@@ -1,0 +1,6 @@
+name = "SmallFloats"
+uuid = "1a823dc9-6fcb-4967-90f0-adc1d2cc8013"
+author = ["Jeffrey Sarnoff <jeffrey.sarnoff@ieee.org>"]
+
+[deps]
+Julia = "1.12"
