@@ -77,23 +77,48 @@ _folded(T) = Base.isdispatchelem(T)
         @test length(rt) == 1 && _folded(rt[1])
     end
 
-    # Zero-behaviour-change pin for Stage 1: every K ≤ 8 format is rung 1 on the
-    # Float64 carrier. When Code16 lands this becomes a statement about the
-    # K ≤ 8 subgrid only, and that is the point — no existing format moves.
-    for F in fmts
+    # Zero-behaviour-change pin, now scoped to the K ≤ 8 subgrid — which is what
+    # the Stage 1 version of this block said it would become once `Code16`
+    # landed. That scoping IS the assertion: opening the grid to 504 formats
+    # moved nothing about the 120 that already existed.
+    narrow = filter(F -> bitwidth(F) <= _S.KSPLIT, fmts)
+    wide   = filter(F -> bitwidth(F) > _S.KSPLIT, fmts)
+    @test length(narrow) == 120 && length(wide) == 384
+
+    for F in narrow
         @test _S.rung(F) === _S.HeadF64()
         @test _S.datumcarrier(F) === Float64
         @test _S.promotecarrier(F) === Float64
         @test _S.codeunit_type(F) === UInt8
+        @test _S.decodepolicy(F) === _S.TableDecode()
+        @test _S.orderkeytype(F) === UInt16
         @test _S.reptype(F) === F
     end
 
-    # Representation invariant 3, stated as the mask it now derives from.
+    # The wide half: the storage unit is a function of K alone, the carrier is a
+    # function of the bias alone, and the two axes are independent. The last
+    # assertion is the interesting one — a K = 16 format can sit on any rung, so
+    # a trait that conflated width with carrier would fail here and nowhere else.
+    for F in wide
+        @test _S.codeunit_type(F) === UInt16
+        @test _S.decodepolicy(F) === _S.ComputeDecode()
+        @test _S.orderkeytype(F) === UInt32
+        @test _S.reptype(F) === F
+        @test _S.rung(F) === (expbias(F) <= 512 ? _S.HeadF64() :
+                              expbias(F) <= 8192 ? _S.HeadF128() : _S.HeadExact())
+    end
+    @test _S.rung(Binary16p14se) === _S.HeadF64()     # widest K, narrowest bias
+    @test _S.rung(Binary16p1uf) === _S.HeadExact()    # widest K, widest bias
+    @test _S.rung(Binary8p1uf) === _S.HeadF64()       # narrow K, widest narrow bias
+
+    # Representation invariant 3, stated as the mask it now derives from, over
+    # the whole grid rather than the byte-wide half of it.
     for F in fmts
         K = bitwidth(F)
-        @test _S.codemask(F) == UInt8((1 << K) - 1)
-        @test _S._unitmask(UInt16, K) == UInt16((1 << K) - 1)
-        @test _S._unitmask(UInt16, 16) == 0xffff      # the case `1 << K` gets wrong
-        @test _S._unitmask(UInt8, 8) == 0xff          # ditto at the byte width
+        U = _S.codeunit_type(F)
+        @test _S.codemask(F) === U((UInt64(1) << K) - 1)
+        @test _S._unitmask(UInt16, K) == UInt16((UInt64(1) << K) - 1)
     end
+    @test _S._unitmask(UInt16, 16) == 0xffff      # the case `1 << K` gets wrong
+    @test _S._unitmask(UInt8, 8) == 0xff          # ditto at the byte width
 end

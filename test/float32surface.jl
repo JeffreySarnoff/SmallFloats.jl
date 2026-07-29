@@ -7,10 +7,21 @@
 
 using BFloat16s: BFloat16
 
+# The Float32/BFloat16 surface is `Code8`-only until Stage 4 of the K ≤ 16
+# extension gates it on the datum-exactness trait (§4 Stage 4 item 6): both the
+# narrowing-exactness claim below and the pinned `f32_exact` counts are
+# statements about the K ≤ 8 grid, and reading them over 504 formats would be
+# reading them over formats whose datums Float32 cannot represent at all.
+# Scoped, not weakened — every K ≤ 8 format is still enumerated exhaustively.
+const _F32_FORMATS = sort!([nm for nm in keys(SmallFloats._NAMED)
+                            if bitwidth(getfield(SmallFloats, nm)) <= SmallFloats.KSPLIT])
+
 @testset "Float32/BFloat16 surface (M1)" begin
+    @test length(_F32_FORMATS) == 120
     @testset "exact decode, every format × every code" begin
         nf32 = nbf16 = 0
-        for T in values(SmallFloats._NAMED)
+        for nm in _F32_FORMATS
+            T = getfield(SmallFloats, nm)
             for c in 0x00:UInt8((1 << bitwidth(T)) - 1)
                 v = rawvalue(T, c); d = decode(v)
                 if isnan(d)
@@ -21,7 +32,7 @@ using BFloat16s: BFloat16
                 end
             end
         end
-        total = sum(1 << bitwidth(T) for T in values(SmallFloats._NAMED))
+        total = sum(1 << bitwidth(getfield(SmallFloats, nm)) for nm in _F32_FORMATS)
         @test nf32 == total          # Float32 narrowing exact, all datums
         @test nbf16 == total         # BFloat16 narrowing exact, all datums
     end
@@ -60,7 +71,8 @@ end
     # Multiply 118/120 same-format signatures; Add and Subtract 88/120.
     counts = Dict(op => 0 for op in (:Add, :Subtract, :Multiply))
     mulfail = Symbol[]
-    for (name, T) in SmallFloats._NAMED, op in (:Add, :Subtract, :Multiply)
+    for name in _F32_FORMATS, op in (:Add, :Subtract, :Multiply)
+        T = getfield(SmallFloats, name)
         g = f32_exact(op, T, T)
         counts[op] += g
         op === :Multiply && !g && push!(mulfail, name)

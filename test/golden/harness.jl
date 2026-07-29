@@ -50,9 +50,17 @@ digest(s::Sink) = bytes2hex(SHA.sha256(take!(s.io)))
 # ---- the grid, in a fixed order --------------------------------------------
 
 """Every K ≤ 8 format, in sorted-alias-name order. The order is part of the
-digest, so it must not depend on `Dict` iteration."""
+digest, so it must not depend on `Dict` iteration.
+
+The `K ≤ KSPLIT` filter is what makes G5 a *non-regression* gate rather than a
+coverage gate: the oracle was captured at `51abb00`, when 120 formats existed,
+and its digests are statements about those 120. Widening this list to the 504
+would not strengthen the gate — it would silently invalidate every digest in
+the file and make the comparison meaningless. Wide formats are covered by the
+sweep and the stage gates, which is where new coverage belongs."""
 function golden_formats()
-    names = sort!(collect(keys(SmallFloats._NAMED)))
+    names = sort!([n for n in keys(SmallFloats._NAMED)
+                   if bitwidth(SmallFloats._NAMED[n]) <= SmallFloats.KSPLIT])
     [SmallFloats._NAMED[n] for n in names]
 end
 

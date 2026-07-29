@@ -316,7 +316,9 @@ end
 function conformance_report(io::IO=stdout, c::ConformanceDeclaration=conformance())
     println(io, "Conformance declaration — ", c.package)
     println(io, "Implements: ", c.draft)
-    println(io, "\nFormats (", length(c.formats), "): all Binary{K,P,Σ,Δ}, K ∈ 3:8, ",
+    # The range is READ FROM THE CONSTANTS, never spelled: a conformance
+    # declaration that can go stale is worse than no declaration.
+    println(io, "\nFormats (", length(c.formats), "): all Binary{K,P,Σ,Δ}, K ∈ $KMIN:$KMAX, ",
             "Σ ∈ {Signed, Unsigned}, Δ ∈ {Finite, Extended}")
     println(io, "\nScalar operations (", length(c.operations), "):")
     for a in 1:3

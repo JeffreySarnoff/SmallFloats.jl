@@ -42,15 +42,44 @@
     return reinterpret(Float64, bits)
 end
 
-@generated function _decode_table(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
+# Bounded to `Code8` BY SIGNATURE, not by a check inside: a `Code16` request must
+# be a `MethodError` at the call site rather than a 65 536-element constant tuple
+# the compiler dutifully materializes. That is invariant 10 (§3.5) stated where
+# it can be enforced — the tuple length is `2^K`, and `2^KSPLIT = 256` is the
+# whole justification for the shape. `decodepolicy` selects it; the two agree by
+# construction because both are keyed on the representation.
+@generated function _decode_table(::Type{F}) where {K,P,S,E,F<:Code8{K,P,S,E}}
     t = ntuple(i -> _decode_compute(F, UInt8(i - 1)), 1 << K)
     :($t)
 end
+# The `Code16` half of the guard is a method that THROWS, not an absent method.
+# Absence was the first spelling and it is wrong for a reason worth recording:
+# the abstract forwarder below infers to `Union{Type{Code8{…}}, Type{Code16{…}}}`
+# when the format parameters are not statically known, so a missing `Code16`
+# method turns a deliberate refusal into a static-analysis defect — JET reports
+# it as an unreachable-method bug against the whole package, and the only way to
+# keep the suite green would be a filter, which the verification doctrine says
+# must be backed by a concrete-call gate proving the path is clean. It is not
+# clean; it is refused. Saying so in a method is both honest and total.
+@noinline _decode_table(::Type{<:Code16}) = throw(ArgumentError(
+    "a 2^K-entry constant decode table exists only for K ≤ $KSPLIT — at K = 16 it " *
+    "would be 65 536 entries, which invariant 10 forbids outright. Wide formats " *
+    "decode by computation; see `decodepolicy`"))
+@noinline _decode_table32(::Type{<:Code16}) = throw(ArgumentError(
+    "the Float32 decode table exists only for K ≤ $KSPLIT; the Float32 surface for " *
+    "wide formats is gated on the datum-exactness trait in Stage 4"))
+
+# The abstract-format forwarder every representation-keyed function needs (§11
+# M14): `_decode_table(Binary{3,1,true,true})` is how the gate suite asks a
+# *format* for its table, and without this it dies with a `MethodError` rather
+# than answering. `reptype` is the one map from format to representation.
+@inline _decode_table(::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
+    _decode_table(reptype(Binary{K,P,S,E}))
 
 # Float32 twin of _decode_table: same ground truth, narrowed once. Narrowing is
 # exact for every K ≤ 8 datum (worst cases 2^126 and the Float32-subnormal
 # 2^-127, both from Binary8p1u; asserted exhaustively in the suite).
-@generated function _decode_table32(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
+@generated function _decode_table32(::Type{F}) where {K,P,S,E,F<:Code8{K,P,S,E}}
     t = ntuple(i -> Float32(_decode_compute(F, UInt8(i - 1))), 1 << K)
     :($t)
 end
@@ -64,8 +93,22 @@ end
 Implemented as a constant-tuple lookup (bitops plan K2): the per-format table is
 generated once from `_decode_compute` above, so the two are correct by
 construction and asserted equivalent exhaustively; constant inputs still fold.
+
+Selected by `decodepolicy`, which is dispatch on the representation and not a
+branch on K (invariant 9, §2 R-F).
 """
-@inline decode(v::Binary) = @inbounds _decode_table(typeof(v))[Int(codepoint(v)) + 1]
+@inline decode(v::Binary) = _decode(decodepolicy(typeof(v)), v)
+@inline _decode(::TableDecode, v::Binary) =
+    @inbounds _decode_table(typeof(v))[Int(codepoint(v)) + 1]
+# Stage 3 leaves this rung of the ladder empty ON PURPOSE. `_decode_compute`'s
+# tail is still the Float64 bit assembly whose justifying comment ("|e + nb − 1|
+# ≤ ~260") is exactly the K ≤ 8 premise: at B ≈ 1024 the minimum datum is
+# 2^(2−P−B), a Float64 subnormal, and the assembly produces garbage rather than
+# an error. A wrong answer is worse than no answer, so until Stage 4 replaces
+# the tail with the carrier-generic `ldexp` path, ask and be told no.
+@noinline _decode(::ComputeDecode, v::Binary) = throw(ArgumentError(
+    "decode of a K ≥ $(KSPLIT + 1) format ($(formatname(typeof(v)))) needs the " *
+    "carrier-generic finite path, which arrives in Stage 4 of the K ≤ 16 extension"))
 
 """
     encode(T, sign, S, Q) -> UInt8   (private; design §3.3)
@@ -95,16 +138,35 @@ end
 # NaN (at the −0 slot for signed formats / top code for unsigned) sorts ABOVE +Inf
 # [interpretation; draft §4.12.1 text unavailable in upload — see checkpoint].
 
-"""The order key reserved for the single NaN — above every finite key and ±Inf."""
-const NAN_ORDER_KEY = typemax(UInt16)
+"""
+    nan_order_key(F)
+
+The order key reserved for the single NaN — above every finite key and ±Inf.
+
+Per format, not a constant, and the key type is `orderkeytype(F)` rather than
+`UInt16`. The reason is arithmetic, not tidiness: a format has `2^K` code points
+mapping to keys `1 … 2^K`, so `UInt16` runs out at exactly K = 16 — `UInt16(c) +
+UInt16(1)` for `c = 0xffff` wraps **silently to 0**, putting the largest datum
+below the smallest. `orderkeytype` returns `UInt32` for `Code16`, which has room
+for the keys and for a sentinel strictly above all of them.
+
+*(§4 Stage 4 item 3, pulled forward into Stage 3 — §11 M16. The rest of Stage 3
+makes wide formats fail loudly; a wraparound in the total order is the one
+K ≥ 9 defect that would have been silent, so it is closed here rather than
+carried for a commit.)*
+"""
+@inline nan_order_key(::Type{F}) where {F<:Binary} = typemax(orderkeytype(F))
+@inline nan_order_key(v::Binary) = nan_order_key(typeof(v))
 
 @inline function order_key(v::Binary{K,P,SGN,EXT}) where {K,P,SGN,EXT}
+    T = typeof(v)
+    O = orderkeytype(T)
     c = codepoint(v)
-    isnan(v) && return NAN_ORDER_KEY
-    SGN || return UInt16(c) + UInt16(1)
-    sm = signmask(typeof(v))
+    isnan(v) && return typemax(O)
+    SGN || return O(c) + O(1)
+    sm = signmask(T)
     neg = c >= sm
-    neg ? UInt16(sm) - UInt16(c - sm) : UInt16(sm) + UInt16(c) + UInt16(1)
+    neg ? O(sm) - O(c - sm) : O(sm) + O(c) + O(1)
 end
 
 """TotalOrder⟨fx,fy⟩ (draft §4.12.1): x ≤ y in the total order (single NaN largest).
@@ -143,11 +205,22 @@ function Base.sort!(v::AbstractVector{T}, lo::Int, hi::Int, ::CodeCountingSort,
                     o::Union{Base.Order.ForwardOrdering,
                              Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}}) where {T<:Binary}
     K = bitwidth(T)
+    U = codeunit_type(T)
+    # Counting sort pays 2^K of setup before it looks at the data. At K ≤ 8 that
+    # is 257 buckets and never worth a test; at K = 16 it is 65 537 buckets and
+    # ~512 KiB for a vector that may hold three elements. The gate is a
+    # generalization, not a behaviour change — at K ≤ 8 it fires only for inputs
+    # so short that either algorithm is instant, and both algorithms produce the
+    # same permutation because equal keys mean identical code points.
+    # (§4 Stage 4 item 4, pulled forward with the key retyping — §11 M16.)
+    n = hi - lo + 1
+    n < (1 << K) && return sort!(v, lo, hi, Base.Sort.DEFAULT_UNSTABLE, o)
     nk = (1 << K) + 1                              # keys 1..2^K plus NaN sentinel bucket
     counts = zeros(Int, nk + 1)
-    key2code = Vector{UInt8}(undef, nk + 1)
-    bucket(k) = k == NAN_ORDER_KEY ? nk + 1 : Int(k)   # sentinel folds to the top bucket
-    for c in 0x00:UInt8((1 << K) - 1)              # key ↔ code inversion, 2^K iterations
+    key2code = Vector{U}(undef, nk + 1)
+    nan_key = nan_order_key(T)
+    bucket(k) = k == nan_key ? nk + 1 : Int(k)     # sentinel folds to the top bucket
+    for c in zero(U):U((1 << K) - 1)               # key ↔ code inversion, 2^K iterations
         key2code[bucket(order_key(rawvalue(T, c)))] = c
     end
     @inbounds for i in lo:hi

@@ -252,7 +252,7 @@ end
 @inline function _extremal_SQ(::Type{T}) where {K,P,SGN,EXT,T<:Binary{K,P,SGN,EXT}}
     hidden = Int64(1) << (P - 1)                          # implicit-bit weight, as in ωDecode
     c = codepoint(MaxFiniteOf(T))
-    tsig = c & UInt8(hidden - 1)                          # trailing significand
+    tsig = c & _cu(T, hidden - 1)                         # trailing significand
     Eb = Int(c >> (P - 1))                                # biased exponent field
     B = expbias(T)
     S = Eb == 0 ? Int64(tsig) : Int64(tsig) + hidden

@@ -207,6 +207,49 @@ end
 end
 
 # ============================================================================
+# Carrier rung selection (§2 R-B, §4 Stage 3 item 5)
+# ============================================================================
+# `apply_op` reaches ω-semantics through the rung of the format being produced.
+# Rung 1 forwards to the Float64 catalogue below — the only one that exists
+# today — and the other two rungs are DELIBERATELY MISSING BODIES rather than a
+# check inside `rung`.
+#
+# That placement is the point. `rung` is a trait: a total function of the format
+# parameters, defined for all 504 formats, and a trait that throws over a third
+# of its domain is not a trait — it is a branch wearing a trait's name
+# (invariant 9). An incomplete implementation is precisely a set of unimplemented
+# METHODS, and the method table is the one place that already reports exactly
+# that. So `rung(F)` answers `HeadF128()` for a B = 4096 format at Stage 3 just
+# as it will at Stage 6; what is absent is the evaluator for that answer.
+#
+# Gating on the RESULT format alone is complete at this stage, and only at this
+# stage: operands arrive already decoded, `decode` refuses every K ≥ 9 format
+# until Stage 4, and every K ≤ 8 format has B ≤ 128, hence rung 1. Stage 6
+# replaces this with the `rung(op, Fs...)` join over result and argument formats,
+# which is what makes mixed-format evaluation well-defined.
+@inline ωeval(::HeadF64, op::Val, xs::Float64...) = ωeval(op, xs...)
+@noinline ωeval(::HeadF128, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
+    "$OP on this format needs the rung-2 (Float128) carrier, which arrives in " *
+    "Stage 6 of the K ≤ 16 extension"))
+@noinline ωeval(::HeadExact, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
+    "$OP on this format needs the rung-3 (exact) carrier, which arrives in " *
+    "Stage 6/7 of the K ≤ 16 extension"))
+
+# `Convert` is registry arity 1 but registry group `:conv`, and it is the one
+# operation with no ω-semantics of its own: the conversion IS the projection into
+# the target format, so on the datum it is the identity. Spelling that identity
+# makes `ωeval` total over the registry.
+#
+# This is §11 M9's trap closed rather than routed around. Every consumer that
+# filters the registry by arity alone — the golden harness did, and Stage 6's
+# `factors` column will — walks into `Convert` and dies on a missing method
+# somewhere far from the mistake. `tables.jl`'s `_scalar_code` keeps its explicit
+# `:Convert` branch: that is not redundancy, it is the statement that a Convert
+# table entry is a bare projection, and it must stay visible at the site where
+# a table entry is defined to be the defined result (invariant 6).
+ωeval(::Val{:Convert}, x::Float64) = x
+
+# ============================================================================
 # Group "exact selection": Abs, Negate, CopySign, extremum family, Clamp
 # ============================================================================
 ωeval(::Val{:Abs}, x::Float64) = isnan(x) ? NaN : abs(x)

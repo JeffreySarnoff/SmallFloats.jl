@@ -32,7 +32,9 @@ using SmallFloats: project, project_interval, round_to_precision, encode, order_
     nan_code, posinf_code, neginf_code, maxfinite_datum,
     get_table, _USE_FLOAT128, _f128, _UNARY_OPS, rawvalue, nan_code, TableKey,
     rawvalue, decode, _decode_compute, _decode_table, nan_code, Rounded, KIND_FIN,
-    apply_op, MaybeRNG
+    apply_op, MaybeRNG,
+    KMIN, KMAX, KSPLIT, codemask, codeunit_type, reptype, nan_order_key, rung,
+    Code8, Code16, HeadF64, HeadF128, HeadExact
 
 # Main.FastTest = true
 #
@@ -176,9 +178,20 @@ println(Binary8p4se, "  ", Binary8p4se(2.0), "  ", formatname(Binary8p1uf))
 # `similar` normalizes an abstract format request at the array boundary.
 @test eltype(similar([Binary8p4se(1.0)], Binary{5,2,true,true})) === Binary5p2se
 
-@test_throws ArgumentError Binary{9,4,true,true}(Val(:code), 0x00)
+# K = 17 is the first width past `KMAX`; its `P ≥ K` sibling below is unaffected
+# by the extension and stays where it is. (Was K = 9 before Stage 3 opened the
+# grid — the assertion is "outside the supported range", not a fixed number, so
+# it moves with `KMAX`.)
+@test_throws ArgumentError Binary{17,4,true,true}(Val(:code), 0x00)
 @test_throws ArgumentError Binary{8,8,true,true}(Val(:code), 0x00)
+@test_throws ArgumentError SmallFloats.checkformat(KMAX + 1, 4, true, true)
+@test SmallFloats.checkformat(KMAX, 4, true, true) === nothing
 println("parameter validation OK")
+
+# The front-loaded construction sweep runs here, before any test that depends on
+# a value being well formed (§4 Stage 3 item 4), and the stage gates run with it.
+include("sweep_lattice.jl")
+include("stage_gates.jl")
 
 # K=8 boundary: 0xff is a legitimate code point (−Inf for signed·extended)
 @test decode(rawvalue(Binary8p4se, 0xff)) == -Inf
@@ -1047,7 +1060,12 @@ T8 = Binary8p4se; T5 = Binary5p2se
     get_table(:Exp, T8, T8, RNE_SatNone)
     get_table(:Add, T5, T5, T5, RNE_SatNone)
     c = conformance()
-    @test length(c.formats) == 120 && :Binary8p4se in c.formats
+    # The declaration enumerates the whole grid, so its length is a claim about
+    # KMIN:KMAX and must be derived from them — a literal here goes stale the
+    # next time the range moves, which is exactly what the banner it accompanies
+    # is supposed to prevent.
+    @test length(c.formats) == sum(4K - 2 for K in KMIN:KMAX) == 504
+    @test :Binary8p4se in c.formats && :Binary16p8se in c.formats
     @test length(c.operations) == 52
     @test count(o -> o.arity == 3, c.operations) == 3
     @test length(c.cached_specializations) == 2
@@ -1055,7 +1073,8 @@ T8 = Binary8p4se; T5 = Binary5p2se
     @test length(c.block_surface) == 51 * 2 + 6
     @test any(a -> a.name === :exp_ftz_8p4 && a.kappa == κf && a.exhaustive, c.approximate)
     d = conformance_dict(c)
-    @test d["package"] == "SmallFloats.jl 0.1.0" && length(d["formats"]) == 120
+    @test d["package"] == "SmallFloats.jl 0.1.0" &&
+          length(d["formats"]) == sum(4K - 2 for K in KMIN:KMAX)
     @test any(s -> s["op"] == "Add" && s["saturation"] == "SatNone", d["cached_specializations"])
     buf = IOBuffer(); conformance_report(buf, c); rep = String(take!(buf))
     @test occursin("κ verified exhaustively", rep) && occursin("Exp⟨", rep)
@@ -1382,25 +1401,18 @@ end
 end
 
 # ==========================================================================
-# UInt8 code-point constructor
+# Code-point constructor semantics
 # ==========================================================================
-@testset "UInt8 code-point constructor" begin
+@testset "code-point constructor semantics" begin
     # the motivating example, exactly
     a = Binary5p3sf(1.0)
     b = Binary5p3sf(0x08)
     @test a == b && a === b
-    # exhaustive: T(c) ≡ rawvalue(T, c) over every format and every valid code
-    for nm in keys(_NAMED)
-        T = getfield(SmallFloats, nm)
-        for c in 0x00:UInt8((1 << bitwidth(T)) - 1)
-            @test T(c) === rawvalue(T, c)
-        end
-        # invalid codes throw for K < 8 (K = 8 accepts all of UInt8)
-        if bitwidth(T) < 8
-            @test_throws ArgumentError T(UInt8(1 << bitwidth(T)))
-            @test_throws ArgumentError T(0xff)
-        end
-    end
+    # The exhaustive `T(c) ≡ rawvalue(T, c)` pass over every format and every
+    # valid code, and the out-of-range rejection at every `Unsigned` width, now
+    # live in `sweep_lattice.jl` — the same assertions over 504 formats instead
+    # of 120, run before anything else in the suite. This testset keeps the
+    # *semantic* cases, which are about meaning rather than coverage.
     # Restated invariant 2: `Unsigned` is the argument-type CLASS meaning code
     # point, at every width; every other `Real` means value.
     #

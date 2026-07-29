@@ -23,7 +23,33 @@ has actually happened, what is verified, and what is not.***
 | **0 — prerequisites and baseline** | **done** |
 | **1 — traits, tags, T11 constants, audit fixes** | **done, verified** |
 | **2 — representation lattice (abstract `Binary` + `Code8`)** | **done, verified** |
-| 3–9 | not started |
+| **3 — `Code16` and the 504-format grid** | **done, verified** |
+| 4–9 | not started |
+
+**Stage 3 evidence.** The grid is open: `KMIN:KMAX` = 3:16, 504 formats, per-K
+counts `4K − 2`. The front-loaded construction sweep
+([test/sweep_lattice.jl](test/sweep_lattice.jl)) builds **every code point of
+every format — 7 602 160 points** — through both the checked constructor and the
+unchecked kernel route, at every offered `Unsigned` width, in 10 s. §1 C5's
+finding (the silent-truncation hazard class is empty) is now a measured property
+rather than a reading of the source.
+
+Everything wide that is not yet implemented **refuses**, and
+[test/stage_gates.jl](test/stage_gates.jl) asserts the refusals (634
+assertions): rung-2/rung-3 arithmetic, wide `decode`, and the `2^K`-entry
+constant table. `rung` itself stays total over all 504 formats — the missing
+thing is the evaluator, not the answer. That file is designed to shrink; a row
+going red *because the operation started working* is how it is meant to die.
+
+Two Stage 4 items moved here (§11 M16) on a hazard-class rule — **loud waits,
+silent does not**: `order_key` wrapped `UInt16` to 0 at K = 16, inverting the
+total order with no exception, and the counting sort had to move with it.
+
+**G5 33/33 byte-identical** through the grid opening; G9 4 290 assertions,
+now asserting both halves of the lattice (120 narrow unchanged, 384 wide, and
+that a K = 16 format can sit on **any** rung); Aqua and both JET passes green
+with no new filter. Warm scalar paths still allocate zero; `vmap!` on the table
+path 0.26 ns/elem.
 
 **Stage 2 evidence.** Full suite green (3 m 23 s), **G5 `:full` — all fifteen
 section digests byte-identical to the `51abb00` oracle** (11 m 26 s), zero method

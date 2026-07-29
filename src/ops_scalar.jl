@@ -128,7 +128,7 @@ end
 """apply_op(Val(op), fr, ρ, R, xs...) — evaluate `op`'s ω-semantics on decoded
 Float64 operands and project the result into `fr` under ρ (with random bits R)."""
 @inline function apply_op(op::Val, ::Type{fr}, ρ::ProjSpec, R::Int, xs::Float64...) where {fr<:Binary}
-    res = ωeval(op, xs...)
+    res = ωeval(rung(fr), op, xs...)
     # bitops plan Phase 0(a): explicit fast split — Class-1/selection results are
     # Float64 for every ordinary input; keep the widened union off the hot path.
     # Justification: like-for-like measurement (both variants under identical

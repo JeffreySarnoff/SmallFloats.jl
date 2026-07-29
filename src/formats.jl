@@ -1,9 +1,25 @@
 # ===== formats.jl — the Binary{K,P,SGN,EXT} type, Group M, naming, Base API (design §2, §3.1)
 
+# ---- the supported bitwidth range, and the representation seam within it.
+#
+# Three constants, spelled once, because three different things were all being
+# written as the literal `8` and they do not move together: the low end of the
+# draft's range, the high end this package implements, and the width at which
+# the storage unit changes from one byte to two. `KSPLIT` is a REPRESENTATION
+# fact — it is `8 * sizeof(UInt8)` and nothing else — while `KMIN`/`KMAX` are a
+# scope claim about the package. Conflating them is how `K <= 8` ends up
+# meaning "narrow enough for a byte" in one place and "supported" in another.
+"""Lowest bitwidth the draft defines (`K = 3`: sign, one exponent bit, one significand bit)."""
+const KMIN = 3
+"""Highest bitwidth this package implements."""
+const KMAX = 16
+"""Largest `K` whose code point fits a `UInt8` — the `Code8`/`Code16` seam."""
+const KSPLIT = 8
+
 """
     Binary{K,P,SGN,EXT} <: AbstractFloat
 
-A P3109 **format**: bitwidth `K ∈ 3:8`, precision `P`, signedness `SGN::Bool`
+A P3109 **format**: bitwidth `K ∈ 3:16`, precision `P`, signedness `SGN::Bool`
 (`true` = Signed), domain `EXT::Bool` (`true` = Extended, i.e. the datum set
 includes infinities).
 
@@ -26,8 +42,13 @@ maintained zero as a representation invariant. Construct raw code points with
 `T(c::Unsigned)` (validated code-point construction), `rawvalue(T, c)`
 (unchecked kernel route), or `Code8{...}(Val(:code), x)`; construct from numeric
 values with `T(x::Real)` (default projection spec) or `Convert`. `Unsigned` is
-the one argument-type class meaning *code point*; all other `Real`s mean
-*value*.
+the one argument-type class meaning *code point*, at **every** width — `T(0x02)`
+is code point 2 whether `T`'s unit is a `UInt8` or a `UInt16`; all other `Real`s
+mean *value*.
+
+There are `4K − 2` formats at each `K` (`P ∈ 1:K` × signed/unsigned ×
+finite/extended, less the two `P == K` signed combinations, which have no
+exponent bits), so `KMIN:KMAX` = 504 in total.
 """
 abstract type Binary{K,P,SGN,EXT} <: AbstractFloat end
 
@@ -43,7 +64,7 @@ struct Code8{K,P,SGN,EXT} <: Binary{K,P,SGN,EXT}
     @inline function Code8{K,P,SGN,EXT}(::Val{:code}, x::UInt8) where {K,P,SGN,EXT}
         @boundscheck begin
             checkformat(K, P, SGN, EXT)
-            K <= 8 || throw(ArgumentError("Code8 requires K ≤ 8, got K=$K"))
+            K <= KSPLIT || throw(ArgumentError("Code8 requires K ≤ $KSPLIT, got K=$K"))
             # A MASK test, not a comparison against 2^K: it states representation
             # invariant 3 directly (the high bits are zero) rather than a numeric
             # range that merely implies it, and `codemask` is built by complement
@@ -58,16 +79,17 @@ end
 """
     Code16{K,P,SGN,EXT} <: Binary{K,P,SGN,EXT}
 
-The two-byte representation, for `9 ≤ K ≤ 16`. Declared here so that `reptype`
-is a total function from the moment it becomes non-trivial; no format
-instantiates it until `checkformat` opens above K = 8.
+The two-byte representation — every format with `KSPLIT < K ≤ KMAX`. Differs
+from its `Code8` sibling only in the width of the word carrying the code point;
+all semantics live in the `Binary` parameters.
 """
 struct Code16{K,P,SGN,EXT} <: Binary{K,P,SGN,EXT}
     x::UInt16
     @inline function Code16{K,P,SGN,EXT}(::Val{:code}, x::UInt16) where {K,P,SGN,EXT}
         @boundscheck begin
             checkformat(K, P, SGN, EXT)
-            9 <= K <= 16 || throw(ArgumentError("Code16 requires 9 ≤ K ≤ 16, got K=$K"))
+            KSPLIT < K <= KMAX ||
+                throw(ArgumentError("Code16 requires $(KSPLIT+1) ≤ K ≤ $KMAX, got K=$K"))
             x & _unitmask(UInt16, K) == x ||
                 throw(ArgumentError("code point $x out of range for K=$K"))
         end
@@ -78,7 +100,8 @@ end
 function checkformat(K, P, SGN, EXT)
     (K isa Int && P isa Int && SGN isa Bool && EXT isa Bool) ||
         throw(ArgumentError("Binary parameters must be (K::Int, P::Int, SGN::Bool, EXT::Bool)"))
-    3 <= K <= 8 || throw(ArgumentError("bitwidth K=$K outside supported range 3:8"))
+    KMIN <= K <= KMAX ||
+        throw(ArgumentError("bitwidth K=$K outside supported range $KMIN:$KMAX"))
     if SGN
         0 < P < K || throw(ArgumentError("signed format requires 0 < P < K (got P=$P, K=$K)"))
     else
@@ -163,7 +186,7 @@ So `reptype` carries real weight rather than being belt-and-braces — it is how
 a method that holds only the format parameters reaches a constructible type.
 
 The `Val` barrier is deliberate (invariant 9). The obvious spelling,
-`K <= 8 ? Code8{…} : Code16{…}`, returns a `Type`, so its inferred return type
+`K <= KSPLIT ? Code8{…} : Code16{…}`, returns a `Type`, so its inferred return type
 is a small `Union` unless the compiler folds the comparison. It usually will;
 "usually" cannot underwrite a correctness-critical selection that also gates a
 zero-allocation guarantee. Behind a `Val`, each `_rep` method has exactly one
@@ -171,7 +194,8 @@ concrete return type and there is nothing to fold. Gate G9 checks it per format.
 """
 @inline reptype(::Type{T}) where {T<:Code8}  = T
 @inline reptype(::Type{T}) where {T<:Code16} = T
-@inline reptype(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = _rep(Val(K <= 8), Binary{K,P,S,E})
+@inline reptype(::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
+    _rep(Val(K <= KSPLIT), Binary{K,P,S,E})
 @inline _rep(::Val{true},  ::Type{Binary{K,P,S,E}}) where {K,P,S,E} = Code8{K,P,S,E}
 @inline _rep(::Val{false}, ::Type{Binary{K,P,S,E}}) where {K,P,S,E} = Code16{K,P,S,E}
 # `codemask` needs `bitwidth`, so it is defined with the Group M block below.
@@ -205,9 +229,28 @@ is by being out of code range — which throws. `rawvalue(T, c)` remains the
 unchecked kernel-internal route.
 """
 @inline (::Type{R})(c::Unsigned) where {K,P,S,E,R<:Code8{K,P,S,E}} =
-    R(Val(:code), UInt8(c))
+    (_checkcode(R, c); R(Val(:code), UInt8(c)))
 @inline (::Type{R})(c::Unsigned) where {K,P,S,E,R<:Code16{K,P,S,E}} =
-    R(Val(:code), UInt16(c))
+    (_checkcode(R, c); R(Val(:code), UInt16(c)))
+
+# The range check must happen BEFORE the narrowing, or the argument's width
+# decides the exception. `Binary5p2se(0x0100)` narrowed first raises
+# `InexactError` about `UInt8`, which is a statement about the *representation* —
+# but the caller's error is about the *format*: 256 is not a code point of a
+# 5-bit format at any width. Checked first, every offered `Unsigned` width gets
+# the same `ArgumentError` naming K, which is what invariant 2's "range-checked
+# against 2^K regardless of its width" actually requires.
+#
+# The comparison promotes to the wider of the two unsigned types, so it is exact
+# for `UInt128` arguments and folds to nothing for constant codes. The narrowing
+# that follows is a *checked* conversion that the check has already made
+# infallible — deliberately not `% UInt8`, so the "no unchecked conversion in a
+# K-dependent layer" property (§1 C5) stays true by grep and not by argument.
+@inline function _checkcode(::Type{F}, c::Unsigned) where {K,P,S,E,F<:Binary{K,P,S,E}}
+    c <= codemask(F) ||
+        throw(ArgumentError("code point $c out of range for K=$K (max $(codemask(F)))"))
+    nothing
+end
 
 # Constructors on the ABSTRACT format still work and forward to the
 # representation, so `Binary{8,4,true,true}(x)` keeps its meaning even though the
@@ -338,13 +381,13 @@ end
 _formatname(K, P, S, E) = Symbol("Binary", K, "p", P, S ? "s" : "u", E ? "e" : "f")
 
 const _NAMED = Dict{Symbol,DataType}()
-for K in 3:8, P in 1:K, S in (true, false), E in (true, false)
+for K in KMIN:KMAX, P in 1:K, S in (true, false), E in (true, false)
     S && P >= K && continue
     name = _formatname(K, P, S, E)
     # The alias names the REPRESENTATION, not the format: it must be concrete to
     # serve as an array element type. Plain code, not an `@eval`, so the grid
-    # costs 120 constant definitions rather than 120 macro expansions.
-    T = (K <= 8 ? Code8 : Code16){K,P,S,E}
+    # costs 504 constant definitions rather than 504 macro expansions.
+    T = (K <= KSPLIT ? Code8 : Code16){K,P,S,E}
     @eval const $name = $T
     _NAMED[name] = T
 end
@@ -428,10 +471,20 @@ end
 function Base.show(io::IO, v::Binary)
     T = typeof(v)
     print(io, formatname(T), "(")
+    _show_datum(decodepolicy(T), io, v)
+    print(io, "0x", string(codepoint(v); base=16, pad=2 * sizeof(codeunit_type(T))), ")")
+end
+@inline function _show_datum(::TableDecode, io::IO, v::Binary)
     d = decode(v)
     isnan(d) ? print(io, "NaN") : print(io, d)
-    print(io, " ≡ 0x", string(codepoint(v); base=16, pad=2 * sizeof(codeunit_type(T))), ")")
+    print(io, " ≡ ")
 end
+# `show` must not be the thing that throws. Between Stage 3 and Stage 4 a K ≥ 9
+# value has a code point but no decodable datum, and a testset that fails while
+# comparing two such values has to be able to PRINT them — otherwise the report
+# is an error inside the error reporter. Prints the code point alone; collapses
+# back to a single method the moment `decode` is total again.
+@inline _show_datum(::ComputeDecode, ::IO, ::Binary) = nothing
 
 # ---- Base numeric API on the type (defined via Group M / decode; see also ops_scalar.jl)
 Base.zero(T::Type{<:Binary}) = rawvalue(T, 0x00)

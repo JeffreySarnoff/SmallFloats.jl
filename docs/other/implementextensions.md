@@ -925,10 +925,15 @@ before a single wide format exists.
 
 ### Stage 3 — `Code16` and the 504-format grid
 
-1. Populate `Code16`; open `checkformat` to `3 <= KMIN..KMAX <= 16` with the
-   range as named constants.
-2. Extend the alias loop to `3:16` → 504 names. Verify the count in the suite
-   (`length(_NAMED) == 504`), and the per-K counts `4K − 2`.
+1. Populate `Code16`; open `checkformat` to `KMIN:KMAX` with the range as named
+   constants. **Three** constants, not two: `KMIN = 3` and `KMAX = 16` are a
+   scope claim about the package, while `KSPLIT = 8` is a *representation* fact
+   (`8 * sizeof(UInt8)`) and the `Code8`/`Code16` seam. All three were being
+   written as the literal `8`, and they do not move together — that is how
+   `K <= 8` comes to mean "narrow enough for a byte" in one file and
+   "supported" in another.
+2. Extend the alias loop to `KMIN:KMAX` → 504 names. Verify the count in the
+   suite (`length(_NAMED) == 504`), and the per-K counts `4K − 2`.
 3. **Restated invariant 2** lands here: `(::Type{T})(c::Unsigned)` replaces the
    `UInt8` method (range-checked against `codemask`, so *every* `Unsigned` at
    *every* width is a code point, uniformly); `show` padding becomes
@@ -951,6 +956,19 @@ before a single wide format exists.
    `rung` stays **total** — it is a trait, and a trait that throws over a third
    of its domain is not a trait. An incomplete implementation is precisely a
    set of missing methods, which is what the method table reports.
+
+   *Reached as `ωeval(rung(fr), op, xs...)` from `apply_op`.* Gating on the
+   **result** format alone is complete at this stage and only at this stage:
+   operands arrive already decoded, `decode` refuses every K ≥ 9 format until
+   Stage 4, and every K ≤ 8 format has B ≤ 128 and is therefore rung 1. Stage 6
+   replaces it with the `rung(op, Fs...)` join (R-B). Measured: the tag argument
+   is free — warm scalar paths still allocate zero and `vmap!` still runs at
+   0.26 ns/elem on the table path.
+
+   *Same discipline, wider than the plan said:* `decode` is gated too (§11 M17).
+   It is not arithmetic, but `_decode_compute`'s Float64 bit-assembly tail is
+   the one wide route that would have been **silently wrong** rather than
+   loudly missing.
 6. Update [`approx.jl:313`](../../src/approx.jl#L313)'s conformance banner
    (`K ∈ 3:8` → the constants) so the declaration cannot go stale.
 7. `test/runtests.jl:118`'s `Binary{9,4,true,true}` invalidity assertion moves
@@ -958,6 +976,13 @@ before a single wide format exists.
 
 **Exit:** the full lattice sweep passes at every K; every Group B/C arithmetic
 call throws with a message naming its stage; G5 still byte-identical.
+
+**Achieved.** Lattice sweep 504 formats × 7 602 160 code points, exhaustive,
+10 s (`test/sweep_lattice.jl`). Stage gates 634 assertions
+(`test/stage_gates.jl`) — a new file that *shrinks* as the extension lands, and
+whose rows are meant to go red by being implemented. G9 4 290 assertions over
+the whole grid. **G5 33/33 byte-identical** through the grid opening. Aqua and
+both JET passes green with no new filter. Warm scalar paths allocate zero.
 
 ---
 
@@ -975,6 +1000,8 @@ call throws with a message naming its stage; G5 still byte-identical.
    `Int64` and needs no change (`Eb ≤ 2^16`, `S ≤ 2^16`).
 3. **Order keys**: `orderkeytype` (R-A), `nan_order_key(F) = typemax(orderkeytype(F))`
    replacing the `NAN_ORDER_KEY` const, `codedistance` follows.
+   **→ landed in Stage 3 (§11 M16):** a `UInt16` key wraps silently to 0 at
+   K = 16, and Stage 3's whole discipline is that wide formats fail *loudly*.
 4. **Counting sort**: `key2code::Vector{codeunit_type(T)}`, and the length
    gate
    ```julia
@@ -984,6 +1011,10 @@ call throws with a message naming its stage; G5 still byte-identical.
    At K = 16 the unconditional setup is 512 KiB and 65 536 iterations before
    touching the data. The gate is a generalization, not a behavior change: at
    K ≤ 8 it almost never fires.
+   **→ landed in Stage 3 (§11 M16)**, with item 3: the sort reads
+   `NAN_ORDER_KEY`, so it had to move when the key type did, and a sort that
+   *works* while allocating 512 KiB for a three-element vector is the kind of
+   thing that gets measured before it gets fixed.
 5. **`PackedVector`**: `U(c & mask)` for `U = codeunit_type(F)`; `_codemask(K)`
    already returns `UInt64` and is correct to K = 63. **Refuse loudly at
    K = 16** — packing is the identity there and a silent identity invites
@@ -1711,6 +1742,99 @@ column** and will iterate the registry the same way: `factors(:Convert)` must
 be defined (or `:conv` excluded) or the same trap fires in the carrier
 selection, where it would be far less obvious. The rule for every registry
 consumer is **filter by `(arity, group)`, never by arity alone.**
+*Closed in Stage 3 by giving `Convert` the ω-semantics it actually has — the
+identity on the datum. See M18.*
+
+### Stage 3
+
+**M16 — two Stage 4 items moved into Stage 3, on a hazard-class rule.** Stage 3
+opens the grid to 504 formats while the wide *paths* land in Stages 4–7, so the
+stage's whole discipline is that an unimplemented route fails loudly. Sorting
+the changes by how they fail rather than by which stage listed them gives a
+rule: **a route that would fail loudly waits for its stage; a route that would
+be silently wrong does not.**
+
+Two of Stage 4's items are the second kind:
+
+* *Order keys.* `order_key` computed `UInt16(c) + UInt16(1)`. At K = 16 the top
+  code is `0xffff`, so the largest datum's key **wraps to 0** and sorts below
+  the smallest — no exception, no warning, a total order that is not one.
+  `orderkeytype` already returned `UInt32` for `Code16`; the key function simply
+  was not reading it. Now `nan_order_key(F) = typemax(orderkeytype(F))` per
+  format, replacing the `NAN_ORDER_KEY` constant.
+* *Counting sort.* It reads `NAN_ORDER_KEY` and builds `Vector{UInt8}`, so it had
+  to move with the key type regardless; the `n < 2^K` length gate came with it
+  rather than leaving a sort that works while allocating 512 KiB of buckets to
+  order three elements.
+
+Everything else Stage 4 owns — `decode`'s wide path, `PackedVector`, the
+Float32 surface — throws today and stays where the plan put it.
+
+**M17 — `decode` and `_decode_table` refuse by METHOD, and the refusal has to be
+a method that throws rather than a method that is absent.** `decode` now
+dispatches on `decodepolicy` (R-F, a Stage 4 item in shape but forced here):
+`_decode_compute`'s tail is still the Float64 bit assembly whose justifying
+comment is *literally* the K ≤ 8 premise, and at B ≈ 1024 a format's minimum
+datum is a Float64 subnormal where the assembly returns garbage rather than
+failing. So `ComputeDecode` throws until Stage 4 gives it the `ldexp` body.
+
+`_decode_table` is bounded to `Code8` by *signature*, which is invariant 10
+enforced where it can be: the tuple length is `2^K`, and asking for `K = 16`
+must be an error at the call site rather than a 65 536-element constant tuple
+the compiler dutifully materializes.
+
+The first spelling of that bound made the `Code16` case an **absent** method,
+and that was wrong for a reason worth recording. The abstract-format forwarder
+(§11 M14) infers to `Union{Type{Code8{…}}, Type{Code16{…}}}` when the format
+parameters are not statically known, so an absent method turns a deliberate
+refusal into a static-analysis defect: JET's whole-package pass reports it as an
+unreachable-method bug, and the only way back to green would be a filter — which
+the verification doctrine says must be backed by a concrete-call gate proving
+the path is clean. **It is not clean; it is refused.** A method that throws says
+so, is total, and keeps the guard.
+
+*Same shape, different site:* `show` must never be the thing that throws.
+A testset that fails while comparing two wide values has to be able to print
+them, or the report becomes an error inside the error reporter. `_show_datum`
+dispatches on `decodepolicy` and prints the code point alone until decode is
+total again.
+
+**M18 — `Convert` gets its ω-semantics instead of another special case.**
+`apply_op` now reaches the catalogue through `ωeval(rung(fr), op, xs...)`, and
+that made JET see what §11 M9 predicted in prose: `ωeval(::Val{:Convert}, ::Float64)`
+has no method, because `Convert` is registry arity 1 but registry group `:conv`.
+The fix is one line — `ωeval(::Val{:Convert}, x::Float64) = x` — and it is not a
+patch. Convert's ω-semantics **is** the identity on the datum; the conversion is
+the projection into the target format, which `project` already does. Spelling it
+makes `ωeval` total over the registry, so the next consumer that filters by
+arity alone gets an answer instead of a `MethodError` far from the mistake.
+`tables.jl`'s explicit `:Convert` branch stays: that one is not redundancy, it is
+the statement that a Convert table entry is a bare projection, and it belongs at
+the site where a table entry is defined to be the defined result (invariant 6).
+
+**M19 — the K ≤ 8 test surfaces are scoped, not widened, and each for its own
+reason.** Opening `_NAMED` to 504 silently changed the meaning of every loop
+written as `for T in values(_NAMED)`. Three were affected and none of them
+should simply grow:
+
+* `golden_formats()` (G5). The oracle was captured at `51abb00` when 120 formats
+  existed; its digests *are* statements about those 120. Widening the list would
+  not strengthen the gate, it would invalidate every digest in the file.
+* `float32surface.jl`. The narrowing-exactness claim and the pinned `f32_exact`
+  counts (118/120 Multiply, 88/120 Add) are statements about the K ≤ 8 grid.
+  Stage 4 gates this surface on the datum-exactness trait; until then, reading
+  it over formats whose datums Float32 cannot represent measures nothing.
+* `gates_g9.jl`'s zero-behaviour-change pin — which is the one that *earns*
+  its scoping. Its Stage 1 comment said "when `Code16` lands this becomes a
+  statement about the K ≤ 8 subgrid only, and that is the point". It now asserts
+  120 narrow and 384 wide, that no narrow format's traits moved, and — the case
+  a width/carrier conflation would fail and nothing else would — that a K = 16
+  format can sit on **any** rung: `Binary16p14se` is rung 1, `Binary16p1uf` is
+  rung 3.
+
+The conformance-declaration length assertions were the opposite case: they were
+literal `120`s and are now `sum(4K − 2 for K in KMIN:KMAX)`, because that
+assertion is precisely a claim about the range and must move with it.
 
 ---
 
