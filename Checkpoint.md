@@ -22,7 +22,20 @@ has actually happened, what is verified, and what is not.***
 |---|---|
 | **0 — prerequisites and baseline** | **done** |
 | **1 — traits, tags, T11 constants, audit fixes** | **done, verified** |
-| 2–9 | not started |
+| **2 — representation lattice (abstract `Binary` + `Code8`)** | **done, verified** |
+| 3–9 | not started |
+
+**Stage 2 evidence.** Full suite green (3 m 23 s), **G5 `:full` — all fifteen
+section digests byte-identical to the `51abb00` oracle** (11 m 26 s), zero method
+ambiguities (Aqua + `detect_ambiguities`). The first `:full` run reported three
+failures; they were the gate's own completeness loop comparing the oracle's 18
+entries against the 15 that `:full` computes, not moved results (§11 M15). Three
+deliberate, documented breakages landed and are pinned by rewritten tests:
+`Binary8p4se === Binary{8,4,true,true}` is now `false` (the alias is the
+*representation*, the parameterized name is the *format*); every `Unsigned` at
+every width is a code point (restated invariant 2); and the abstract format
+prints as `Binary8p4se{format}` so it cannot be confused with its
+representation in an error message.
 
 **Stage 1 exit evidence.** Full suite green (~8.9 M assertions + G9 + G5-fast +
 Aqua + JET, 3 m 01 s). **G5 fast 7/7 byte-identical** against a golden captured

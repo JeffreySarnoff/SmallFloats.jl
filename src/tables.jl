@@ -21,7 +21,7 @@ struct TableKey
     sm::Symbol                 # saturation-mode type name
 end
 
-_fkey(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = (K, P, Int(S), Int(E))
+_fkey(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = (K, P, Int(S), Int(E))
 _rmname(ρ::ProjSpec) = nameof(typeof(roundingmode(ρ)))
 _smname(ρ::ProjSpec) = nameof(typeof(saturationmode(ρ)))
 

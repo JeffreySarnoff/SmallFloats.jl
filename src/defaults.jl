@@ -73,13 +73,20 @@ The session's default format. Initialized to `Binary8p2se`.
 """
 # Shared by the two format-valued setters: `Binary{9,…}` is a perfectly legal
 # type object, so it is the *parameters* that must be validated, not the type.
-function _set_format_default!(ref, ::Type{Binary{K,P,S,E}}) where {K,P,S,E}
+#
+# C4: this rebuilt `Binary{K,P,S,E}` and stored *that*. After the representation
+# split the rebuilt type is the ABSTRACT format, and the assignment still
+# typechecks — `_DEFAULT_TYPE` is a `Ref{Type{<:Binary}}` — so nothing complains
+# at the store. The failure surfaces far away and much later, as
+# `similar(A, DefaultType())` producing a boxed array. It is invariant 8's
+# canonical instance: propagate the type you were given, never re-form it.
+function _set_format_default!(ref, ::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
     checkformat(K, P, S, E)
-    ref[] = Binary{K,P,S,E}
+    ref[] = reptype(F)
 end
 
 DefaultType() = _DEFAULT_TYPE[]
-DefaultType!(T::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
+DefaultType!(T::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} =
     _set_format_default!(_DEFAULT_TYPE, T)
 
 """
@@ -91,7 +98,7 @@ when the caller does not name one. Initialized to `Binary8p2se`. Independent of
 `DefaultType`, which is the default *operand* format.
 """
 DefaultReturnType() = _DEFAULT_RETURN[]
-DefaultReturnType!(T::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
+DefaultReturnType!(T::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} =
     _set_format_default!(_DEFAULT_RETURN, T)
 
 """

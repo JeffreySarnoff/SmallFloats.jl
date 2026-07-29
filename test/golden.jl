@@ -4,12 +4,13 @@
 # pre-refactor tree (`test/golden/capture.jl`, run once at Stage 0).
 #
 # Tier is chosen by SMALLFLOATS_G5:
-#   "fast" (default) — ~45 s: metadata, decode, lattice, order, projection,
+#   "fast"           — ~1 min: metadata, decode, lattice, order, projection,
 #                      packed, sort. Everything a type refactor can move.
-#   "lazy"           — ~2 min: "fast" and samples 15%-20% of the operation catalogue, blocks, kernels,
-#                      Base veneers. Required at stage exit.
-#   "full"           — ~5 min: adds the operation catalogue, blocks, kernels,
-#                      Base veneers. Required at stage exit.
+#   "lazy" (default) — ~3 min: "fast", the cheap full sections whole, and a
+#                      1-in-6 format sample of the three expensive ones.
+#                      The routine stage-exit tier.
+#   "full"           — ~11 min: every section over all 120 formats. Required at
+#                      the Stage 2 exit and at release.
 #   "off"            — skip (with a visible message; never silently).
 #
 # A failure here is not a test that needs updating. It means a K ≤ 8 result
@@ -18,14 +19,16 @@
 
 using Test, SmallFloats
 
-if !haskey(ENV, "SMALLFLOAT_G5") || ENV["SMALLFLOAT_G5"] == "full"
-    ENV["SMALLFLOAT_G5"] = "lazy"
-end
+# The routine tier is `lazy` — the stage-exit gate. `fast`, `full` and `off` are
+# opt-in and are HONOURED: a tier the caller asked for is never silently
+# downgraded, because a gate that quietly runs less than it was told to is worse
+# than no gate. (§11 M15.)
+get!(ENV, "SMALLFLOATS_G5", "lazy")
 
 include(joinpath(@__DIR__, "golden", "harness.jl"))
 
 @testset "G5 — K ≤ 8 golden non-regression" begin
-    tier = get(ENV, "SMALLFLOATS_G5", "fast")
+    tier = ENV["SMALLFLOATS_G5"]
     if tier == "off"
         @info "G5 skipped (SMALLFLOATS_G5=off)"
     elseif !isfile(GOLDEN_FILE)
@@ -45,11 +48,15 @@ include(joinpath(@__DIR__, "golden", "harness.jl"))
         end
         # Sections present in the oracle but not computed at this tier are not a
         # failure — that is what tiering means — but a section that disappeared
-        # from the harness entirely is.
-        if tier == "full"
-            for name in keys(want)
-                @test any(p -> first(p) == name, got)
-            end
+        # from the harness entirely is. So the completeness check is against the
+        # harness's DECLARED section set, not against what this tier happened to
+        # compute; the earlier spelling (`any(p -> first(p) == name, got)`) made
+        # the three `~lazy` entries fail at `:full` by construction, since `:full`
+        # never computes them. Runs at every tier — it costs nothing and a deleted
+        # section should not need `:full` to be noticed. (§11 M15.)
+        known = Set(first(p) for p in all_sections())
+        for name in keys(want)
+            @test (name, name in known) == (name, true)
         end
     end
 end

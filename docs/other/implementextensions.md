@@ -1598,6 +1598,76 @@ the golden's job is to exercise the scalar path invariant 6 names, and a
 harness that bypasses that path no longer protects it. **Cut the breadth, keep
 the mechanism.**
 
+### Stage 2
+
+**M13 — the `similar` normalization is only implementable on the `Array`
+family.** §1's migration plan specifies
+`Base.similar(A::AbstractArray, ::Type{Binary{K,P,S,E}}, dims)`. That method is
+more specific in the element-type slot and *less* specific in the container
+slot than every container-specialized `similar` in Base and the stdlibs, so it
+is ambiguous with all of them — measured: `Diagonal`, `Hermitian`,
+`SymTridiagonal`, `LowerTriangular`, `UnitLowerTriangular`, `UpperHessenberg`,
+`Adjoint`/`Transpose` (vector and matrix forms), `ReinterpretArray`. That family
+is **open-ended**: any package defining `similar(::MyArray, ::Type{T})` adds
+another, so adding disambiguators does not terminate, and Aqua's ambiguity gate
+is in the shipped suite.
+
+Resolution: scope the normalization to `Vector`, `Matrix` and `Array`, which is
+what the package's own kernels and `similar(A, fr)` calls actually use, and
+which shadows exactly Base's three specializations — closed and ambiguity-free.
+Every other container keeps stock Base behaviour, which fails loudly on an
+abstract element type. That is the correct outcome, since the aliases and
+`format(K,P,Σ,Δ)` are the supported route.
+
+*Two arities are needed, not one.* `similar(a, T)` does not funnel through the
+three-argument method for `Array` — it reaches `Array{S,N}(undef, size(a))`
+directly — so a three-argument-only normalization is silently bypassed for
+exactly the container people use. Found by test, not by reading.
+
+**M14 — every representation trait needs an abstract-format forwarder.**
+`codeunit_type`, `decodepolicy` and `orderkeytype` dispatch on `Code8`/`Code16`
+(the seam), but Group M and the extremal queries are bounded by
+`::Type{<:Binary{K,P,S,E}}`, which **admits the abstract format itself** — and
+asking a *format* for its extremal code point is legitimate usage that both the
+suite and the documentation do (`MaxFiniteOf(Binary{5,2,true,true})`). Without a
+forwarder those calls reach `codeunit_type` with an abstract argument and die
+with a `MethodError`. Each trait therefore gets three methods: one per
+representation, plus an exact `::Type{Binary{K,P,S,E}}` forwarder through
+`reptype`. The exact signature matches only the abstract type, so it cannot be
+ambiguous with the two `<:Code*` methods.
+
+*Related, same cause:* the `Val(:code)` constructor forwarder must narrow the
+code to the representation's unit **before** reaching the inner constructor.
+Without that, a `UInt8` code aimed at a `Code16` format raises a `MethodError`
+before `@boundscheck` can run `checkformat`, turning a parameter-validation
+error (`ArgumentError` for K = 9 at this stage) into a dispatch error. That path
+is deliberately not `@inbounds`: it is the checked route and the check is the
+point.
+
+**M15 — G5's own completeness check failed `:full` by construction.** The Stage 2
+exit run reported `30 passed, 3 failed` and the three failures were *not* moved
+results: all fifteen digests `:full` computes matched the oracle byte for byte.
+The gate's second loop — "a section in the oracle but absent from the harness is
+a deletion" — was written as `for name in keys(want); @test any(p -> first(p) ==
+name, got)`, comparing the oracle's **18** entries against the **15** a `:full`
+run produces. The three `~lazy` sample sections are in the oracle (`capture.jl`
+writes every tier's entries, by design — §4 Stage 8) and are never computed at
+`:full`, so they failed every time. The check was testing the tier table, not the
+harness.
+
+Fixed by comparing the oracle's names against `all_sections()` — the harness's
+declared set — which is what "did a section disappear" actually means, and which
+is correct at *every* tier, so the check no longer needs to be `:full`-gated.
+
+*Second defect, same file:* a stray guard forced `ENV["SMALLFLOAT_G5"]` (missing
+the `S`) to `"lazy"` whenever it was unset **or equal to `"full"`**. The typo
+made it dead code; had it been spelled correctly it would have silently
+downgraded exactly the tier Stage 2 mandates. Replaced with
+`get!(ENV, "SMALLFLOATS_G5", "lazy")`: `lazy` becomes the routine default (which
+is what the suite should run per edit), and an explicitly requested tier is
+always honoured. **A gate that quietly runs less than it was told to is worse
+than no gate.**
+
 **M10 — G9's predicate is `Base.isdispatchelem`, not `isconcretetype`.** The
 obvious spelling of "this trait folded to one exact answer" is
 `isconcretetype(only(Base.return_types(trait, Tuple{Type{F}})))`. It is wrong

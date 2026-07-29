@@ -146,7 +146,36 @@ println("formats verified: $(nfmt[]) formats, $(nchecked[]) code points, all exh
     @test Base.return_types(mx, Tuple{Binary8p4se}) == [Binary8p4se]
 end
 println(Binary8p4se, "  ", Binary8p4se(2.0), "  ", formatname(Binary8p1uf))
-@test Binary8p4se === Binary{8,4,true,true}
+
+# The format / representation split (draft §3.1: a format is "a datum set and an
+# encoding"; the width of the word carrying a code point is below that level).
+#
+#   Binary{8,4,true,true}  IS the format          — abstract
+#   Binary8p4se            IS its representation  — concrete
+#
+# So the old `Binary8p4se === Binary{8,4,true,true}` is now `false`, and that is
+# not a regression to paper over: NO option supporting two storage widths can
+# preserve it. Under a fifth type parameter `Binary{8,4,true,true}` would be a
+# UnionAll — likewise neither `===` a concrete type nor concrete itself; under a
+# parallel wide type the name would not span both widths at all. The identity is
+# incompatible with two representations, so it is a cost of the extension rather
+# than of any particular way of doing it.
+@test Binary8p4se !== Binary{8,4,true,true}
+@test Binary8p4se <: Binary{8,4,true,true}
+@test isconcretetype(Binary8p4se)          # a valid array element type
+@test isabstracttype(Binary{8,4,true,true})
+@test SmallFloats.reptype(Binary{8,4,true,true}) === Binary8p4se
+@test SmallFloats.format(8, 4, true, true) === Binary8p4se     # programmatic route
+# The two must not PRINT alike either: the difference between them is exactly
+# what an error about `similar` or `eltype` needs to communicate.
+@test repr(Binary8p4se) != repr(Binary{8,4,true,true})
+# Constructing through the abstract format still works and yields the
+# representation — which is what keeps the break confined to `===`/`eltype`.
+@test Binary{8,4,true,true}(2.0) === Binary8p4se(2.0)
+@test Binary{8,4,true,true}(0x02) === Binary8p4se(0x02)
+# `similar` normalizes an abstract format request at the array boundary.
+@test eltype(similar([Binary8p4se(1.0)], Binary{5,2,true,true})) === Binary5p2se
+
 @test_throws ArgumentError Binary{9,4,true,true}(Val(:code), 0x00)
 @test_throws ArgumentError Binary{8,8,true,true}(Val(:code), 0x00)
 println("parameter validation OK")
@@ -1372,11 +1401,29 @@ end
             @test_throws ArgumentError T(0xff)
         end
     end
-    # semantic split: UInt8 is a code point; every other Integer is a numeric value
+    # Restated invariant 2: `Unsigned` is the argument-type CLASS meaning code
+    # point, at every width; every other `Real` means value.
+    #
+    # This supersedes the old "only `UInt8` is a code point". That spelling tied
+    # the meaning to a concrete type, which was unambiguous only while there was
+    # one storage width — with two, spelling and content come apart. The
+    # alternatives were both worse: making the meaning follow the FORMAT's unit
+    # would let `Binary12p7se(0x08)` and `Binary8p4se(0x08)` mean different
+    # things, which is precisely what invariant 2 exists to prevent; and
+    # accepting only `codeunit_type(F)` trades one K-dependence for another
+    # while rejecting a strictly larger set of *correct* programs (a helper
+    # written `f(::Type{F}, c::UInt8)` works for every format under the rule
+    # below and would need a per-format cast under the strict one).
+    #
+    # Widening an `Unsigned` is lossless, so the only way a wrong-width argument
+    # can be wrong is by being out of code range — which throws either way.
     @test Binary8p4se(0x02) === rawvalue(Binary8p4se, 0x02)
-    @test decode(Binary8p4se(2)) == 2.0
+    @test decode(Binary8p4se(2)) == 2.0                 # signed Integer ⇒ value
     @test Binary8p4se(0x02) != Binary8p4se(2)
-    @test decode(Binary8p4se(UInt16(2))) == 2.0        # only UInt8, not wider unsigned
+    for U in (UInt8, UInt16, UInt32, UInt64)            # width-independence of MEANING
+        @test Binary8p4se(U(2)) === rawvalue(Binary8p4se, 0x02)
+    end
+    @test_throws ArgumentError Binary5p2se(UInt64(64))   # range-checked at every width
     @test decode(Convert(Binary8p4se, RNE_SatNone, 0x02)) == 2.0   # Convert stays numeric
     # Rational disambiguation policy
     @test_throws ArgumentError Binary8p4se(1//2)

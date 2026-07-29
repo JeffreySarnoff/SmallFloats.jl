@@ -42,16 +42,16 @@
     return reinterpret(Float64, bits)
 end
 
-@generated function _decode_table(::Type{Binary{K,P,S,E}}) where {K,P,S,E}
-    t = ntuple(i -> _decode_compute(rawvalue(Binary{K,P,S,E}, UInt8(i - 1))), 1 << K)
+@generated function _decode_table(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
+    t = ntuple(i -> _decode_compute(F, UInt8(i - 1)), 1 << K)
     :($t)
 end
 
 # Float32 twin of _decode_table: same ground truth, narrowed once. Narrowing is
 # exact for every K ≤ 8 datum (worst cases 2^126 and the Float32-subnormal
 # 2^-127, both from Binary8p1u; asserted exhaustively in the suite).
-@generated function _decode_table32(::Type{Binary{K,P,S,E}}) where {K,P,S,E}
-    t = ntuple(i -> Float32(_decode_compute(rawvalue(Binary{K,P,S,E}, UInt8(i - 1)))), 1 << K)
+@generated function _decode_table32(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
+    t = ntuple(i -> Float32(_decode_compute(F, UInt8(i - 1))), 1 << K)
     :($t)
 end
 
@@ -65,8 +65,7 @@ Implemented as a constant-tuple lookup (bitops plan K2): the per-format table is
 generated once from `_decode_compute` above, so the two are correct by
 construction and asserted equivalent exhaustively; constant inputs still fold.
 """
-@inline decode(v::Binary{K,P,SGN,EXT}) where {K,P,SGN,EXT} =
-    @inbounds _decode_table(Binary{K,P,SGN,EXT})[Int(codepoint(v)) + 1]
+@inline decode(v::Binary) = @inbounds _decode_table(typeof(v))[Int(codepoint(v)) + 1]
 
 """
     encode(T, sign, S, Q) -> UInt8   (private; design §3.3)
@@ -75,19 +74,18 @@ construction and asserted equivalent exhaustively; constant inputs still fold.
 (S == 2^P is the next-binade carry, draft §4.7.4 NOTE 4). Precondition: the value
 is in the datum set of `T` (guaranteed by RoundToPrecision ∘ Saturate).
 """
-@inline function encode(::Type{Binary{K,P,SGN,EXT}}, sign::Int, S::Int64, Q::Int64) where {K,P,SGN,EXT}
-    F = Binary{K,P,SGN,EXT}
-    S == 0 && return 0x00
+@inline function encode(::Type{F}, sign::Int, S::Int64, Q::Int64) where {K,P,SGN,EXT,F<:Binary{K,P,SGN,EXT}}
+    S == 0 && return _cu(F, 0)
     hidden = Int64(1) << (P - 1)               # implicit-bit weight; also the first normal S
     if S == (Int64(1) << P)                    # carry into next binade
         S = hidden; Q += 1
     end
-    local c::UInt8
+    local c::codeunit_type(F)
     if S < hidden                              # subnormal: Q must equal 2-B-P
-        c = UInt8(S)
+        c = _cu(F, S)
     else
         Eb = Int(Q) + P - 1 + expbias(F)       # biased exponent field
-        c = UInt8((S & (hidden - 1)) + (Int64(Eb) << (P - 1)))
+        c = _cu(F, (S & (hidden - 1)) + (Int64(Eb) << (P - 1)))
     end
     (SGN && sign < 0) && (c |= signmask(F))
     c
@@ -104,7 +102,7 @@ const NAN_ORDER_KEY = typemax(UInt16)
     c = codepoint(v)
     isnan(v) && return NAN_ORDER_KEY
     SGN || return UInt16(c) + UInt16(1)
-    sm = signmask(Binary{K,P,SGN,EXT})
+    sm = signmask(typeof(v))
     neg = c >= sm
     neg ? UInt16(sm) - UInt16(c - sm) : UInt16(sm) + UInt16(c) + UInt16(1)
 end
