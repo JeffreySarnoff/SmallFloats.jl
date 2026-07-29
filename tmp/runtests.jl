@@ -34,6 +34,21 @@ using SmallFloats: project, project_interval, round_to_precision, encode, order_
     rawvalue, decode, _decode_compute, _decode_table, nan_code, Rounded, KIND_FIN,
     apply_op, MaybeRNG
 
+
+if isdefined(Main, :FastTest) || isdefined(SmallFloats, :FastTest)
+
+const K5  = div(5000, 5)
+const K4B = div(4096, 4)
+const K4  = div(4000, 4)
+const K2  = div(2000, 4)
+const K1  = div(1000, 4)
+const H2  = div(200,  4)
+const H1  = div(100, 4)
+const T5  = div(50, 2)
+const T1  = div(10, 2)
+
+else
+
 const K5  = 5000
 const K4B = 4096
 const K4  = 4000
@@ -43,6 +58,8 @@ const H2  = 200
 const H1  = 100
 const T5  = 50
 const T1  = 10
+
+end
 
 const UN = collect(_UNARY_OPS)
 
