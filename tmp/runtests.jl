@@ -34,6 +34,15 @@ using SmallFloats: project, project_interval, round_to_precision, encode, order_
     rawvalue, decode, _decode_compute, _decode_table, nan_code, Rounded, KIND_FIN,
     apply_op, MaybeRNG
 
+const K5  = 5000
+const K4B = 4096
+const K4  = 4000
+const K2  = 2000
+const K1  = 1000
+const H2  = 200
+const H1  = 100
+const T5  = 50
+const T1  = 10
 
 const UN = collect(_UNARY_OPS)
 
