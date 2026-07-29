@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{       }\PYG{c}{\PYGZsh{} K}
+\PYG{n}{precision}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{      }\PYG{c}{\PYGZsh{} P}
+\PYG{n}{issigned}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{isextended}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{expbias}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{expbitwidth}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{trailingsigbits}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+
+\PYG{n}{MaxFiniteOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{MinFiniteOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{MinPositiveOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{MinNormalOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{MaxSubnormalOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\end{MintedVerbatim}

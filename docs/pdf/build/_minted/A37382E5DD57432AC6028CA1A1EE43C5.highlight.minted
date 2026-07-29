@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Random}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Statistics}
+
+\PYG{n}{rng}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{42}\PYG{p}{)}
+\PYG{n}{w}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{10\PYGZus{}000}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{.*}\PYG{+w}{ }\PYG{l+m+mf}{0.25}\PYG{+w}{          }\PYG{c}{\PYGZsh{} typical trained\PYGZhy{}weight scale}
+\PYG{n}{q}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{o}{.}\PYG{p}{(}\PYG{n}{w}\PYG{p}{)}\PYG{+w}{                     }\PYG{c}{\PYGZsh{} project every weight}
+\PYG{n}{back}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{decode}\PYG{o}{.}\PYG{p}{(}\PYG{n}{q}\PYG{p}{)}
+
+\PYG{n}{mean}\PYG{p}{((}\PYG{n}{w}\PYG{+w}{ }\PYG{o}{.\PYGZhy{}}\PYG{+w}{ }\PYG{n}{back}\PYG{p}{)}\PYG{o}{.\PYGZca{}}\PYG{l+m+mi}{2}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{maximum}\PYG{p}{(}\PYG{n}{abs}\PYG{o}{.}\PYG{p}{(}\PYG{n}{w}\PYG{+w}{ }\PYG{o}{.\PYGZhy{}}\PYG{+w}{ }\PYG{n}{back}\PYG{p}{)),}\PYG{+w}{ }\PYG{n}{count}\PYG{p}{(}\PYG{n}{isinf}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{back}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{/}\PYG{+w}{ }\PYG{n}{length}\PYG{p}{(}\PYG{n}{back}\PYG{p}{)}
+\end{MintedVerbatim}

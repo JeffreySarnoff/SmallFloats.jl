@@ -1,0 +1,138 @@
+\changetocdepth {1}
+\xpg@aux {}{latex}
+\contentsline {chapter}{Contents}{ii}{chapter*.1}%
+\contentsline {chapter}{\chapternumberline {1}SmallFloats.jl}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Documentation map}{1}{section.1.1}%
+\contentsline {chapter}{\chapternumberline {2}Introduction}{2}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Why this package exists}{2}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Thirty-second tour}{3}{section.2.2}%
+\contentsline {section}{\numberline {2.3}The formats}{3}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Where to go next}{3}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Installation}{3}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Status and conformance}{4}{section.2.6}%
+\contentsline {chapter}{\chapternumberline {3}Cheat Sheet}{5}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Start here}{5}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Format names}{6}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Values and code points}{6}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Projection specifications}{7}{section.3.4}%
+\contentsline {subsection}{Deterministic projections}{8}{section*.2}%
+\contentsline {subsection}{Stochastic projections}{8}{section*.3}%
+\contentsline {subsection}{Session defaults}{8}{section*.4}%
+\contentsline {section}{\numberline {3.5}Scalar operation catalog}{10}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Arrays}{10}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Blocks and scaled operations}{11}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Packed storage}{11}{section.3.8}%
+\contentsline {section}{\numberline {3.9}Conformance and approximations}{12}{section.3.9}%
+\contentsline {section}{\numberline {3.10}Common traps}{12}{section.3.10}%
+\contentsline {section}{\numberline {3.11}Performance checklist}{12}{section.3.11}%
+\contentsline {chapter}{\chapternumberline {4}User Guide}{13}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Formats and format queries}{13}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Values}{14}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Random values}{15}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Projection specifications}{16}{section.4.4}%
+\contentsline {subsection}{Predefined specs}{17}{section*.5}%
+\contentsline {subsection}{Stochastic rounding}{18}{section*.6}%
+\contentsline {subsection}{Session defaults}{19}{section*.7}%
+\contentsline {section}{\numberline {4.5}Scalar operations: the two registers}{20}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Arrays, kernels, and sorting}{21}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Blocks and scaled operations}{22}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Packed storage}{22}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Conformance and κ-approximate implementations}{22}{section.4.9}%
+\contentsline {section}{\numberline {4.10}Performance guidance}{23}{section.4.10}%
+\contentsline {section}{\numberline {4.11}Environment switches}{23}{section.4.11}%
+\contentsline {chapter}{\chapternumberline {5}User Examples}{24}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Basic}{24}{section.5.1}%
+\contentsline {subsection}{One value, every rounding mode}{24}{section*.8}%
+\contentsline {subsection}{Enumerating a whole format}{24}{section*.9}%
+\contentsline {subsection}{Saturation in one line each}{25}{section*.10}%
+\contentsline {subsection}{Random values under a chosen projection}{25}{section*.11}%
+\contentsline {section}{\numberline {5.2}General AI}{26}{section.5.2}%
+\contentsline {subsection}{Log-odds belief updating — and where tiny formats bite reasoning}{26}{section*.12}%
+\contentsline {subsection}{Fuzzy inference in an unsigned format}{26}{section*.13}%
+\contentsline {subsection}{Search heuristics: what quantized scores keep is the ordering}{27}{section*.14}%
+\contentsline {section}{\numberline {5.3}Machine Learning}{27}{section.5.3}%
+\contentsline {subsection}{Quantizing a weight tensor and measuring the damage}{27}{section*.15}%
+\contentsline {subsection}{Picking a format: precision vs range}{27}{section*.16}%
+\contentsline {subsection}{Stochastic rounding is unbiased where nearest is not}{28}{section*.17}%
+\contentsline {section}{\numberline {5.4}Deep Learning}{28}{section.5.4}%
+\contentsline {subsection}{MX-style block quantization — and the staging pitfall}{28}{section*.18}%
+\contentsline {subsection}{Quantized dot products with one final rounding}{29}{section*.19}%
+\contentsline {subsection}{Why training loops like stochastic rounding: the swamping demo}{29}{section*.20}%
+\contentsline {subsection}{Activation functions are 256-byte lookup tables}{30}{section*.21}%
+\contentsline {subsection}{Packing a quantized model}{30}{section*.22}%
+\contentsline {chapter}{\chapternumberline {6}Julia Compatibility}{31}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Using the overloads}{31}{section.6.1}%
+\contentsline {section}{\numberline {6.2}The mapping}{32}{section.6.2}%
+\contentsline {section}{\numberline {6.3}What is \emph {not} mapped, and why}{32}{section.6.3}%
+\contentsline {section}{\numberline {6.4}The rest of the Base surface}{32}{section.6.4}%
+\contentsline {chapter}{\chapternumberline {7}Technical Guide}{33}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Layer map}{34}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Encoding and decoding}{34}{section.7.2}%
+\contentsline {section}{\numberline {7.3}The projection engine}{34}{section.7.3}%
+\contentsline {section}{\numberline {7.4}The oracle and the result-kind protocol}{35}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Tables and kernels}{36}{section.7.5}%
+\contentsline {section}{\numberline {7.6}Blocks: exactness without a superaccumulator}{37}{section.7.6}%
+\contentsline {section}{\numberline {7.7}The κ registry and conformance}{37}{section.7.7}%
+\contentsline {section}{\numberline {7.8}Verification doctrine}{37}{section.7.8}%
+\contentsline {section}{\numberline {7.9}Benchmark doctrine}{38}{section.7.9}%
+\contentsline {section}{\numberline {7.10}Deliberate limitations}{38}{section.7.10}%
+\contentsline {chapter}{\chapternumberline {8}Technical Examples}{39}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Basic}{39}{section.8.1}%
+\contentsline {subsection}{Watching RoundToPrecision work}{39}{section*.23}%
+\contentsline {subsection}{Symbolic sticky: projecting {\textquotedbl }just below{\textquotedbl } a number}{39}{section*.24}%
+\contentsline {subsection}{Tables are the scalar path, memoized}{40}{section*.25}%
+\contentsline {subsection}{Order keys}{40}{section*.26}%
+\contentsline {section}{\numberline {8.2}General AI}{40}{section.8.2}%
+\contentsline {subsection}{Ranking safety: an exhaustive monotonicity audit of score conversion}{40}{section*.27}%
+\contentsline {subsection}{κ-safe decision margins for approximate evaluators}{41}{section*.28}%
+\contentsline {section}{\numberline {8.3}Machine Learning}{42}{section.8.3}%
+\contentsline {subsection}{Verifying a quantizer exhaustively against an independent reference}{42}{section*.29}%
+\contentsline {subsection}{The κ workflow, including the part where it says no}{42}{section*.30}%
+\contentsline {subsection}{Exporting the conformance declaration}{42}{section*.31}%
+\contentsline {section}{\numberline {8.4}Deep Learning}{43}{section.8.4}%
+\contentsline {subsection}{Proving your fused kernel exact: BlockDotProduct vs 512-bit truth}{43}{section*.32}%
+\contentsline {subsection}{Stochastic rounding, audited: the full-R sweep}{43}{section*.33}%
+\contentsline {subsection}{An accelerator-style activation, κ-measured: hard-tanh vs Tanh}{44}{section*.34}%
+\contentsline {subsection}{Benchmarking without measuring the dispatcher}{44}{section*.35}%
+\contentsline {chapter}{\chapternumberline {9}SmallFloats.jl benchmark report}{45}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Core primitives}{45}{section.9.1}%
+\contentsline {section}{\numberline {9.2}Scalar operations}{45}{section.9.2}%
+\contentsline {subsection}{Unary (30)}{46}{section*.36}%
+\contentsline {subsubsection}{Safe args}{46}{section*.37}%
+\contentsline {subsubsection}{No NaN, Inf args}{47}{section*.38}%
+\contentsline {subsubsection}{No NaN args}{48}{section*.39}%
+\contentsline {subsubsection}{All code points}{49}{section*.40}%
+\contentsline {subsection}{Binary (18)}{50}{section*.41}%
+\contentsline {subsubsection}{Safe args}{50}{section*.42}%
+\contentsline {subsubsection}{No NaN, Inf args}{51}{section*.43}%
+\contentsline {subsubsection}{No NaN args}{51}{section*.44}%
+\contentsline {subsubsection}{All code points}{52}{section*.45}%
+\contentsline {subsection}{Ternary (3)}{52}{section*.46}%
+\contentsline {subsubsection}{Safe args}{52}{section*.47}%
+\contentsline {subsubsection}{No NaN, Inf args}{52}{section*.48}%
+\contentsline {subsubsection}{No NaN args}{53}{section*.49}%
+\contentsline {subsubsection}{All code points}{53}{section*.50}%
+\contentsline {section}{\numberline {9.3}Sensitivity studies}{53}{section.9.3}%
+\contentsline {subsection}{Format sensitivity}{54}{section*.51}%
+\contentsline {subsection}{Projection by rounding/saturation mode}{54}{section*.52}%
+\contentsline {section}{\numberline {9.4}Kernels and storage}{54}{section.9.4}%
+\contentsline {subsection}{Array kernels (vmap)}{55}{section*.53}%
+\contentsline {subsection}{Ternary bitwidth tiers (FMA/FAA)}{55}{section*.54}%
+\contentsline {subsection}{Sorting (64 K values)}{55}{section*.55}%
+\contentsline {subsection}{Table builds (oracle + projection, Float128-first)}{56}{section*.56}%
+\contentsline {subsection}{Block and scaled operations}{56}{section*.57}%
+\contentsline {subsection}{Conversions and packed storage}{56}{section*.58}%
+\contentsline {chapter}{\chapternumberline {10}Adding Operations}{57}{chapter.10}%
+\contentsline {section}{\numberline {10.1}Universal duties (every new operation)}{57}{section.10.1}%
+\contentsline {section}{\numberline {10.2}Scalar operations}{58}{section.10.2}%
+\contentsline {subsection}{Adding a unary operation}{58}{section*.59}%
+\contentsline {subsection}{Adding a binary operation}{59}{section*.60}%
+\contentsline {subsection}{Adding a ternary operation}{60}{section*.61}%
+\contentsline {subsection}{Adding a quaternary operation}{60}{section*.62}%
+\contentsline {section}{\numberline {10.3}Block operations}{62}{section.10.3}%
+\contentsline {subsection}{Adding a scaled block operation}{62}{section*.63}%
+\contentsline {subsection}{Adding an elementwise block operation}{62}{section*.64}%
+\contentsline {subsection}{Adding a reductive block operation}{62}{section*.65}%
+\contentsline {section}{\numberline {10.4}After any addition: the closing checklist}{63}{section.10.4}%
+\contentsline {chapter}{\chapternumberline {11}External Reference}{64}{chapter.11}%
+\contentsline {chapter}{\chapternumberline {12}Internal Reference}{75}{chapter.12}%

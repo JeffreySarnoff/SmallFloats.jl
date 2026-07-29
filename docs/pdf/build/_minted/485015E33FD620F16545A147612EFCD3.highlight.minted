@@ -1,0 +1,13 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultRoundingMode!}\PYG{p}{(}\PYG{n}{TowardZero}\PYG{p}{())}
+\PYG{g+go}{TowardZero()}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultProjection}\PYG{p}{()}\PYG{+w}{               }\PYG{c}{\PYGZsh{} followed the component}
+\PYG{g+go}{(TowardZero, SatNone)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultProjection!}\PYG{p}{(}\PYG{n}{RNA\PYGZus{}SatFinite}\PYG{p}{)}
+\PYG{g+go}{(NearestTiesToAway, SatFinite)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultRoundingMode}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{DefaultSaturationMode}\PYG{p}{()}\PYG{+w}{   }\PYG{c}{\PYGZsh{} followed the projection}
+\PYG{g+go}{(NearestTiesToAway(), SatFinite())}
+\end{MintedVerbatim}

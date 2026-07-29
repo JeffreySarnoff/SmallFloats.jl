@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{vmap!}\PYG{p}{(}\PYG{n}{dest}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{Val}\PYG{p}{(}\PYG{n}{op}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{fr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{[,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{[,}\PYG{+w}{ }\PYG{n}{C}\PYG{p}{]];}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{dest}
+\PYG{n}{vmap}\PYG{p}{(}\PYG{n}{op}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{fr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{o}{...}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{)}
+\end{MintedVerbatim}

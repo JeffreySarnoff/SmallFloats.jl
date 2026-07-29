@@ -1,0 +1,570 @@
+{
+ "source": "IEEE_P3109_D1.md",
+ "document": "IEEE P3109/D1, July 2026",
+ "sections": [
+  {
+   "id": "1",
+   "title": "Overview",
+   "level": 1,
+   "line": 136
+  },
+  {
+   "id": "1.1",
+   "title": "Scope",
+   "level": 2,
+   "line": 138
+  },
+  {
+   "id": "1.2",
+   "title": "Word usage",
+   "level": 2,
+   "line": 146
+  },
+  {
+   "id": "2",
+   "title": "Definitions and abbreviations",
+   "level": 1,
+   "line": 159
+  },
+  {
+   "id": "2.1",
+   "title": "Definitions",
+   "level": 2,
+   "line": 161
+  },
+  {
+   "id": "2.2",
+   "title": "Abbreviations",
+   "level": 2,
+   "line": 243
+  },
+  {
+   "id": "2.3",
+   "title": "Mathematical notations",
+   "level": 2,
+   "line": 251
+  },
+  {
+   "id": "3",
+   "title": "Floating-point formats",
+   "level": 1,
+   "line": 262
+  },
+  {
+   "id": "3.1",
+   "title": "Formats",
+   "level": 2,
+   "line": 264
+  },
+  {
+   "id": "3.2",
+   "title": "Naming",
+   "level": 2,
+   "line": 315
+  },
+  {
+   "id": "4",
+   "title": "Operations",
+   "level": 1,
+   "line": 330
+  },
+  {
+   "id": "4.1",
+   "title": "General",
+   "level": 2,
+   "line": 332
+  },
+  {
+   "id": "4.2",
+   "title": "Projection specifications",
+   "level": 2,
+   "line": 360
+  },
+  {
+   "id": "4.3",
+   "title": "Operation definitions",
+   "level": 2,
+   "line": 381
+  },
+  {
+   "id": "4.3.1",
+   "title": "Operation definition schema",
+   "level": 3,
+   "line": 382
+  },
+  {
+   "id": "4.3.2",
+   "title": "Pattern-matching declarations",
+   "level": 3,
+   "line": 405
+  },
+  {
+   "id": "4.4",
+   "title": "Approximate implementations",
+   "level": 2,
+   "line": 468
+  },
+  {
+   "id": "4.5",
+   "title": "Conforming implementations",
+   "level": 2,
+   "line": 521
+  },
+  {
+   "id": "4.6",
+   "title": "Conformance declarations",
+   "level": 2,
+   "line": 588
+  },
+  {
+   "id": "4.7",
+   "title": "Internal functions",
+   "level": 2,
+   "line": 613
+  },
+  {
+   "id": "4.7.1",
+   "title": "General",
+   "level": 3,
+   "line": 614
+  },
+  {
+   "id": "4.7.2",
+   "title": "Decoding",
+   "level": 3,
+   "line": 619
+  },
+  {
+   "id": "4.7.3",
+   "title": "Projection",
+   "level": 3,
+   "line": 665
+  },
+  {
+   "id": "4.7.4",
+   "title": "Rounding to precision",
+   "level": 3,
+   "line": 704
+  },
+  {
+   "id": "4.7.5",
+   "title": "Saturation",
+   "level": 3,
+   "line": 770
+  },
+  {
+   "id": "4.7.6",
+   "title": "Encoding",
+   "level": 3,
+   "line": 818
+  },
+  {
+   "id": "4.8",
+   "title": "Decoding and encoding for external formats",
+   "level": 2,
+   "line": 865
+  },
+  {
+   "id": "4.8.1",
+   "title": "Decoding",
+   "level": 3,
+   "line": 869
+  },
+  {
+   "id": "4.8.2",
+   "title": "Encoding",
+   "level": 3,
+   "line": 892
+  },
+  {
+   "id": "4.9",
+   "title": "Converting between formats",
+   "level": 2,
+   "line": 917
+  },
+  {
+   "id": "4.9.1",
+   "title": "Conversion",
+   "level": 3,
+   "line": 918
+  },
+  {
+   "id": "4.10",
+   "title": "Arithmetic operations",
+   "level": 2,
+   "line": 940
+  },
+  {
+   "id": "4.10.1",
+   "title": "Absolute value, Negation",
+   "level": 3,
+   "line": 945
+  },
+  {
+   "id": "4.10.2",
+   "title": "Copying the sign",
+   "level": 3,
+   "line": 976
+  },
+  {
+   "id": "4.10.3",
+   "title": "Addition, Subtraction",
+   "level": 3,
+   "line": 1008
+  },
+  {
+   "id": "4.10.4",
+   "title": "Multiplication",
+   "level": 3,
+   "line": 1052
+  },
+  {
+   "id": "4.10.5",
+   "title": "Division",
+   "level": 3,
+   "line": 1093
+  },
+  {
+   "id": "4.10.6",
+   "title": "Fused Multiply–Add",
+   "level": 3,
+   "line": 1131
+  },
+  {
+   "id": "4.10.7",
+   "title": "Fused Add–Add",
+   "level": 3,
+   "line": 1182
+  },
+  {
+   "id": "4.10.8",
+   "title": "Square root, Reciprocal, Reciprocal square root",
+   "level": 3,
+   "line": 1232
+  },
+  {
+   "id": "4.10.9",
+   "title": "Logarithm, Exponentiation",
+   "level": 3,
+   "line": 1273
+  },
+  {
+   "id": "4.10.10",
+   "title": "Trigonometric functions",
+   "level": 3,
+   "line": 1320
+  },
+  {
+   "id": "4.10.11",
+   "title": "Hyperbolic functions",
+   "level": 3,
+   "line": 1371
+  },
+  {
+   "id": "4.10.12",
+   "title": "Trigonometric *π*-functions",
+   "level": 3,
+   "line": 1419
+  },
+  {
+   "id": "4.10.13",
+   "title": "Softplus",
+   "level": 3,
+   "line": 1469
+  },
+  {
+   "id": "4.10.14",
+   "title": "Hypotenuse",
+   "level": 3,
+   "line": 1492
+  },
+  {
+   "id": "4.10.15",
+   "title": "Inverse tangent of two variables",
+   "level": 3,
+   "line": 1518
+  },
+  {
+   "id": "4.10.16",
+   "title": "Inverse tangent of two variables (*π*-variant)",
+   "level": 3,
+   "line": 1560
+  },
+  {
+   "id": "4.11",
+   "title": "Extrema",
+   "level": 2,
+   "line": 1602
+  },
+  {
+   "id": "4.11.1",
+   "title": "Minimum and maximum, and number variants",
+   "level": 3,
+   "line": 1603
+  },
+  {
+   "id": "4.11.2",
+   "title": "Minimum and maximum magnitude, and number variants",
+   "level": 3,
+   "line": 1649
+  },
+  {
+   "id": "4.11.3",
+   "title": "Minimum and maximum finite variants",
+   "level": 3,
+   "line": 1699
+  },
+  {
+   "id": "4.11.4",
+   "title": "Clamping",
+   "level": 3,
+   "line": 1737
+  },
+  {
+   "id": "4.12",
+   "title": "Comparisons",
+   "level": 2,
+   "line": 1778
+  },
+  {
+   "id": "4.12.1",
+   "title": "Total order predicate",
+   "level": 3,
+   "line": 1851
+  },
+  {
+   "id": "4.12.2",
+   "title": "Comparison operator symbols",
+   "level": 3,
+   "line": 1876
+  },
+  {
+   "id": "4.13",
+   "title": "Predicates and classification",
+   "level": 2,
+   "line": 1895
+  },
+  {
+   "id": "4.13.1",
+   "title": "Classifier operation",
+   "level": 3,
+   "line": 1944
+  },
+  {
+   "id": "4.14",
+   "title": "Format-level operations",
+   "level": 2,
+   "line": 1975
+  },
+  {
+   "id": "4.15",
+   "title": "Projection specification operations",
+   "level": 2,
+   "line": 2005
+  },
+  {
+   "id": "4.16",
+   "title": "Next greater than and next less than",
+   "level": 2,
+   "line": 2027
+  },
+  {
+   "id": "5",
+   "title": "Block operations",
+   "level": 1,
+   "line": 2077
+  },
+  {
+   "id": "5.1",
+   "title": "Internal functions",
+   "level": 2,
+   "line": 2089
+  },
+  {
+   "id": "5.1.1",
+   "title": "Decoding",
+   "level": 3,
+   "line": 2090
+  },
+  {
+   "id": "5.1.2",
+   "title": "Projection",
+   "level": 3,
+   "line": 2112
+  },
+  {
+   "id": "5.2",
+   "title": "Conversion of blocks",
+   "level": 2,
+   "line": 2146
+  },
+  {
+   "id": "5.2.1",
+   "title": "Conversion from a block",
+   "level": 3,
+   "line": 2147
+  },
+  {
+   "id": "5.2.2",
+   "title": "Conversion to a block",
+   "level": 3,
+   "line": 2173
+  },
+  {
+   "id": "5.2.3",
+   "title": "Conversion to a block with scale factor computation",
+   "level": 3,
+   "line": 2200
+  },
+  {
+   "id": "5.3",
+   "title": "Block reduction operations",
+   "level": 2,
+   "line": 2244
+  },
+  {
+   "id": "5.3.1",
+   "title": "Sum and product",
+   "level": 3,
+   "line": 2245
+  },
+  {
+   "id": "5.3.2",
+   "title": "Dot product",
+   "level": 3,
+   "line": 2277
+  },
+  {
+   "id": "5.4",
+   "title": "Elementwise operations on blocks",
+   "level": 2,
+   "line": 2310
+  },
+  {
+   "id": "5.5",
+   "title": "Scaled operations via block operations",
+   "level": 2,
+   "line": 2357
+  },
+  {
+   "id": "Annex A",
+   "title": "Annex A (informative) Rationales and discussion",
+   "level": 1,
+   "line": 2371
+  },
+  {
+   "id": "A.1",
+   "title": "General",
+   "level": 2,
+   "line": 2373
+  },
+  {
+   "id": "A.2",
+   "title": "Not a number (NaN)",
+   "level": 2,
+   "line": 2380
+  },
+  {
+   "id": "A.3",
+   "title": "Zero",
+   "level": 2,
+   "line": 2404
+  },
+  {
+   "id": "A.4",
+   "title": "Infinities",
+   "level": 2,
+   "line": 2427
+  },
+  {
+   "id": "A.5",
+   "title": "Exponent bias",
+   "level": 2,
+   "line": 2503
+  },
+  {
+   "id": "A.6",
+   "title": "Subnormals",
+   "level": 2,
+   "line": 2523
+  },
+  {
+   "id": "Annex B",
+   "title": "Annex B (informative) Encoding",
+   "level": 1,
+   "line": 2536
+  },
+  {
+   "id": "B.1",
+   "title": "Value tables",
+   "level": 2,
+   "line": 2559
+  },
+  {
+   "id": "Annex C",
+   "title": "Annex C (informative) Value tables for K=2",
+   "level": 1,
+   "line": 2648
+  },
+  {
+   "id": "Annex D",
+   "title": "Annex D (informative) Examples of approximation declarations",
+   "level": 1,
+   "line": 2672
+  },
+  {
+   "id": "D.1",
+   "title": "Example: Approximate implementation of Exp",
+   "level": 2,
+   "line": 2674
+  },
+  {
+   "id": "D.2",
+   "title": "Example: Approximate implementation of BlockDotProduct",
+   "level": 2,
+   "line": 2691
+  },
+  {
+   "id": "Annex E",
+   "title": "Annex E (informative) Recommendations for reduction accuracy specifications",
+   "level": 1,
+   "line": 2718
+  },
+  {
+   "id": "E.1",
+   "title": "BlockReduceAdd",
+   "level": 2,
+   "line": 2720
+  },
+  {
+   "id": "E.2",
+   "title": "BlockReduceMultiply",
+   "level": 2,
+   "line": 2740
+  },
+  {
+   "id": "E.3",
+   "title": "BlockDotProduct",
+   "level": 2,
+   "line": 2758
+  },
+  {
+   "id": "Annex F",
+   "title": "Annex F (informative) External formats",
+   "level": 1,
+   "line": 2781
+  },
+  {
+   "id": "Annex G",
+   "title": "Annex G (informative) Operation groups",
+   "level": 1,
+   "line": 2805
+  },
+  {
+   "id": "Annex H",
+   "title": "Annex H (informative) Bibliography",
+   "level": 1,
+   "line": 2894
+  }
+ ]
+}

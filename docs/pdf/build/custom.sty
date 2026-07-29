@@ -1,0 +1,63 @@
+% custom.sty — written by transform.py (docs/pdf/howto.md Stage 3.7).
+% All overrides live here; the Documenter-generated files stay pristine.
+\usepackage{etoolbox}
+\usepackage{needspace}   % rule 3: short table-bearing subsections keep together
+
+% Geometry: 1.1in side margins so ~100-char code lines fit at \small mono.
+\setulmarginsandblock{1.15in}{1.0in}{*}
+\setlrmarginsandblock{1.1in}{1.1in}{*}
+\setheaderspaces{0.6in}{*}{*}
+\checkandfixthelayout
+
+% Mandatory pagination rules (howto.md rules 1-6).
+\raggedbottom
+\interlinepenalty=10000
+\clubpenalty=10000 \widowpenalty=10000
+\displaywidowpenalty=10000 \brokenpenalty=10000
+\predisplaypenalty=10000   % equations stay with their introducing text
+\predisplaypenalty=10000
+
+% Code blocks: unbreakable, wrapped safely, visible continuation marker.
+% The \par\medskip on each side is the rule-8 breakable glue.
+\setminted{breaklines=true, breakindent=1.5em,
+  breaksymbolleft={\tiny\ensuremath{\hookrightarrow}},
+  fontsize=\small}
+\BeforeBeginEnvironment{minted}{\par\medskip\noindent\begin{minipage}{\linewidth}}
+\AfterEndEnvironment{minted}{\end{minipage}\par\medskip}
+
+% Tables: unbreakable, footnotesize, tightened column padding.
+\BeforeBeginEnvironment{tabulary}{\par\medskip\noindent
+  \begin{minipage}{\linewidth}\footnotesize\setlength{\tabcolsep}{3pt}}
+\AfterEndEnvironment{tabulary}{\end{minipage}\par\medskip}
+
+% Running headers/footers; folio-only on chapter openings.
+\pagestyle{ruled}
+\makeevenfoot{ruled}{}{\thepage}{}  \makeoddfoot{ruled}{}{\thepage}{}
+\makeevenhead{ruled}{\small\leftmark}{}{} \makeoddhead{ruled}{}{}{\small\rightmark}
+\copypagestyle{plain}{ruled} \makeevenhead{plain}{}{}{} \makeoddhead{plain}{}{}{}
+\copypagestyle{chapter}{ruled} \makeevenhead{chapter}{}{}{}
+\makeoddhead{chapter}{}{}{} \makeheadrule{chapter}{\textwidth}{0pt}
+
+% TOC block integrity (howto.md rule 9): contents-page breaks belong BEFORE
+% chapter entries, never inside a chapter's subentry block — so discourage
+% breaks before section-level TOC lines (penalty 3, not infinite: a block
+% taller than a contents page may still break, per the rule's exception).
+\makeatletter
+% \pretocmd, not \preto: \l@section is parameterized, and \preto would strip
+% its parameter text (the ".toc has an extra }" failure). Loud on failure.
+\pretocmd{\l@section}{\nopagebreak[3]}{}
+  {\PackageError{custom}{l@section TOC rule-9 patch failed to apply}{}}
+\makeatother
+
+% Unicode fallbacks — generated from the survey's coverage check.
+\usepackage{newunicodechar}
+
+
+\emergencystretch=3em
+
+% Cover page date: the build's UTC timestamp (memoir's \maketitle prints \date;
+% the title/author macros in preamble.tex leave it untouched).
+\date{2026-07-25T02:16Z}
+
+\hypersetup{pdftitle={Internal Reference 0.1.0 — Documentation}, pdfauthor={Jeffrey Sarnoff},
+  bookmarksnumbered=true, bookmarksopen=true}

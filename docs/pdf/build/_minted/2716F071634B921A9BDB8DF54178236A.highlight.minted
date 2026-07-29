@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{decode!}\PYG{p}{(}\PYG{n}{dest}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float32}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{A}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{})}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{dest}
+\PYG{n}{decode!}\PYG{p}{(}\PYG{n}{dest}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Float64}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{A}\PYG{o}{::}\PYG{k+kt}{AbstractArray}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{})}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{dest}
+\end{MintedVerbatim}

@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{n}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1\PYGZus{}000\PYGZus{}000}
+\PYG{n}{model}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{Binary5p2se}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{UInt8}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{31}\PYG{p}{)))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{n}\PYG{p}{]}
+\PYG{n}{pv}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{PackedVector}\PYG{p}{(}\PYG{n}{model}\PYG{p}{)}
+\PYG{p}{(}\PYG{n}{sizeof}\PYG{p}{(}\PYG{n}{model}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{sizeof}\PYG{p}{(}\PYG{n}{pv}\PYG{o}{.}\PYG{n}{data}\PYG{p}{))}
+\end{MintedVerbatim}

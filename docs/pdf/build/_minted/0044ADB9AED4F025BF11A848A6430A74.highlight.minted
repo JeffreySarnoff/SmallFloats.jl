@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{round\PYGZus{}to\PYGZus{}precision}
+
+\PYG{n}{r}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{round\PYGZus{}to\PYGZus{}precision}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{8}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{NearestTiesToEven}\PYG{p}{(),}\PYG{+w}{ }\PYG{l+m+mf}{2.30078125}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} P=4, bias=8}
+\PYG{p}{(}\PYG{n}{r}\PYG{o}{.}\PYG{n}{sign}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{r}\PYG{o}{.}\PYG{n}{S}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{r}\PYG{o}{.}\PYG{n}{Q}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{r}\PYG{o}{.}\PYG{n}{S}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{l+m+mf}{2.0}\PYG{o}{\PYGZca{}}\PYG{n}{r}\PYG{o}{.}\PYG{n}{Q}\PYG{p}{)}
+\end{MintedVerbatim}

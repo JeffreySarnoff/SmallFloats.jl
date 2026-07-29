@@ -1,0 +1,23 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Random}
+
+\PYG{n}{rng}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+\PYG{n}{mk}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Block}\PYG{p}{(}\PYG{n}{Binary8p1uf}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{o}{\PYGZca{}}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{3}\PYG{o}{:}\PYG{l+m+mi}{3}\PYG{p}{)),}
+\PYG{+w}{             }\PYG{n}{ntuple}\PYG{p}{(}\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{UInt8}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{255}\PYG{p}{))),}\PYG{+w}{ }\PYG{l+m+mi}{32}\PYG{p}{))}
+
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{verify\PYGZus{}dots}\PYG{p}{(}\PYG{n}{trials}\PYG{p}{)}
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{trials}
+\PYG{+w}{        }\PYG{n}{bx}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{by}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{mk}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{mk}\PYG{p}{()}
+\PYG{+w}{        }\PYG{n}{lx}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{bx}\PYG{o}{.}\PYG{n}{s}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{bx}\PYG{o}{.}\PYG{n}{x}\PYG{p}{]}
+\PYG{+w}{        }\PYG{n}{ly}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{by}\PYG{o}{.}\PYG{n}{s}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{by}\PYG{o}{.}\PYG{n}{x}\PYG{p}{]}
+\PYG{+w}{        }\PYG{p}{(}\PYG{n}{any}\PYG{p}{(}\PYG{o}{!}\PYG{n}{isfinite}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{lx}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{n}{any}\PYG{p}{(}\PYG{o}{!}\PYG{n}{isfinite}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ly}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{k}{continue}
+\PYG{+w}{        }\PYG{n}{truth}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{setprecision}\PYG{p}{(()}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{sum}\PYG{p}{(}\PYG{k+kt}{BigFloat}\PYG{p}{(}\PYG{n}{lx}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{k+kt}{BigFloat}\PYG{p}{(}\PYG{n}{ly}\PYG{p}{[}\PYG{n}{i}\PYG{p}{])}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{i}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{32}\PYG{p}{),}
+\PYG{+w}{                             }\PYG{k+kt}{BigFloat}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{512}\PYG{p}{)}
+\PYG{+w}{        }\PYG{n}{got}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{BlockDotProduct}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{bx}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{by}\PYG{p}{)}
+\PYG{+w}{        }\PYG{n}{ref}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{setprecision}\PYG{p}{(()}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{project}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{truth}\PYG{p}{),}\PYG{+w}{ }\PYG{k+kt}{BigFloat}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{512}\PYG{p}{)}
+\PYG{+w}{        }\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{got}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{ref}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{false}
+\PYG{+w}{    }\PYG{k}{end}
+\PYG{+w}{    }\PYG{n+nb}{true}
+\PYG{k}{end}
+\PYG{n}{verify\PYGZus{}dots}\PYG{p}{(}\PYG{l+m+mi}{200}\PYG{p}{)}
+\end{MintedVerbatim}

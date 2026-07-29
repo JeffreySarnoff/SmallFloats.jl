@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{ConvertToBlock}\PYG{p}{(}\PYG{n}{FS}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{FE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{values\PYGZus{}tuple}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{scale}\PYG{p}{)}
+\PYG{n}{ConvertToBlockMaxAbsFinite}\PYG{p}{(}\PYG{n}{FS}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{FE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{scale\PYGZus{}ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{element\PYGZus{}ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{values\PYGZus{}tuple}\PYG{p}{)}
+\end{MintedVerbatim}

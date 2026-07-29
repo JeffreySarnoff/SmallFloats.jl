@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+ERROR: ArgumentError: declared κ = 1.0 understates measured κ = 2.0 — registration rejected
+\end{MintedVerbatim}

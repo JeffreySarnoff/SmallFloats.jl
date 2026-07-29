@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{rand}\PYG{p}{(}\PYG{n}{T}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{dims}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{rand!}\PYG{p}{(}\PYG{n}{A}\PYG{p}{)}\PYG{+w}{      }\PYG{c}{\PYGZsh{} uniform on [0, 1)}
+\PYG{n}{randn}\PYG{p}{(}\PYG{n}{T}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{dims}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{randn!}\PYG{p}{(}\PYG{n}{A}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} standard normal, always finite}
+\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{)}\PYG{+w}{                   }\PYG{c}{\PYGZsh{} explicit rng as usual}
+
+\PYG{n}{rand}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{;}\PYG{+w}{  }\PYG{n}{projection}\PYG{o}{=}\PYG{n}{RTP\PYGZus{}SatNone}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} scalar forms: land under any ProjSpec}
+\PYG{n}{randn}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{projection}\PYG{o}{=}\PYG{n}{RTZ\PYGZus{}SatFinite}\PYG{p}{)}\PYG{+w}{ }\PYG{c}{\PYGZsh{} (stochastic ρ draws R from same rng)}
+\end{MintedVerbatim}

@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{project}
+\PYG{n}{project}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ProjSpec}\PYG{p}{(}\PYG{n}{TowardNegative}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{SatNone}\PYG{p}{()),}\PYG{+w}{ }\PYG{l+m+mf}{1.0}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{sticky}\PYG{o}{=\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)}
+\end{MintedVerbatim}

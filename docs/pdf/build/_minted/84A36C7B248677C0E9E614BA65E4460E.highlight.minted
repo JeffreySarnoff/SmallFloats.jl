@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}
+
+\PYG{k}{for}\PYG{+w}{ }\PYG{n}{μ}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{NearestTiesToEven}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{NearestTiesToAway}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{TowardPositive}\PYG{p}{(),}
+\PYG{+w}{          }\PYG{n}{TowardNegative}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{TowardZero}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{ToOdd}\PYG{p}{())}
+\PYG{+w}{    }\PYG{n}{v}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ProjSpec}\PYG{p}{(}\PYG{n}{μ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{SatNone}\PYG{p}{()),}\PYG{+w}{ }\PYG{l+m+mf}{2.30078125}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{println}\PYG{p}{(}\PYG{n}{rpad}\PYG{p}{(}\PYG{n}{string}\PYG{p}{(}\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{μ}\PYG{p}{)),}\PYG{+w}{ }\PYG{l+m+mi}{20}\PYG{p}{),}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{} → \PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{v}\PYG{p}{))}
+\PYG{k}{end}
+\end{MintedVerbatim}

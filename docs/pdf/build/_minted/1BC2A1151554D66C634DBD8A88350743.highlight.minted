@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+(256, 0.384, 100, 0.9375)
+\PYGZsh{} LUT size; fraction saturated to ±1; distinct output codes; last value below 1
+\end{MintedVerbatim}

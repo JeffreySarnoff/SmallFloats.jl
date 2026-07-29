@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c}{\PYGZsh{} x·y − z ≡ FMA(x, y, −z). Negation of z follows the Subtract convention:}
+\PYG{c}{\PYGZsh{} preserve NaN, and map −0 to +0 so the single\PYGZhy{}zero datum model is respected.}
+\PYG{n}{ωeval}\PYG{p}{(}\PYG{o}{::}\PYG{k+kt}{Val}\PYG{p}{\PYGZob{}}\PYG{l+s+ss}{:FMS}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{o}{::}\PYG{k+kt}{Float64}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}
+\PYG{+w}{    }\PYG{n}{ωeval}\PYG{p}{(}\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:FMA}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{isnan}\PYG{p}{(}\PYG{n}{z}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{n}{z}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{iszero}\PYG{p}{(}\PYG{n}{z}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{l+m+mf}{0.0}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{n}{z}\PYG{p}{))}
+\end{MintedVerbatim}

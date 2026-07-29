@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{0.25}\PYG{p}{)}
+\PYG{g+go}{Binary8p4se(1.875 ≡ 0x47)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Binary5p3sf}\PYG{p}{(}\PYG{l+m+mh}{0x08}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{Binary5p3sf}\PYG{p}{(}\PYG{l+m+mf}{1.0}\PYG{p}{)}\PYG{+w}{     }\PYG{c}{\PYGZsh{} UInt8 constructs from a code point}
+\PYG{g+go}{true}
+\end{MintedVerbatim}

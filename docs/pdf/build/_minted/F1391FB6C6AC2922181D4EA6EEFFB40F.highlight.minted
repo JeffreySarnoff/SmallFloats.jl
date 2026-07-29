@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{isnan}\PYG{p}{(}\PYG{n}{x}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{isinf}\PYG{p}{(}\PYG{n}{x}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{isfinite}\PYG{p}{(}\PYG{n}{x}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{iszero}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+\PYG{n}{signbit}\PYG{p}{(}\PYG{n}{x}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{issubnormal}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+\PYG{n}{Class}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+\PYG{n}{NextGreaterThan}\PYG{p}{(}\PYG{n}{x}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{NextLessThan}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+\PYG{n}{nextfloat}\PYG{p}{(}\PYG{n}{x}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{prevfloat}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}
+\PYG{n}{TotalOrder}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}
+\end{MintedVerbatim}

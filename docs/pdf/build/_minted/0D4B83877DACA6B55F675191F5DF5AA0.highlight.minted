@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{FS}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p1uf}
+\PYG{n}{FE}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}
+
+\PYG{n}{b}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Block}\PYG{p}{(}\PYG{n}{FS}\PYG{p}{(}\PYG{l+m+mf}{4.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{FE}\PYG{p}{(}\PYG{l+m+mf}{1.5}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{FE}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{0.75}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{FE}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{FE}\PYG{p}{(}\PYG{l+m+mf}{0.5}\PYG{p}{))}
+
+\PYG{n}{blocksize}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}
+\PYG{n}{scaleformat}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}
+\PYG{n}{elemformat}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}
+
+\PYG{n}{ConvertFromBlock}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}
+\PYG{n}{BlockReduceAdd}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}
+\PYG{n}{BlockReduceMultiply}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}
+\PYG{n}{BlockDotProduct}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}
+\end{MintedVerbatim}

@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{)}\PYG{+w}{                    }\PYG{c}{\PYGZsh{} numeric value: project into T}
+\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{1.6}\PYG{p}{)}\PYG{+w}{       }\PYG{c}{\PYGZsh{} explicit projection}
+
+\PYG{n}{c}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{              }\PYG{c}{\PYGZsh{} UInt8 code point}
+\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}\PYG{+w}{                      }\PYG{c}{\PYGZsh{} UInt8 means validated CODE POINT}
+\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{c}\PYG{p}{)}\PYG{+w}{            }\PYG{c}{\PYGZsh{} unchecked code\PYGZhy{}point construction}
+
+\PYG{n}{d}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{                 }\PYG{c}{\PYGZsh{} exact Float64 datum}
+\end{MintedVerbatim}

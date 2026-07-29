@@ -1,0 +1,37 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}BlockSumOfSquares(fr, ρ, b): project(Σ decode\PYGZhy{}laneᵢ²) — one rounding total.}
+\PYG{l+s}{Fold algebra: any NaN lane ⇒ NaN; else any ±Inf lane ⇒ +Inf (squares cannot}
+\PYG{l+s}{cancel — no opposite\PYGZhy{}infinity NaN case exists, unlike ReduceAdd); else exact.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{BlockSumOfSquares}\PYG{p}{(}\PYG{n}{fr}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{ρ}\PYG{o}{::}\PYG{k+kt}{ProjSpec}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{o}{::}\PYG{k+kt}{Block}\PYG{p}{\PYGZob{}}\PYG{k+kt}{B}\PYG{p}{\PYGZcb{};}
+\PYG{+w}{                           }\PYG{n}{rng}\PYG{o}{::}\PYG{k+kt}{MaybeRNG}\PYG{o}{=}\PYG{n+nb}{nothing}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{R}\PYG{o}{::}\PYG{k+kt}{Union}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Nothing}\PYG{p}{,}\PYG{k+kt}{Int}\PYG{p}{\PYGZcb{}}\PYG{o}{=}\PYG{n+nb}{nothing}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{where}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{k+kt}{B}\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{X}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{blockdecode}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{res}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{any}\PYG{p}{(}\PYG{n}{isnan}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{)}
+\PYG{+w}{        }\PYG{n+nb}{NaN}
+\PYG{+w}{    }\PYG{k}{elseif}\PYG{+w}{ }\PYG{n}{any}\PYG{p}{(}\PYG{n}{isinf}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{)}
+\PYG{+w}{        }\PYG{n+nb}{Inf}
+\PYG{+w}{    }\PYG{k}{elseif}\PYG{+w}{ }\PYG{n}{all}\PYG{p}{(}\PYG{n}{iszero}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{)}
+\PYG{+w}{        }\PYG{l+m+mf}{0.0}
+\PYG{+w}{    }\PYG{k}{else}
+\PYG{+w}{        }\PYG{c}{\PYGZsh{} span filter: lanes carry ≤17\PYGZhy{}bit significands ⇒ squares ≤34 bits and}
+\PYG{+w}{        }\PYG{c}{\PYGZsh{} a square\PYGZsq{}s exponent is 2·(lane exponent); the sum is exact in Float128}
+\PYG{+w}{        }\PYG{c}{\PYGZsh{} when 34 + 2·span + ⌈log₂B⌉ + 1 ≤ 113  ⇒  2·span + ⌈log₂B⌉ ≤ 78.}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{n}{\PYGZus{}f128}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{l+m+mi}{2}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{\PYGZus{}expspan}\PYG{p}{(}\PYG{n}{X}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{\PYGZus{}log2ceil}\PYG{p}{(}\PYG{n}{B}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZlt{}=}\PYG{+w}{ }\PYG{l+m+mi}{78}
+\PYG{+w}{            }\PYG{n}{acc}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Float128}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}
+\PYG{+w}{            }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{X}
+\PYG{+w}{                }\PYG{n}{q}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Float128}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}
+\PYG{+w}{                }\PYG{n}{acc}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{n}{q}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{q}\PYG{+w}{                      }\PYG{c}{\PYGZsh{} exact squares, exact sum}
+\PYG{+w}{            }\PYG{k}{end}
+\PYG{+w}{            }\PYG{n}{acc}
+\PYG{+w}{        }\PYG{k}{else}
+\PYG{+w}{            }\PYG{n}{BigExactF}\PYG{p}{(()}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{setprecision}\PYG{p}{(}\PYG{k+kt}{BigFloat}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}REDPREC}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{do}
+\PYG{+w}{                }\PYG{n}{acc}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k+kt}{BigFloat}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}
+\PYG{+w}{                }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{X}
+\PYG{+w}{                    }\PYG{n}{acc}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{k+kt}{BigFloat}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}\PYG{o}{\PYGZca{}}\PYG{l+m+mi}{2}\PYG{+w}{          }\PYG{c}{\PYGZsh{} exact at \PYGZus{}REDPREC}
+\PYG{+w}{                }\PYG{k}{end}
+\PYG{+w}{                }\PYG{n}{acc}
+\PYG{+w}{            }\PYG{k}{end}\PYG{p}{)}
+\PYG{+w}{        }\PYG{k}{end}
+\PYG{+w}{    }\PYG{k}{end}
+\PYG{+w}{    }\PYG{n}{\PYGZus{}finish}\PYG{p}{(}\PYG{n}{fr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}drawR}\PYG{p}{(}\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{R}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{res}\PYG{p}{)}
+\PYG{k}{end}
+\end{MintedVerbatim}

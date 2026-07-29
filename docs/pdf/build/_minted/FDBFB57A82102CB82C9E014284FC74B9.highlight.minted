@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{d}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{conformance\PYGZus{}dict}\PYG{p}{()}\PYG{+w}{          }\PYG{c}{\PYGZsh{} plain nested Dict\PYGZob{}String,Any\PYGZcb{}}
+\PYG{p}{(}\PYG{n}{d}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}package\PYGZdq{}}\PYG{p}{],}\PYG{+w}{ }\PYG{n}{length}\PYG{p}{(}\PYG{n}{d}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}formats\PYGZdq{}}\PYG{p}{]),}\PYG{+w}{ }\PYG{n}{length}\PYG{p}{(}\PYG{n}{d}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}operations\PYGZdq{}}\PYG{p}{]),}
+\PYG{+w}{ }\PYG{p}{[}\PYG{n}{s}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}op\PYGZdq{}}\PYG{p}{]}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{s}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{d}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}cached\PYGZus{}specializations\PYGZdq{}}\PYG{p}{]])}
+\end{MintedVerbatim}

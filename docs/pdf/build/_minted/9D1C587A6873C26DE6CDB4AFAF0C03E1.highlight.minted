@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{get\PYGZus{}table}
+\PYG{n}{empty\PYGZus{}tables!}\PYG{p}{()}
+\PYG{n}{tbl}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{get\PYGZus{}table}\PYG{p}{(}\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{)}
+\PYG{p}{(}\PYG{n}{tbl}\PYG{p}{[}\PYG{k+kt}{Int}\PYG{p}{(}\PYG{l+m+mh}{0x45}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{],}
+\PYG{+w}{ }\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{Exp}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mh}{0x45}\PYG{p}{))),}
+\PYG{+w}{ }\PYG{n}{table\PYGZus{}bytes}\PYG{p}{())}
+\end{MintedVerbatim}

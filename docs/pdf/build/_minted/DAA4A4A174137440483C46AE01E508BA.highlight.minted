@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+(61, 512)          \PYGZsh{} softplus keeps 61 distinct codes here; two LUTs now cached
+\end{MintedVerbatim}

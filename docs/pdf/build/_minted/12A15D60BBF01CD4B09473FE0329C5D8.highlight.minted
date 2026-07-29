@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+NearestTiesToEven    → 2.25
+NearestTiesToAway    → 2.25
+TowardPositive       → 2.5
+TowardNegative       → 2.25
+TowardZero           → 2.25
+ToOdd                → 2.25
+\end{MintedVerbatim}

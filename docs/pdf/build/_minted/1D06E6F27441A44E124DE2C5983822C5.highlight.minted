@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{BlockAdd}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b1}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b2}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{result\PYGZus{}scale}\PYG{p}{)}
+\PYG{n}{BlockExp}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{result\PYGZus{}scale}\PYG{p}{)}
+
+\PYG{n}{ScaledAdd}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{scale1}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x1}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{scale2}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x2}\PYG{p}{)}
+\PYG{n}{ScaledExp}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{scale}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{)}
+\end{MintedVerbatim}

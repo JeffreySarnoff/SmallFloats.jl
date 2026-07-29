@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary5p2se}\PYG{o}{.}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{),}\PYG{+w}{ }\PYG{l+m+mi}{6}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{.*}\PYG{+w}{ }\PYG{l+m+mi}{4}\PYG{p}{);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{pv}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{PackedVector}\PYG{p}{(}\PYG{n}{v}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{sizeof}\PYG{p}{(}\PYG{n}{pv}\PYG{o}{.}\PYG{n}{data}\PYG{p}{)}
+\PYG{g+go}{8                     \PYGZsh{} 6 × 5 bits = 30 bits → one 64\PYGZhy{}bit word}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{pv}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}
+\PYG{g+go}{true}
+\end{MintedVerbatim}

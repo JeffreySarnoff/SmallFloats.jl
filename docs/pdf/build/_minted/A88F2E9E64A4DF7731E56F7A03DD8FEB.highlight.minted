@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+(5.0634, 4.5)       \PYGZsh{} difference is input quantization only, never accumulation error
+\end{MintedVerbatim}

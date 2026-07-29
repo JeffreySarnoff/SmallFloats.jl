@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{σ}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RSA\PYGZus{}SatNone}\PYG{p}{(}\PYG{l+m+mi}{8}\PYG{p}{)}
+
+\PYG{n}{Add}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{σ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{rng}\PYG{o}{=}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{))}\PYG{+w}{  }\PYG{c}{\PYGZsh{} reproducible stream}
+\PYG{n}{Add}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{σ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{R}\PYG{o}{=}\PYG{l+m+mi}{17}\PYG{p}{)}\PYG{+w}{            }\PYG{c}{\PYGZsh{} exact draw, ideal for tests}
+
+\PYG{n}{isstochastic}\PYG{p}{(}\PYG{n}{σ}\PYG{p}{)}\PYG{+w}{                   }\PYG{c}{\PYGZsh{} true}
+\PYG{n}{nrandbits}\PYG{p}{(}\PYG{n}{σ}\PYG{p}{)}\PYG{+w}{                      }\PYG{c}{\PYGZsh{} 8}
+\end{MintedVerbatim}

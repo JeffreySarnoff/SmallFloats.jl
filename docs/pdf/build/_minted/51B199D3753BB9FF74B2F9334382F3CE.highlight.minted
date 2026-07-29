@@ -1,0 +1,19 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c}{\PYGZsh{} Stable form: h + log1p(exp(l − h)), h = max, l = min. Every step is monotone}
+\PYG{c}{\PYGZsh{} nondecreasing in (x, y), so whole\PYGZhy{}expression directed rounding in \PYGZus{}mpfr2 is a}
+\PYG{c}{\PYGZsh{} valid enclosure (the same argument Softplus records).}
+\PYG{n}{\PYGZus{}logaddexp}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{h}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{max}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{l}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{min}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{h}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n}{log1p}\PYG{p}{(}\PYG{n}{exp}\PYG{p}{(}\PYG{n}{l}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{h}\PYG{p}{)))}
+
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{o}{::}\PYG{k+kt}{Val}\PYG{p}{\PYGZob{}}\PYG{l+s+ss}{:LogAddExp}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{Float64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{Float64}\PYG{p}{)}
+\PYG{+w}{    }\PYG{p}{(}\PYG{n}{isnan}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{|}\PYG{+w}{ }\PYG{n}{isnan}\PYG{p}{(}\PYG{n}{y}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{NaN}
+\PYG{+w}{    }\PYG{p}{(}\PYG{n}{x}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n+nb}{Inf}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{n}{y}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n+nb}{Inf}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{Inf}\PYG{+w}{        }\PYG{c}{\PYGZsh{} ∞ dominates}
+\PYG{+w}{    }\PYG{n}{x}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{y}\PYG{+w}{                       }\PYG{c}{\PYGZsh{} log(0 + eʸ) = y, exactly}
+\PYG{+w}{    }\PYG{n}{y}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{n+nb}{Inf}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{x}
+\PYG{+w}{    }\PYG{c}{\PYGZsh{} yd: two faithful libm calls plus additions, condition ≤ 1 throughout}
+\PYG{+w}{    }\PYG{c}{\PYGZsh{} (result ≥ max(x, y)) ⇒ ≤ \PYGZti{}3 ulp ≈ 2⁻⁵⁰ — 2⁵ slack; measure it, including}
+\PYG{+w}{    }\PYG{c}{\PYGZsh{} x ≈ y (where log1p(exp(0)) dominates) and widely separated operands.}
+\PYG{+w}{    }\PYG{n}{\PYGZus{}encl2}\PYG{p}{(}\PYG{n}{\PYGZus{}logaddexp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{;}
+\PYG{+w}{           }\PYG{n}{fq}\PYG{o}{=}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{\PYGZus{}logaddexp}\PYG{p}{(}\PYG{n}{Float128}\PYG{p}{(}\PYG{n}{x}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Float128}\PYG{p}{(}\PYG{n}{y}\PYG{p}{)),}
+\PYG{+w}{           }\PYG{n}{yd}\PYG{o}{=}\PYG{n}{\PYGZus{}logaddexp}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{))}
+\PYG{k}{end}
+\end{MintedVerbatim}

@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{l+s}{\PYGZdq{}\PYGZdq{}\PYGZdq{}BlockRelu(fr, ρ, b, sr): lanewise max(xᵢ, 0) — NaN lanes propagate NaN per}
+\PYG{l+s}{MaximumNumber\PYGZsq{}s number\PYGZhy{}preferring rows only when both operands are NaN, i.e.}
+\PYG{l+s}{never here; state your lane semantics this explicitly for any new op.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{BlockRelu}\PYG{p}{(}\PYG{n}{fr}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{ρ}\PYG{o}{::}\PYG{k+kt}{ProjSpec}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{o}{::}\PYG{k+kt}{Block}\PYG{p}{\PYGZob{}}\PYG{k+kt}{B}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{sr}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{;}
+\PYG{+w}{                   }\PYG{n}{rng}\PYG{o}{::}\PYG{k+kt}{MaybeRNG}\PYG{o}{=}\PYG{n+nb}{nothing}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{where}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{k+kt}{B}\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{X}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{blockdecode}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{Z}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ntuple}\PYG{p}{(}\PYG{n}{i}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:MaximumNumber}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{X}\PYG{p}{[}\PYG{n}{i}\PYG{p}{],}\PYG{+w}{ }\PYG{l+m+mf}{0.0}\PYG{p}{),}\PYG{+w}{ }\PYG{k+kt}{Val}\PYG{p}{(}\PYG{n}{B}\PYG{p}{))}
+\PYG{+w}{    }\PYG{n}{blockproject}\PYG{p}{(}\PYG{n}{fr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{sr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Z}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{)}
+\PYG{k}{end}
+\end{MintedVerbatim}
