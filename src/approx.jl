@@ -57,7 +57,13 @@ function measure_kappa(fn::F, op::Symbol, fr::Type{<:Binary},
         project(fr, ρ, decode(args[1])) :
         apply_op(Val(op), fr, ρ, 0, map(decode, args)...)
     function visit(codes::NTuple{N,Int})
-        args = ntuple(i -> rawvalue(argformats[i], UInt8(codes[i])), Val(N))
+        # A1: the code unit comes from the argument format, not from `UInt8`.
+        # `UInt8(codes[i])` is a *checked* conversion, so at K ≥ 9 this threw
+        # rather than truncating — a loud failure, not a silently wrong κ — but
+        # κ is a declared conformance property (invariant 5) and measuring it
+        # must not be the thing that discovers the format is too wide.
+        args = ntuple(i -> rawvalue(argformats[i],
+                                    codeunit_type(argformats[i])(codes[i])), Val(N))
         want = defined(args...)
         got = fn(args...)::fr
         dw, dg = decode(want), decode(got)

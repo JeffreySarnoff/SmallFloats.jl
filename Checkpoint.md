@@ -20,14 +20,16 @@ has actually happened, what is verified, and what is not.***
 
 | stage | state |
 |---|---|
-| **0 — prerequisites and baseline** | **done except the golden capture** |
-| **1 — traits, tags, T11 constants, audit fixes** | **partially applied, UNVERIFIED** |
+| **0 — prerequisites and baseline** | **done** |
+| **1 — traits, tags, T11 constants, audit fixes** | **done, verified** |
 | 2–9 | not started |
 
-**Blocked.** The Bash safety classifier is unavailable, so `julia` cannot be
-run. Only allowlisted commands (`echo`, `grep`, `wc`, `find`) pass. Nothing in
-Stage 1 can be verified until that clears or
-`.claude/settings.json` gains `"permissions": {"allow": ["Bash(julia:*)"]}`.
+**Stage 1 exit evidence.** Full suite green (~8.9 M assertions + G9 + G5-fast +
+Aqua + JET, 3 m 01 s). **G5 fast 7/7 byte-identical** against a golden captured
+from a clean `main` worktree at `51abb00` (M11) — so the oracle is independent
+of the code it judges. G9 green at 1 212 assertions. Every special and extremal
+constant verified byte-identical to its pre-T11 formula across all 120 formats,
+independently of the golden.
 
 ---
 
@@ -55,22 +57,19 @@ every measurement. The tree as inherited did not build.
 | `test/golden.jl` | gate G5; tier from `SMALLFLOATS_G5` ∈ {`fast`, `full`, `off`} | **no** — not yet `include`d from `runtests.jl` |
 | `docs/other/implementextensions.md` | §11 execution log added (M1–M9); G5 tier table; Stage 0 step 0 | n/a |
 
-### Live and UNVERIFIED — the risk
+### Stage 1 source changes — verified zero behaviour change
 
 | file | change |
 |---|---|
-| `src/formats.jl` | representation trait block (`codeunit_type`, `codemask`, `decodepolicy`, `orderkeytype`, `reptype`, `_unitmask`, `DecodePolicy` tags); Group M signatures widened to `::Type{<:Binary{K,P,S,E}}`; every special and extremal code point rebuilt by complement construction (T11) |
+| `src/formats.jl` | representation trait block (`codeunit_type`, `codemask`, `decodepolicy`, `orderkeytype`, `reptype`, `_unitmask`, `DecodePolicy` tags); Group M signatures widened to `::Type{<:Binary{K,P,S,E}}` (M7); every special and extremal code point rebuilt by complement construction (T11), via the single `_cu` narrowing point (M8) |
+| `src/carriers.jl` | wired into the include list after `formats.jl`; order comment updated in the same commit (doctrine rule). All 120 formats answer rung 1 / `Float64` — no existing format moves |
+| `src/decode_encode.jl` | `_decode_compute` reshaped to the `(::Type{F}, c)` form returning `datumcarrier(F)`, with a value-form shim so the suite and docs are unaffected; specials now go through the carrier-generic `_cnan`/`_cinf`/`_cninf` constants instead of `Float64` literals |
+| `src/approx.jl` | **A1** — `measure_kappa` builds arguments with `codeunit_type(argformats[i])`, not `UInt8` |
+| `src/project.jl` | **C8** — dead `_cmp_rounded_datum` removed, along with its `_nbits` helper, which had no other caller. Replaced by a note recording why it may be wanted back at Stage 7, against `Dyadic` rather than `Float64` |
 
-All eight rewritten constants were hand-checked against the originals for
-K ≤ 8 and match: `signmask` = `2^(K−1)`; `nan_code` = `signmask` (signed) /
-`codemask` (unsigned); `posinf_code` = that − 1; `neginf_code` = `codemask`;
-`MaxFiniteOf` = (`signmask`|`codemask`) − (2 if Extended else 1) across all
-four rows; `MaxSubnormalOf` = `2^(P−1) − 1`; `MinNormalOf` = `2^(P−1)`.
-
-**Hand-checking is precisely what G5 exists to replace.** Stage 1's whole claim
-is that it is *provably* zero-behaviour-change, and that proof is unrun. To
-restore a known-green tree: `git checkout src/formats.jl`. Everything else
-listed above stands on its own.
+All eight rewritten constants were additionally checked directly against their
+pre-T11 formulas across all 120 formats — an independent check that does not go
+through the golden.
 
 ---
 

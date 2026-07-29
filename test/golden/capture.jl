@@ -26,7 +26,7 @@ function main()
     end
     println("capturing G5 golden over $(length(golden_formats())) formats ",
             "($(length(representative_formats())) representative) …")
-    ds = golden_digests(:full; verbose = true)
+    ds = golden_digests(:all; verbose = true)     # every tier's sections
     open(GOLDEN_FILE, "w") do io
         println(io, "# SmallFloats.jl — G5 K ≤ 8 golden non-regression digests")
         println(io, "# captured ", Base.VERSION, " on ", Sys.MACHINE)

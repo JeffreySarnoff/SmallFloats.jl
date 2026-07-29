@@ -2,19 +2,28 @@
 
 # Computational ωDecode: the ground truth from which the lookup table below is
 # generated. Kept private; `decode` (the exported entry) reads the table.
-@inline function _decode_compute(v::Binary{K,P,SGN,EXT})::Float64 where {K,P,SGN,EXT}
-    F = Binary{K,P,SGN,EXT}
-    c = codepoint(v)
+# The primary form takes the format TYPE and a code point, not a value: the
+# table builders have only a code in hand, and a carrier-generic decode has to
+# name the carrier, which is a property of the type (implementextensions §2 R-F).
+# The value form is kept because it is the one the suite and the docs call.
+@inline _decode_compute(v::Binary) = _decode_compute(typeof(v), codepoint(v))
+
+@inline function _decode_compute(::Type{F}, c) where {K,P,SGN,EXT,F<:Binary{K,P,SGN,EXT}}
+    C = datumcarrier(F)                        # Float64 today; Float128/Dyadic later
     # Special code points come from formats.jl rather than being re-derived here:
     # one definition of the layout, not two. (Unsigned formats put NaN and the
     # −Inf slot at the same code, so NaN must be tested first — it is.)
-    c == nan_code(F) && return NaN
+    #
+    # The specials go through the carrier-generic constants rather than bare
+    # `NaN`/`Inf` literals: those are `Float64`, so on a wider carrier they are a
+    # silent narrow-then-widen, and on `Dyadic` they are simply wrong-typed.
+    c == nan_code(F) && return _cnan(C)
     if EXT
-        c == posinf_code(F) && return Inf
-        SGN && c == neginf_code(F) && return -Inf
+        c == posinf_code(F) && return _cinf(C)
+        SGN && c == neginf_code(F) && return _cninf(C)
     end
     hidden = 1 << (P - 1)                      # implicit-bit weight of the integer significand
-    tmask = UInt8(hidden - 1)                  # trailing-significand mask
+    tmask = _cu(F, hidden - 1)                 # trailing-significand mask
     neg = SGN && (c >= signmask(F))
     m = neg ? c - signmask(F) : c
     tsig = m & tmask

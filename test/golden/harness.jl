@@ -59,19 +59,41 @@ end
 """Every code point of `F`, ascending."""
 allcodes(F) = 0x00:UInt8((1 << bitwidth(F)) - 1)
 
-"""A **derived** representative subset of the grid — not hand-listed, so it
-cannot silently stop covering a cell. For each (K, Σ, Δ) it takes the extreme
-and middle precisions, which spans the whole (P, B) range at every K.
+"""The `:lazy` sampling fraction — the share of the expensive sections' format
+lists that the middle tier walks. Sampling is by **format**, deterministically
+by stride, so a lazy run is reproducible and its digest is stable."""
+const LAZY_STRIDE = 6      # 21/120 = 17.5 %, 9/48 = 18.8 % — inside the 15–20 % band
 
-Used only by the sections whose per-entry cost is an MPFR ladder (the
-transcendental unary sweep). The cheap sections stay exhaustive over all 120
-formats, and `decode` / `project` / `order` — the stages a type refactor can
-actually move — are exhaustive for every format regardless."""
+"""Deterministic ~1/`LAZY_STRIDE` sample of a format list, always including the
+first and last entries so the extremes of the grid are never dropped."""
+function lazy_sample(fmts)
+    n = length(fmts)
+    idx = collect(1:LAZY_STRIDE:n)
+    last(idx) == n || push!(idx, n)
+    fmts[idx]
+end
+
+"""A **derived** representative subset of the grid — not hand-listed, so it
+cannot silently stop covering a cell. For each (K, Σ, Δ) it takes the two
+extreme precisions, `P = 1` and `P = pmax`, which are the two ends of the
+(P, B) range at that K: `P = 1` maximizes the exponent bias (the widest datum
+spread, the hardest carrier case) and `P = pmax` minimizes it.
+
+Used only by the sections whose per-entry cost is an MPFR ladder. The cheap
+sections stay exhaustive over all 120 formats, and `decode` / `project` /
+`order` — the stages a type refactor can actually move — are exhaustive for
+every format regardless.
+
+*Sizing (§11 M12): an earlier version also took the midpoint precision, giving
+70 of 120 formats — 58 % of the grid, which is not a subset in any useful
+sense. Two-per-cell gives 46, and since the interior of the P range is
+interpolation between the two ends for every trait that matters here (B is
+monotone in P at fixed K), the midpoint was buying repetition, not coverage.*"""
 function representative_formats()
     out = DataType[]
     for K in 3:8, S in (true, false), E in (true, false)
         pmax = S ? K - 1 : K
-        for P in unique((1, cld(pmax, 2), pmax))
+        for P in unique((1, pmax))
             push!(out, SmallFloats._NAMED[SmallFloats._formatname(K, P, S, E)])
         end
     end
@@ -216,8 +238,11 @@ ladders (~200 µs/entry measured), so ρ-breadth here is bought on the derived
 representative subset (`sec_unary_rho`) rather than on all 120 formats. The
 full-grid claim that matters for G5 — that no *format* changed — is carried by
 `decode`, `project`, `order` and this section together."""
-function sec_unary_default(s::Sink)
-    for F in golden_formats(), op in _unary_ops()
+sec_unary_default(s::Sink)      = _unary_default(s, golden_formats())
+sec_unary_default_lazy(s::Sink) = _unary_default(s, lazy_sample(golden_formats()))
+
+function _unary_default(s::Sink, fmts)
+    for F in fmts, op in _unary_ops()
         tbl = SmallFloats.get_table(op, F, F, RNE_SatNone)
         for i in eachindex(tbl)
             emit!(s, UInt64(tbl[i]))
@@ -228,11 +253,22 @@ end
 
 """ρ-breadth for the unary catalogue over the derived representative formats,
 plus the stochastic sweep (never tabulable — invariant 4 — so it runs the
-scalar path with an explicit R and never touches RNG state)."""
-function sec_unary_rho(s::Sink)
+scalar path with an explicit R and never touches RNG state).
+
+*Cost note (§11 M12): each ρ here re-derives the SAME `ωeval` result — the
+exact value or enclosure is ρ-independent, and only `project` differs — so a
+third pure ρ costs a full extra MPFR sweep to exercise one more projection
+mode. Two directed modes on opposite sides (`RTZ` truncating, `RTP` toward
++∞ with Propagate saturation) is where the marginal information is; `RTO` was
+dropped. It is still covered exhaustively over all 120 formats by the `project`
+section, which is carrier-cheap.*"""
+sec_unary_rho(s::Sink)      = _unary_rho(s, representative_formats())
+sec_unary_rho_lazy(s::Sink) = _unary_rho(s, lazy_sample(representative_formats()))
+
+function _unary_rho(s::Sink, fmts)
     ops = _unary_ops()
-    for F in representative_formats()
-        for op in ops, ρ in (RTZ_SatFinite, RTP_SatPropagate, RTO_SatNone)
+    for F in fmts
+        for op in ops, ρ in (RTZ_SatFinite, RTP_SatPropagate)
             tbl = SmallFloats.get_table(op, F, F, ρ)
             for i in eachindex(tbl)
                 emit!(s, UInt64(tbl[i]))
@@ -251,10 +287,14 @@ end
 """Every binary operation over same-format pairs. The arithmetic and extremum
 families are Float64-resident and sweep all 120 formats on a 32-code subset;
 the three MPFR-backed ones sweep the representative formats on 12 codes."""
-function sec_binary(s::Sink)
+sec_binary(s::Sink)      = _binary(s, golden_formats(), representative_formats())
+sec_binary_lazy(s::Sink) = _binary(s, lazy_sample(golden_formats()),
+                                      lazy_sample(representative_formats()))
+
+function _binary(s::Sink, fmts, repfmts)
     dear  = (:Hypot, :ArcTan2, :ArcTan2Pi)
     cheap = filter(op -> !(op in dear), _binary_ops())
-    for F in golden_formats()
+    for F in fmts
         cs = subcodes(F, 32)
         for op in cheap, ρ in CORE_RHO
             V = Val(op)
@@ -264,7 +304,7 @@ function sec_binary(s::Sink)
             end
         end
     end
-    for F in representative_formats()
+    for F in repfmts
         cs = subcodes(F, 12)
         for op in dear, ρ in (RNE_SatNone, RTZ_SatFinite)
             V = Val(op)
@@ -434,15 +474,51 @@ const FULL_SECTIONS = (
     "juliacompat"   => sec_juliacompat,
 )
 
+# `:lazy` — the middle tier. Everything `:fast` does, plus the *cheap* full
+# sections in full, plus a deterministic ~1/LAZY_STRIDE format sample of the
+# three expensive ones.
+#
+# The sampled sections carry their OWN section names and therefore their own
+# golden entries. This is forced, not stylistic: a golden compares digests, and
+# a digest over a sampled format list is simply a different number from the
+# digest over the whole list. Reusing the `unary_rho` name for a sample would
+# make every lazy run report a spurious mismatch. `capture.jl` writes all three
+# tiers' entries, so any tier can be checked against the same file.
+const LAZY_SECTIONS = (
+    "convert"            => sec_convert,
+    "ternary"            => sec_ternary,
+    "blocks"             => sec_blocks,
+    "kernels"            => sec_kernels,
+    "juliacompat"        => sec_juliacompat,
+    "unary_default~lazy" => sec_unary_default_lazy,
+    "unary_rho~lazy"     => sec_unary_rho_lazy,
+    "binary~lazy"        => sec_binary_lazy,
+)
+
 sections(tier::Symbol) =
     tier === :fast ? FAST_SECTIONS :
+    tier === :lazy ? (FAST_SECTIONS..., LAZY_SECTIONS...) :
     tier === :full ? (FAST_SECTIONS..., FULL_SECTIONS...) :
-    throw(ArgumentError("tier must be :fast or :full, got :$tier"))
+    throw(ArgumentError("tier must be :fast, :lazy or :full, got :$tier"))
 
-"""Compute the section digests for `tier`, in declaration order."""
+"""Every section any tier can ask for, deduplicated, in a stable order — what
+`capture.jl` must write so that all three tiers are checkable."""
+function all_sections()
+    seen = Set{String}()
+    out = Pair{String,Any}[]
+    for (name, f) in (FAST_SECTIONS..., FULL_SECTIONS..., LAZY_SECTIONS...)
+        name in seen && continue
+        push!(seen, name); push!(out, name => f)
+    end
+    Tuple(out)
+end
+
+"""Compute the section digests for `tier`, in declaration order. `tier = :all`
+computes every section any tier can request — what `capture.jl` writes."""
 function golden_digests(tier::Symbol = :full; verbose::Bool = false)
+    secs = tier === :all ? all_sections() : sections(tier)
     out = Pair{String,String}[]
-    for (name, f) in sections(tier)
+    for (name, f) in secs
         t = @elapsed begin
             s = Sink(); f(s); d = digest(s)
         end

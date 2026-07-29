@@ -139,6 +139,13 @@ G3 `_rtp_f64` bit ≡ generic · G4 rung-selection equivalence · G5 K ≤ 8 gol
 non-regression · G6 carrier-lift exactness · G7 `HeadExact` carrier swap ·
 G8 representation invariant at every K · G9 trait folding.
 
+G5 runs in three tiers, selected by `ENV["SMALLFLOATS_G5"]`: **`fast`** (~1 min,
+after every edit; exhaustive over all 120 formats for everything a type
+refactor can move), **`lazy`** (~3 min, the routine stage-exit gate),
+**`full`** (~10 min, required at the Stage 2 exit and at release — Stage 2
+changes the type of every value in the package, which is the one place a defect
+could be format-specific rather than systematic).
+
 Deterministic **specialization regressions** (concrete inferred return types at
 the public entry points, zero warm-path allocation) stand in for timing
 assertions.

@@ -1533,6 +1533,16 @@ include("float32surface.jl")
 include("ternary_opt.jl")
 
 # ==========================================================================
+# K ≤ 16 extension standing gates (docs/other/implementextensions.md §5)
+#   G9 — trait folding: every type/tag-valued trait resolves to one exact
+#        answer for every format in the grid.
+#   G5 — K ≤ 8 golden non-regression, captured before the refactor began.
+#        Tier from SMALLFLOATS_G5 ∈ {fast, lazy, full, off}; defaults to fast.
+# ==========================================================================
+include("gates_g9.jl")
+include("golden.jl")
+
+# ==========================================================================
 # Package hygiene (Aqua) and static error analysis (JET)
 # ==========================================================================
 include("quality.jl")

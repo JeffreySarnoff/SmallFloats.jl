@@ -1261,8 +1261,37 @@ edit, so:
 
 | tier | sections | cost | when |
 |---|---|---|---|
-| `:fast` | meta, decode, lattice, order, project, packed, sort | ~45 s | after **every** edit |
-| `:full` | + convert, unary_default, unary_rho, binary, ternary, blocks, kernels, juliacompat | ~5 min | **stage exit**, and mandatory at the exits of Stages 1 and 2 |
+| `:fast` | meta, decode, lattice, order, project, packed, sort | **57 s** | after **every** edit |
+| `:lazy` | + the cheap full sections in full, and a ~1/6 format sample of the three expensive ones | ~3 min | **stage exit** (the routine gate) |
+| `:full` | + convert, unary_default, unary_rho, binary, ternary, blocks, kernels, juliacompat | ~10 min | **Stage 2 exit** and release |
+
+**Why `:lazy` is the routine stage gate, and where it is not enough.** The
+expensive sections are defence in depth: an arithmetic result cannot move
+without `decode`, `project` or the code lattice moving first, and those are in
+`:fast`, exhaustive over all 120 formats at every tier. Sampling the operation
+catalogue therefore trades a small amount of redundancy for a 3× shorter gate,
+which is the right trade for a gate run at every stage boundary.
+
+**Stage 2 is the exception and must exit on `:full`.** It is the one commit
+that changes the type of every value in the package, and the one place where a
+defect could plausibly be format-specific rather than systematic — precisely
+the failure a 1-in-6 format sample can miss. The same applies to release.
+
+*Figures measured, not estimated (§11 M2, M12). `:full` is dominated by two
+sections — `unary_rho` and `unary_default` — because a unary table entry is one
+oracle trip and 24 of the 30 unary operations are MPFR directed-enclosure
+ladders at ~0.5–1 ms each. Everything else together is under 2 minutes.*
+
+**The `:lazy` sections carry their own names and their own golden entries**
+(`unary_rho~lazy`, `unary_default~lazy`, `binary~lazy`). That is forced rather
+than stylistic: a digest over a sampled format list is a different number from
+the digest over the whole list, so reusing the full section's name would make
+every lazy run report a spurious mismatch. `capture.jl` writes every tier's
+sections into the one file, so any tier is checkable against it.
+
+The sample is **deterministic** — a fixed stride over the format list, always
+including the first and last entries so the extremes of the grid are never
+dropped. A golden whose contents depend on a random draw is not a golden.
 
 The split is a wall-clock decision, not a coverage concession: the fast tier is
 exhaustive over all 120 formats for exactly the stages a type refactor can
@@ -1487,14 +1516,22 @@ the one given. Fixed, plus `SHA` declared in `[extras]`/`[targets]` for the
 golden harness. *Baseline once building: the full suite passes — ~8.9 M
 assertions, 2 m 33 s.*
 
-**M2 — G5 is tiered, because the full sweep costs ~5 minutes.** The first
-capture attempt ran **13 minutes** before failing. Profiling by section showed
-the cost is almost entirely the unary catalogue: 30 operations × 4 ρ ×
-120 formats ≈ 14 400 tables, and a table entry is one oracle trip at a measured
-**~200 µs** for the MPFR-backed transcendentals. A gate that costs minutes is a
-gate that gets skipped, so G5 splits into `:fast` (~45 s, run after every edit)
-and `:full` (~5 min, run at stage exit). §5's G5 entry states the split and why
-it is not a coverage concession.
+**M2 — G5 is tiered, because the full sweep costs 15 minutes.** The first
+capture attempt ran 13 minutes before failing. Profiling by section showed the
+cost is almost entirely the unary catalogue: 30 operations × 4 ρ × 120 formats
+≈ 14 400 tables, and a table entry is one oracle trip at a measured **~200 µs**
+for the MPFR-backed transcendentals. A gate that costs minutes is a gate that
+gets skipped, so G5 splits into `:fast` (**57 s** measured, run after every
+edit) and `:full` (**15 min 13 s** measured, run at stage exit).
+
+*The tiering worked; the sizing estimate did not.* This entry first claimed
+`:full` would cost ~5 minutes after the M4 subsetting. Measured: 913 s, of which
+`unary_rho` is 532 s and `unary_default` 196 s — 80 % in two sections. M4 cut
+the format count for ρ-breadth but the surviving 46 representative formats ×
+30 ops × 3 ρ is still ~4 100 MPFR-backed tables. The lesson is the one this
+project keeps relearning: **a cost model over MPFR work is worthless until
+measured.** If `:full` needs to come down further, the lever is ρ-breadth on
+the transcendental catalogue, not format count.
 
 **M3 — the golden is a standalone harness, not instrumented testsets.** See
 Stage 0 step 2. Digesting the existing suite's testsets would couple the oracle
@@ -1535,6 +1572,55 @@ only the edits that genuinely need the type refactor (the (b) sites, which must
 route through `reptype`). *Rule generalized:* **any edit that is a no-op while
 `Binary` is concrete belongs in Stage 1, not Stage 2.** The same argument moved
 the T11 complement migration there, and for the same reason.
+
+**M12 — M4's "representative subset" was 58 % of the grid, and the ρ sweep paid
+for work it re-derived.** Measuring `:full` by section exposed two sizing errors
+in my own harness, both of the same kind: a claimed reduction that was not
+computed.
+
+*The subset was not a subset.* `representative_formats()` took three precisions
+per `(K, Σ, Δ)` cell — the two extremes and the midpoint — giving **70 of 120
+formats**. Since `B` is monotone in `P` at fixed `K`, the midpoint is
+interpolation between the two ends for every trait these sections exercise, so
+it bought repetition rather than coverage. Two-per-cell gives 46.
+
+*The ρ sweep re-derived ρ-independent work.* For a given `(op, format, code)`,
+`ωeval` yields the same exact value or enclosure whatever ρ is; only `project`
+differs. Sweeping three pure ρ therefore ran the MPFR ladder three times to
+exercise three projection modes — roughly **350 s of the 532 s** spent
+recomputing identical intermediates. Cut to two directed modes on opposite
+sides (`RTZ_SatFinite`, `RTP_SatPropagate`); `RTO` remains covered exhaustively
+over all 120 formats by the `project` section, which is carrier-cheap.
+
+*What was deliberately NOT done.* The tempting fix is to call `ωeval` once and
+project it under each ρ. That would be correct arithmetic and wrong testing:
+the golden's job is to exercise the scalar path invariant 6 names, and a
+harness that bypasses that path no longer protects it. **Cut the breadth, keep
+the mechanism.**
+
+**M10 — G9's predicate is `Base.isdispatchelem`, not `isconcretetype`.** The
+obvious spelling of "this trait folded to one exact answer" is
+`isconcretetype(only(Base.return_types(trait, Tuple{Type{F}})))`. It is wrong
+for exactly the traits G9 exists to protect: a type-valued trait infers to
+`Type{Float64}` / `Type{UInt8}` / `Type{Code8{…}}`, and **`isconcretetype(Type{Float64})`
+is `false`** — `Type{X}` is a kind, not a concrete type, even though it has one
+inhabitant. The mistake fails every type-valued trait while passing every
+tag-valued one, which reads exactly like a real defect in the trait design and
+is not. `Base.isdispatchelem` is the correct predicate: true for a concrete
+type and for a `Type{X}` singleton, false for a `Union` and for `Any` — which
+is precisely "inference resolved this call to one exact answer". Written down
+because the false reading would have sent the next person to re-introduce D3's
+2 520 generated methods to fix a problem that does not exist.
+
+**M11 — the golden was captured from a clean `main` worktree, not from HEAD.**
+Checkpoint §6 flagged this as the one property that can only be lost once:
+`src/formats.jl` already carried the (asserted zero-change) Stage 1 edits, so
+capturing in place would have made G5 partly self-referential. Resolved by
+`git worktree add` at `main`, copying in only `Project.toml` (the build fix —
+without it the worktree cannot instantiate) and the harness, and capturing
+there. The golden's header records `git: 51abb00`, which is the commit the
+oracle actually describes. **G5 fast then passed 7/7 against the Stage 1 tree**,
+which is the intended use: the oracle is independent of the code it judges.
 
 **M8 — `_cu(F, x)` as the single narrowing point.** The T11 rewrite needs the
 storage unit at a dozen sites (`signmask`, `nan_code`, the four extremal

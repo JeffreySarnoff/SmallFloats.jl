@@ -40,14 +40,23 @@ using .Float128FMA          # on Windows this installs Base.fma
 include("faa128.jl")
 using .Float128FAA          
 
-# Include order: formats → projspec → defaults → decode_encode → project →
-# ops_scalar → juliacompat → oracle → tables → kernels → blocks → packed →
-# approx → rand.
+# Include order: formats → carriers → projspec → defaults → decode_encode →
+# project → ops_scalar → juliacompat → oracle → tables → kernels → blocks →
+# packed → approx → rand.
 # (One deliberate delta from the architecture §11 listing: the evaluation-protocol
 # structs BigExactF/EncloseF live in ops_scalar.jl per §6, so ops_scalar precedes
 # oracle; oracle's references to them are function-body-late-bound either way, but
 # this is the order the harnesses verified.)
+#
+# `carriers.jl` follows `formats.jl` because its trait signatures are bounded by
+# `Binary`, which a `where` clause resolves at method-definition time. It owns
+# the second of the two axes: `formats.jl` decides how a code point is *stored*
+# (a function of K), `carriers.jl` decides what holds a datum in *flight* (a
+# function of the exponent bias B). Keeping them in separate files is what makes
+# "the carrier is a property of values in flight, not of formats at rest"
+# checkable rather than merely stated.
 include("formats.jl")
+include("carriers.jl")
 include("projspec.jl")
 include("defaults.jl")
 include("decode_encode.jl")

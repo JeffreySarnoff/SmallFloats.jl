@@ -231,28 +231,20 @@ end
     _νrnite(ν, νs, N) + R >= Int64(1) << N
 
 # ---- dyadic comparison for saturation (design §5.3)
-@inline _nbits(S::Int64) = 64 - leading_zeros(UInt64(S))
-# compare s·S·2^Q against extremal datum m (as Float64, exact); |result| may exceed Float64 range,
-# so compare in (sign, msb-position, aligned significand) space.
-@inline function _cmp_rounded_datum(sign::Int8, S::Int64, Q::Int64, m::Float64)
-    S == 0 && return m == 0.0 ? 0 : (m > 0 ? -1 : 1)
-    m == 0.0 && return Int(sign)
-    sm = m > 0 ? 1 : -1
-    Int(sign) != sm && return Int(sign) < sm ? -1 : 1
-    am = abs(m)
-    (mS, mE, _) = Base.decompose(am)                      # am = mS · 2^mE exactly
-    mS64 = Int64(mS); mE64 = Int64(mE)
-    p1 = Q + _nbits(S); p2 = mE64 + _nbits(mS64)          # msb positions
-    if p1 != p2
-        c = p1 < p2 ? -1 : 1
-    else
-        Δ = Q - mE64                                       # |Δ| ≤ 64 when positions equal
-        a1 = Δ >= 0 ? (Int128(S) << Δ) : Int128(S)
-        a2 = Δ >= 0 ? Int128(mS64) : (Int128(mS64) << (-Δ))
-        c = a1 < a2 ? -1 : (a1 > a2 ? 1 : 0)
-    end
-    Int(sign) > 0 ? c : -c
-end
+#
+# `_cmp_rounded_datum(sign, S, Q, m::Float64)` and its `_nbits` helper lived
+# here: a comparison of a
+# rounded canonical form against an extremal datum, done in
+# (sign, msb-position, aligned significand) space so that a |result| exceeding
+# Float64's range stayed comparable. It was removed at Stage 1 of the K ≤ 16
+# extension because it had **no call site anywhere** in `src/` or `test/`
+# (implementextensions §1 C8) — `saturate` compares `(S, Q)` against
+# `_extremal_SQ` in pure integer space and never needs it.
+#
+# Recorded rather than silently deleted because wide K may want exactly this
+# shape back: comparing against an extremal datum whose magnitude exceeds the
+# carrier is the Group C saturation question. If Stage 7 needs it, reintroduce
+# it against `Dyadic` — where the (S, Q) form is native — not against Float64.
 
 # Extremal magnitude in canonical (S, Q) integer form — a pure function of the type
 # parameters, so it constant-folds (bitops plan K4). Verified by enumeration against

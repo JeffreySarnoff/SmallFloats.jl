@@ -6,6 +6,8 @@
 # Tier is chosen by SMALLFLOATS_G5:
 #   "fast" (default) — ~45 s: metadata, decode, lattice, order, projection,
 #                      packed, sort. Everything a type refactor can move.
+#   "lazy"           — ~2 min: "fast" and samples 15%-20% of the operation catalogue, blocks, kernels,
+#                      Base veneers. Required at stage exit.
 #   "full"           — ~5 min: adds the operation catalogue, blocks, kernels,
 #                      Base veneers. Required at stage exit.
 #   "off"            — skip (with a visible message; never silently).
@@ -15,6 +17,11 @@
 # recapture.
 
 using Test, SmallFloats
+
+if !haskey(ENV, "SMALLFLOAT_G5") || ENV["SMALLFLOAT_G5"] == "full"
+    ENV["SMALLFLOAT_G5"] = "lazy"
+end
+
 include(joinpath(@__DIR__, "golden", "harness.jl"))
 
 @testset "G5 — K ≤ 8 golden non-regression" begin
