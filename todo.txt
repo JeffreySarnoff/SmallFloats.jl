@@ -1,0 +1,11 @@
+till blocked with a bare command, and the rule is syntactically right. That points at the cause: Claude Code reads .claude/settings.json at session start, and this file was created mid-session, so it isn't loaded. The default allowlist (which is why echo and grep still work) was loaded at startup; your new rule wasn't.
+
+You'll need to restart the session for it to take effect. The work is all on disk, so nothing is lost — Checkpoint.md is written specifically so a fresh session can pick up cleanly. On restart, point me at it and I'll resume.
+
+When julia runs again, the sequence from §6 of the checkpoint is:
+
+using SmallFloats — do my formats.jl edits compile?
+Pkg.test() — is Stage 1 zero-behaviour-change?
+Capture the golden — but decide the stash question first (§6 item 4): the golden must come from a tree nobody has edited, and src/formats.jl currently has unverified edits. My recommendation remains stash → capture → re-apply. It's the one property in this project that can only be lost once.
+Finish Stage 1.
+One caveat on the restart: I lose the working context, but not the record. Checkpoint.md §2 has the file-by-file verification status, §4 has the eight design decisions (M1–M8) with reasons, and §5 has the open items including the two I'd most want a fresh session not to miss — the nine dangling checkpoint.md references and the unexplained test/runtests1.jl.

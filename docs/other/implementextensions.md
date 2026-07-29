@@ -762,17 +762,33 @@ without touching its neighbours.
 *No source changes. Everything here is a thing that must exist before an edit
 is safe.*
 
+0. **Make the repository build** (§11 M1 — discovered during execution, not by
+   the audit). `Project.toml` was rejected outright by Pkg: `Julia = "1.12"` in
+   `[compat]` must be lowercase `julia`, and `author` must be `authors`. Until
+   both are fixed `Pkg.instantiate()` fails, so *nothing* — not the suite, not
+   the golden, not a single `using` — can run. C9 understated the state of the
+   rename: the tree was not merely missing its doctrine file, it did not build.
 1. **Reconstitute the doctrine file** (C9). Recompose the seven invariants, the
    include-order rule, the enumerate-don't-sample doctrine, the
    `SmallFloats_Float128` dual-configuration contract, and the JET-filter rule
    from [`docs/src/technical_guide.md`](../src/technical_guide.md) and the
    assertions in [`test/`](../../test/). Without it, invariants 8–10 have
    nowhere to live and invariant 8's grep enforcement has nothing to cite.
-2. **Capture the K ≤ 8 golden (G5).** Run the existing suite against the
-   current tree; for each testset, SHA-256 the concatenated result code points;
-   commit as `test/golden/k8.sha256` (~50 lines, diffable — technique T12).
-   **Capture before the first edit**; a golden derived from refactored code
-   proves only self-consistency.
+2. **Capture the K ≤ 8 golden (G5).** SHA-256 one digest per section of the
+   K ≤ 8 observable surface; commit as `test/golden/k8.sha256` (~20 lines,
+   diffable — technique T12). **Capture before the first edit**; a golden
+   derived from refactored code proves only self-consistency, so
+   [`capture.jl`](../../test/golden/capture.jl) refuses to overwrite an
+   existing file without an explicit environment override.
+
+   *Implementation note (§11 M3).* The plan said "run the existing suite and
+   digest each testset". That was the wrong shape: the suite's testsets are
+   `@test` calls, not result streams, so digesting them means invasive edits to
+   1 500 lines of tests — and it couples the oracle to the *structure* of the
+   suite rather than to the *behaviour* of the package. A standalone harness
+   ([`test/golden/harness.jl`](../../test/golden/harness.jl)) enumerating the
+   surface directly is independent of how the tests happen to be organized, is
+   reproducible from one command, and is what G5 actually needs.
 3. **Record the performance baseline.** Scalar `Add`, `project`, array unary
    and binary gathers, and the zero-allocation pins, under the existing
    benchmark harness, with the machine and Julia version recorded. Stage 2 is
@@ -1236,7 +1252,28 @@ way to reach a wrong answer from user code.
 
 **G5 — K ≤ 8 golden non-regression.** Captured at Stage 0 *before* any edit,
 compared byte-for-byte. The exit criterion for Stages 1 and 2 and a standing
-gate thereafter.
+gate thereafter. Implemented in [`test/golden/`](../../test/golden/); the gate
+is [`test/golden.jl`](../../test/golden.jl).
+
+**Two tiers** (measured — see §11 M2). The full sweep costs ~5 minutes, which
+is right for a stage exit and wrong for a gate you want to run after every
+edit, so:
+
+| tier | sections | cost | when |
+|---|---|---|---|
+| `:fast` | meta, decode, lattice, order, project, packed, sort | ~45 s | after **every** edit |
+| `:full` | + convert, unary_default, unary_rho, binary, ternary, blocks, kernels, juliacompat | ~5 min | **stage exit**, and mandatory at the exits of Stages 1 and 2 |
+
+The split is a wall-clock decision, not a coverage concession: the fast tier is
+exhaustive over all 120 formats for exactly the stages a type refactor can
+move — storage, traits, constructors, the decode/encode plumbing, and the
+projection engine. An arithmetic result cannot change without one of those
+changing first. The full tier measures that claim rather than asserting it.
+
+*What is digested is semantic observables only* — code points, decoded bit
+patterns, class tags, order keys — never printed type names, because Stage 2
+changes `show` for the abstract format on purpose. A golden that fires on an
+intended change is a golden that gets disabled.
 
 **G6 — carrier-lift exactness (new).** Every `lift(h, decode(v))` is exact for
 every datum of every format, and no narrowing `lift` method exists. A T1-tier
@@ -1428,6 +1465,96 @@ within 1.5× of `Float64` on scalar `Add` at K ≤ 8.
 | 14 | **C9: the doctrine file does not exist in this repository** | Both predecessors instruct amending a `CLAUDE.md` that was not copied with the rename. Invariants 8–10 have nowhere to live; a Stage 0 blocker |
 | 15 | **G6–G9 added; G1 extended to band contiguity** | Each new gate corresponds to a defect class introduced above that the inherited five do not cover |
 | 16 | **Stage 0 added; nine stages became ten** | Golden capture, doctrine reconstitution, baselines, and the four decisions are prerequisites, not step 1 of the first edit |
+
+---
+
+## 11. Execution log — modifications made while implementing
+
+*Appended as each stage is executed. A plan is a hypothesis; this is what
+contact with the code changed about it. Items are numbered `M<n>` and are
+referenced from the stage and gate text above.*
+
+### Stage 0
+
+**M1 — the repository did not build; C9 understated the state of the rename.**
+`Project.toml` was rejected by Pkg outright: `[compat]` had `Julia = "1.12"`
+(the key must be lowercase `julia`) and the metadata key was `author` rather
+than `authors`. `Pkg.instantiate()` therefore failed, and with it every
+subsequent action — the suite, the golden, a bare `using`. C9 reported a
+missing doctrine file; the truth was that the copy from `ByteFloats.jl` left
+the tree **unbuildable**, which is a stronger reason for Stage 0 to exist than
+the one given. Fixed, plus `SHA` declared in `[extras]`/`[targets]` for the
+golden harness. *Baseline once building: the full suite passes — ~8.9 M
+assertions, 2 m 33 s.*
+
+**M2 — G5 is tiered, because the full sweep costs ~5 minutes.** The first
+capture attempt ran **13 minutes** before failing. Profiling by section showed
+the cost is almost entirely the unary catalogue: 30 operations × 4 ρ ×
+120 formats ≈ 14 400 tables, and a table entry is one oracle trip at a measured
+**~200 µs** for the MPFR-backed transcendentals. A gate that costs minutes is a
+gate that gets skipped, so G5 splits into `:fast` (~45 s, run after every edit)
+and `:full` (~5 min, run at stage exit). §5's G5 entry states the split and why
+it is not a coverage concession.
+
+**M3 — the golden is a standalone harness, not instrumented testsets.** See
+Stage 0 step 2. Digesting the existing suite's testsets would couple the oracle
+to the suite's *structure*; enumerating the surface directly couples it to the
+package's *behaviour*, which is what is being protected.
+
+**M4 — ρ-breadth for the expensive catalogue is bought on a derived
+representative subset.** Sweeping 30 unary ops × 4 ρ over all 120 formats is
+~3.7 M MPFR ladders. The full-grid claim that matters for G5 — that no format's
+decode, projection, ordering or code lattice moved — is carried exhaustively by
+the fast tier; ρ-breadth over the operation catalogue is defence in depth and
+runs on a subset **derived from the grid** (for each `(K, Σ, Δ)`, the extreme
+and middle precisions), never hand-listed. This is Stage 8's
+"derived-not-hand-listed" rule applied a stage early, where it first bites.
+
+**M5 — there is deliberately no `conformance` section in the golden.**
+`conformance_dict()` embeds `collect(keys(TABLE_CACHE))`, so its value depends
+on which tables happen to be cached when it is called — nondeterministic across
+runs and across section orderings — and it lists the 120 format names, which
+Stage 3 changes to 504 **on purpose**. Digesting a *declaration* byte-exact
+guarantees false positives of both kinds. Invariant 5's real content (κ
+measured by exhaustive enumeration at registration) is pinned by the suite.
+
+### Stage 1
+
+**M7 — the disposition-(a) signature widening moves from Stage 2 to Stage 1.**
+Appendix A splits the 29 exact `::Type{Binary{K,P,S,E}}` signatures into
+(a) widen to `<:`, (b) retarget to the representation, (c) keep exact. The plan
+put all three in Stage 2. But while `Binary` is still concrete,
+`::Type{<:Binary{K,P,S,E}}` and `::Type{Binary{K,P,S,E}}` **match exactly the
+same single type**, so every (a) site can be widened at Stage 1 as a provably
+zero-behaviour-change edit — and Stage 1's exit is G5, which verifies that
+completely.
+
+Doing so is strictly better than the plan: it removes ~21 of the 29 sites from
+the diff of the single riskiest commit in the project, leaving Stage 2 to carry
+only the edits that genuinely need the type refactor (the (b) sites, which must
+route through `reptype`). *Rule generalized:* **any edit that is a no-op while
+`Binary` is concrete belongs in Stage 1, not Stage 2.** The same argument moved
+the T11 complement migration there, and for the same reason.
+
+**M8 — `_cu(F, x)` as the single narrowing point.** The T11 rewrite needs the
+storage unit at a dozen sites (`signmask`, `nan_code`, the four extremal
+codes …). Spelling `codeunit_type(F)(x)` at each is noisy and invites someone
+to shortcut it back to a `UInt8` literal. One `@inline _cu(::Type{F}, x)`
+helper makes the unit a single grep-able point and keeps every constant a
+literal after folding. The special-code block now reads as arithmetic on
+`signmask`/`codemask` rather than on `1 << K`, which is also what makes the
+four `MaxFiniteOf` rows collapse into one expression.
+
+**M9 — `Convert` is registry arity 1 but registry group `:conv`, and every
+consumer that filters by arity alone walks into it.** The first harness built
+its unary list as `arity == 1` and died in `apply_op` with
+`MethodError: no method matching ωeval(::Val{:Convert}, ::Float64)` — `Convert`
+has no ω-semantics, and `tables.jl`'s `_scalar_code` special-cases it into a
+bare projection. Recorded here because **Stage 6 adds `factors` as an `OpInfo`
+column** and will iterate the registry the same way: `factors(:Convert)` must
+be defined (or `:conv` excluded) or the same trap fires in the carrier
+selection, where it would be far less obvious. The rule for every registry
+consumer is **filter by `(arity, group)`, never by arity alone.**
 
 ---
 

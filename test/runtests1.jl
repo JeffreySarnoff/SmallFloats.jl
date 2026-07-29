@@ -34,38 +34,6 @@ using SmallFloats: project, project_interval, round_to_precision, encode, order_
     rawvalue, decode, _decode_compute, _decode_table, nan_code, Rounded, KIND_FIN,
     apply_op, MaybeRNG
 
-# Main.FastTest = true
-#
-# if isdefined(Main, :FastTest)
-
-const K5  = div(5000, 5)
-const K4B = div(4096, 4)
-const K4  = div(4000, 4)
-const K2  = div(2000, 4)
-const K1  = div(1000, 4)
-const H2  = div(200,  4)
-const H1  = div(100, 4)
-const TEN5 = div(50, 5)
-const TEN1 = div(10, 2)
-
-# No `T5`/`T1` loop counts: `T5` collides with the format binding
-# `T5 = Binary5p2se` (line ~653, 65 uses), and the only `T1` sites are the
-# BlockVector layout test, whose siblings hardcode `10`, `blocks[7]` and
-# `(4, 10)` — it is a fixed-size layout check, not a scaling loop.
-
-#else
-#=
-const K5  = 5000
-const K4B = 4096
-const K4  = 4000
-const K2  = 2000
-const K1  = 1000
-const H2  = 200
-const H1  = 100
-const TEN5  = 50
-const TEN1  = 10
-=#
-#end
 
 const UN = collect(_UNARY_OPS)
 
@@ -689,12 +657,12 @@ T8 = Binary8p3se; T5 = Binary5p2se; S4 = Binary4p2se; R5 = Binary5p3se
     @test_throws ArgumentError get_table(:Exp, T8, T8, ProjSpec(StochasticA{2}(), SatNone()))
 
     # --- vmap ≡ scalar map (unary, binary, mixed-format, asymmetric)
-    codesA = [rawvalue(T5, UInt8(rand(0:31))) for _ in 1:K4B]
-    codesB = [rawvalue(T5, UInt8(rand(0:31))) for _ in 1:K4B]
+    codesA = [rawvalue(T5, UInt8(rand(0:31))) for _ in 1:4096]
+    codesB = [rawvalue(T5, UInt8(rand(0:31))) for _ in 1:4096]
     out = Subtract(T5, RNE_SatNone, codesA, codesB)
     @test all(codepoint(out[i]) == codepoint(Subtract(T5, RNE_SatNone, codesA[i], codesB[i])) for i in eachindex(out))
-    a4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:K1]
-    b4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:K1]
+    a4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:1000]
+    b4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:1000]
     om = Multiply(R5, ρup, a4, b4)
     @test eltype(om) == R5
     @test all(codepoint(om[i]) == codepoint(Multiply(R5, ρup, a4[i], b4[i])) for i in eachindex(om))
@@ -704,7 +672,7 @@ T8 = Binary8p3se; T5 = Binary5p2se; S4 = Binary4p2se; R5 = Binary5p3se
     @test all(codepoint(oc[c + 1]) == codepoint(Convert(T5, ρup, rawvalue(T8, UInt8(c)))) for c in 0:255)
 
     # --- ternary Shape B
-    c4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:K1]
+    c4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:1000]
     of = FMA(S4, RNE_SatNone, a4, b4, c4)
     @test all(codepoint(of[i]) == codepoint(FMA(S4, RNE_SatNone, a4[i], b4[i], c4[i])) for i in eachindex(of))
 
@@ -723,7 +691,7 @@ T8 = Binary8p3se; T5 = Binary5p2se; S4 = Binary4p2se; R5 = Binary5p3se
     dest = similar(codesA); v = Val(:Add)
     vmap!(dest, v, T5, RNE_SatNone, codesA, codesB)
     @test (@allocated vmap!(dest, v, T5, RNE_SatNone, codesA, codesB)) == 0
-    destu = similar(ou); vu = Val(:Exp); srcu = [rawvalue(T8, UInt8(rand(0:255))) for _ in 1:K4B]
+    destu = similar(ou); vu = Val(:Exp); srcu = [rawvalue(T8, UInt8(rand(0:255))) for _ in 1:4096]
     du = similar(srcu)
     vmap!(du, vu, T8, RNE_SatNone, srcu)
     @test (@allocated vmap!(du, vu, T8, RNE_SatNone, srcu)) == 0
@@ -794,7 +762,7 @@ rnd(T) = rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1)))
 
 @testset "blocks.jl §8" begin
     # --- blockdecode ≡ independent lane semantics, incl 0·∞ and NaN
-    for _ in 1:H2
+    for _ in 1:200
         b = Block(rnd(T5), ntuple(_ -> rnd(T5), 3))
         X = blockdecode(b)
         for i in 1:3
@@ -848,7 +816,7 @@ rnd(T) = rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1)))
     @test decode(bi.x[1]) == 1.0 && decode(bi.x[2]) == -1.0 && decode(bi.x[3]) == 0.0 && isnan(decode(bi.x[4]))
 
     # --- ScaledOp ≡ B=1 BlockOp with unit result scale (draft §5.5)
-    for _ in 1:H1
+    for _ in 1:100
         s1, x1, s2, x2 = rnd(T5), rnd(T5), rnd(T5), rnd(T5)
         r1 = ScaledAdd(T8, RNE_SatNone, s1, x1, s2, x2)
         r2 = BlockAdd(T8, RNE_SatNone, Block(s1, (x1,)), Block(s2, (x2,)), one(T5))
@@ -1148,7 +1116,7 @@ println("approx.jl verified")
     # --- envelope sanity: libquadmath error ≪ the 2^-90 claim (assert < 2^-100)
     rng = Xoshiro(2026)
     for f in (exp, log, sin, tanh, atan, log1p, expm1, asinh)
-        for _ in 1:H2
+        for _ in 1:200
             x = (f === log ? rand(rng) * 100 + 1e-6 :
                  f === log1p ? rand(rng) * 10 - 0.99 : randn(rng) * 3)
             y128 = f(Float128(x))
@@ -1204,7 +1172,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         # datums, pairwise sums/products (the reachable arithmetic values), sticky variants
         pool = Float64[]
         append!(pool, fin)
-        for _ in 1:K4
+        for _ in 1:4000
             x, y = rand(fin), rand(fin)
             s = x + y; iszero(s) || !isfinite(s) || push!(pool, s)
             p = x * y; iszero(p) || !isfinite(p) || push!(pool, p)
@@ -1213,7 +1181,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
             @test eqrtp(P, B, μ, X, 0, st)
         end
         # stochastic: full R-sweep at small N, boundary N ∈ {45, 60} sampled R
-        for X in pool[1:H2]
+        for X in pool[1:200]
             for N in (1, 2), R in 0:(1 << N) - 1, SV in (StochasticA{N}(), StochasticB{N}(), StochasticC{N}())
                 @test eqrtp(P, B, SV, X, R, 0)
             end
@@ -1242,7 +1210,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
                 @test (x == y) == (dx == dy) && (x < y) == (dx < dy) && (x <= y) == (dx <= dy)
             end
         end
-        A = [rawvalue(T, rand(UInt8) & UInt8((1 << bitwidth(T)) - 1)) for _ in 1:K5]
+        A = [rawvalue(T, rand(UInt8) & UInt8((1 << bitwidth(T)) - 1)) for _ in 1:5000]
         s1 = sort(A)                                   # counting sort via defalg
         s2 = sort(A; alg=Base.Sort.DEFAULT_UNSTABLE)   # stock comparison sort
         @test codepoint.(s1) == codepoint.(s2)
@@ -1250,9 +1218,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         r2 = sort(A; alg=Base.Sort.DEFAULT_UNSTABLE, rev=true)
         @test codepoint.(r1) == codepoint.(r2)
         @test issorted(s1)
-        # interior slice, derived from K5 so it tracks the FastTest scaling.
-        # Fixed point at the original literals: K5 = 5000 ⇒ 100:4000.
-        sv = sort!(view(copy(A), max(1, K5 ÷ 50):(4 * K5) ÷ 5))
+        sv = sort!(view(copy(A), 100:4000))
         @test issorted(sv)
         byp = sort(A; by=decode)                       # non-default ordering falls back safely
         @test decode.(byp[.!isnan.(decode.(byp))]) |> issorted
@@ -1279,7 +1245,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
             end
             @test codepoint.(collect(pv)) == codepoint.(reverse(A))
         end
-        A = [rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1))) for _ in 1:K1]
+        A = [rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1))) for _ in 1:1000]
         pv = PackedVector(A)
         @test sizeof(pv.data) <= cld(1000 * bitwidth(T), 64) * 8 + 8
         o1 = SmallFloats.vmap(:Exp, T, RNE_SatNone, pv)       # kernel-through-packed ≡ bytes
@@ -1498,16 +1464,16 @@ end
     # a non-default projection is the same draw, differently projected
     r1, r2 = Xoshiro(7), Xoshiro(7)
     @test all(rand(r1, T; projection=RTP_SatNone) ===
-              Convert(T, RTP_SatNone, rand(r2, Float64)) for _ in 1:K2)
+              Convert(T, RTP_SatNone, rand(r2, Float64)) for _ in 1:2_000)
     r1, r2 = Xoshiro(7), Xoshiro(7)
     @test all(randn(r1, T; projection=RTZ_SatFinite) ===
-              Convert(T, RTZ_SatFinite, randn(r2)) for _ in 1:K2)
+              Convert(T, RTZ_SatFinite, randn(r2)) for _ in 1:2_000)
     # stochastic projections draw R from the SAME rng: seeded streams reproduce
     σ8 = RSA_SatNone(8)
-    draws(seed) = [codepoint(rand(Xoshiro(seed), T; projection=σ8)) for _ in 1:TEN5]
+    draws(seed) = [codepoint(rand(Xoshiro(seed), T; projection=σ8)) for _ in 1:50]
     @test draws(5) == draws(5)
     @test draws(5) != draws(6)
-    ndraws(seed) = [codepoint(randn(Xoshiro(seed), T; projection=σ8)) for _ in 1:TEN5]
+    ndraws(seed) = [codepoint(randn(Xoshiro(seed), T; projection=σ8)) for _ in 1:50]
     @test ndraws(5) == ndraws(5)
     # unsigned randn throws on the keyword spelling too
     @test_throws ArgumentError randn(Xoshiro(1), Binary6p3ue; projection=RNE_SatFinite)

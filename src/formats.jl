@@ -37,6 +37,53 @@ function checkformat(K, P, SGN, EXT)
     nothing
 end
 
+# ---- representation traits (implementextensions §2 R-A, §3.2)
+#
+# These answer "how is a code point stored, and how is it decoded" — the axis
+# that is a function of K alone. They are separate from the *carrier* traits in
+# carriers.jl, which answer "what holds a datum in flight" and are a function of
+# the exponent bias B.
+#
+# Every one is reached by DISPATCH and has a single concrete return type
+# (invariant 9). Today there is one representation, so each is one method; when
+# `Code16` arrives they become two methods dispatching on the representation,
+# NOT a branch on K. Gate G9 pins that each folds to a literal per format.
+
+"""Decode strategy for a format: a `2^K`-entry constant tuple, or computed."""
+abstract type DecodePolicy end
+"""`2^K ≤ 256`: the generated constant tuple folds and costs one load."""
+struct TableDecode <: DecodePolicy end
+"""`2^K > 256`: compute from the code point; a 65 536-element tuple literal is
+not a table, it is a compile-time hazard (invariant 10)."""
+struct ComputeDecode <: DecodePolicy end
+
+"""
+    _unitmask(U, K) -> U
+
+The low-`K`-bits mask of storage unit `U`, built by **complement** — shift down
+from `typemax`, never up from `one`.
+
+Julia defines a shift at or beyond a type's width as zero, so `UInt8(1) << 8`
+and `UInt16(1) << 16` are both `0`, and `2^K` computed in a unit of width `K`
+is `0`. The format grid **always contains a format whose K equals its storage
+width** (K = 8 on `UInt8`, K = 16 on `UInt16`), so that case is structural, not
+an edge. Here the shift amount is `width − K ∈ [0, width−1]`, in which the
+pathological amount is unreachable *by construction*, at every K, for every
+unit — including a future `Code32`.
+"""
+@inline _unitmask(::Type{U}, K::Int) where {U<:Unsigned} = typemax(U) >> (8 * sizeof(U) - K)
+
+"""The storage unit of a format's code point: `UInt8` for K ≤ 8."""
+@inline codeunit_type(::Type{<:Binary}) = UInt8
+"""Decode strategy for a format (`TableDecode` while every K ≤ 8)."""
+@inline decodepolicy(::Type{<:Binary}) = TableDecode()
+"""Unsigned type wide enough for a format's `2^K + 1` total-order keys."""
+@inline orderkeytype(::Type{<:Binary}) = UInt16
+"""The concrete representation type of a format — the identity while `Binary`
+is itself concrete; the abstract-format → `Code8`/`Code16` map afterwards."""
+@inline reptype(::Type{F}) where {F<:Binary} = F
+# `codemask` needs `bitwidth`, so it is defined with the Group M block below.
+
 """Unsafe raw constructor used by kernels after invariants are established."""
 @inline rawvalue(::Type{Binary{K,P,SGN,EXT}}, x::UInt8) where {K,P,SGN,EXT} =
     @inbounds Binary{K,P,SGN,EXT}(Val(:code), x)
@@ -60,19 +107,31 @@ and `Convert` is numeric for all integers: `Binary8p4se(0x02)` is code point 2
 @inline Base.codepoint(v::Binary) = v.x   # extends Base.codepoint (Char); avoids export clash
 
 # ---- Group M (meta) operations: pure functions of the type parameters (design §2.3)
+#
+# Every signature here is `::Type{<:Binary{K,P,S,E}}`, not the exact
+# `::Type{Binary{K,P,S,E}}`. Today those match the same single type, so this is
+# a no-op verified by G5 — but once `Binary` is abstract the exact form stops
+# matching the concrete `Code8`/`Code16` values that flow through it, and an
+# exact-form method is then a `MethodError` waiting for its first wide caller.
+# Widening here rather than in Stage 2 keeps the risky stage's diff to the type
+# refactor alone (implementextensions §11 M7).
 "Format bitwidth K (3–8)."
-bitwidth(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = K
-Base.precision(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = P
+bitwidth(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = K
+Base.precision(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = P
 "Whether the format is Signed (has a sign bit and negative datums)."
-issigned(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = S
+issigned(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = S
 "Whether the format's domain is Extended (datum set includes infinities)."
-isextended(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = E
+isextended(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = E
 "Exponent bias: 2^(K−P−1) signed, 2^(K−P) unsigned."
-expbias(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = S ? (1 << (K - P - 1)) : (1 << (K - P))
+expbias(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = S ? (1 << (K - P - 1)) : (1 << (K - P))
 "Width of the exponent field in bits: (K − signbit) − (P − 1)."
-expbitwidth(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = (S ? K - 1 : K) - (P - 1)
+expbitwidth(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = (S ? K - 1 : K) - (P - 1)
 "Trailing-significand width P − 1 (the stored fraction bits)."
-trailingsigbits(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = P - 1
+trailingsigbits(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = P - 1
+
+"""The low-K-bits mask of a format's storage unit (representation invariant 3):
+the code point occupies the low K bits, the high bits are maintained zero."""
+@inline codemask(::Type{F}) where {F<:Binary} = _unitmask(codeunit_type(F), bitwidth(F))
 
 const BitwidthOf = bitwidth
 const PrecisionOf = precision
@@ -82,13 +141,24 @@ const ExponentBiasOf = expbias
 const ExponentBitwidthOf = expbitwidth
 const TrailingSignificandBitwidthOf = trailingsigbits
 
-# Special code points (literals after constant folding)
-@inline nan_code(::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
-    S ? UInt8(1 << (K - 1)) : UInt8((1 << K) - 1)
-@inline posinf_code(::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
-    S ? UInt8((1 << (K - 1)) - 1) : UInt8((1 << K) - 2)   # meaningful only when E
-@inline neginf_code(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = UInt8((1 << K) - 1)  # signed+E only
-@inline signmask(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = UInt8(1 << (K - 1))
+# Special code points (literals after constant folding).
+#
+# Built from `signmask` and `codemask` rather than from `1 << K` (technique
+# T11). The values are unchanged — G5 verifies that byte-for-byte — but the
+# *reason* they are correct changes from "the shift happens to run in `Int`,
+# and K ≤ 8 ≪ 63" to a structural one: every shift amount below is ≤ K−1, and
+# `codemask` shifts DOWN from `typemax`, so the oversized-shift hazard
+# (`UInt16(1) << 16 === 0x0000`, no error) is unreachable at every K for every
+# storage unit. That property is what a 504-format grid needs to inherit for
+# free; width-relative safety is an accident that holds until it does not.
+@inline _cu(::Type{F}, x::Integer) where {F<:Binary} = codeunit_type(F)(x)
+
+@inline signmask(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} = _cu(F, 1) << (K - 1)
+@inline nan_code(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} =
+    S ? signmask(F) : codemask(F)
+@inline posinf_code(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} =   # meaningful only when E
+    (S ? signmask(F) : codemask(F)) - _cu(F, 1)
+@inline neginf_code(::Type{F}) where {F<:Binary} = codemask(F)        # signed+E only
 
 # Extremal *code points* (draft Group M returns format values).
 # Largest finite magnitude code: the greatest code below the NaN/Inf slots.
@@ -96,20 +166,22 @@ const TrailingSignificandBitwidthOf = trailingsigbits
 #   signed·finite    : NaN  at 2^(K-1)          → maxfinite = 2^(K-1)-1
 #   unsigned·extended: NaN 2^K-1, +Inf 2^K-2    → maxfinite = 2^K-3
 #   unsigned·finite  : NaN  at 2^K-1            → maxfinite = 2^K-2
-@inline function MaxFiniteOf(T::Type{Binary{K,P,S,E}}) where {K,P,S,E}
-    c = S ? (E ? UInt8((1 << (K - 1)) - 2) : UInt8((1 << (K - 1)) - 1)) :
-            (E ? UInt8((1 << K) - 3)       : UInt8((1 << K) - 2))
-    rawvalue(T, c)
+# The four rows collapse to one expression: the ceiling is the NaN slot's
+# neighbourhood — `signmask` for signed formats, `codemask` for unsigned — and
+# the Extended domain spends one more code on +Inf.
+@inline function MaxFiniteOf(T::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
+    ceiling = S ? signmask(F) : codemask(F)
+    rawvalue(T, ceiling - _cu(F, E ? 2 : 1))
 end
-@inline function MinFiniteOf(T::Type{Binary{K,P,S,E}}) where {K,P,S,E}
-    S || return rawvalue(T, 0x00)                              # unsigned: 0
+@inline function MinFiniteOf(T::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
+    S || return rawvalue(T, _cu(F, 0))                         # unsigned: 0
     rawvalue(T, codepoint(MaxFiniteOf(T)) | signmask(T))       # most negative finite
 end
-@inline MinPositiveOf(T::Type{<:Binary}) = rawvalue(T, 0x01)
-@inline MaxSubnormalOf(T::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
-    rawvalue(T, UInt8((1 << (P - 1)) - 1))          # P=1 formats have no subnormals ⇒ code 0
-@inline MinNormalOf(T::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
-    rawvalue(T, UInt8(1 << (P - 1)))
+@inline MinPositiveOf(T::Type{F}) where {F<:Binary} = rawvalue(T, _cu(F, 1))
+@inline MaxSubnormalOf(T::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} =
+    rawvalue(T, (_cu(F, 1) << (P - 1)) - _cu(F, 1))  # P=1 formats have no subnormals ⇒ code 0
+@inline MinNormalOf(T::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} =
+    rawvalue(T, _cu(F, 1) << (P - 1))
 
 # Datum-valued companions (design §2.3): Float64 is the universal exact carrier
 maxfinite_datum(T::Type{<:Binary}) = decode(MaxFiniteOf(T))
