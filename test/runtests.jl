@@ -1690,6 +1690,11 @@ include("golden.jl")
 # The prose cannot disagree with the package: bitwidth range, format count and
 # export-surface size are read from `SmallFloats` and searched for in docs/src.
 include("docs_consistency.jl")
+# …and the examples in those docs actually run and produce what they claim.
+# Documenter only checks `jldoctest` blocks and this package has none, so
+# without this the 109 `julia-repl` examples were prose that looked like
+# evidence.
+include("docs_examples.jl")
 
 include("quality.jl")
 

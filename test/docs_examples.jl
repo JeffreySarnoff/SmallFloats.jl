@@ -175,9 +175,15 @@ end
                 continue
             end
             (status === :novalue || isempty(exp)) && (nskip += 1; continue)
+            # Normalise what the HARNESS changes, never what the docs claim:
+            #   * `Array{T,1}` — the REPL prints the `Vector{T}` alias
+            #   * `SmallFloats.Foo` — `show` qualifies names because this runs in
+            #     a synthetic module; a reader's REPL has `using SmallFloats` and
+            #     prints them bare
             gotc = strip(got)
             gotc = replace(gotc, r"Array\{([^,}]+), 1\}" => s"Vector{\1}")
             gotc = replace(gotc, r"Array\{([^,}]+), 2\}" => s"Matrix{\1}")
+            gotc = replace(gotc, "SmallFloats." => "")
             if occursin("(…)", exp)
                 startswith(gotc, strip(split(exp, "(…)")[1])) && (ncmp += 1; continue)
             end
