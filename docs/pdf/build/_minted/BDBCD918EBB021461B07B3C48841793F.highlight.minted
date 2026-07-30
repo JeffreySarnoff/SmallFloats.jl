@@ -1,4 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{actS}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Softplus}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pre}\PYG{p}{)}
-\PYG{p}{(}\PYG{n}{length}\PYG{p}{(}\PYG{n}{unique}\PYG{p}{(}\PYG{n}{codepoint}\PYG{o}{.}\PYG{p}{(}\PYG{n}{actS}\PYG{p}{))),}\PYG{+w}{ }\PYG{n}{table\PYGZus{}bytes}\PYG{p}{())}
-\end{MintedVerbatim}

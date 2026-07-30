@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{),}\PYG{+w}{ }\PYG{k+kt}{Float64}\PYG{p}{)}\PYG{+w}{                }\PYG{c}{\PYGZsh{} the underlying uniform draw}
+\PYG{g+go}{0.0022505868897625403}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{)}\PYG{+w}{            }\PYG{c}{\PYGZsh{} default: floor (stays in [0,1))}
+\PYG{g+go}{Binary8p4se(0.001953125 ≡ 0x02)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{projection}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RTP\PYGZus{}SN}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} ceiling}
+\PYG{g+go}{Binary8p4se(0.0029296875 ≡ 0x03)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{projection}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} nearest}
+\PYG{g+go}{Binary8p4se(0.001953125 ≡ 0x02)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{projection}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RSA\PYGZus{}SN}\PYG{p}{(}\PYG{l+m+mi}{8}\PYG{p}{))}\PYG{+w}{  }\PYG{c}{\PYGZsh{} stochastic}
+\PYG{g+go}{Binary8p4se(0.001953125 ≡ 0x02)}
+\end{MintedVerbatim}

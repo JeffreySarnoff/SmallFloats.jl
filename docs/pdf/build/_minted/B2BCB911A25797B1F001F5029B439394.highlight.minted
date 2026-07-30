@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{DefaultType}\PYG{p}{()}\PYG{+w}{            }\PYG{c}{\PYGZsh{} Binary8p2se     DefaultType!(Binary8p4se)}
+\PYG{n}{DefaultReturnType}\PYG{p}{()}\PYG{+w}{      }\PYG{c}{\PYGZsh{} Binary8p2se     DefaultReturnType!(Binary8p3se)}
+\PYG{n}{DefaultRoundingMode}\PYG{p}{()}\PYG{+w}{    }\PYG{c}{\PYGZsh{} NearestTiesToEven()}
+\PYG{n}{DefaultSaturationMode}\PYG{p}{()}\PYG{+w}{  }\PYG{c}{\PYGZsh{} SatNone()}
+\PYG{n}{DefaultProjection}\PYG{p}{()}\PYG{+w}{      }\PYG{c}{\PYGZsh{} RNE\PYGZus{}SN}
+\PYG{n}{DefaultRNG}\PYG{p}{()}\PYG{+w}{             }\PYG{c}{\PYGZsh{} Xoshiro         DefaultRNG!(Xoshiro(42))}
+\PYG{n}{DefaultRbits}\PYG{p}{()}\PYG{+w}{           }\PYG{c}{\PYGZsh{} 8               DefaultRbits!(16)}
+\end{MintedVerbatim}

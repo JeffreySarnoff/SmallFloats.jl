@@ -1,5 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{σ4}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RSA\PYGZus{}SatNone}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{+w}{                  }\PYG{c}{\PYGZsh{} ≡ ProjSpec(StochasticA\PYGZob{}4\PYGZcb{}(), SatNone())}
-\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mf}{2.0}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{l+m+mi}{3}\PYG{o}{/}\PYG{l+m+mi}{64}
-\PYG{n}{count}\PYG{p}{(}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{project}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{σ4}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{R}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mf}{2.25}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{R}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{15}\PYG{p}{)}
-\end{MintedVerbatim}

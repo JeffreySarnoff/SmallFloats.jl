@@ -41,6 +41,36 @@ UNICODE_FALLBACKS = {
 }
 
 
+def heading_text(cmd):
+    """The RENDERED text of a sectioning command, markup stripped.
+
+    Two bugs in one line, both invisible until a heading contained inline code.
+    The previous expression took the first non-greedy `{...}`, so
+    `\\section{The \\texttt{AbstractFloat} contract}` yielded
+    `The \\texttt{AbstractFloat` — truncated at the inner brace AND still
+    carrying LaTeX. `validate.py` then searched the PDF for that string, never
+    found it, and reported "same-page check could not run" for a heading that
+    renders perfectly well.
+
+    Balanced-brace scan for the argument, then drop command wrappers so the text
+    matches what a reader sees. `survey.json` becomes legible at the same time,
+    which is how the truncation would have been noticed sooner."""
+    i = cmd.index("{")
+    depth, j = 0, i
+    while j < len(cmd):
+        if cmd[j] == "{":
+            depth += 1
+        elif cmd[j] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        j += 1
+    arg = cmd[i + 1:j]
+    arg = re.sub(r"\\[a-zA-Z]+\s*\{([^{}]*)\}", r"\1", arg)   # \texttt{x} -> x
+    arg = re.sub(r"\\[a-zA-Z]+\s*", "", arg)                   # bare commands
+    return arg.replace("{", "").replace("}", "").strip()
+
+
 def die(msg):
     print(f"transform.py: FAIL — {msg}", file=sys.stderr)
     sys.exit(1)
@@ -150,7 +180,13 @@ def main():
     # (parent level, child level, levels that end the parent's scope)
     for parent, child, enders in (("chapter", "section", ("chapter",)),
                                   ("section", "subsection", ("chapter", "section"))):
-        for i, (pos, kind, title) in enumerate(marks):
+        # `head_title`, not `title` — the document title lives in an enclosing
+        # local of the same name, and rebinding it here silently set the PDF's
+        # `pdftitle` to whatever heading this loop happened to visit last. Every
+        # build produced "Internal Reference 0.1.0 — Documentation": the final
+        # chapter's name, not the document's. Nothing checked the metadata, so it
+        # had been wrong on every PDF the pipeline ever produced.
+        for i, (pos, kind, head_title) in enumerate(marks):
             if kind != parent:
                 continue
             spans = []
@@ -179,7 +215,7 @@ def main():
                                 (("short spans", short),
                                  (f"{len(spans)} children", crowded),
                                  ("variant families", family)) if on)
-                regroup.append(f"{parent} {title!r} ({len(spans)} {child}s; "
+                regroup.append(f"{parent} {head_title!r} ({len(spans)} {child}s; "
                                f"avg {sum(spans)/len(spans):.0f} est lines; {why})")
     survey["regroup_candidates"] = regroup
     for r in regroup:
@@ -334,8 +370,7 @@ def main():
         return sum(max(1, -(-len(l.strip()) // PROSE_CHARS_PER_LINE))
                    for l in seg.split("\n") if l.strip())
 
-    head_marks = [(m.start(), m.group(1),
-                   re.search(r"\{(.*?)\}", m.group(0)).group(1))
+    head_marks = [(m.start(), m.group(1), heading_text(m.group(0)))
                   for m in re.finditer(
                       r"^\\(chapter|section|subsection|subsubsection)\{.*\}",
                       tex, re.M)]
@@ -367,8 +402,9 @@ def main():
     fallbacks = []
     for c in missing:
         if c not in UNICODE_FALLBACKS:
-            die(f"character {c!r} (U+{ord(c):04X}) not covered by DejaVu and "
-                "has no fallback mapping — extend UNICODE_FALLBACKS")
+            die(f"character {c!r} (U+{ord(c):04X}) is missing from at least one "
+                "DejaVu family in use and has no fallback mapping — extend "
+                "UNICODE_FALLBACKS")
         fallbacks.append(f"\\newunicodechar{{{c}}}{{{UNICODE_FALLBACKS[c]}}}")
     survey["unicode_fallbacks"] = "".join(missing)
 
@@ -395,7 +431,21 @@ def main():
 
 
 def font_misses(nonascii):
-    """Characters absent from both DejaVu Sans and DejaVu Sans Mono."""
+    r"""Characters absent from ANY font the document sets text in.
+
+    Not "absent from both". The predicate used to be `not any(...)` — a
+    character counted as missing only when *every* font lacked it — and that let
+    `⟺` (U+27FA) through: DejaVu Sans has it, DejaVu Sans Mono does not, and the
+    document sets it inside `\texttt` when it appears in a docstring. Two
+    "Missing character" lines, caught by the Stage 4 log gate rather than here,
+    which is the wrong place to catch it.
+
+    The survey cannot know which font a given occurrence will land in, so the
+    correct test is conservative: if any font in use lacks the glyph, emit the
+    fallback. That is free when the glyph *is* present in the text font, because
+    every mapping in `UNICODE_FALLBACKS` is an `\ensuremath{...}` — it typesets
+    from the math font regardless of the surrounding family, so the rendering is
+    consistent either way rather than font-dependent."""
     try:
         from fontTools.ttLib import TTFont
     except ImportError:
@@ -411,7 +461,7 @@ def font_misses(nonascii):
     if not paths:
         return []
     cmaps = [set(TTFont(p).getBestCmap()) for p in paths]
-    return [c for c in nonascii if not any(ord(c) in cm for cm in cmaps)]
+    return [c for c in nonascii if not all(ord(c) in cm for cm in cmaps)]
 
 
 CUSTOM_STY = r"""% custom.sty — written by transform.py (docs/pdf/howto.md Stage 3.7).

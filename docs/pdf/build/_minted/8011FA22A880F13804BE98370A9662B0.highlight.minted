@@ -1,3 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{p}{(}\PYG{n}{T}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{})(}\PYG{n}{c}\PYG{o}{::}\PYG{k+kt}{UInt8}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{T}
-\end{MintedVerbatim}

@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{target}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mf}{0.30078125}\PYG{+w}{                       }\PYG{c}{\PYGZsh{} ν = 3/16 of an ulp above 0.296875}
+\PYG{n}{σ}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RSA\PYGZus{}SN}\PYG{p}{(}\PYG{l+m+mi}{16}\PYG{p}{)}\PYG{+w}{                       }\PYG{c}{\PYGZsh{} StochasticA\PYGZob{}16\PYGZcb{} with SatNone}
+\PYG{n}{rng}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{n}{m}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{mean}\PYG{p}{(}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{σ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{target}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{200\PYGZus{}000}\PYG{p}{)}
+\PYG{p}{(}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{n}{target}\PYG{p}{)),}\PYG{+w}{ }\PYG{n}{m}\PYG{p}{)}
+\end{MintedVerbatim}

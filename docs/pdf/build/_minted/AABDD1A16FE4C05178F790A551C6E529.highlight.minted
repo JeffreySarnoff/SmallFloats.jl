@@ -1,0 +1,17 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{ScaledAffine}\PYG{p}{(}\PYG{n}{fr}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{ρ}\PYG{o}{::}\PYG{k+kt}{ProjSpec}\PYG{p}{,}
+\PYG{+w}{                      }\PYG{n}{s1}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{s2}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{;}
+\PYG{+w}{                      }\PYG{n}{rng}\PYG{o}{::}\PYG{k+kt}{MaybeRNG}\PYG{o}{=}\PYG{n+nb}{nothing}\PYG{p}{)}
+\PYG{+w}{    }\PYG{c}{\PYGZsh{} Each (scale, element) pair is a TWO\PYGZhy{}FACTOR MONOMIAL and gets its own head}
+\PYG{+w}{    }\PYG{c}{\PYGZsh{} from the two formats — the same rule `blockdecode` applies to a block.}
+\PYG{+w}{    }\PYG{n}{h1}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{rung}\PYG{p}{(}\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Multiply}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{s1}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{x}\PYG{p}{))}
+\PYG{+w}{    }\PYG{n}{h2}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{rung}\PYG{p}{(}\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Multiply}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{s2}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{y}\PYG{p}{))}
+\PYG{+w}{    }\PYG{n}{a}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{n}{h1}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Multiply}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{lift}\PYG{p}{(}\PYG{n}{h1}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{s1}\PYG{p}{)),}\PYG{+w}{ }\PYG{n}{lift}\PYG{p}{(}\PYG{n}{h1}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)))}\PYG{o}{::}\PYG{n}{carriertype}\PYG{p}{(}\PYG{n}{h1}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{b}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{n}{h2}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Multiply}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{lift}\PYG{p}{(}\PYG{n}{h2}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{s2}\PYG{p}{)),}\PYG{+w}{ }\PYG{n}{lift}\PYG{p}{(}\PYG{n}{h2}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{y}\PYG{p}{)))}\PYG{o}{::}\PYG{n}{carriertype}\PYG{p}{(}\PYG{n}{h2}\PYG{p}{)}
+\PYG{+w}{    }\PYG{c}{\PYGZsh{} The two products may land on DIFFERENT carriers, so the add runs at their}
+\PYG{+w}{    }\PYG{c}{\PYGZsh{} join with each operand lifted into it.}
+\PYG{+w}{    }\PYG{n}{h}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{\PYGZus{}joinheads}\PYG{p}{(}\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{res}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{n}{h}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Add}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{lift}\PYG{p}{(}\PYG{n}{h}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{a}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{lift}\PYG{p}{(}\PYG{n}{h}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{))}
+\PYG{+w}{    }\PYG{n}{\PYGZus{}bp\PYGZus{}element}\PYG{p}{(}\PYG{n}{fr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}drawR}\PYG{p}{(}\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{nothing}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{res}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{1.0}\PYG{p}{)}
+\PYG{k}{end}
+\end{MintedVerbatim}

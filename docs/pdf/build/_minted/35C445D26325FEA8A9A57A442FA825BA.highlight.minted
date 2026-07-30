@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c}{\PYGZsh{} …continuing the existing `if op.arity == …` cascade:}
+\PYG{k}{if}\PYG{+w}{ }\PYG{n}{op}\PYG{o}{.}\PYG{n}{arity}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{4}
+\PYG{+w}{    }\PYG{n+nd}{@eval}\PYG{+w}{ }\PYG{k}{begin}
+\PYG{+w}{        }\PYG{n+nd}{@inline}\PYG{+w}{ }\PYG{k}{function}\PYG{+w}{ }\PYG{o}{\PYGZdl{}}\PYG{n}{name}\PYG{p}{(}\PYG{n}{fr}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{ρ}\PYG{o}{::}\PYG{k+kt}{ProjSpec}\PYG{p}{,}
+\PYG{+w}{                               }\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{w}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{;}
+\PYG{+w}{                               }\PYG{n}{rng}\PYG{o}{::}\PYG{k+kt}{MaybeRNG}\PYG{o}{=}\PYG{n+nb}{nothing}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{R}\PYG{o}{::}\PYG{k+kt}{Union}\PYG{p}{\PYGZob{}}\PYG{k+kt}{Nothing}\PYG{p}{,}\PYG{k+kt}{Int}\PYG{p}{\PYGZcb{}}\PYG{o}{=}\PYG{n+nb}{nothing}\PYG{p}{)}
+\PYG{+w}{            }\PYG{n}{apply\PYGZus{}op}\PYG{p}{(}\PYG{o}{\PYGZdl{}}\PYG{n}{V}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{fr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}drawR}\PYG{p}{(}\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{R}\PYG{p}{),}
+\PYG{+w}{                     }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{x}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{y}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{z}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{w}\PYG{p}{))}
+\PYG{+w}{        }\PYG{k}{end}
+\PYG{+w}{        }\PYG{n+nd}{@inline}\PYG{+w}{ }\PYG{o}{\PYGZdl{}}\PYG{n}{name}\PYG{p}{(}\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{o}{::}\PYG{k+kt}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{w}\PYG{o}{::}\PYG{k+kt}{T}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{kw}\PYG{o}{...}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{where}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{k+kt}{T}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{o}{=}
+\PYG{+w}{            }\PYG{o}{\PYGZdl{}}\PYG{n}{name}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{default\PYGZus{}projspec}\PYG{p}{(}\PYG{n}{T}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{kw}\PYG{o}{...}\PYG{p}{)}
+\PYG{+w}{    }\PYG{k}{end}
+\PYG{k}{end}
+\end{MintedVerbatim}

@@ -1,7 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{ρ}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ProjSpec}\PYG{p}{(}\PYG{n}{TowardPositive}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{SatFinite}\PYG{p}{())}
-\PYG{g+go}{(TowardPositive, SatFinite)}
-
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{RTP\PYGZus{}SatFinite}\PYG{+w}{ }\PYG{o}{===}\PYG{+w}{ }\PYG{n}{ρ}\PYG{+w}{                }\PYG{c}{\PYGZsh{} every pairing is also predefined}
-\PYG{g+go}{true}
-\end{MintedVerbatim}

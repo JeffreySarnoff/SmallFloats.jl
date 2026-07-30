@@ -1,6 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{step2}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{r}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Exp}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{);}
-\PYG{+w}{            }\PYG{n}{isfinite}\PYG{p}{(}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{r}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{n}{NextGreaterThan}\PYG{p}{(}\PYG{n}{NextGreaterThan}\PYG{p}{(}\PYG{n}{r}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{n}{r}\PYG{p}{)}
-
-\PYG{n}{measure\PYGZus{}kappa}\PYG{p}{(}\PYG{n}{step2}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{)}
-\end{MintedVerbatim}

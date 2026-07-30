@@ -1,3 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{decode}\PYG{p}{(}\PYG{n}{v}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{Float64}
-\end{MintedVerbatim}

@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{decode}\PYG{p}{(}\PYG{n}{v}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{datumcarrier}\PYG{p}{(}\PYG{n}{typeof}\PYG{p}{(}\PYG{n}{v}\PYG{p}{))}
+\end{MintedVerbatim}

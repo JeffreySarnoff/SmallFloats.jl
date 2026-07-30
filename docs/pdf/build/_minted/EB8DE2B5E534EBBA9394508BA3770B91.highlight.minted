@@ -1,7 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{+w}{ }\PYG{o}{===}\PYG{+w}{ }\PYG{k+kt}{Binary}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{8}\PYG{p}{,}\PYG{l+m+mi}{4}\PYG{p}{,}\PYG{k+kt}{true}\PYG{p}{,}\PYG{k+kt}{true}\PYG{p}{\PYGZcb{}}
-\PYG{g+go}{true}
-
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{formatname}\PYG{p}{(}\PYG{k+kt}{Binary}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{k+kt}{true}\PYG{p}{,}\PYG{k+kt}{false}\PYG{p}{\PYGZcb{})}
-\PYG{g+go}{:Binary6p3sf}
-\end{MintedVerbatim}

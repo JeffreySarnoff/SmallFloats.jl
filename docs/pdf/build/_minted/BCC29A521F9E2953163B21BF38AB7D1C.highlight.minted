@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{RSA\PYGZus{}SN}\PYG{p}{()}\PYG{+w}{                      }\PYG{c}{\PYGZsh{} StochasticA with the default N = 8}
+\PYG{g+go}{(StochasticA[8], SatNone)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{RSC\PYGZus{}SF}\PYG{p}{(}\PYG{l+m+mi}{16}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{===}\PYG{+w}{ }\PYG{n}{ProjSpec}\PYG{p}{(}\PYG{k+kt}{StochasticC}\PYG{p}{\PYGZob{}}\PYG{l+m+mi}{16}\PYG{p}{\PYGZcb{}(),}\PYG{+w}{ }\PYG{n}{SatFinite}\PYG{p}{())}
+\PYG{g+go}{true}
+\end{MintedVerbatim}

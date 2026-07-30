@@ -1,8 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{rng}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{)}
-\PYG{n}{a64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b64}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{32}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{32}\PYG{p}{)}
-\PYG{n}{qb}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ConvertToBlockMaxAbsFinite}\PYG{p}{(}\PYG{n}{Binary8p1uf}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}
-\PYG{+w}{            }\PYG{n}{ntuple}\PYG{p}{(}\PYG{n}{i}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatFinite}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]),}\PYG{+w}{ }\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+m+mi}{32}\PYG{p}{)))}
-\PYG{n}{dq}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{BlockDotProduct}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatNone}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{qb}\PYG{p}{(}\PYG{n}{a64}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{qb}\PYG{p}{(}\PYG{n}{b64}\PYG{p}{))}
-\PYG{p}{(}\PYG{n}{a64}\PYG{o}{\PYGZsq{}}\PYG{n}{b64}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{dq}\PYG{p}{))}
-\end{MintedVerbatim}

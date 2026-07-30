@@ -1,0 +1,13 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{hash}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.5}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{hash}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.5}\PYG{p}{))}
+\PYG{g+go}{true}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Base}\PYG{o}{.}\PYG{n}{decompose}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.5}\PYG{p}{))}\PYG{+w}{          }\PYG{c}{\PYGZsh{} 12 · 2\PYGZca{}\PYGZhy{}3 = 1.5, exactly}
+\PYG{g+go}{(12, \PYGZhy{}3, 1)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{floor}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{)),}\PYG{+w}{ }\PYG{n}{ceil}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.1}\PYG{p}{))}
+\PYG{g+go}{(Binary8p4se(1.0 ≡ 0x40), Binary8p4se(2.0 ≡ 0x48))}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{reinterpret}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mh}{0x44}\PYG{p}{)}\PYG{+w}{            }\PYG{c}{\PYGZsh{} checked, unlike `rawvalue`}
+\PYG{g+go}{Binary8p4se(1.5 ≡ 0x44)}
+\end{MintedVerbatim}

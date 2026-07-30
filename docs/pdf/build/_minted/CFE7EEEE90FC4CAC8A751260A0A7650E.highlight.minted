@@ -1,9 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{k}{function}\PYG{+w}{ }\PYG{n}{ScaledAffine}\PYG{p}{(}\PYG{n}{fr}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{n}{ρ}\PYG{o}{::}\PYG{k+kt}{ProjSpec}\PYG{p}{,}
-\PYG{+w}{                      }\PYG{n}{s1}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{s2}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{o}{::}\PYG{k+kt}{Binary}\PYG{p}{;}
-\PYG{+w}{                      }\PYG{n}{rng}\PYG{o}{::}\PYG{k+kt}{MaybeRNG}\PYG{o}{=}\PYG{n+nb}{nothing}\PYG{p}{)}
-\PYG{+w}{    }\PYG{n}{a}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Multiply}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{s1}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{x}\PYG{p}{))}\PYG{o}{::}\PYG{k+kt}{Float64}\PYG{+w}{   }\PYG{c}{\PYGZsh{} exact lanes}
-\PYG{+w}{    }\PYG{n}{b}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Multiply}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{s2}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{y}\PYG{p}{))}\PYG{o}{::}\PYG{k+kt}{Float64}
-\PYG{+w}{    }\PYG{n}{\PYGZus{}bp\PYGZus{}element}\PYG{p}{(}\PYG{n}{fr}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{\PYGZus{}drawR}\PYG{p}{(}\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{nothing}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{ωeval}\PYG{p}{(}\PYG{k+kt}{Val}\PYG{p}{(}\PYG{l+s+ss}{:Add}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{),}\PYG{+w}{ }\PYG{l+m+mf}{1.0}\PYG{p}{)}
-\PYG{k}{end}
-\end{MintedVerbatim}

@@ -1,0 +1,17 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{200.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{p}{);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{x}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{y}\PYG{+w}{                              }\PYG{c}{\PYGZsh{} RNE\PYGZus{}SN: overflow → +Inf}
+\PYG{g+go}{Binary8p4se(Inf ≡ 0x7f)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultProjection!}\PYG{p}{(}\PYG{n}{RTZ\PYGZus{}SF}\PYG{p}{);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{x}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{y}\PYG{+w}{                              }\PYG{c}{\PYGZsh{} now clamps to MaxFinite}
+\PYG{g+go}{Binary8p4se(224.0 ≡ 0x7e)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultProjection!}\PYG{p}{(}\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}\PYG{+w}{         }\PYG{c}{\PYGZsh{} restore before moving on — see below}
+\PYG{g+go}{(NearestTiesToEven, SatNone)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Multiply}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} explicit ρ is unaffected}
+\PYG{g+go}{Binary8p4se(Inf ≡ 0x7f)}
+\end{MintedVerbatim}

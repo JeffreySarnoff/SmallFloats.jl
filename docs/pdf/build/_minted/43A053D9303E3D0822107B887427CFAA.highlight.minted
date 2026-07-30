@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{format}\PYG{p}{(}\PYG{n}{K}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{P}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Σ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Δ}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{Type}
+\end{MintedVerbatim}

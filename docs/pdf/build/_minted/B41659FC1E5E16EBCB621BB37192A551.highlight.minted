@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{map}\PYG{p}{(}\PYG{n}{Op}\PYG{p}{(}\PYG{l+s+ss}{:Add}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{)}
+\PYG{n}{Op}\PYG{p}{(}\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}\PYG{o}{.}\PYG{p}{(}\PYG{n}{A}\PYG{p}{)}
+\end{MintedVerbatim}

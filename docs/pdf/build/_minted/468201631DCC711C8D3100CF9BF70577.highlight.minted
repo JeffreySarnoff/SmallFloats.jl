@@ -1,6 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{with\PYGZus{}default\PYGZus{}type}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}\PYG{+w}{          }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{f}\PYG{p}{(}\PYG{n}{DefaultType}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}
-\PYG{n}{with\PYGZus{}default\PYGZus{}returntype}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}\PYG{+w}{    }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{f}\PYG{p}{(}\PYG{n}{DefaultReturnType}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}
-\PYG{n}{with\PYGZus{}default\PYGZus{}accumulatortype}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{f}\PYG{p}{(}\PYG{n}{DefaultAccumulatorType}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}
-\PYG{n}{with\PYGZus{}default\PYGZus{}projection}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}\PYG{+w}{    }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{f}\PYG{p}{(}\PYG{n}{DefaultProjection}\PYG{p}{(),}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}
-\end{MintedVerbatim}

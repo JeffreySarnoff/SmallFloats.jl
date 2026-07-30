@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{b}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Block}\PYG{p}{(}\PYG{n}{Binary8p1uf}\PYG{p}{(}\PYG{l+m+mf}{4.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.5}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{0.75}\PYG{p}{),}
+\PYG{+w}{                 }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{0.5}\PYG{p}{))}
+\PYG{g+go}{Block\PYGZob{}4, Binary8p1uf, Binary8p4se\PYGZcb{}(Binary8p1uf(4.0 ≡ 0x82), (…))}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{ConvertFromBlock}\PYG{p}{(}\PYG{n}{Binary8p3se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} decode scale×elem, project}
+\PYG{g+go}{(Binary8p3se(6.0 ≡ 0x4a), Binary8p3se(\PYGZhy{}3.0 ≡ 0xc6), Binary8p3se(8.0 ≡ 0x4c), Binary8p3se(2.0 ≡ 0x44))}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{BlockReduceAdd}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}\PYG{+w}{     }\PYG{c}{\PYGZsh{} exact Σ scale·xᵢ, then project}
+\PYG{g+go}{Binary8p4se(13.0 ≡ 0x5d)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{ConvertToBlockMaxAbsFinite}\PYG{p}{(}\PYG{n}{Binary8p1uf}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}
+\PYG{+w}{           }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{100.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{12.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{0.5}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{3.0}\PYG{p}{)))}
+\PYG{g+go}{Block\PYGZob{}4, Binary8p1uf, Binary8p4se\PYGZcb{}(Binary8p1uf(64.0 ≡ 0x86), (…))}
+\end{MintedVerbatim}

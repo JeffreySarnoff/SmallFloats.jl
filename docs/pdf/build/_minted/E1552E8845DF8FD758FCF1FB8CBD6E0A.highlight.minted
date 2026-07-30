@@ -1,9 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{ftz}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{ftz\PYGZus{}variant}\PYG{p}{(}\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SatFinite}\PYG{p}{);}\PYG{+w}{  }\PYG{c}{\PYGZsh{} Annex example}
-
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{impl}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{register\PYGZus{}approx!}\PYG{p}{(}\PYG{l+s+ss}{:my\PYGZus{}fast\PYGZus{}exp}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,),}
-\PYG{+w}{                               }\PYG{n}{RNE\PYGZus{}SatFinite}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ftz}\PYG{p}{);}
-
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{kappa}\PYG{p}{(}\PYG{l+s+ss}{:my\PYGZus{}fast\PYGZus{}exp}\PYG{p}{)}\PYG{+w}{      }\PYG{c}{\PYGZsh{} measured max code\PYGZhy{}point deviation, verified exhaustively}
-\PYG{g+go}{4.0}
-\end{MintedVerbatim}
