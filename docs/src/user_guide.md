@@ -317,7 +317,6 @@ Six session-wide defaults are readable as `DefaultX()` and settable as
 |---|---|---|
 | `DefaultType` | `Binary8p2se` | any fully-parameterized `Binary` type |
 | `DefaultReturnType` | `Binary8p2se` | any fully-parameterized `Binary` type |
-| `DefaultAccumulatorType` | `binary32` (`Float32`) | any `AbstractFloat` type |
 | `DefaultRoundingMode` | `NearestTiesToEven()` | mode instance or type |
 | `DefaultSaturationMode` | `SatNone()` | mode instance or type |
 | `DefaultProjection` | `RNE_SatNone` | a `ProjSpec`, or `(mode, sat)` |
@@ -379,8 +378,18 @@ dispatch per call, everything inside still specialized. The explicit forms
 
 To *consume* a default in your own code without paying dynamic-dispatch costs,
 go through the `with_default_*` combinators — `with_default_type`,
-`with_default_returntype`, `with_default_accumulatortype`,
-`with_default_projection` — which call `f(default, args...)`:
+`with_default_returntype`, `with_default_projection` — which call
+`f(default, args...)`:
+
+!!! note "There is no accumulator default"
+    `DefaultAccumulatorType` existed through v0.1.0 and was removed. The
+    wide-precision accumulator in a reduction is not a preference: the span
+    filter measures the operands and picks the cheapest carrier that is
+    *provably exact* for them, so both branches return the defined result. A
+    knob overriding that would make `BlockDotProduct` inexact from the default
+    API. To trade speed for nothing else, set
+    `ENV["SmallFloats_Float128"] = "disable"`, which is bit-identical by
+    construction.
 
 ```julia-repl
 julia> with_default_type((T, x) -> T(x), 1.5)

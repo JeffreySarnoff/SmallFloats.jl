@@ -327,36 +327,51 @@ specific draft-text gaps and the interpretations chosen, and that list is gone.
 Rebuilding it means re-auditing `oracle.jl` against
 [IEEE_D1.md](docs/other/IEEE_D1.md). Schedule with Stage 9.
 
-### O2 — `test/runtests1.jl` is an unexplained near-duplicate
+### O2 — ~~`test/runtests1.jl` is an unexplained near-duplicate~~ **CLOSED**
 
 `test/runtests1.jl` (1 259 lines) was **not present** when the tree was first
-surveyed at the start of this work; `test/runtests.jl` is 1 286 lines. It
-appeared during the session. Its provenance is unknown to me, so I have not
-touched it and have not run it. It needs a disposition, because a second copy of
-the suite is exactly the divergence risk invariant 7 exists to prevent — and
-G5's value depends on there being one oracle, not two.
+surveyed; it appeared during the session with no provenance, so it was neither
+touched nor run. It then diverged measurably — still assuming `K ∈ 3:8`, `UInt8`
+code points, and `Binary{K,P,S,E}` as a concrete type — which made it harmless
+as a live risk and worse as a document: it read like a suite and was a snapshot
+of a tree that no longer existed.
 
-**Still open after Stage 4, and now measurably diverged.** `runtests.jl` has
-moved through four stages of edits; `runtests1.jl` has not been touched and
-still assumes `K ∈ 3:8`, `UInt8` code points, and `Binary{K,P,S,E}` as a
-concrete type. It would not run today. That makes it harmless as a live risk
-and worse as a document — it reads like a suite and is a snapshot of a tree
-that no longer exists. **Recommend deleting it** (git history keeps it) unless
-its provenance turns out to matter.
+**Closed before Stage 6. Both copies deleted** (git history keeps them).
 
-### O3 — the four Stage 0 decisions are still open
+There were **two**, not one. Removing the `DefaultAccumulatorType` symbol and
+grepping for stragglers turned up `tmp/runtests.jl` — 1 532 lines, **tracked**,
+referenced by nothing, last touched by the same three pre-branch commits that
+touched the real suite. It was never in the O2 inventory because nothing had
+gone looking in `tmp/`.
+
+That is the transferable part: **a public-symbol removal is a duplicate
+detector.** A stale copy is precisely the artifact that still mentions the
+removed name, so the sweep that confirms a removal is complete also enumerates
+the copies. Run one before believing a near-duplicate inventory is finished.
+Two of O1's nine dangling references (`runtests1.jl:19`, `runtests1.jl:1259`)
+die with the file.
+
+### O3 — two of the four Stage 0 decisions are still open
 
 From [implementextensions.md §9](docs/other/implementextensions.md): export
 surface (recommend opt-in `SmallFloats.Formats` submodule), `f32_exact`
 disposition (recommend restrict to K ≤ 11 by construction),
-`DefaultAccumulatorType` disposition (recommend wire into the reduction
-accumulator), `PackedVector` at K = 16 (recommend refuse loudly).
+`DefaultAccumulatorType` disposition, `PackedVector` at K = 16.
 
-**One of the four is now settled the other way.** `PackedVector` at K = 16 does
-*not* refuse: the rule cannot be stated without also refusing K = 8, which has
-shipped and is enumerated by G5. It is a `packing_saves` predicate instead
-(§11 M21). The export surface is now the most pressing of the remaining three —
-the package exports **504** aliases into `Main`.
+**Two of the four are now settled, both against their recommendation.**
+
+`PackedVector` at K = 16 does *not* refuse: the rule cannot be stated without
+also refusing K = 8, which has shipped and is enumerated by G5. It is a
+`packing_saves` predicate instead (§11 M21).
+
+`DefaultAccumulatorType` is **deleted**, not wired and not documented as
+advisory (§11 M29). The reduction accumulator's choice is a proof of exactness
+selected from the measured operand span, so a session default over it makes
+`BlockDotProduct` inexact from the default API — invariant 5. Landed before
+Stage 6 in its own commit, together with the stale suite copies (M30).
+
+The export surface is now the most pressing of the remaining two — the package
+exports **504** aliases into `Main`.
 
 ### O4 — stale rename artifacts
 

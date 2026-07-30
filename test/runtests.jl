@@ -234,7 +234,6 @@ end
     # initial values
     @test DefaultType() === Binary8p2se
     @test DefaultReturnType() === Binary8p2se
-    @test DefaultAccumulatorType() === binary32 === Float32
     @test DefaultRoundingMode() === NearestTiesToEven()
     @test DefaultSaturationMode() === SatNone()
     @test DefaultProjection() === RNE_SatNone
@@ -281,9 +280,6 @@ end
     @test DefaultReturnType() === Binary8p4se
     @test DefaultType() === Binary5p3sf                  # independent of the return type
     @test_throws ArgumentError DefaultReturnType!(Binary{8,8,true,true})
-    @test DefaultAccumulatorType!(binary64) === Float64
-    @test DefaultAccumulatorType() === binary64
-    @test_throws MethodError DefaultAccumulatorType!(Int)   # not an AbstractFloat
     @test DefaultRbits!(16) == 16
     @test_throws ArgumentError DefaultRbits!(0)
     @test_throws ArgumentError DefaultRbits!(61)
@@ -295,7 +291,6 @@ end
     # restore initial state for any later consumer
     DefaultType!(Binary8p2se)
     DefaultReturnType!(Binary8p2se)
-    DefaultAccumulatorType!(binary32)
     DefaultProjection!(RNE_SatNone)
     DefaultRNG!(Random.Xoshiro)
     DefaultRbits!(8)
@@ -309,7 +304,6 @@ end
     # fast path (defaults at initial values): correct on every combinator
     @test with_default_type(mkval, 1.5) === Binary8p2se(1.5)
     @test with_default_returntype(mkval, 1.5) === Binary8p2se(1.5)
-    @test with_default_accumulatortype(zero) === 0.0f0
     @test with_default_projection(addρ, a4, b4) === Add(Binary8p4se, RNE_SatNone, a4, b4)
     # Allocation contract (see defaults.jl): zero-alloc + concrete inference hold
     # when f's result type does not depend on the default — the projection
@@ -325,9 +319,7 @@ end
     @test with_default_type(mkval, 1.5) === Binary6p3se(1.5)
     DefaultProjection!(RTZ_SatFinite)
     @test with_default_projection(addρ, a4, b4) === Add(Binary8p4se, RTZ_SatFinite, a4, b4)
-    DefaultAccumulatorType!(binary64)
-    @test with_default_accumulatortype(zero) === 0.0
-    DefaultType!(Binary8p2se); DefaultProjection!(RNE_SatNone); DefaultAccumulatorType!(binary32)
+    DefaultType!(Binary8p2se); DefaultProjection!(RNE_SatNone)
     @test coherent()
 end
 

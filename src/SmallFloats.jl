@@ -109,14 +109,12 @@ export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,
 # session defaults (defaults.jl)
 export DefaultType, DefaultType!,
        DefaultReturnType, DefaultReturnType!,
-       DefaultAccumulatorType, DefaultAccumulatorType!,
        DefaultRoundingMode, DefaultRoundingMode!,
        DefaultSaturationMode, DefaultSaturationMode!,
        DefaultProjection, DefaultProjection!,
        DefaultRNG, DefaultRNG!,
        DefaultRbits, DefaultRbits!,
-       with_default_type, with_default_returntype,
-       with_default_accumulatortype, with_default_projection
+       with_default_type, with_default_returntype, with_default_projection
 
 # comparison, classification, stepping (Groups D/M)
 export TotalOrder, Class, FPClass,

@@ -831,7 +831,8 @@ so Stage 2's diff is only the type refactor.*
    - **A1** — `approx.jl:60`: `UInt8(codes[i])` → `codeunit_type(argformats[i])(codes[i])`.
    - **A6/C8** — delete `_cmp_rounded_datum` ([`project.jl:237-255`](../../src/project.jl#L237)).
    - **A3/A4** — apply the §9 dispositions for `f32_exact` and
-     `DefaultAccumulatorType`.
+     `DefaultAccumulatorType`. *(A4 landed before Stage 6 instead, as a
+     deletion — §11 M29.)*
    - Budgets as `Ref`s (T9): `max_exhaustive`, the table byte budgets, the
      tier thresholds.
 6. **Write G9** (trait folding gate) and run it over the 120 formats. It is
@@ -1525,12 +1526,15 @@ Four. Each is cheap to answer now and expensive to reverse later.
    can only return `true` in the high-P corner of the wide grid. The
    alternatives are building the consumer (the SIMD stochastic loop sketched in
    [Float32more.md §3.4](Float32more.md), never written) or deprecating.
-3. **`DefaultAccumulatorType`** (A4, unconsumed; a full setter/getter/combinator
-   surface over `_GUARD_ACCUM = binary32` that nothing reads, while `blocks.jl`
-   uses its own exact wide-precision accumulator). Recommended: **wire it into
-   the reduction accumulator's precision choice**, where wide K makes it
-   genuinely useful — or document it as advisory. Do not carry an unconsumed
-   knob into a 504-format grid.
+3. ~~**`DefaultAccumulatorType`** (A4, unconsumed…). Recommended: wire it into
+   the reduction accumulator's precision choice, or document it as advisory.~~
+   **RESOLVED — deleted, before Stage 6 (§11 M29).** Both recommended answers
+   were wrong. `blocks.jl`'s accumulator choice is a *proof of exactness*
+   selected from the measured operand span, not a speed/accuracy preference;
+   overriding it from a session default makes `BlockDotProduct` inexact through
+   the default API, which invariant 5 forbids. The knob is also a `Type` where
+   the decision is a precision-plus-proof. Removed together with the two stale
+   suite copies (M30).
 4. **`PackedVector` at K = 16.** Recommended: **refuse loudly**, with a message
    pointing at `Vector`. Packing is the identity there and a silent identity
    invites benchmark confusion.
@@ -2035,6 +2039,59 @@ narrow operands with a wide *result*.
 `_scalar_code` widened past `Float64` in the same edit, deliberately: `project`
 is carrier-generic (§1 C10), so a `Convert` table is buildable at every rung and
 refusing one would be arbitrary. The restriction now lands where it is true.
+
+**M29 — `DefaultAccumulatorType` was not an unconsumed knob; it was a
+correctness switch, and invariant 5 forbids it.** §9 decision 3 framed A4 as a
+scheduling question — wire the knob into the reduction accumulator, or document
+it as advisory. Both answers are wrong, and reading `blocks.jl` says why. The
+span filter there is not trading accuracy for speed:
+
+```julia
+if _f128() && _expspan(X) + _log2ceil(B) <= 92
+    acc = Float128(0); ...                # every partial exact BY WIDTH
+else
+    BigExactF(() -> setprecision(..., BigFloat, _REDPREC))   # exact by precision
+end
+```
+
+Both branches are *proofs of exactness*; the filter measures the operands and
+picks the cheaper carrier that is provably exact for them, so either way the
+answer is the defined result (invariant 6). Wiring a session default over that
+makes `BlockDotProduct` inexact — and its shipped value, `binary32`, is the
+inexact position. An approximate result reachable from the default API is
+precisely what **invariant 5** forbids.
+
+There is a type/precision mismatch underneath, too: the knob is a `Type`, the
+decision is a *precision plus a proof*. `Float128` as a bare type is meaningless
+at that site without the span filter that licenses it.
+
+Removed rather than deferred to Stage 9. A knob documented as advisory is a
+promise that something reads it; nothing did, and the tests could only assert
+that the `Ref` stored what was put in it — the signature of unconsumed API.
+Deleting it before the 504-format grid is cheap; deleting it after a user has
+set it at K = 16 and been given bit-identical results is not. The only genuine
+user choice at that site is Float128-vs-MPFR, which is speed-only with identical
+results by doctrine and already owned by `ENV["SmallFloats_Float128"]`.
+
+*Decision 3 is therefore resolved as **deleted**, and the reason is recorded at
+the removal site in `defaults.jl` — a decision recorded as "deferred" gets
+re-litigated; one recorded with its argument does not.*
+
+**M30 — two more stale copies of the suite, and one of them was tracked.**
+O2 named `test/runtests1.jl`. A grep for the removed symbol found a third
+copy at `tmp/runtests.jl` — **tracked**, 1 532 lines, referenced by nothing,
+last touched by the same pre-branch commits that touched the real suite. Both
+are gone. The lesson is not about these two files: a *public-symbol removal is
+a duplicate detector*, because a stale copy is exactly the thing that still
+mentions the symbol. Run one before trusting that a near-duplicate inventory is
+complete.
+
+*Also corrected in this pass: `16B + 128` at [`blocks.jl:270`](../../src/blocks.jl#L270)
+was read during planning as bias-scaled and flagged as a wide-K blowup. `B`
+there is `Block{B}` — the **blocksize** — and `16` is max P at K = 16, so the
+line is `lanes × significand bits + slack` and needs no change. The comment now
+says so. Stage 6's precision unification is two constants, `_BIGP` and
+`_REDPREC`, exactly as §4 stated.*
 
 ---
 

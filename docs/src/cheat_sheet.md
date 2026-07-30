@@ -185,7 +185,6 @@ Read with `DefaultX()`, set with `DefaultX!(v)`:
 ```julia
 DefaultType()            # Binary8p2se     DefaultType!(Binary8p4se)
 DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
-DefaultAccumulatorType() # binary32        DefaultAccumulatorType!(binary64)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
 DefaultProjection()      # RNE_SatNone
@@ -212,7 +211,6 @@ the default (a default-typed result boxes once at escape):
 with_default_type((T, x) -> T(x), 1.5)          # Binary8p2se(1.5 ≡ 0x41)
 with_default_projection((ρ, x, y) -> Add(T, ρ, x, y), x, y)
 with_default_returntype(f, args...)              # f(DefaultReturnType(), args...)
-with_default_accumulatortype(f, args...)
 ```
 
 ## Scalar operation catalog

@@ -53,12 +53,10 @@
 # must stay identical, so both come from these constants.
 const _GUARD_TYPE       = Binary8p2se
 const _GUARD_RETURN     = Binary8p2se
-const _GUARD_ACCUM      = binary32
 const _GUARD_PROJECTION = ProjSpec(NearestTiesToEven(), SatNone())
 
 const _DEFAULT_TYPE       = Ref{Type{<:Binary}}(_GUARD_TYPE)
 const _DEFAULT_RETURN     = Ref{Type{<:Binary}}(_GUARD_RETURN)
-const _DEFAULT_ACCUM      = Ref{Type{<:AbstractFloat}}(_GUARD_ACCUM)
 const _DEFAULT_ROUNDING   = Ref{RoundingMode3109}(roundingmode(_GUARD_PROJECTION))
 const _DEFAULT_SATURATION = Ref{SaturationMode}(saturationmode(_GUARD_PROJECTION))
 const _DEFAULT_PROJECTION = Ref{ProjSpec}(_GUARD_PROJECTION)
@@ -101,17 +99,23 @@ DefaultReturnType() = _DEFAULT_RETURN[]
 DefaultReturnType!(T::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} =
     _set_format_default!(_DEFAULT_RETURN, T)
 
-"""
-    DefaultAccumulatorType() -> Type{<:AbstractFloat}
-    DefaultAccumulatorType!(T::Type{<:AbstractFloat}) -> T
-
-The session's default accumulator carrier for wide-precision work (reductions,
-dot products). Initialized to `binary32` (the exported IEEE 754 alias for
-`Float32`). Any `AbstractFloat` type is accepted (`binary64`, `Float128`,
-`BigFloat`, …).
-"""
-DefaultAccumulatorType() = _DEFAULT_ACCUM[]
-DefaultAccumulatorType!(T::Type{<:AbstractFloat}) = (_DEFAULT_ACCUM[] = T; T)
+# There is deliberately NO `DefaultAccumulatorType`. It existed through v0.1.0 as
+# an unconsumed `Ref{Type{<:AbstractFloat}}` defaulting to `binary32`, and the
+# K ≤ 16 extension removed it rather than wiring it in (plan §9 decision 3).
+#
+# The reason is invariant 5, not tidiness. The reduction accumulator in
+# `blocks.jl` is not choosing between accuracy and speed: the span filter
+# *measures* the operands and selects the cheapest carrier that is provably
+# exact for them — Float128 by width, else BigFloat at `bigprec`. Both branches
+# yield the defined result (invariant 6). A session knob that overrides that
+# choice makes `BlockDotProduct` inexact, and its shipped value (`Float32`)
+# would have been the inexact position. That is a correctness switch wearing a
+# knob's clothes, reachable from the default API — which is exactly what
+# invariant 5 forbids.
+#
+# The one legitimate user choice at that site is Float128-vs-MPFR, which is
+# speed-only with identical results by doctrine, and `ENV["SmallFloats_Float128"]`
+# already owns it.
 
 """
     DefaultRoundingMode() -> RoundingMode3109
@@ -213,7 +217,6 @@ end
 """
     with_default_type(f, args...)          -> f(DefaultType(), args...)
     with_default_returntype(f, args...)    -> f(DefaultReturnType(), args...)
-    with_default_accumulatortype(f, args...) -> f(DefaultAccumulatorType(), args...)
     with_default_projection(f, args...)    -> f(DefaultProjection(), args...)
 
 Call `f` with the named session default as its first argument — the supported
@@ -246,14 +249,10 @@ Binary8p4se(1.75 ≡ 0x46)
 @inline with_default_returntype(f::F, args...) where {F} =
     _with_default(f, DefaultReturnType(), _GUARD_RETURN, args...)
 
-@inline with_default_accumulatortype(f::F, args...) where {F} =
-    _with_default(f, DefaultAccumulatorType(), _GUARD_ACCUM, args...)
-
 # Reads the coherent pair, never the two component Refs separately: a concurrent
 # set could otherwise hand the guard a torn (rounding, saturation) combination.
 @inline with_default_projection(f::F, args...) where {F} =
     _with_default(f, DefaultProjection(), _GUARD_PROJECTION, args...)
 
 @doc (@doc with_default_type) with_default_returntype
-@doc (@doc with_default_type) with_default_accumulatortype
 @doc (@doc with_default_type) with_default_projection

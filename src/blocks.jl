@@ -260,6 +260,12 @@ function BlockReduceMultiply(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B};
         s * Inf
     elseif any(iszero, X)
         0.0
+    # `B` here is `Block{B}` — the BLOCKSIZE, not the exponent bias — and `16` is
+    # max P at K = 16, so both bounds read "lanes × significand bits (+ slack)".
+    # A product's significand width is the SUM of its factors' widths; its
+    # exponent only shifts, and MPFR's exponent range covers any B. So neither
+    # line is bias-dependent and neither needs the K ≤ 16 widening. Said plainly
+    # because `16B` invites being read as bias-scaled (§11 M30).
     elseif _f128() && 16B + 8 <= 112                            # exact product by width (B ≤ 6)
         acc = Float128(1)
         for v in X
