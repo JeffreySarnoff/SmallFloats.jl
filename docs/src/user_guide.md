@@ -641,6 +641,27 @@ implementations must be acknowledged with an explicit `κ = NaN`. Retrieve with
 
 ## Performance guidance
 
+!!! warning "The abstract format as an array element type"
+    `Binary{K,P,Σ,Δ}` is **abstract**, so an array declared with it has a
+    non-`isbits` element type and boxes every element:
+
+    ```julia-repl
+    julia> isbitstype(eltype(Vector{Binary{8,4,true,true}}(undef, 3)))
+    false
+
+    julia> isbitstype(eltype(Vector{Binary8p4se}(undef, 3)))
+    true
+    ```
+
+    Nothing errors — every operation still returns the right answer, because the
+    package normalizes the abstract format at each constructor and entry point.
+    You simply lose the entire performance story, silently. That makes this the
+    sharper edge of the `===` distinction: the type comparison is visibly
+    `false`, while this one costs you and says nothing.
+
+    `similar(a, T)` normalizes the request; `Vector{T}(undef, n)` cannot be
+    intercepted. Use the alias, or `format(K, P, Σ, Δ)` for runtime parameters.
+
 - **Pass format types statically.** Through `const` bindings, type parameters, or
   function arguments, every entry point fully specializes (scalar `Add` ≈ 18–26 ns,
   `project` ≈ 13 ns, zero allocations). A format type read from a **non-`const`

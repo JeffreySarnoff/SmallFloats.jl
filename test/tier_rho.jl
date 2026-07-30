@@ -91,7 +91,28 @@ function _rho_formats()
     end
     sort!(out)
 end
-const _RHO_FMTS = _rho_formats()
+
+# This file's cost is 52 operations × 6 stochastic ρ × 2^N values of R per
+# format, so the format axis has to be narrow at the default tier — but "narrow"
+# is a decision the CALLER gets to overrule, and until now they could not.
+#
+# `SmallFloats_EXHAUSTIVE=1` was read by exactly one file in the suite, and this
+# was not it: a release run asked for every format and got six, reporting
+# `SAMPLED` in a way that read as intentional rather than omitted (§11 M49).
+# `sweep_formats` is now the single question, so the three tiers reach here.
+const _RHO_FMTS, _RHO_COVERAGE = let (fs, cov) = sweep_formats("Tρ")
+    # At `default` the derived representative set is 50 formats, which at this
+    # file's per-format cost would be ~12 minutes. The default here is therefore
+    # the QUICK set — one per (rung, P == 1) cell — and the coverage string says
+    # so rather than inheriting a phrase describing 50.
+    exhaustive_requested() ? (fs, cov) :
+        (_rho_formats(),
+         "Tρ: SAMPLED — $(length(_rho_formats())) formats, one per (rung, P == 1) " *
+         "cell from the derived representative set. Every carrier and both " *
+         "`blockdecode` methods are reached; the axis is narrow because this " *
+         "file runs 52 operations × 6 stochastic ρ × 2^N values of R per format. " *
+         "SMALLFLOATS_TIER=release sweeps all $(length(ALL_FORMATS)).")
+end
 
 const _STOCH = (StochasticA{4}(), StochasticB{4}(), StochasticC{4}())
 const _RHO_SATS = (SatNone(), SatFinite())
@@ -205,9 +226,9 @@ const _RHO_SATS = (SatNone(), SatFinite())
     @test sort!(collect(visited)) == sort!(collect(cells))
 
     record_gate!("Tρ"; assertions=length(_RHO_FMTS) + 4,
-                 units=n_trunc[] + n_mono[] + n_away[], exhaustive=false,
-                 note="format axis sampled: $(length(_RHO_FMTS)) formats, one " *
-                      "per (rung, P==1) cell, from the derived representative set")
+                 units=n_trunc[] + n_mono[] + n_away[],
+                 exhaustive=exhaustive_requested(),
+                 note=exhaustive_requested() ? "" : _RHO_COVERAGE)
     @info "ρ×rung: $(length(cells)) (rung, op-class, stochastic variant) cells, " *
           "all reached; $(n_trunc[]) R=0≡TowardZero identities, $(n_mono[]) " *
           "monotone-in-R steps, $(n_away[]) away-bound checks, over " *

@@ -73,6 +73,7 @@ using SmallFloats: _NAMED, OP_REGISTRY, opinfo, rung, joinhead, carriertype,
                    Binary, CarrierValue, datumcarrier
 
 isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
+isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
 
 # ---- the format partition, taken from the package rather than restated.
 const _ALLFMT = sort!(collect(keys(_NAMED)))
@@ -85,9 +86,18 @@ const _BY_RUNG = Dict(r => [nm for nm in _ALLFMT if _rungindex(_fmt(nm)) == r] f
 const _R1_CONTROL = [:Binary8p4se, :Binary8p1uf, :Binary6p3se, :Binary3p2se,
                      :Binary16p6se, :Binary16p8se, :Binary9p4se, :Binary12p7se]
 
-const _G10_TIER = lowercase(get(ENV, "SMALLFLOATS_G10", "rep"))
-_G10_TIER in ("rep", "full") ||
-    error("SMALLFLOATS_G10 must be \"rep\" or \"full\", got $(repr(_G10_TIER))")
+# The tier folds into the suite-wide dial (`SMALLFLOATS_TIER`) while keeping its
+# own switch as an override. Before this it read ONLY `SMALLFLOATS_G10`, so
+# `SMALLFLOATS_TIER=release` — or `SmallFloats_EXHAUSTIVE=1` — left this gate at
+# `rep` while the caller believed they had asked for everything (§11 M49).
+const _G10_TIER = let explicit = get(ENV, "SMALLFLOATS_G10", nothing)
+    t = explicit === nothing ?
+        (exhaustive_requested() ? "full" : (quick_requested() ? "quick" : "rep")) :
+        lowercase(explicit)
+    t in ("quick", "rep", "full") ||
+        error("SMALLFLOATS_G10 must be \"quick\", \"rep\" or \"full\", got $(repr(t))")
+    t
+end
 
 """The equivalence class a format occupies for the purposes of this file: what
 dispatch can actually distinguish. Two formats in the same class select the same
@@ -113,11 +123,16 @@ function _representatives(nms)
     out
 end
 
-# Rung 3 enters whole at both tiers: there are only eight of it, it is the
-# carrier this stage introduced, and eight formats is affordable by any reading.
-const _PROBED = _G10_TIER == "full" ?
-    unique(vcat(_R1_CONTROL, _BY_RUNG[2], _BY_RUNG[3])) :
-    unique(vcat(_R1_CONTROL, _representatives(_BY_RUNG[2]), _BY_RUNG[3]))
+# Rung 3 enters whole at EVERY tier: there are only eight of it, it is the
+# carrier the extension introduced, and eight formats is affordable by any
+# reading — including `quick`, which narrows the rung-1 controls instead. A tier
+# that skipped a carrier would not be a faster suite, it would be a different
+# one.
+const _PROBED =
+    _G10_TIER == "full"  ? unique(vcat(_R1_CONTROL, _BY_RUNG[2], _BY_RUNG[3])) :
+    _G10_TIER == "quick" ? unique(vcat(_R1_CONTROL[1:2], _representatives(_BY_RUNG[2])[1:1],
+                                       _BY_RUNG[3][1:2])) :
+                           unique(vcat(_R1_CONTROL, _representatives(_BY_RUNG[2]), _BY_RUNG[3]))
 
 """Eight code points per format: both ends of the lattice, both signs of the
 midpoint, and the specials, taken as raw code points so no format is skipped for
@@ -288,17 +303,16 @@ end
                        length(SHAPES) * length(OP_REGISTRY) * 2,
                  exhaustive=(_G10_TIER == "full"),
                  note=_G10_TIER == "full" ? "" :
-                      "format axis sampled: one per (rung, P==1?, code unit) " *
-                      "class at rung 2, exhaustive at rung 3; SMALLFLOATS_G10=full for all 72")
+                      "format axis sampled (tier=$(_G10_TIER)): $(length(_PROBED)) " *
+                      "formats; SMALLFLOATS_TIER=release (or SMALLFLOATS_G10=full) " *
+                      "probes all 72 above rung 1")
     @info "G10 [tier=$(_G10_TIER)]: $(length(_PROBED)) formats " *
           "($(nr[1]) rung-1, $(nr[2]) rung-2, $(nr[3]) rung-3) × " *
           "$(length(OP_REGISTRY)) registry operations, plus the Base veneers and " *
           "array verbs; block surface over $(length(SHAPES)) (FS,FE) shapes " *
           "covering every realized head and both `blockdecode` methods. " *
-          (_G10_TIER == "rep" ?
-           "The format axis is SAMPLED — one representative per realized " *
-           "(rung, P=1?, code unit) class at rung 2, plus eight rung-1 " *
-           "controls, exhaustive at rung 3. `SMALLFLOATS_G10=full` probes all " *
-           "72 formats above rung 1." :
+          (_G10_TIER != "full" ?
+           "The format axis is SAMPLED at tier=$(_G10_TIER). " *
+           "`SMALLFLOATS_TIER=release` probes all 72 formats above rung 1." :
            "The format axis is EXHAUSTIVE above rung 1 (all 72).")
 end

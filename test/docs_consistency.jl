@@ -23,9 +23,28 @@
 using Test, SmallFloats
 using SmallFloats: KMIN, KMAX, KSPLIT, _NAMED, bitwidth
 
-const _DOCS_SRC = joinpath(@__DIR__, "..", "docs", "src")
-const _DOC_FILES = isdir(_DOCS_SRC) ?
-    sort!(filter(f -> endswith(f, ".md"), readdir(_DOCS_SRC; join=true))) : String[]
+# ---- what is scanned, and why it is more than `docs/src/`.
+#
+# The first version of this gate scanned `docs/src/` only, which left **the
+# most-read file in the repository uncovered**: `README.md` is what a reader
+# meets first and what a package page renders. `docs/other/` holds the design and
+# execution records — a stale range there misleads the next person to work on the
+# package, which is a slower failure but not a smaller one.
+#
+# `docs/build/` and `docs/pdf/build/` are deliberately NOT scanned: they are
+# generated, so a finding there is a finding about their source, reported twice.
+const _DOC_ROOTS = [joinpath(@__DIR__, "..", "docs", "src"),
+                    joinpath(@__DIR__, "..", "docs", "other")]
+const _DOC_FILES = let fs = String[]
+    for d in _DOC_ROOTS
+        isdir(d) && append!(fs, filter(f -> endswith(f, ".md"), readdir(d; join=true)))
+    end
+    rm = joinpath(@__DIR__, "..", "README.md")
+    isfile(rm) && push!(fs, rm)
+    ch = joinpath(@__DIR__, "..", "CHANGELOG.md")
+    isfile(ch) && push!(fs, ch)
+    sort!(fs)
+end
 
 @testset "documentation agrees with the package" begin
     @test !isempty(_DOC_FILES)
@@ -77,14 +96,30 @@ const _DOC_FILES = isdir(_DOCS_SRC) ?
     # pattern is deliberately blunt and the exemption is where the nuance lives.
     _corrected(line) =
         occursin(r"120\s+(exported|at K)", line) ||          # "120 exported" is true
-        occursin(r"FALSE|`false`|\bis false\b|not\s+`?===", line)   # "…is false" is true
+        occursin(r"FALSE|`false`|\bis false\b|not\s+`?===", line) ||  # "…is false" is true
+        occursin(r"becomes\s+`?<:|→\s*`?<:|goes from", line)  # "X becomes <:" describes the change
+
+    # RECORDS are exempt from the range and count patterns, because their whole
+    # purpose is to state what a thing USED to be. `docs/other/` is the design and
+    # execution record; `CHANGELOG.md` is the release record, and a changelog that
+    # could not say "120 formats at K ∈ 3:8" would be unable to describe the
+    # change it exists to describe. Rewriting either to match the present would
+    # destroy the thing they are for.
+    #
+    # They are still scanned for the `===` claim, which is a statement about the
+    # package as it is now wherever it appears — but a line saying the relation
+    # *becomes* `<:` is describing the change and is exempted above.
+    _is_record(f) = occursin(joinpath("docs", "other"), f) ||
+                    basename(f) == "CHANGELOG.md"
+    _always = [p for p in stale if occursin("===", p[2])]
 
     findings = String[]
-    for f in _DOC_FILES, (i, line) in enumerate(eachline(f))
-        for (re, what) in stale
+    for f in _DOC_FILES
+        pats = _is_record(f) ? _always : stale
+        for (i, line) in enumerate(eachline(f)), (re, what) in pats
             occursin(re, line) || continue
             _corrected(line) && continue
-            push!(findings, "$(basename(f)):$i — $what\n      $(strip(line))")
+            push!(findings, "$(relpath(f, joinpath(@__DIR__, ".."))):$i — $what\n      $(strip(line))")
         end
     end
     @test findings == String[]

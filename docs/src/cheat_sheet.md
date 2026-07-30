@@ -370,6 +370,7 @@ Approximate implementations are never substituted into the default API.
 | Trap | Correct pattern |
 |---|---|
 | Treating an `Unsigned` as a number | `T(Int(c))` for a numeric integer; `T(c::Unsigned)` for a code point — at every width |
+| `Vector{Binary{K,P,Σ,Δ}}(undef, n)` | **Silently boxes every element** — the abstract format is not `isbits`. Use `Vector{Binary8p4se}` or `Vector{format(K,P,Σ,Δ)}`. `similar` normalizes; `Vector{…}(undef, n)` cannot be intercepted |
 | Silently mixing formats | Convert explicitly: `Convert(T, ρ, x)` |
 | Assuming `SatNone` always clamps | Choose `SatFinite` when clamping is required |
 | Expecting IEEE division-by-zero | P3109 semantics here define `x / 0 → NaN` |

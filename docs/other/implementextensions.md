@@ -2781,6 +2781,63 @@ assertions: StochasticB and StochasticC are **not** truncation at `R = 0` (B's
 saturation mode whose rows *consult the rounding mode*, so the `R = 0` identity
 cannot hold under it and is asserted under `SatFinite`.
 
+**M49 — a switch only one of four tiers read, and a hint with nothing to attach
+to.** Two follow-ups after Stage 9, one a defect and one a recommendation that
+measurement disproved.
+
+*The defect.* `SmallFloats_EXHAUSTIVE` was read by exactly one file —
+`tier_t2.jl`. In the release-tier run recorded as green, `Tρ` swept **six
+formats** while the caller had asked for every format, and `G10` widened only
+because `SMALLFLOATS_G10=full` happened to be set alongside. Set the exhaustive
+switch alone and you get a partial G10 and a six-format `Tρ` while believing you
+asked for everything.
+
+That is CLAUDE.md's own rule broken by the suite that enforces it: *"A tier the
+caller asks for is honoured, never downgraded: a gate that quietly runs less than
+it was told to is worse than no gate."* And the roll-call's `SAMPLED` label made
+it look **intentional** — the same shape as §11 M45's finding, one level up: a
+label that is true about the run can still be false about the intent.
+
+Resolved with one dial, `SMALLFLOATS_TIER ∈ {quick, default, release}`, which
+every format-swept tier reads through `sweep_formats`. The individual switches
+remain as overrides. Two constraints, both from the doctrine: **T1 stays
+exhaustive at every tier** (§6.2 says the lattice sweep must), and the roll-call
+now **prints the tier and asserts it** — at `release` every gate that can be
+exhaustive must be, with G2/G4/G7 named as boundary-targeted exceptions so the
+exception is a list rather than a shrug; at `quick` at least one axis must be
+narrowed, so a quick run cannot masquerade as a release gate.
+
+`quick` exists for a reason worth stating: a suite with no named fast path gets
+one invented badly, by developers running single files.
+
+*The disproved recommendation.* I proposed registering an error hint for the
+abstract-format-as-concrete-type failure, reasoning that `===` was written into
+three documentation files by the same author on three occasions and that being
+told once does not stick. Checking before shipping it: **nothing errors.**
+`Binary{8,4,true,true}(1.5)`, `Add`, `zero`, `convert`, `rand` and
+`Vector{…}(undef, n)` all succeed — the package already normalizes the abstract
+format at every entry point. A hint would have been code that looks like a
+safety net and never fires, so it was removed rather than shipped.
+
+What the check *did* find is a sharper trap than the one I was aiming at:
+
+```julia
+isbitstype(eltype(Vector{Binary{8,4,true,true}}(undef, 3)))   # false
+isbitstype(eltype(Vector{Binary8p4se}(undef, 3)))             # true
+```
+
+Every element boxed, every answer still correct, and nothing said. The `===`
+distinction is at least *visibly* false; this one costs the entire performance
+story in silence. `similar(a, T)` normalizes; `Vector{T}(undef, n)` cannot be
+intercepted, so it is documented in the performance guidance and in the cheat
+sheet's trap table — the two places a reader looks for exactly this.
+
+*Also found, and it is the plan's own Stage 9 item 4.* Both `benchmarking/` and
+`docs/` pinned `SmallFloats` at the **ByteFloats-era UUID**
+(`d8c9c1d9-…` against the current `1a823dc9-…`), so neither environment could
+resolve the package at all. Repointed; the report regenerates and the docs build
+clean, with the rewritten per-operation-class preflight passing on a live run.
+
 ---
 
 ## Appendix A — the exact-signature sweep

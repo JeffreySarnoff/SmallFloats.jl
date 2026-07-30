@@ -12,6 +12,7 @@
 using Test
 
 isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
+isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
 
 @testset "roll-call — every gate standing, coverage stated" begin
     missing_gates = [g for g in REQUIRED_GATES if !haskey(GATE_LOG, g)]
@@ -28,8 +29,21 @@ isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
     io = IOBuffer()
     println(io, "\n", "="^78)
-    println(io, "COVERAGE ROLL-CALL — ", length(GATE_LOG), " gates and tiers, ",
+    println(io, "COVERAGE ROLL-CALL — tier=", SUITE_TIER, " — ",
+                length(GATE_LOG), " gates and tiers, ",
                 n_exh, " exhaustive, ", length(GATE_LOG) - n_exh, " sampled")
+    println(io, "="^78)
+    # The tier belongs at the top, not in a footnote. A reader who sees
+    # "9 exhaustive" without knowing which tier produced it has been told a
+    # number, not a coverage claim.
+    println(io, SUITE_TIER == "release" ?
+        "  Release tier: every format axis exhaustive, G5 and G10 at `full`." :
+        SUITE_TIER == "quick" ?
+        "  QUICK tier — the edit-compile-test loop. Format axes are at their\n" *
+        "  narrowest (one per rung) and G5 is at `fast`. NOT a release gate:\n" *
+        "  run SMALLFLOATS_TIER=release before shipping." :
+        "  Default tier. Format axes are sampled per the derived representative\n" *
+        "  set; SMALLFLOATS_TIER=release sweeps all 504 formats.")
     println(io, "="^78)
     for (name, e) in sort!(collect(GATE_LOG), by=first)
         println(io, rpad(name, 6), rpad(e.exhaustive ? "exhaustive" : "SAMPLED", 12),
@@ -72,4 +86,21 @@ KNOWINGLY NOT COVERED (plan §6.4) — stated here so it is not rediscovered:
     print(String(take!(io)))
 
     @test total_units > 0
+
+    # A `quick` run must never be able to masquerade as a release gate: at that
+    # tier some axis IS narrowed, by construction, so a run reporting everything
+    # exhaustive would mean the dial did not reach a tier that should have
+    # narrowed — the same "quietly ran something other than what was asked"
+    # failure the dial exists to remove, pointing the other way.
+    if SUITE_TIER == "quick"
+        @test n_exh < length(GATE_LOG)
+    elseif SUITE_TIER == "release"
+        # Conversely, at `release` every tier that CAN be exhaustive must be.
+        # G2, G4 and G7 are boundary-targeted by design and are named here so
+        # the exception is a list rather than a shrug.
+        by_design = Set(["G2", "G4", "G7"])
+        not_exhaustive = sort!([k for (k, e) in GATE_LOG
+                                if !e.exhaustive && !(k in by_design)])
+        @test not_exhaustive == String[]
+    end
 end

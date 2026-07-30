@@ -24,7 +24,12 @@ using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage
 # opt-in and are HONOURED: a tier the caller asked for is never silently
 # downgraded, because a gate that quietly runs less than it was told to is worse
 # than no gate. (§11 M15.)
-get!(ENV, "SMALLFLOATS_G5", "lazy")
+# G5 follows the suite-wide dial unless the caller named a tier explicitly.
+# `get!` is deliberate: an explicit `SMALLFLOATS_G5` always wins, so widening one
+# axis without moving the whole tier stays possible (§11 M49).
+isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
+get!(ENV, "SMALLFLOATS_G5",
+     SUITE_TIER == "release" ? "full" : SUITE_TIER == "quick" ? "fast" : "lazy")
 
 isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 include(joinpath(@__DIR__, "golden", "harness.jl"))

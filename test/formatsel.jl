@@ -132,21 +132,84 @@ end
 
 const THRESHOLD_EDGES = threshold_edges()
 
-"""`true` when the caller asked for the exhaustive sweep. Named here so every
-tier reads the same switch and reports it the same way (Stage 8 step 5)."""
-exhaustive_requested() = get(ENV, "SmallFloats_EXHAUSTIVE", "0") in ("1", "true", "yes")
+# ---- ONE dial for the whole suite.
+#
+# Before this, `SmallFloats_EXHAUSTIVE` was read by exactly one file
+# (`tier_t2.jl`). Setting it and nothing else gave a caller a partial G10 and a
+# six-format Tρ **while they believed they had asked for everything** — and the
+# roll-call's `SAMPLED` label made that look intentional rather than omitted.
+#
+# CLAUDE.md's own words: *"A tier the caller asks for is **honoured, never
+# downgraded**: a gate that quietly runs less than it was told to is worse than
+# no gate."* A switch only one of four tiers reads is that failure exactly, so
+# the switch is now central and `exhaustive_requested()` is the single question
+# every format-swept tier asks.
+#
+#   quick    — the edit-compile-test loop. Narrow format axes, G5 `fast`.
+#              Roughly 5 minutes. Exists because a suite with no named fast path
+#              gets one invented badly (developers running single files).
+#   default  — what `Pkg.test()` does with no environment set. ~17 minutes.
+#   release  — every format axis exhaustive, G5 and G10 at `full`. ~38 minutes.
+#              The stage-exit and release gate.
+#
+# **`T1` is exhaustive at every tier and is not tunable here.** The lattice sweep
+# at every K is 7 602 160 points for 1m50, and §6.2 says it must stay exhaustive.
+# That is the line the dial does not move.
+#
+# The individual switches remain as overrides — a caller who sets
+# `SMALLFLOATS_G5` or `SmallFloats_EXHAUSTIVE` explicitly gets exactly that —
+# but nobody should need to know three of them to run a release gate.
+const _TIER_NAMES = ("quick", "default", "release")
+const SUITE_TIER = let t = lowercase(get(ENV, "SMALLFLOATS_TIER", "default"))
+    t in _TIER_NAMES ||
+        error("SMALLFLOATS_TIER must be one of $(_TIER_NAMES), got $(repr(t))")
+    t
+end
+
+"""`true` when the caller asked for every format. Set by `SMALLFLOATS_TIER=release`
+or by `SmallFloats_EXHAUSTIVE=1` directly; the explicit switch wins so a caller
+can widen one axis without moving the whole tier."""
+exhaustive_requested() =
+    get(ENV, "SmallFloats_EXHAUSTIVE", "") in ("1", "true", "yes") ||
+    (SUITE_TIER == "release" && !haskey(ENV, "SmallFloats_EXHAUSTIVE"))
+
+"""`true` at the `quick` tier, where a format axis should be as narrow as it can
+be while still touching every carrier. Never narrower than "one per rung" — a
+tier that skipped a carrier would not be a faster suite, it would be a different
+one."""
+quick_requested() = SUITE_TIER == "quick"
 
 """The format list a sweep should use, and a phrase naming what it is — so the
-`@info` line cannot claim coverage the run did not have."""
+`@info` line and the roll-call cannot claim coverage the run did not have."""
 function sweep_formats(what::AbstractString)
     if exhaustive_requested()
         (ALL_FORMATS,
          "$what: EXHAUSTIVE — all $(length(ALL_FORMATS)) formats")
+    elseif quick_requested()
+        fs = quick_formats()
+        (fs,
+         "$what: SAMPLED (tier=quick) — $(length(fs)) of $(length(ALL_FORMATS)) " *
+         "formats, one per (rung, P == 1) cell; every carrier is touched and " *
+         "nothing else is. Use SMALLFLOATS_TIER=default or =release for more")
     else
         (REPRESENTATIVE,
          "$what: SAMPLED — $(length(REPRESENTATIVE)) of $(length(ALL_FORMATS)) " *
          "formats, one per realized (rung, rung-boundary, code unit, P-class, " *
-         "Σ, Δ) cell, maximizing B within each; set SmallFloats_EXHAUSTIVE=1 " *
-         "for all of them")
+         "Σ, Δ) cell, maximizing B within each; SMALLFLOATS_TIER=release " *
+         "(or SmallFloats_EXHAUSTIVE=1) for all of them")
     end
+end
+
+"""The narrowest format set that still reaches every evaluation carrier and both
+`blockdecode` methods: one per `(rung, P == 1)` cell, drawn from the derived
+representative set so it inherits its "maximizing B" rule."""
+function quick_formats()
+    seen = Set(); out = Symbol[]
+    for nm in REPRESENTATIVE
+        T = _selF(nm)
+        c = (_rungindex(T), precision(T) == 1)
+        c in seen && continue
+        push!(seen, c); push!(out, nm)
+    end
+    sort!(out)
 end
