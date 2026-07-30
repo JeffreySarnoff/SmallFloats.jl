@@ -1034,6 +1034,19 @@ both JET passes green with no new filter. Warm scalar paths allocate zero.
 grid — the first stage where P > 8 reaches the bit path); **G6**; the full
 lattice sweep still green; Group A operational at every K.
 
+**Achieved.** **G3** green over **135 `(P, B)` cells** — every pair the grid
+realizes, not just the rung-1 ones (§11 M22) — 4 839 210 bit-vs-generic
+comparisons, 1.1 s. **G6** green over **19 976 144 `(datum, head)` pairs**,
+exhaustive, 27 s. **Group A verified at every K** by
+[test/wide_ops.jl](../../test/wide_ops.jl): 321 984 results on the 312 wide
+rung-1 formats, each recomputed from the draft definition in MPFR rather than
+compared against the package's own oracle. Ordering and the counting sort
+checked against decoded datums at K = 16, which is the first point at which
+Stage 3's key retyping could be verified against values rather than structure.
+G5 33/33 byte-identical; lattice sweep, G9, Aqua and both JET passes green;
+warm scalar paths allocate zero on **both** narrow and wide formats and the
+narrow array path holds 0.26 ns/elem.
+
 ---
 
 ### Stage 5 — Table and kernel policy
@@ -1835,6 +1848,93 @@ should simply grow:
 The conformance-declaration length assertions were the opposite case: they were
 literal `120`s and are now `sum(4K − 2 for K in KMIN:KMAX)`, because that
 assertion is precisely a claim about the range and must move with it.
+
+---
+
+### Stage 4
+
+**M20 — `decode`'s return type is now format-dependent, and three Base
+constructors had to stop assuming otherwise.** `decode(v)` returns
+`datumcarrier(typeof(v))`: `Float64` for 432 formats, `Float128` for 64,
+`BigFloat` for 8. The consequence is easy to miss because it type-checks
+everywhere: **`Base.Float64(v) = decode(v)` became wrong** — a method named
+`Float64` returning a `Float128` for 72 of the 504 formats. It is now
+`Float64(decode(v))`, which is the identity on the rung-1 path and therefore
+free. `Float32` splits on `decodepolicy` (the narrowed-table gather for K ≤ 8,
+`Float32(decode(v))` above it) and `BFloat16` routes through `Float64`.
+
+These conversions **round**, in the ordinary Julia sense, and they always did —
+what changed is that "always exact" stopped being true incidentally. `decode` is
+the exact route; `decode!` is the exact *bulk* route and refuses rather than
+rounds; `Float32(x)` rounds. Three surfaces, three contracts, stated.
+
+*Second-order, and worth the three lines it costs:* `show` of a Group C value
+printed **~78 decimal digits** for a one-bit significand, because `ldexp`
+returns a `BigFloat` at MPFR's 256-bit default and the shortest-round-trip
+printer honours the value's precision, not its information content. `show`
+rebuilds the datum at `precision(F)` — exact, since a datum fits in `P ≤ 16`
+bits by construction — purely for display. `decode` keeps the wide precision,
+because a decoded datum goes on to be computed with. Stage 7 makes this moot by
+replacing `BigFloat` with `Dyadic`.
+
+**M21 — `PackedVector`'s "refuse at K = 16" is a rule that fires on one of two
+identical cases, so it became a predicate instead.** §4 Stage 4 item 5 asked for
+a loud refusal at K = 16 because packing is the identity there and a silent
+identity invites benchmark confusion. Both halves of that are right, and the
+boundary is still wrong: packing is *equally* the identity at K = 8, where
+`⌈n·8/64⌉` words is exactly `n` bytes — and K = 8 has shipped since before the
+extension and is enumerated by G5's packed section over all 120 formats.
+Refusing K = 16 alone would encode an accident of history as a rule; refusing
+both would be a breaking change justified by tidiness.
+
+`packing_saves(F)` exposes the fact instead of enforcing it. Benchmarks and docs
+read it; `PackedVector` at those two widths stays correct, supported, and
+pointless.
+
+**M22 — G3's domain is every `(P, B)` the grid realizes, not the rung-1 grid.**
+§5 scoped G3 to `(P ≤ 16, B ≤ 512)` — the pairs where Float64 is the format's
+*own* carrier. That is not the reachable set: `Convert(F, ρ, x::Float64)`
+projects an external Float64 into **any** format, so `_rtp_f64` runs at every
+bias in the grid, up to B = 32768. The wide-B region is exactly where the bit
+path's `d < 0` branch would be exercised, and it turns out to be unreachable for
+a normal Float64 input because `1 − B` drops below Float64's exponent range —
+a fact worth measuring rather than asserting. **135 cells**, which is the same
+135 that §1 C6 found for the engine's parameter domain, arrived at independently.
+
+**M23 — the table builders refuse wide formats by name, not by `InexactError`.**
+Stage 4 makes the *scalar* path work at every K; the tabulated path still indexes
+operands as `UInt8` into a `Memory{UInt8}` sized `2^ΣK` with no byte budget, and
+widening it is Stage 5. Left alone, a wide array operation died as
+`InexactError: trunc(UInt8, 0x0400)` from three frames inside a builder — loud,
+but naming neither the cause nor the remedy, and the remedy exists: the scalar
+path works. `get_table` now refuses at all three arities with a message naming
+Stage 5, and `test/stage_gates.jl` pins it.
+
+*The guard's first spelling cost a JET failure worth recording:*
+`all(F -> bitwidth(F) <= KSPLIT, Fs)` infers `Union{Missing, Bool}`, because
+`all` with a general predicate is three-valued. That leaked into every array
+entry point as "non-boolean `Missing` found in boolean context" — four
+concrete-call gate failures from a guard that is constant-foldable. Spelled as a
+recursion over the type tuple it is `Bool` by construction. **A predicate on
+types should never be able to return `Missing`.**
+
+**M24 — `decode!`'s Float64 gate is `datumsexact`, not `datumcarrier`, and the
+gap between them is the point.** 454 formats have Float64-exact datums; only 432
+are rung 1. The 22-format B = 1024 band decodes exactly into Float64 and still
+needs `Float128` to *compute* in, because a product of two of its datums leaves
+Float64's range even though each operand sits inside it. `datumcarrier` answers
+a question about arithmetic; `decode!` asks a question about representation.
+Using the arithmetic trait as the gate — which the plan's wording invited —
+would have refused 22 formats for which the promise holds. The two axes §3.1
+separates are separate here too.
+
+*Testing note, from the first G6 run:* `Base.decompose` puts the **sign in the
+denominator** — `decompose(-0.0078125)` is `(4503599627370496, -59, -1)`, a
+positive significand over `den = -1`. Reading `den == 1` as "finite" silently
+classifies every negative datum as non-finite, which is why the first run
+reported 444 failures that were all correct code. Zero's exponent is also
+carrier-specific (`(0, -1074, 1)` for Float64, `(0, 0, 1)` for BigFloat). Both
+are absorbed in `gates_g6.jl`'s normalizer.
 
 ---
 

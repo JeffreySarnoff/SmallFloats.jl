@@ -125,6 +125,37 @@ function get_table end
 @inline _check_tabulable(ρ::ProjSpec) =
     isstochastic(ρ) && throw(ArgumentError("stochastic ρ $ρ is not tabulable (design §5.4)"))
 
+# The table builders are still `Code8`-only: they index operands as `UInt8`, hold
+# results in a `Memory{UInt8}`, and size themselves as `2^ΣK` with no byte
+# budget. Widening them — the byte-budget policy, the two typed caches, and the
+# conditional Shape A fallback that runs the scalar path per element instead of
+# refusing — is Stage 5.
+#
+# Until then the refusal is spelled out here rather than left to happen. Without
+# this guard a wide array operation dies as `InexactError: trunc(UInt8, 0x0400)`
+# from somewhere three frames inside a table builder: loud, but it names neither
+# the cause nor the remedy, and the scalar path *does* work at every K. Stage 3
+# set the rule that an unimplemented route says which stage finishes it; this is
+# that rule applied to the route Stage 4 leaves behind. (§11 M23.)
+@noinline function _refuse_wide_table(op::Symbol, Fs::Tuple)
+    wide = [formatname(F) for F in Fs if bitwidth(F) > KSPLIT]
+    throw(ArgumentError(
+        "tabulated $op over $(join(wide, ", ")) needs the wide table policy " *
+        "(byte budget, 16-bit code units, Shape-A fallback), which arrives in " *
+        "Stage 5 of the K ≤ 16 extension. The scalar path is available at every " *
+        "K — call $op elementwise, or use a K ≤ $KSPLIT format for the array route"))
+end
+# Spelled as a recursion rather than `all(F -> bitwidth(F) <= KSPLIT, Fs)`:
+# `all` with a general predicate is three-valued, so it infers `Union{Missing,
+# Bool}` and JET reports "non-boolean `Missing` found in boolean context" on
+# every array entry point. The recursion is `Bool` by construction and folds to
+# a constant, since every argument is a type.
+@inline _allnarrow() = true
+@inline _allnarrow(F::Type{<:Binary}, rest::Vararg{Type{<:Binary}}) =
+    (bitwidth(F) <= KSPLIT) && _allnarrow(rest...)
+@inline _check_tabulable_width(op::Symbol, Fs::Vararg{Type{<:Binary},N}) where {N} =
+    _allnarrow(Fs...) || _refuse_wide_table(op, Fs)
+
 # Double-checked pattern: probe under lock, build OUTSIDE the lock (builds may run
 # MPFR escalations), insert under lock; a racing duplicate build is benign and rare.
 # Written once here so the unary and binary fetches cannot acquire the lock, probe,
@@ -138,11 +169,13 @@ end
 
 @noinline function get_table(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary}, ρ::ProjSpec)::Memory{UInt8}
     _check_tabulable(ρ)
+    _check_tabulable_width(op, fr, f1)
     key = TableKey(op, _fkey(fr), _fkey(f1), (0, 0, 0, 0), _rmname(ρ), _smname(ρ))
     _cached_table(key, () -> _build_unary(op, fr, f1, ρ))
 end
 @noinline function get_table(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary}, f2::Type{<:Binary}, ρ::ProjSpec)::Memory{UInt8}
     _check_tabulable(ρ)
+    _check_tabulable_width(op, fr, f1, f2)
     key = TableKey(op, _fkey(fr), _fkey(f1), _fkey(f2), _rmname(ρ), _smname(ρ))
     _cached_table(key, () -> _build_binary(op, fr, f1, f2, ρ))
 end
@@ -206,6 +239,7 @@ point. Builds unconditionally (policy lives in `_ternary_table_for`); pure ρ on
 @noinline function get_table(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary},
                              f2::Type{<:Binary}, f3::Type{<:Binary}, ρ::ProjSpec)::Memory{UInt8}
     _check_tabulable(ρ)
+    _check_tabulable_width(op, fr, f1, f2, f3)
     key = _tkey(op, fr, f1, f2, f3, ρ)
     t = _ternary_probe(key)
     t !== nothing && return t

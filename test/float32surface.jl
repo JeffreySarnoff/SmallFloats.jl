@@ -7,34 +7,56 @@
 
 using BFloat16s: BFloat16
 
-# The Float32/BFloat16 surface is `Code8`-only until Stage 4 of the K ≤ 16
-# extension gates it on the datum-exactness trait (§4 Stage 4 item 6): both the
-# narrowing-exactness claim below and the pinned `f32_exact` counts are
-# statements about the K ≤ 8 grid, and reading them over 504 formats would be
-# reading them over formats whose datums Float32 cannot represent at all.
-# Scoped, not weakened — every K ≤ 8 format is still enumerated exhaustively.
-const _F32_FORMATS = sort!([nm for nm in keys(SmallFloats._NAMED)
-                            if bitwidth(getfield(SmallFloats, nm)) <= SmallFloats.KSPLIT])
+using SmallFloats: datumsexact, codeunit_type, KSPLIT
+
+# The exactness claim is no longer "every format", because at K ≤ 16 it is not
+# true of every format — it is true of every format `datumsexact` says it is
+# true of, and that predicate is what `decode!` gates on. The test therefore
+# enumerates the trait's *whole* domain and then tests its **boundary**: a
+# format where the trait fails must actually fail, or the trait is merely a
+# conservative guess wearing a theorem's clothes. (§4 Stage 4 item 6.)
+const _NAMES = sort!(collect(keys(SmallFloats._NAMED)))
+const _K8_FORMATS = filter(nm -> bitwidth(getfield(SmallFloats, nm)) <= KSPLIT, _NAMES)
+const _F32_EXACT  = filter(nm -> datumsexact(Float32, getfield(SmallFloats, nm)), _NAMES)
+const _BF16_EXACT = filter(nm -> datumsexact(BFloat16, getfield(SmallFloats, nm)), _NAMES)
+
+"""Every datum of `T`, exact in `X`? Measured, not asked of the trait."""
+function all_datums_exact(::Type{X}, ::Type{T}) where {X,T}
+    U = codeunit_type(T)
+    for i in UInt64(0):((UInt64(1) << bitwidth(T)) - 1)
+        v = rawvalue(T, U(i)); d = decode(v)
+        isnan(d) && (isnan(X(v)) || return false); isnan(d) && continue
+        big(X(v)) == big(d) || return false
+    end
+    true
+end
 
 @testset "Float32/BFloat16 surface (M1)" begin
-    @test length(_F32_FORMATS) == 120
-    @testset "exact decode, every format × every code" begin
-        nf32 = nbf16 = 0
-        for nm in _F32_FORMATS
-            T = getfield(SmallFloats, nm)
-            for c in 0x00:UInt8((1 << bitwidth(T)) - 1)
-                v = rawvalue(T, c); d = decode(v)
-                if isnan(d)
-                    nf32 += isnan(Float32(v)); nbf16 += isnan(BFloat16(v))
-                else
-                    nf32 += Float64(Float32(v)) == d
-                    nbf16 += Float64(BFloat16(v)) == d
-                end
-            end
+    @test length(_K8_FORMATS) == 120
+    @test length(_F32_EXACT) == 376
+    @test length(_BF16_EXACT) == 244
+    # Every K ≤ 8 format is still in the exact set — the extension takes nothing
+    # away from the grid that existed before it.
+    @test _K8_FORMATS ⊆ _F32_EXACT && _K8_FORMATS ⊆ _BF16_EXACT
+
+    @testset "exact decode over the trait's whole domain" begin
+        for nm in _F32_EXACT
+            @test (nm, all_datums_exact(Float32, getfield(SmallFloats, nm))) == (nm, true)
         end
-        total = sum(1 << bitwidth(getfield(SmallFloats, nm)) for nm in _F32_FORMATS)
-        @test nf32 == total          # Float32 narrowing exact, all datums
-        @test nbf16 == total         # BFloat16 narrowing exact, all datums
+        for nm in _BF16_EXACT
+            @test (nm, all_datums_exact(BFloat16, getfield(SmallFloats, nm))) == (nm, true)
+        end
+    end
+
+    @testset "the trait's boundary is real, not conservative" begin
+        # For every format the trait REJECTS, some datum must genuinely fail to
+        # round-trip. Without this the trait could refuse everything and the
+        # suite above would still pass.
+        for nm in _NAMES
+            T = getfield(SmallFloats, nm)
+            datumsexact(Float32, T) && continue
+            @test (nm, all_datums_exact(Float32, T)) == (nm, false)
+        end
     end
 
     @testset "decode! gather ≡ scalar surface" begin
@@ -43,7 +65,34 @@ const _F32_FORMATS = sort!([nm for nm in keys(SmallFloats._NAMED)
             @test isequal(decode!(similar(A, Float32), A), Float32.(A))
             @test isequal(decode!(similar(A, Float64), A), Float64.(A))
         end
+        # The ComputeDecode branch, on a wide format that clears both gates.
+        let T = Binary16p8se
+            @test datumsexact(Float32, T) && datumsexact(Float64, T)
+            A = [rawvalue(T, UInt16(c)) for c in 0:255:65535]
+            @test isequal(decode!(similar(A, Float32), A), Float32.(A))
+            @test isequal(decode!(similar(A, Float64), A), Float64.(A))
+        end
         @test_throws DimensionMismatch decode!(zeros(Float32, 3), fill(zero(Binary8p4se), 4))
+
+        # `decode!` promises exactness and must refuse rather than round. The
+        # scalar conversions are NOT gated — `Float32(x)` rounds, by Julia
+        # convention — so the pair below is the whole contract in two lines.
+        let T = Binary16p2se                       # B = 8192: no external float holds it
+            @test !datumsexact(Float32, T) && !datumsexact(Float64, T)
+            A = [rawvalue(T, UInt16(c)) for c in 0:9]
+            @test_throws ArgumentError decode!(zeros(Float32, 10), A)
+            @test_throws ArgumentError decode!(zeros(Float64, 10), A)
+            @test Float32.(A) isa Vector{Float32}   # rounding route stays open
+        end
+        # The 22-format band where the datums fit Float64 but the arithmetic
+        # carrier is wider: `decode!` must accept these, which is exactly why
+        # its gate is `datumsexact` and not `datumcarrier`.
+        let T = Binary12p1se                       # B = 1024, carrier Float128
+            @test SmallFloats.datumcarrier(T) === Float128
+            @test datumsexact(Float64, T)
+            A = [rawvalue(T, UInt16(c)) for c in 0:4095]
+            @test isequal(decode!(similar(A, Float64), A), Float64.(A))
+        end
     end
 
     @testset "array Convert ≡ scalar Convert" begin
@@ -71,7 +120,10 @@ end
     # Multiply 118/120 same-format signatures; Add and Subtract 88/120.
     counts = Dict(op => 0 for op in (:Add, :Subtract, :Multiply))
     mulfail = Symbol[]
-    for name in _F32_FORMATS, op in (:Add, :Subtract, :Multiply)
+    # Scoped to K ≤ 8 on purpose: these counts are a pinned measurement of the
+    # Float32 *kernel* gate over the grid it was measured on. The wide-format
+    # kernel surface is Stage 6's business, not this trait's.
+    for name in _K8_FORMATS, op in (:Add, :Subtract, :Multiply)
         T = getfield(SmallFloats, name)
         g = f32_exact(op, T, T)
         counts[op] += g

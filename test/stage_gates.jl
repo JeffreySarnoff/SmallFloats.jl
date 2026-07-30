@@ -50,19 +50,44 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         @test occursin("rung-3", e.msg)
     end
 
-    # ---- Wide decode: refused until the carrier-generic finite path exists.
-    # `_decode_compute`'s tail is still the Float64 bit assembly whose premise is
-    # exactly K ≤ 8, so the alternative to refusing is a wrong answer.
+    # ---- Wide decode LANDED in Stage 4; what remains asserted is that the two
+    # policies are still selected by the representation and that the `2^K`
+    # constant table is still refused for `Code16` (invariant 10) even though
+    # decoding itself now works.
     @test decodepolicy(Binary8p4se) === TableDecode()
     @test decodepolicy(Binary12p5se) === ComputeDecode()
-    let e = try (decode(Binary12p5se(0x0abc)); nothing) catch e; e end
+    let e = try (SmallFloats._decode_table(Binary12p5se); nothing) catch e; e end
         @test e isa ArgumentError
-        @test occursin("Stage 4", e.msg)
+        @test occursin("invariant 10", e.msg)
+    end
+    let e = try (SmallFloats._decode_table32(Binary12p5se); nothing) catch e; e end
+        @test e isa ArgumentError
+    end
+
+    # ---- Array/table routes at wide K: Stage 5. The scalar path works at every
+    # K from Stage 4 (see `wide_ops.jl`); the *tabulated* path still indexes
+    # operands as `UInt8` into a `Memory{UInt8}` sized `2^ΣK` with no byte
+    # budget. The refusal is asserted here so the boundary is a decision rather
+    # than an `InexactError` from three frames inside a table builder.
+    let W = Binary12p5se, a = W(1.5)
+        for f in (() -> SmallFloats.get_table(:Exp, W, W, RNE_SatNone),
+                  () -> SmallFloats.get_table(:Add, W, W, W, RNE_SatNone),
+                  () -> vmap!(similar([a, a]), Val(:Add), W, RNE_SatNone, [a, a], [a, a]))
+            e = try (f(); nothing) catch e; e end
+            @test e isa ArgumentError
+            @test occursin("Stage 5", e.msg)
+        end
+        # ...and the scalar route it points at genuinely works.
+        @test decode(Add(W, RNE_SatNone, a, W(0.25))) == 1.75
     end
 
     # ---- `show` must never be the thing that throws: a failing testset has to
-    # be able to print the values it is comparing.
-    @test repr(Binary12p5se(0x0abc)) == "Binary12p5se(0x0abc)"
+    # be able to print the values it is comparing, at every carrier.
     @test repr(Binary8p4se(0x02)) == "Binary8p4se(0.001953125 ≡ 0x02)"
+    @test repr(Binary12p5se(0x0abc)) == "Binary12p5se(-8.344650268554688e-7 ≡ 0x0abc)"
+    for nm in sort!(collect(keys(_NAMED)))
+        T = getfield(SmallFloats, nm)
+        @test (nm, repr(T(zero(SmallFloats.codeunit_type(T)))) isa String) == (nm, true)
+    end
 
 end

@@ -31,15 +31,40 @@
     B = expbias(F)
     sig = Eb == 0 ? Int(tsig) : Int(tsig) + hidden
     e = (Eb == 0 ? 1 : Eb) - B + (1 - P)
-    # bit assembly (bitops plan K2): every datum exponent is deep inside Float64's
-    # normal range (|e + nb − 1| ≤ ~260), so no subnormal/overflow cases exist and
-    # ldexp's generality is pure overhead.
-    sig == 0 && return 0.0
+    # A single zero: the draft's datum set has no −0, so the sign is dropped here
+    # rather than reaching a carrier that would keep it.
+    sig == 0 && return _czero(C)
+    _finite_datum(reptype(F), C, sig, e, neg)
+end
+
+# The finite datum, `±sig · 2^e`, built on the format's carrier.
+#
+# Dispatched on the REPRESENTATION rather than on the carrier or on a branch,
+# because the split is exactly the representation seam (invariant 9): the bit
+# assembly's licence is `|e + nb − 1| ≤ ~260`, and that bound is the K ≤ KSPLIT
+# premise written arithmetically. `reptype` is the identity on a concrete
+# format and the format→representation map on an abstract one, so the call
+# below is correct for both without a second forwarder.
+#
+# The generic row is `ldexp`, which is where the extension actually bites: a
+# B ≈ 1024 format's smallest datum is `2^(2−P−B)`, as low as `2^-1038`, a
+# **Float64 subnormal**. Bit assembly there does not merely lose precision — it
+# writes a biased exponent that has gone negative into the exponent field and
+# produces an unrelated number. `ldexp` is defined on the whole range for every
+# carrier, and `C(sig)` is exact for every carrier because `sig ≤ 2^16`.
+@inline function _finite_datum(::Type{<:Code8}, ::Type{Float64}, sig::Int, e::Int, neg::Bool)
+    # bit assembly (bitops plan K2): every K ≤ 8 datum exponent is deep inside
+    # Float64's normal range, so no subnormal/overflow case exists and ldexp's
+    # generality is pure overhead. Retained under this signature only.
     nb = 64 - leading_zeros(UInt64(sig))
     mant = (UInt64(sig) << (53 - nb)) & ((UInt64(1) << 52) - 1)
     bits = (UInt64(e + nb - 1 + 1023) << 52) | mant
     neg && (bits |= UInt64(1) << 63)
-    return reinterpret(Float64, bits)
+    reinterpret(Float64, bits)
+end
+@inline function _finite_datum(::Type{<:Code16}, ::Type{C}, sig::Int, e::Int, neg::Bool) where {C}
+    d = ldexp(C(sig), e)
+    neg ? -d : d
 end
 
 # Bounded to `Code8` BY SIGNATURE, not by a check inside: a `Code16` request must
@@ -66,8 +91,8 @@ end
     "would be 65 536 entries, which invariant 10 forbids outright. Wide formats " *
     "decode by computation; see `decodepolicy`"))
 @noinline _decode_table32(::Type{<:Code16}) = throw(ArgumentError(
-    "the Float32 decode table exists only for K ≤ $KSPLIT; the Float32 surface for " *
-    "wide formats is gated on the datum-exactness trait in Stage 4"))
+    "the Float32 decode table exists only for K ≤ $KSPLIT; wide formats reach " *
+    "Float32 through `Float32(decode(v))`, gated on `datumsexact(Float32, F)`"))
 
 # The abstract-format forwarder every representation-keyed function needs (§11
 # M14): `_decode_table(Binary{3,1,true,true})` is how the gate suite asks a
@@ -85,30 +110,26 @@ end
 end
 
 """
-    decode(v::Binary) -> Float64
+    decode(v::Binary) -> datumcarrier(typeof(v))
 
-ωDecode (draft §4.7.2). Float64 is the universal exact carrier for K ≤ 8 datums
-(≤ 8-bit significands, |exponent| ≲ 2^7); exactness is asserted by exhaustive test.
+ωDecode (draft §4.7.2). **Exact for every datum of every format**, which is why
+the return type is the format's carrier rather than a fixed one: `Float64` where
+the bias allows (432 of the 504 formats), `Float128` to B = 8192, `BigFloat`
+above. `Float64(v)` is the way to ask for a `Float64` and accept the rounding.
 
-Implemented as a constant-tuple lookup (bitops plan K2): the per-format table is
-generated once from `_decode_compute` above, so the two are correct by
-construction and asserted equivalent exhaustively; constant inputs still fold.
+Two implementations, selected by `decodepolicy` — dispatch on the
+representation, not a branch on K (invariant 9, §2 R-F):
 
-Selected by `decodepolicy`, which is dispatch on the representation and not a
-branch on K (invariant 9, §2 R-F).
+  * `TableDecode` (K ≤ `KSPLIT`): a `2^K`-entry constant-tuple lookup (bitops
+    plan K2), generated once from `_decode_compute`, so the two are correct by
+    construction and asserted equivalent exhaustively; constant inputs fold.
+  * `ComputeDecode` (K > `KSPLIT`): `_decode_compute` directly. No table —
+    65 536 entries is what invariant 10 exists to forbid.
 """
 @inline decode(v::Binary) = _decode(decodepolicy(typeof(v)), v)
 @inline _decode(::TableDecode, v::Binary) =
     @inbounds _decode_table(typeof(v))[Int(codepoint(v)) + 1]
-# Stage 3 leaves this rung of the ladder empty ON PURPOSE. `_decode_compute`'s
-# tail is still the Float64 bit assembly whose justifying comment ("|e + nb − 1|
-# ≤ ~260") is exactly the K ≤ 8 premise: at B ≈ 1024 the minimum datum is
-# 2^(2−P−B), a Float64 subnormal, and the assembly produces garbage rather than
-# an error. A wrong answer is worse than no answer, so until Stage 4 replaces
-# the tail with the carrier-generic `ldexp` path, ask and be told no.
-@noinline _decode(::ComputeDecode, v::Binary) = throw(ArgumentError(
-    "decode of a K ≥ $(KSPLIT + 1) format ($(formatname(typeof(v)))) needs the " *
-    "carrier-generic finite path, which arrives in Stage 4 of the K ≤ 16 extension"))
+@inline _decode(::ComputeDecode, v::Binary) = _decode_compute(v)
 
 """
     encode(T, sign, S, Q) -> UInt8   (private; design §3.3)

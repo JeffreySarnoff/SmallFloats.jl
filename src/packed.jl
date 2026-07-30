@@ -10,8 +10,14 @@
     PackedVector{F<:Binary} <: AbstractVector{F}
 
 Bit-packed storage of `F` code points at `bitwidth(F)` bits per element.
-Construct with `PackedVector(A::AbstractVector{F})`; recover bytes with
-`Vector(pv)` or `collect(pv)`. Memory: ⌈n·K/64⌉ words vs n bytes unpacked.
+Construct with `PackedVector(A::AbstractVector{F})`; recover with `Vector(pv)`
+or `collect(pv)`. Memory: `⌈n·K/64⌉` words vs `n·sizeof(codeunit_type(F))`
+unpacked.
+
+**It saves nothing when `K == 8·sizeof(codeunit_type(F))`** — K = 8 and K = 16 —
+where the packed layout is bit-for-bit the unpacked one and every access pays
+the shift/mask/splice for no return. `packing_saves(F)` says so; see its
+docstring for why that is a query rather than an error.
 """
 struct PackedVector{F<:Binary} <: AbstractVector{F}
     data::Vector{UInt64}
@@ -47,7 +53,7 @@ Base.@propagate_inbounds function Base.getindex(pv::PackedVector{F}, i::Int) whe
     if _crosses_word(off, K)
         c |= @inbounds(pv.data[w + 1]) << (64 - off)
     end
-    rawvalue(F, UInt8(c & mask))
+    rawvalue(F, _cu(F, c & mask))
 end
 Base.@propagate_inbounds function Base.setindex!(pv::PackedVector{F}, v::F, i::Int) where {F}
     @boundscheck checkbounds(pv, i)
@@ -62,6 +68,29 @@ Base.@propagate_inbounds function Base.setindex!(pv::PackedVector{F}, v::F, i::I
     end
     pv
 end
+
+"""
+    packing_saves(F) -> Bool
+
+Whether `PackedVector{F}` is smaller than `Vector{F}` — `false` exactly when
+`bitwidth(F)` equals the storage unit's width, i.e. K = 8 and K = 16.
+
+**Why this is a query and not a refusal.** §4 Stage 4 item 5 called for
+`PackedVector` to refuse loudly at K = 16, on the grounds that packing is the
+identity there and a silent identity invites benchmark confusion. The grounds
+are right and the boundary is not: packing is *equally* the identity at K = 8,
+which has shipped since before the extension and is enumerated by G5's packed
+section over all 120 formats. A rule that fires on one of two identical cases
+is not a rule, and the alternative — refusing both — would be a breaking change
+justified by tidiness.
+
+So the fact is exposed instead of enforced. Benchmarks and the docs read it;
+`PackedVector` at those widths stays correct, stays supported, and stays
+pointless. (§11 M21.)
+"""
+@inline packing_saves(::Type{F}) where {F<:Binary} =
+    bitwidth(F) < 8 * sizeof(codeunit_type(F))
+@inline packing_saves(pv::PackedVector{F}) where {F} = packing_saves(F)
 
 # Two facts every packed access needs: the low-K code mask, and whether an element
 # starting at bit `off` spills into the next word.

@@ -163,21 +163,68 @@ Convert(fr::Type{<:Binary}, ρ::ProjSpec, A::AbstractArray{<:Binary}) =
     decode!(dest::AbstractArray{Float32}, A::AbstractArray{<:Binary}) -> dest
     decode!(dest::AbstractArray{Float64}, A::AbstractArray{<:Binary}) -> dest
 
-Exact bulk ωDecode: a Shape-A gather of the (narrowed) decode table into an
-external float array. Both carriers are exact for every K ≤ 8 datum."""
+**Exact** bulk ωDecode into an external float array.
+
+Exactness is the whole contract here — it is what distinguishes `decode!` from
+`Float32.(A)`, which rounds like any other Julia conversion — so the destination
+element type is **gated on the format**, not assumed. `datumsexact(X, F)` decides
+it, and a format whose datums do not all fit `X` raises rather than silently
+rounding a bulk array. Every K ≤ 8 format passes both gates, so this is a new
+refusal only for formats that did not exist before the K ≤ 16 extension.
+
+Where the gate passes and `K ≤ KSPLIT`, the implementation is unchanged: a
+Shape-A gather of the (narrowed) constant decode table."""
 function decode!(dest::AbstractArray{Float32}, A::AbstractArray{F}) where {F<:Binary}
     axes(dest) == axes(A) || throw(DimensionMismatch("dest and A must share axes"))
+    datumsexact(Float32, F) || throw(ArgumentError(
+        "decode! promises exactness, and not every datum of $(formatname(F)) is " *
+        "representable in Float32 (P=$(precision(F)), B=$(expbias(F))). Use " *
+        "`Float32.(A)` and own the rounding, or decode to $(datumcarrier(F))"))
+    _decode_f32!(decodepolicy(F), dest, A)
+end
+@inline function _decode_f32!(::TableDecode, dest, A::AbstractArray{F}) where {F<:Binary}
     tbl = _decode_table32(F)
     @inbounds for i in eachindex(dest, A)
         dest[i] = tbl[Int(codepoint(A[i])) + 1]
     end
     dest
 end
+@inline function _decode_f32!(::ComputeDecode, dest, A::AbstractArray{F}) where {F<:Binary}
+    @inbounds for i in eachindex(dest, A)
+        dest[i] = Float32(decode(A[i]))          # exact: the gate above says so
+    end
+    dest
+end
+
 function decode!(dest::AbstractArray{Float64}, A::AbstractArray{F}) where {F<:Binary}
     axes(dest) == axes(A) || throw(DimensionMismatch("dest and A must share axes"))
+    # The gate is `datumsexact`, NOT `datumcarrier(F) === Float64`, and the
+    # difference is instructive: 454 formats have Float64-exact datums but only
+    # 432 are rung 1. The B = 1024 band — 22 formats — decodes exactly into
+    # Float64 and still needs `Float128` to *compute* in, because a product of
+    # two of its datums leaves Float64's range even though each operand sits
+    # inside it. `datumcarrier` answers a question about arithmetic; this
+    # function asks a question about representation, and using the arithmetic
+    # trait here would refuse 22 formats for which the promise holds.
+    datumsexact(Float64, F) || throw(ArgumentError(
+        "decode! promises exactness, and not every datum of $(formatname(F)) is " *
+        "representable in Float64 (P=$(precision(F)), B=$(expbias(F))). Use " *
+        "`Float64.(A)` and own the rounding, or decode to $(datumcarrier(F))"))
+    _decode_f64!(decodepolicy(F), dest, A)
+end
+@inline function _decode_f64!(::TableDecode, dest, A::AbstractArray{F}) where {F<:Binary}
     tbl = _decode_table(F)
     @inbounds for i in eachindex(dest, A)
         dest[i] = tbl[Int(codepoint(A[i])) + 1]
+    end
+    dest
+end
+@inline function _decode_f64!(::ComputeDecode, dest, A::AbstractArray{F}) where {F<:Binary}
+    @inbounds for i in eachindex(dest, A)
+        # `Float64(...)` is the identity for a rung-1 format and an exact
+        # narrowing for the B = 1024 band, which the gate above has already
+        # established. It is never a rounding here.
+        dest[i] = Float64(decode(A[i]))
     end
     dest
 end

@@ -470,21 +470,22 @@ function Base.show(io::IO, T::Type{<:Binary})
 end
 function Base.show(io::IO, v::Binary)
     T = typeof(v)
-    print(io, formatname(T), "(")
-    _show_datum(decodepolicy(T), io, v)
-    print(io, "0x", string(codepoint(v); base=16, pad=2 * sizeof(codeunit_type(T))), ")")
-end
-@inline function _show_datum(::TableDecode, io::IO, v::Binary)
     d = decode(v)
-    isnan(d) ? print(io, "NaN") : print(io, d)
-    print(io, " ≡ ")
+    print(io, formatname(T), "(")
+    isnan(d) ? print(io, "NaN") : print(io, _shortdatum(T, d))
+    print(io, " ≡ 0x", string(codepoint(v); base=16, pad=2 * sizeof(codeunit_type(T))), ")")
 end
-# `show` must not be the thing that throws. Between Stage 3 and Stage 4 a K ≥ 9
-# value has a code point but no decodable datum, and a testset that fails while
-# comparing two such values has to be able to PRINT them — otherwise the report
-# is an error inside the error reporter. Prints the code point alone; collapses
-# back to a single method the moment `decode` is total again.
-@inline _show_datum(::ComputeDecode, ::IO, ::Binary) = nothing
+
+# A datum has at most `P ≤ 16` significant bits, but a `BigFloat` carries its own
+# precision — and `ldexp` returns one at the MPFR *default*, 256 bits — so the
+# eight Group C formats would otherwise print ~78 decimal digits to express a
+# one-bit significand. Rebuilding at the format's precision is exact (the datum
+# fits in `P` bits by construction) and is what makes the shortest-round-trip
+# printer produce the short answer. Display only: `decode` keeps the wide
+# precision, because a decoded datum goes on to be *computed with*.
+@inline _shortdatum(::Type{F}, d) where {F<:Binary} = d
+@inline _shortdatum(::Type{F}, d::BigFloat) where {F<:Binary} =
+    BigFloat(d; precision = max(2, precision(F)))
 
 # ---- Base numeric API on the type (defined via Group M / decode; see also ops_scalar.jl)
 Base.zero(T::Type{<:Binary}) = rawvalue(T, 0x00)
@@ -531,14 +532,24 @@ Base.promote_rule(::Type{<:Binary}, ::Type{Float32}) = Float64
 Base.promote_rule(::Type{<:Binary}, ::Type{Float16}) = Float64
 Base.promote_rule(::Type{<:Binary}, ::Type{BFloat16}) = Float64
 Base.promote_rule(::Type{<:Binary}, ::Type{<:Integer}) = Float64
-Base.Float64(v::Binary) = decode(v)
-# exact: all K≤8 datums fit Float32 — a direct gather of the narrowed decode
-# table, bit-identical to Float32(decode(v)) (asserted exhaustively)
-Base.Float32(v::Binary) =
+# The three external-float conversions are ROUNDING conversions, in the ordinary
+# Julia sense: `Float32(x)` means "give me the nearest Float32". They were exact
+# for every K ≤ 8 format and are still exact for every format where
+# `datumsexact` holds — but that is now a property to be *queried*, not a promise
+# the constructor makes. `decode(v)` is the exact route and returns the format's
+# own carrier; `decode!` is the bulk route and refuses rather than rounds.
+#
+# Note `Float64(v)` in particular: it can no longer be `decode(v)`, because for
+# 72 of the 504 formats that returns a `Float128` or a `BigFloat` and a method
+# named `Float64` must return a `Float64`.
+Base.Float64(v::Binary) = Float64(decode(v))
+Base.Float32(v::Binary) = _tofloat32(decodepolicy(typeof(v)), v)
+# K ≤ KSPLIT keeps the direct gather of the narrowed table — bit-identical to
+# `Float32(decode(v))` and asserted so exhaustively.
+@inline _tofloat32(::TableDecode, v::Binary) =
     @inbounds _decode_table32(typeof(v))[Int(codepoint(v)) + 1]
-# exact: ≤8-bit significands ≤ BFloat16's 8-bit precision, exponents within its
-# range (subnormals reach 2^-133 < 2^-127) — asserted exhaustively
-(::Type{BFloat16})(v::Binary) = BFloat16(decode(v))
+@inline _tofloat32(::ComputeDecode, v::Binary) = Float32(decode(v))
+(::Type{BFloat16})(v::Binary) = BFloat16(Float64(v))
 (::Type{T})(v::Binary) where {T<:Binary} = _convert_default(T, v)
 (::Type{T})(x::Real) where {T<:Binary} = _convert_default(T, x)
 # Disambiguates against Base's (::Type{T})(::Rational) where T<:AbstractFloat

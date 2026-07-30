@@ -87,11 +87,18 @@ function _rtp_f64(P::Int, B::Int, μ::RoundingMode3109, X::Float64, R::Int, stic
     e = Int(u >> 52) - 1023                                  # normal input guaranteed
     m = (u & ((UInt64(1) << 52) - 1)) | (UInt64(1) << 52)    # 53-bit significand
     Q = Int64(max(e, 1 - B) - P + 1)
-    d = e - Int(Q)                                           # units-bit position; d ≤ P−1 ≤ 7
+    # units-bit position. `Q = max(e, 1−B) − P + 1`, so `d = e − Q` is exactly
+    # `P−1` on the normal branch and strictly less below it: `d ≤ P−1 ≤ KMAX−1`.
+    # It was `≤ 7` while P ≤ 8; the bound is the only thing the widening moves,
+    # and gate G3 measures the consequence rather than trusting this comment.
+    d = e - Int(Q)
     local Sfl::Int64, νfix::UInt128
     lost = false
     if d >= 0
-        t = 52 - d                                           # t ∈ [45, 52]
+        # t ∈ [52−(P−1), 52] = [37, 52] at P ≤ 16 (was [45, 52] at P ≤ 8). The
+        # shift stays well inside `UInt64`, and `Sfl = m >> t ≤ 2^16` stays well
+        # inside `Int64` — the two facts the bit path needs.
+        t = 52 - d
         Sfl = Int64(m >> t)
         νfix = UInt128(m & ((UInt64(1) << t) - 1)) << (128 - t)
     else

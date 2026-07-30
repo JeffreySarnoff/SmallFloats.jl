@@ -137,6 +137,78 @@ Julia `AbstractFloat`, never the internal exact carrier."""
 @inline _cninf(::Type{C}) where {C<:AbstractFloat} = C(-Inf)
 @inline _czero(::Type{C}) where {C<:AbstractFloat} = zero(C)
 
+# ---- the carrier join, one direction only -----------------------------------
+#
+# After the carrier split, `decode(x1)` and `decode(x2)` can be different types
+# — a `Float64` and a `Float128` — and no `ωeval` row exists for that pair
+# (§2 R-B). `lift` moves a datum **up** to the head an operation runs on, and
+# every method is exact by construction:
+#
+#   Float64  → Float128  : 53 ≤ 113 significand bits and Float128's exponent
+#                          range strictly contains Float64's, subnormals included.
+#   Float64  → BigFloat  : built at precision 53, so exact regardless of the
+#                          ambient MPFR precision — the operand's own precision
+#                          never limits the precision of a result computed from
+#                          it, so pinning it here costs nothing and removes a
+#                          dependence on global state.
+#   Float128 → BigFloat  : likewise at precision 113.
+#
+# **There is deliberately no narrowing method.** `lift(::HeadF64, ::Float128)`
+# does not exist, and its absence is the design: a narrowing lift is a silent
+# rounding of a datum on a path that believes it is exact, and a `MethodError`
+# at the call site is the cheapest possible way to be told. Gate G6 enumerates
+# the exactness over every datum of every format and asserts the absence.
+@inline lift(::HeadF64,   x::Float64)  = x
+@inline lift(::HeadF128,  x::Float64)  = Float128(x)
+@inline lift(::HeadF128,  x::Float128) = x
+@inline lift(::HeadExact, x::Float64)  = BigFloat(x; precision = 53)
+@inline lift(::HeadExact, x::Float128) = BigFloat(x; precision = 113)
+@inline lift(::HeadExact, x::BigFloat) = x
+
+# ---- external-carrier datum exactness ----------------------------------------
+#
+# `decode` is exact by construction — that is what `datumcarrier` is for. The
+# question this answers is the *other* one: given an external float type the
+# caller chose, are all of `F`'s datums exactly representable in it? It gates
+# the bulk `decode!` surface, which advertises exactness and must refuse rather
+# than round.
+#
+# Stated from the format's parameters and the target's range, not from a table
+# of blessed formats — at 504 formats a hand-maintained list is a defect
+# waiting for the next K.
+
+"""(least subnormal exponent, greatest normal exponent) of an external float."""
+@inline _extexprange(::Type{Float64})  = (-1074, 1023)
+@inline _extexprange(::Type{Float32})  = (-149, 127)
+@inline _extexprange(::Type{Float16})  = (-24, 15)
+@inline _extexprange(::Type{BFloat16}) = (-133, 127)
+
+"""
+    datumsexact(X, F) -> Bool
+
+`true` when **every** datum of format `F` is exactly representable in the
+external float type `X`.
+
+Three conditions, one per way a conversion can lose information:
+
+  * `P ≤ precision(X)` — the significand fits;
+  * the largest finite datum's exponent is within `X`'s normal range. That
+    exponent is `B − 1` for a signed format and `0` for an unsigned one, which
+    is not symmetry-breaking pedantry: an unsigned format spends its whole
+    exponent field below 1, so `Binary16p1uf`'s datums run down to `2^-32769`
+    while its largest is `0.5`;
+  * `2 − P − B ≥` `X`'s least subnormal exponent — and the smallest datum being
+    a *subnormal* of `X` is fine, because a datum is `sig · 2^(2−P−B)` with
+    integer `sig`, so once the step is a multiple of `X`'s subnormal step every
+    datum lands on `X`'s grid exactly.
+"""
+@inline function datumsexact(::Type{X}, ::Type{F}) where {K,P,S,E,X,F<:Binary{K,P,S,E}}
+    lo, hi = _extexprange(X)
+    B = expbias(F)
+    emax = S ? B - 1 : 0
+    P <= Base.precision(X) && emax <= hi && (2 - P - B) >= lo
+end
+
 # ---- MPFR precision ----------------------------------------------------------
 
 """
