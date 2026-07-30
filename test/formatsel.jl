@@ -87,8 +87,16 @@ format_cell(nm) = (T = _selF(nm);
                     _pclass(T), issigned(T), isextended(T)))
 
 """One format per realized cell: the one maximizing B, then K, then name. Every
-sweep that cannot afford 504 formats takes this set and says so."""
-function representative_formats()
+sweep that cannot afford 504 formats takes this set and says so.
+
+Named `derive_representatives` rather than `representative_formats` because
+`test/golden/harness.jl` already owns the latter — G5's own two-per-cell K ≤ 8
+selection, which is a different set answering a different question. Both files are
+`include`d into `Main`, so the shorter name was a silent method overwrite: whichever
+loaded second won, and the `const REPRESENTATIVE` below happened to be computed
+before the clobber. That is luck, not design, and the run said so with a
+`Method definition ... overwritten` warning."""
+function derive_representatives()
     best = Dict{Any,Symbol}()
     for nm in ALL_FORMATS
         c = format_cell(nm); T = _selF(nm)
@@ -104,7 +112,7 @@ function representative_formats()
     sort!(collect(values(best)))
 end
 
-const REPRESENTATIVE = representative_formats()
+const REPRESENTATIVE = derive_representatives()
 
 # ---- the T4 edge set, derived from the thresholds in the SOURCE.
 #

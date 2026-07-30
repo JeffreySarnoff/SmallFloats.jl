@@ -144,11 +144,23 @@ const DEFAULT_RBITS = 8
 # written methods differing only in two names. Generated from the grid instead,
 # so a change to the constructor protocol — validation, the no-argument budget,
 # the Val route — happens once and cannot apply unevenly across the nine.
-# Names are unchanged: `RSA_SN`, `RSA_SNType`, …
-for (tag, mode) in ((:RSA, :StochasticA), (:RSB, :StochasticB), (:RSC, :StochasticC)),
-    sat in (:SatFinite, :SatPropagate, :SatNone)
+#
+# The saturation tag is carried as an explicit `mode => suffix` pair rather than
+# derived from the type name, and that is the whole reason this loop is worth a
+# comment. The short-name rename (`RSA_SatNone` → `RSA_SN`) renamed every
+# hand-written `const` above and the export list, and could not see these:
+# `Symbol(tag, :_, sat)` built `RSA_SatNone` from the *type* symbol, so the nine
+# stochastic constructors kept their old names while `export` and every call site
+# used the new ones. Julia exports an undefined name without complaint, so
+# `RSA_SN` was **exported but not defined** and the failure surfaced only at the
+# first call. Naming the suffix explicitly makes the generator visible to the
+# next rename.
+const _SAT_TAGS = ((:SatFinite => :SF), (:SatPropagate => :SP), (:SatNone => :SN))
 
-    ctor  = Symbol(tag, :_, sat)
+for (tag, mode) in ((:RSA, :StochasticA), (:RSB, :StochasticB), (:RSC, :StochasticC)),
+    (sat, suffix) in _SAT_TAGS
+
+    ctor  = Symbol(tag, :_, suffix)
     alias = Symbol(ctor, :Type)
     @eval begin
         const $alias = ProjSpec{$mode{N}, $sat} where {N}

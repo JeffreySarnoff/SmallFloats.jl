@@ -27,16 +27,22 @@ the position that for value sets this small there is no excuse for approximation
   deviation bound κ is *measured by exhaustive enumeration* at registration time, and
   understated declarations are rejected. Nothing approximate is reachable from the
   default API.
-- **Exhaustively tested.** The value sets are tiny (≤ 256 points per format), so the
-  test suite does not sample — it enumerates: every operation on every input, every
-  ordering of every pair, every stochastic draw at boundary budgets. The shipped suite
-  carries ≈ 8.9 million assertions.
+- **Enumerated where enumeration is affordable, and labelled where it is not.**
+  The code lattice is swept **exhaustively at every bitwidth** — all 504 formats,
+  7 602 160 code points — and the projection engine is checked against an
+  independent `Rational{BigInt}` reference over every realized `(P, B)` cell.
+  Where a space is too large to enumerate (the ordered-pair cross-product above
+  K = 8 is 4.3 × 10⁹ pairs for a single format), the suite says **"sampled"** in
+  those words rather than rounding up. Every run ends with a coverage roll-call
+  naming each gate, what it compared, and which of the two it was: ≈ 35 million
+  verified units across 13 gates and tiers.
 - **Fast where it matters.** Pure-mode elementwise work runs through precomputed
-  lookup tables (sub-nanosecond per element); the scalar path is fully specialized and
-  allocation-free (≈ 18 ns for a complete `Add` including projection); sub-byte packed
-  storage, integer-keyed ordering with an O(n) counting sort, and a mask-based rounding
-  core round out the performance story. A reproducible Chairmarks benchmark suite ships
-  in `benchmarking/`.
+  lookup tables (sub-nanosecond per element); the scalar path is fully specialized
+  and allocation-free (`decode` ≈ 1.2 ns, `project` ≈ 6.6 ns, a complete `Add`
+  ≈ 9 ns including projection); sub-byte packed storage, integer-keyed ordering
+  with an O(n) counting sort, and a mask-based rounding core round out the
+  performance story. A reproducible Chairmarks benchmark suite ships in
+  `benchmarking/`, and every number here comes from it.
 
 ## Thirty-second tour
 
