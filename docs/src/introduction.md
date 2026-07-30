@@ -2,7 +2,7 @@
 
 SmallFloats.jl is a conforming, performance-oriented Julia implementation of the **IEEE P3109
 draft standard** — *Arithmetic Formats for Machine Learning* — covering every binary
-format the draft defines at bitwidths 3 through 8, every projection (rounding ×
+format the draft defines at bitwidths 3 through 16, every projection (rounding ×
 saturation) mode including the three stochastic families, the full scalar operation
 catalog, block-scaled ("MX-style") operations, and the draft's conformance and
 κ-approximation machinery.
@@ -66,13 +66,24 @@ julia> Exp(Binary8p4se, RNE_SatNone, Binary8p4se.([-1.0, 0.5, 2.0]))
 
 ## The formats
 
-A format is the type `Binary{K,P,SGN,EXT}`: bitwidth `K ∈ 3:8`, precision `P ∈ 1:K`
+A format is the type `Binary{K,P,SGN,EXT}`: bitwidth `K ∈ 3:16`, precision `P ∈ 1:K`
 (with the signedness constraint), signed/unsigned `SGN`, and extended (has ±Inf) or
-finite `EXT`. All 120 draft formats carry their draft names as exported aliases —
-`Binary8p4se` is `Binary{8,4,true,true}` ("K = 8, P = 4, signed, extended"); the
-trailing letters are `s`/`u` for signedness and `e`/`f` for extended/finite. Values
-are 1-byte immutable wrappers around their code point; every format has a single NaN,
-no negative zero, and `Float64` serves as the exact interchange carrier for all datums.
+finite `EXT`. All **504** draft formats carry their draft names as aliases. The
+**120 at K ≤ 8 are exported** by `using SmallFloats`; the other 384 are opt-in via
+`using SmallFloats.Formats`, and are always reachable as `SmallFloats.Binary16p6se`
+or programmatically as `format(16, 6, true, true)`.
+
+`Binary8p4se` *represents* `Binary{8,4,true,true}` ("K = 8, P = 4, signed,
+extended"); the trailing letters are `s`/`u` for signedness and `e`/`f` for
+extended/finite. Note that the two are related by `<:`, not `===` — `Binary` is
+abstract (a format is "a datum set and an encoding"), and the alias names its
+concrete *representation*.
+
+Values are immutable wrappers around their code point: one byte at K ≤ 8,
+two above it. Every format has a single NaN and no negative zero. `Float64` is the
+exact interchange carrier for the 432 formats whose exponent range it holds;
+the remaining 72 use `Float128` or an exact dyadic carrier, selected by the
+format and never by the caller.
 
 ## Where to go next
 

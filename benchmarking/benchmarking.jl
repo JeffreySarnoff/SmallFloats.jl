@@ -156,13 +156,53 @@ end
 # ---------------------------------------------------------------------------
 # preflight: abort rather than publish dispatch measurements
 # ---------------------------------------------------------------------------
+# The abort condition is per OPERATION CLASS, not per head — the K ≤ 8 phrasing
+# ("HeadF64 and HeadF128 are zero-allocation unconditionally") was measured false
+# and was never a statement about the head (§11 M46).
+#
+# What the measurement showed: every *component* of a wide call — `decode`,
+# `_joinheads`, `lift`, `ωeval`, `project`, `_finish_slow` — is allocation-free
+# at all three heads, and the composition allocated 304 bytes on `Float128` and
+# 592 on `Dyadic` purely because `apply_op`'s vararg lacked a length parameter.
+# That is fixed. What remains is real: arithmetic escalates to MPFR whenever the
+# operand spread exceeds the carrier's exact range, and a `Binary16p6se` add over
+# `B = 512` can span 1024 binades — so it allocates **at rung 1**.
+#
+# Therefore:
+#   * ABORT on any exact selection allocating, at any rung. A selection returns
+#     one of its operands; there is nothing for it to escalate into, so zero is
+#     unconditional and a nonzero reading is always plumbing, never arithmetic.
+#     This is the condition that would have caught the vararg defect.
+#   * MEASURE, do not gate, arithmetic. Its allocation is a function of the
+#     operand spread, and the benchmark's own operands decide it.
+const _SELECTIONS = (Maximum, Minimum, MaximumMagnitude, MinimumFinite, CopySign)
+
 function preflight(::Type{T}) where {T<:Binary}
     a, b, c = T(1.5), T(0.25), T(2.0)
-    add2(x, y) = Add(T, RNE_SatNone, x, y);  add2(a, b)
     prj(d) = project(T, RNE_SatNone, d);     prj(2.3)
+    @allocated(prj(2.3)) == 0 ||
+        error("preflight failed: `project` allocates on the warm path — " *
+              "measurements would reflect dispatch, not arithmetic")
+
+    # The unconditional claim, at whatever rung `T` sits on.
+    for f in _SELECTIONS
+        g(x, y) = f(T, RNE_SatNone, x, y); g(a, b)
+        @allocated(g(a, b)) == 0 || error(
+            "preflight failed: $(nameof(f)) allocates on the warm path for $T. " *
+            "An exact selection returns one of its operands and cannot escalate, " *
+            "so this is plumbing — a lost specialization or a boxed union — and " *
+            "not the operand spread. See §11 M46.")
+    end
+
+    # Group A on the format's own carrier: allocation-free when the operands do
+    # not force an escalation, which these do not (adjacent magnitudes).
+    add2(x, y) = Add(T, RNE_SatNone, x, y);  add2(a, b)
     fma3(x, y, z) = FMA(T, RNE_SatNone, x, y, z); fma3(a, b, c)
-    ok = @allocated(add2(a, b)) == 0 && @allocated(prj(2.3)) == 0 && @allocated(fma3(a, b, c)) == 0
-    ok || error("preflight failed: warm scalar paths allocate — measurements would reflect dispatch, not arithmetic")
+    (@allocated(add2(a, b)) == 0 && @allocated(fma3(a, b, c)) == 0) ||
+        error("preflight failed: narrow-spread Add/FMA allocate for $T — these " *
+              "operands are adjacent in magnitude and cannot force an MPFR " *
+              "escalation, so an allocation here is a specialization defect")
+
     # wide-spread FMA/FAA (the sticky-head escalation, ops_scalar.jl's StickyF) must
     # also be allocation-free — it replaced a BigFloat-allocating fallback.
     W = Binary8p1se
@@ -172,6 +212,23 @@ function preflight(::Type{T}) where {T<:Binary}
     wok = @allocated(wfma(wa, wb, wc)) == 0 && @allocated(wfaa(wa, wb, wc)) == 0
     wok || error("preflight failed: wide-spread FMA/FAA (sticky-head escalation) allocates")
     nothing
+end
+
+"""Allocation on the arithmetic path, RECORDED rather than gated, with the rung
+that produced it. Meaningless without the operand spread beside it, which is why
+it is a report row and not an abort condition (§11 M46)."""
+function allocation_profile(::Type{T}) where {T<:Binary}
+    a, b, c = T(1.5), T(0.25), T(2.0)
+    sel(x, y) = Maximum(T, RNE_SatNone, x, y);  sel(a, b)
+    add2(x, y) = Add(T, RNE_SatNone, x, y);     add2(a, b)
+    fma3(x, y, z) = FMA(T, RNE_SatNone, x, y, z); fma3(a, b, c)
+    lad(x) = Exp(T, RNE_SatNone, x);            lad(a)
+    (; rung = SmallFloats.rungindex(SmallFloats.rung(T)),
+       carrier = nameof(SmallFloats.carriertype(SmallFloats.rung(T))),
+       selection = @allocated(sel(a, b)),
+       add = @allocated(add2(a, b)),
+       fma = @allocated(fma3(a, b, c)),
+       ladder = @allocated(lad(a)))
 end
 
 # ---------------------------------------------------------------------------

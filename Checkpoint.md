@@ -29,7 +29,34 @@ has actually happened, what is verified, and what is not.***
 | **5 — table and kernel policy** | **done, verified** |
 | **6 — the carrier lattice** | **done, verified** |
 | **7 — `Dyadic`** | **done, verified** — the carrier swap, the P = 1 block-scale path, **G7**, the block surface under the carrier lattice, **G10**, the extended **G4**, and the per-head allocation profile |
-| 8–9 | not started |
+| **8 — test doctrine and tiers** | **done, verified** — T1/T2a/T2b/Tρ, the derived format selection, the coverage roll-call, and the export surface (O3 closed early) |
+| **9 — docs, exports, benchmarks, release** | **in progress** — exports, the stale-artifact purge, the docs range/count fix + consistency gate, the `Float16`/`BFloat16` trap section, `README.md`, `CHANGELOG.md`, the per-operation-class preflight, the wide precompile workload and the version bump are done; the release-tier gate run is in flight |
+
+**Stage 8 closed.** Its two defect-finding steps were run first, deliberately,
+and both found something (§11 M47, M48):
+
+* **`project_interval`'s flat 4096-bit ceiling was the last `_BIGP`.**
+  `ArcCosPi(Binary15p2ue, StochasticA/SatNone, x)` **threw** for any subnormal
+  `x` — B = 8192 there, so deciding which side of the datum ½ the true value
+  falls on needs ≈ 8 200 bits. Only a directed or stochastic rule can see it;
+  under nearest both enclosure endpoints agree on the first iteration, which is
+  why G10's sweep of every operation at rung 2 missed it. **A gate that fixes
+  one axis to its common value cannot see a defect that lives on that axis** —
+  G10 fixes ρ and varies the surface, Tρ fixes the surface and varies ρ, and
+  neither substitutes for the other.
+* **`refimpl` was out of normal form**, leaving `S = 2^P` after a rounding
+  carry, since the file was written. Invisible because its only consumer
+  compared *values*, and `2^P·2^Q == 2^(P−1)·2^(Q+1)`. Comparing the triple is
+  the stronger check and it found the reference, not the engine.
+
+The suite now prints a **coverage roll-call** at the end of every green run: 13
+gates and tiers, ≈ 35.3 M compared units, each labelled exhaustive or SAMPLED,
+followed by the §6.4 knowingly-uncovered list. A gate that is deleted, renamed
+or skipped fails the roll-call; one that registers zero units fails it too,
+because an empty loop and a passing loop look identical in a summary line.
+
+Wall clock 17.1 min against ≈ 10 before Stage 7 — 1.7× the time for 4.0× the
+compared units.
 
 **Stage 7 closed.** Beyond the carrier swap it took three more pieces, none of
 them in the plan:

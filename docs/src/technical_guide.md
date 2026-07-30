@@ -10,7 +10,7 @@ Source files load in dependency order, each layer speaking only downward:
 
 | layer | file | provides |
 |---|---|---|
-| formats | `formats.jl` | `Binary{K,P,SGN,EXT}`, the 120 named aliases, Group M queries |
+| formats | `formats.jl` | `Binary{K,P,SGN,EXT}`, the 504 named aliases, Group M queries |
 | specs | `projspec.jl` | rounding/saturation singletons, `ProjSpec{R,S}`, the predefined spec grid |
 | defaults | `defaults.jl` | settable session defaults (`DefaultType`, `DefaultProjection`, …) behind `Ref`s; consumed via the speculation guard |
 | codec | `decode_encode.jl` | decode (generated tables + bit-composed compute), encode, order keys, counting sort, `Class`, Next ops |
@@ -178,7 +178,7 @@ element, measured 0.27 ns/elem unary and 0.5 ns/elem binary. Tables are built
 table ≡ scalar over every entry.
 
 Ternary (`FMA`, `FAA`, `Clamp`) is a finite function too — 2^(K1+K2+K3) entries —
-but that count spans four orders of magnitude across the 3–8 bitwidth range (512 B
+but that count spans four orders of magnitude across the 3–16 bitwidth range (512 B
 at K=3, 16 MiB at K=8), so one policy doesn't fit the whole range. A separate
 `TernaryKey → TernaryEntry` cache (`_ternary_table_for`, in `tables.jl`) tiers by
 Σ bitwidth:

@@ -5,18 +5,37 @@ this guide are captured from real sessions against the shipped package.
 
 ## Formats and format queries
 
-The parametric type `Binary{K,P,SGN,EXT}` defines a format: bitwidth `K ∈ 3:8`,
+The parametric type `Binary{K,P,SGN,EXT}` defines a format: bitwidth `K ∈ 3:16`,
 precision `P` (significand bits including the implicit bit), `SGN::Bool` for
 signed/unsigned, `EXT::Bool` for extended (with ±Inf) versus finite. Every legal
-combination — 120 formats — has its draft name exported:
+combination — **504 formats** — has a draft-named alias. `using SmallFloats`
+exports the **120 at K ≤ 8**; the rest are one opt-in away:
 
 ```julia-repl
-julia> Binary8p4se === Binary{8,4,true,true}
+julia> Binary8p4se <: Binary{8,4,true,true}      # `<:`, not `===` — see below
 true
 
 julia> formatname(Binary{6,3,true,false})
 :Binary6p3sf
+
+julia> SmallFloats.Binary16p6se                  # always reachable, unexported
+Binary16p6se
+
+julia> format(16, 6, true, true)                 # programmatic, runtime params
+Binary16p6se
+
+julia> using SmallFloats.Formats                 # …or bring all 504 into scope
+
+julia> Binary16p6se
+Binary16p6se
 ```
+
+`Binary8p4se === Binary{8,4,true,true}` is **`false`**, and the distinction is the
+draft's own: a *format* is a datum set and an encoding, while the width of the
+machine word carrying a code point is a representation choice below the standard's
+level of description. `Binary` is abstract; `Binary8p4se` is its concrete
+representation and is what an array element type or a constructor target needs.
+Use the alias, or `format(K, P, Σ, Δ)` when the parameters are runtime values.
 
 The suffix reads: `p4` precision 4, `s`/`u` signed/unsigned, `e`/`f` extended/finite.
 
@@ -52,9 +71,59 @@ julia> MaxFiniteOf(x)
 Binary8p4se(224.0 ≡ 0x7e)
 ```
 
+## `Binary16p11se` is not `Float16`, and `Binary16p8se` is not `BFloat16`
+
+The K ≤ 16 grid contains two formats that look like the IEEE-754 `binary16` and
+the bfloat16 used in machine learning. **They are not those types**, and the
+differences are the kind that produce correct-looking numbers rather than errors.
+
+| | `Binary16p11se` | `Float16` | `Binary16p8se` | `BFloat16` |
+|---|---|---|---|---|
+| precision `P` | 11 | 11 | 8 | 8 |
+| exponent bias | **16** | **15** | **128** | **127** |
+| largest finite | **65472** | **65504** | **3.3762e38** | **3.3895e38** |
+| NaN encodings | **1** | **2046** | **1** | **2046** |
+| negative zero | **no** | yes | **no** | yes |
+| domain is a parameter | **yes** (`se`/`sf`) | no | **yes** | no |
+
+The bias is the trap. P3109 defines the bias so that the exponent range is
+symmetric about the format's midpoint; IEEE-754 defines it as `2^(E-1) − 1`. The
+two differ by one, so **every datum in the format is a factor of two away from
+its IEEE counterpart** — `Binary16p11se` and `Float16` share a significand layout
+and disagree on the value of every code point.
+
+That is why the largest finites differ: 65472 is `(2^11 − 1) · 2^5`, one ulp
+short of `Float16`'s 65504, because the top code point of an extended format is
+`Inf` rather than a finite value. Converting between them is a conversion, never
+a reinterpretation:
+
+```julia-repl
+julia> using SmallFloats.Formats
+
+julia> Convert(Binary16p11se, RNE_SatFinite, Float16(1.5))    # a conversion
+Binary16p11se(1.5 ≡ 0x4200)
+
+julia> reinterpret(Binary16p11se, Float16(1.5))               # NOT a thing
+ERROR: MethodError: ...
+```
+
+The remaining rows are draft decisions rather than accidents. A single NaN
+encoding means there is no payload to propagate and no quiet/signalling
+distinction; the 2045 code points IEEE spends on NaN payloads are datums here.
+No negative zero means `-0.0` and `0.0` are the same code point, so a sign-symmetric
+format has an odd number of finite values. And the domain parameter — `e` for
+extended (with ±Inf), `f` for finite — has no IEEE analogue at all: `Binary16p11sf`
+spends the two infinity code points on finite values instead.
+
+If you want IEEE semantics, use `Float16` and `BFloat16`; the package converts to
+and from both, exactly where the datum sets permit (`datumsexact`).
+
 ## Values
 
-A value is one byte: an immutable wrapper around its code point. Four ways in, two
+A value is an immutable wrapper around its code point — **one byte at K ≤ 8, two
+above it**. The storage unit is `codeunit_type(T)`, a property of the
+*representation*; the code point occupies the low `K` bits and the high bits are
+maintained zero. Four ways in, two
 ways out:
 
 ```julia-repl

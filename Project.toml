@@ -1,7 +1,7 @@
 name = "SmallFloats"
 uuid = "1a823dc9-6fcb-4967-90f0-adc1d2cc8013"
 authors = ["Jeffrey Sarnoff <jeffrey.sarnoff@ieee.org>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 BFloat16s = "ab4f0b2a-ad5b-11e8-123f-65d77653426b"

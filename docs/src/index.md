@@ -1,7 +1,7 @@
 # SmallFloats.jl
 
 *A conforming, performance-oriented Julia implementation of the IEEE P3109 draft
-standard — arithmetic formats for machine learning at bitwidths 3–8.*
+standard — arithmetic formats for machine learning at bitwidths 3–16.*
 
 Bit-exact defined results on every default path; one projection engine as the single
 write path into a code point; approximation only behind an explicitly named,

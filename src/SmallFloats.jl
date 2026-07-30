@@ -3,7 +3,7 @@
     SmallFloats
 
 A conforming, performance-oriented Julia implementation of the IEEE P3109 draft
-standard for arithmetic formats for machine learning (bitwidths 3–8).
+standard for arithmetic formats for machine learning (bitwidths 3–16).
 
 Bit-exact defined results on every default path; the projection engine
 (`RoundToPrecision → Saturate → Encode`) is the single write path into a code
@@ -228,6 +228,33 @@ export conformance, conformance_dict, conformance_report, draft_revision,
         bx = Block(one(S), (a, b, a, b)); by = Block(one(S), (b, a, b, a))
         BlockDotProduct(T, RNE_SatNone, bx, by)
         BlockAdd(T, RNE_SatNone, bx, by, one(S))
+
+        # ---- exactly one wide format per carrier, and no more.
+        #
+        # The image must not grow with the grid: 504 formats × the operation
+        # register would be an enormous workload for paths most users never take.
+        # But the wide carriers are *new code*, and leaving them entirely
+        # uncompiled means the first wide call in a session pays for the whole
+        # carrier lattice — measured at ≈ 1.8 s per format elsewhere in this
+        # work, essentially all specialization.
+        #
+        # So: one representative at each rung above 1, one Group A operation and
+        # one Group B, which is what forces `decode`'s wide path, `lift`, the
+        # per-head `ωeval` rows, the enclosure ladder, and `project`'s generic
+        # `_rab` family to exist. Adding a second format at the same rung
+        # compiles the same methods again for a different type parameter and buys
+        # nothing.
+        W2 = Binary16p5se        # rung 2 — Float128 carrier
+        W3 = Binary16p1uf        # rung 3 — Dyadic carrier (the MX scale shape)
+        for WF in (W2, W3)
+            w1 = WF(1.5); w2 = WF(0.25)
+            Add(WF, RNE_SatNone, w1, w2)          # Group A, per-head ωeval
+            Multiply(WF, RNE_SatFinite, w1, w2)
+            Exp(WF, RNE_SatNone, w1)              # Group B, the enclosure ladder
+            Convert(T, RNE_SatNone, w1)           # wide → narrow, across the seam
+            decode(w1); codepoint(w1); w1 < w2    # the veneers a user reaches first
+        end
+
         empty_tables!()          # tables are cheap to rebuild; don't bloat the image
     end
 end

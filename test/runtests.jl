@@ -1687,6 +1687,10 @@ include("golden.jl")
 # ==========================================================================
 # Package hygiene (Aqua) and static error analysis (JET)
 # ==========================================================================
+# The prose cannot disagree with the package: bitwidth range, format count and
+# export-surface size are read from `SmallFloats` and searched for in docs/src.
+include("docs_consistency.jl")
+
 include("quality.jl")
 
 # LAST: assert every gate stood, print what each covered, and print — in one

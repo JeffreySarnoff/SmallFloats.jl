@@ -40,7 +40,7 @@ Binary K p P (s|u) (e|f)
        │   │  │     └─ extended (Inf) or finite domain
        │   │  └────── signed or unsigned
        │   └───────── significand precision, including the implicit bit
-       └───────────── total bitwidth, 3 through 8
+       └───────────── total bitwidth, 3 through 16
 ```
 
 Examples:
