@@ -2093,6 +2093,106 @@ line is `lanes × significand bits + slack` and needs no change. The comment now
 says so. Stage 6's precision unification is two constants, `_BIGP` and
 `_REDPREC`, exactly as §4 stated.*
 
+**M31 — G2 could not be written red before rung 3 existed, and the recorded red.**
+The plan says "write **G2** first and watch it fail." Taken literally that is
+impossible, and the reason is worth stating because it generalizes.
+
+`_BIGP` is consumed by `_bigsum2`/`_bigfma`/`_bigsum3`, whose signatures are
+`Float64`. Float64's own exponent span is 2 097 bits, so `2200` is sufficient
+**by 49 bits** for every operand pair those functions can currently be handed.
+The constant is not wrong today. It becomes wrong the instant a datum from a
+B = 32 768 format reaches them — which requires rung-3 evaluation to exist. A
+G2 run before that fails with the Stage-3 refusal `ArgumentError`, which proves
+only that Stage 6 has not happened yet. That is M28's lesson one layer up: **a
+refusal is not a disagreement**, and a gate satisfied by a refusal is not
+armed.
+
+So the sequence is: wire rung 3 the way one would *without* the gate (`_BIGP`
+untouched — the naive implementation, not scaffolding), run G2, fix. The red
+below is the evidence that writing it naively is wrong:
+
+```
+[ Info: G2 tier A: 504 formats, spread measured from the lattice;
+        _BIGP = 2200 insufficient for 50 of them
+gates_g2.jl:147  RQ(decode(got)) == want                    1//1 == 2//1
+gates_g2.jl:148  got === W(2.0)
+                 Binary16p1uf(1.0 ≡ 0x8000) === Binary16p1uf(2.0 ≡ 0x8001)
+gates_g2.jl:155  Subtract(W, RTN_SatFinite, a, b)           1//1 == 1//2
+gates_g2.jl:159  FMA(W, RTP_SatFinite, a, one_, b)          1//1 == 2//1
+gates_g2.jl:191  FMA(W, RTP_SatFinite, x, y, z) === MaxFiniteOf(W)
+                 Binary16p1uf(1.8e+9863 ≡ 0xfffd) === Binary16p1uf(3.5e+9863 ≡ 0xfffe)
+gates_g2.jl:201  Add(V, RTP_SatFinite, a, b)                1//1 == 2//1
+G2 — bigprec sufficiency | 4071 passed  6 failed
+```
+
+Note the shape of the failure: `1//1` where the answer is `2//1`. Not an
+exception, not a NaN, not an obviously corrupt magnitude — **the operand,
+returned unchanged**, because a residual 30 000 binades below the rounding
+position fell off a 2 200-bit accumulator and TowardPositive then had nothing
+to round up. Without the `Rational{BigInt}` reference this is indistinguishable
+from a correct answer, which is the entire argument for the gate.
+
+**`_BIGP = 2200` is insufficient for 50 of the 504 formats**, not 8 — the
+measured Tier-A number. The rung-3 formats are the ones that cannot *evaluate*
+without it, but every rung-2 format with B > 1024 also exceeds it.
+
+*Two things learned while writing it.* **(a)** G2 needs two tiers, and they must
+be labelled: the bound (`bigprec(F) ≥ spread + max Pᵢ + 1`, spread measured from
+the lattice, all 504 formats) was green from birth because `bigprec` was written
+correct in Stage 4 and merely left unwired. A G2 containing only that tier
+passes on the day it is written. **(b)** A gate's red has to be *readable*: the
+worst-case FMA row first compared two `Rational{BigInt}`s with ~32 800-bit
+numerators and buried the other five failures under 30 000 digits of output. It
+compares code points now, with the rational comparison kept one line up against
+a reference datum small enough to print.
+
+**The fix, and why it is two methods rather than one.** `apply_op` receives
+*decoded datums*, not the formats they came from, so `bigprec(Fs…)` cannot be
+reached from the escalation closures. Threading the formats down would mean a
+signature change at **~60 call sites**, including
+[`test/golden/harness.jl`](../../test/golden/harness.jl) — the G5 oracle
+generator. Churn adjacent to the digests, to obtain a bound that is *looser*
+than what the operands already state.
+
+So `bigprec` gained a second method, dispatched on argument class:
+
+```julia
+bigprec(Fs::Type{<:Binary}...)  # static:   2(maxB + maxP) + 64
+bigprec(xs::AbstractFloat...)   # realized: spread(xs) + max sigbits + 64
+bigprec_prod(x, y, zs...)       # the FMA shape: the product's exponent is e₁+e₂,
+                                # outside the operands' own range, and its
+                                # significand is P₁+P₂ wide
+```
+
+One policy — *derived, never constant* — expressed statically where formats are
+in scope and dynamically where only datums are. G2 tier A asserts the static
+bound **dominates** the realized one across the enumerable domain, so the
+relationship between the two is tested rather than asserted in a comment.
+Measured at the witness: static 65 602, realized 33 087.
+
+*Three defects in the fix itself, each caught by a standing gate rather than by
+inspection.* **(a)** The two `bigprec` methods, written as bare `Vararg`s, are
+**ambiguous at N = 0** — `bigprec()` matches both. `Test.detect_ambiguities`
+caught it; both now spell out a first argument, which also states that there is
+no exact precision for no terms. **(b)** `for v in (x, xs...)` splats, which
+allocates; replaced by a `_spanstep` fold. **(c)** The `ωeval(::HeadExact, op,
+xs::BigFloat...)` row accepts **every** operation and delegates to `_ωexact`,
+which has only Group A rows — so Group B/C at rung 3 became a `MethodError`
+naming an internal function. **This is M17's own rule, broken by the commit that
+cites it**, and JET found it: refuse by method, and let the method *throw*.
+`_ωexact` now has a catch-all that names the operation and the stage.
+
+*Also settled by writing it:* `bigprec` **is** sufficient for FMA, whose product
+carries 2P significand bits rather than P — the `+64` slack covers `P + 1` for
+every `P ≤ 63`. The subtler half is the spread: a product may be enormous, but
+if `|p|` exceeds MaxFinite then so does `p + z`, since a datum `z` cannot cancel
+it without being comparable in magnitude (which makes the spread small) — so the
+exact and the truncated evaluation land in the same saturation row either way.
+The spread reaches its maximum only when the result is in range, and there it is
+bounded by the format's own spread, which is what `bigprec` is built from. The
+margin at the witness is 67 bits and is now pinned by a test rather than by this
+paragraph.
+
 ---
 
 ## Appendix A — the exact-signature sweep

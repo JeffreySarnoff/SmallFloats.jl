@@ -10,7 +10,7 @@
 #                       (collapses to exact when V/S is representable, e.g. every
 #                       P=1 power-of-two scale — the draft's own NOTE — for free)
 #   Float128 exact V  : exact BigFloat conversion (≥128 bits), then one directed division
-#   BigExactF         : evaluated exactly (2200 bits); dividing at ≥ that precision
+#   BigExactF         : evaluated exactly (see `bigprec`); dividing at ≥ that precision
 #                       makes the conversion exact, so again one directed division
 #   EncloseF (d,u)    : interval-divided by the exact scale, sign-aware
 #   Enclose128F       : its MPFR fallback `f` is an EncloseF-shaped ladder — reuse it

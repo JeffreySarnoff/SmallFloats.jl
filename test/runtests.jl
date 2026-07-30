@@ -1585,6 +1585,9 @@ include("ternary_opt.jl")
 
 # ==========================================================================
 # K ≤ 16 extension standing gates (docs/other/implementextensions.md §5)
+#   G2 — `bigprec` sufficiency: the exact-arithmetic precision is derived and
+#        adequate, checked against `Rational{BigInt}` at the maximal-spread
+#        witness. Written RED first and the failure recorded (§11 M31).
 #   G3 — `_rtp_f64` bit ≡ generic over every (P, B) the grid realizes.
 #   G6 — carrier-lift exactness over every datum of every format.
 #   G9 — trait folding: every type/tag-valued trait resolves to one exact
@@ -1592,6 +1595,7 @@ include("ternary_opt.jl")
 #   G5 — K ≤ 8 golden non-regression, captured before the refactor began.
 #        Tier from SMALLFLOATS_G5 ∈ {fast, lazy, full, off}; defaults to lazy.
 # ==========================================================================
+include("gates_g2.jl")
 include("gates_g3.jl")
 include("gates_g6.jl")
 # Stage 5's central claim: which shape an array kernel takes is a policy

@@ -212,24 +212,85 @@ end
 # ---- MPFR precision ----------------------------------------------------------
 
 """
-    bigprec(Fs...) -> Int
+    bigprec(Fs::Type{<:Binary}...) -> Int      # static bound, from formats
+    bigprec(xs::AbstractFloat...)   -> Int     # realized bound, from operands
 
-Exact-arithmetic precision for the MPFR escalations, derived from the operand
-formats rather than fixed.
+Exact-arithmetic precision for the MPFR escalations, **derived rather than
+fixed**. One policy, two expressions of it, chosen by dispatch.
 
-An exact sum of two datums needs `spread + max(Pᵢ) + 1` bits, and the spread
-between the largest and smallest magnitudes of a format reaches `2B + P`. The
-constant it replaces (`_BIGP = 2200`) is ample through B = 512 and **silently
-truncates** above it — a truncated "exact" BigFloat is the worst failure mode
-available, because it is indistinguishable from a correct one without a
-reference. Gate G2 is written red against the `Binary16p1uf` witness before
-this is wired in.
+An exact sum of terms needs `spread + max significand bits + 1`. Both methods
+compute that; they differ only in where the spread comes from.
+
+  * From **formats**: the spread between a format's largest and smallest
+    magnitudes reaches `2B + P`, so `2(B + P) + 64` bounds every operand pair
+    the format admits. Static, folds to a literal, and enumerable over all 504
+    formats — which is what gate G2's tier A does.
+  * From **operands**: the spread actually present, which is what the escalation
+    sites use, because `apply_op` receives decoded datums and not the formats
+    they came from. Threading the formats there would mean a signature change at
+    ~60 call sites including the G5 oracle harness; deriving from the operands
+    is both cheaper and *tighter*.
+
+G2 asserts the static bound dominates the realized one over every enumerable
+domain, so "two expressions of one policy" is a tested relationship and not an
+assurance.
+
+The constant these replace (`_BIGP = 2200`) was ample through B = 512 and
+**silently truncated** above it. A truncated "exact" BigFloat is the worst
+failure mode this package has available: it is not an exception and not an
+obviously corrupt magnitude, but a plausible result indistinguishable from the
+correct one without an independent reference. G2 was written red against the
+`Binary16p1uf` witness first and recorded the failure — it returned an operand
+unchanged (§11 M31).
 """
-@inline function bigprec(Fs::Vararg{Type{<:Binary},N}) where {N}
-    maxB = 0; maxP = 0
-    for F in Fs
-        maxB = max(maxB, expbias(F))
-        maxP = max(maxP, precision(F))
+# Both methods spell out a FIRST argument rather than taking bare varargs. With
+# `Vararg` alone the two are ambiguous at N = 0 — `bigprec()` matches both — and
+# `Test.detect_ambiguities` catches it. Requiring one operand also states the
+# obvious: there is no exact-arithmetic precision for no terms.
+@inline function bigprec(F::Type{<:Binary}, Fs::Vararg{Type{<:Binary},N}) where {N}
+    maxB = expbias(F); maxP = precision(F)
+    for G in Fs
+        maxB = max(maxB, expbias(G))
+        maxP = max(maxP, precision(G))
     end
     2 * (maxB + maxP) + 64
+end
+
+@inline function bigprec(x::AbstractFloat, xs::Vararg{AbstractFloat,N}) where {N}
+    lo = typemax(Int); hi = typemin(Int); pmax = 2
+    lo, hi, pmax = _spanstep(x, lo, hi, pmax)
+    for v in xs                          # not `(x, xs...)`: the splat is an allocation
+        lo, hi, pmax = _spanstep(v, lo, hi, pmax)
+    end
+    lo > hi && return pmax + 64          # all terms zero/non-finite: nothing to align
+    (hi - lo) + pmax + 64
+end
+@inline function _spanstep(v::AbstractFloat, lo::Int, hi::Int, pmax::Int)
+    (isfinite(v) & !iszero(v)) || return (lo, hi, pmax)
+    e = Base.exponent(v)
+    (min(lo, e), max(hi, e), max(pmax, Base.precision(v)))
+end
+
+"""
+    bigprec_prod(xs...) -> Int
+
+`bigprec` for an expression whose leading term is the **product** `x₁·x₂` and
+whose remaining terms are added to it — the FMA shape. The product's exponent is
+`e₁ + e₂`, which lies outside the range of the operands' own exponents, so the
+sum method would understate the spread. Its significand is `P₁ + P₂` bits wide.
+"""
+@inline function bigprec_prod(x::AbstractFloat, y::AbstractFloat,
+                              zs::Vararg{AbstractFloat,N}) where {N}
+    pe = (iszero(x) | iszero(y)) ? 0 : Base.exponent(x) + Base.exponent(y)
+    lo = pe; hi = pe
+    for z in zs
+        (isfinite(z) & !iszero(z)) || continue
+        e = Base.exponent(z)
+        lo = min(lo, e); hi = max(hi, e)
+    end
+    pmax = Base.precision(x) + Base.precision(y)
+    for z in zs
+        pmax = max(pmax, Base.precision(z))
+    end
+    (hi - lo) + pmax + 64
 end

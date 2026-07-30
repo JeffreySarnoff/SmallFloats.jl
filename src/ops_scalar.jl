@@ -91,6 +91,8 @@ const _F64_MINNORMISH = 6.7e-290   # ≈ 2^-960: comfortably clear of subnormals
     project(fr, ρ, v; R)
 @inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, v::Float128) where {fr<:Binary} =
     project(fr, ρ, v; R)
+@inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, v::BigFloat) where {fr<:Binary} =
+    project(fr, ρ, v; R)
 @inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, b::BigExactF) where {fr<:Binary} =
     project(fr, ρ, b.f(); R)
 @inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, s::StickyF) where {fr<:Binary} =
@@ -156,13 +158,17 @@ end
 #
 # The `Float64` method above is strictly more specific, so this costs the working
 # path nothing.
-@noinline function apply_op(op::Val{OP}, ::Type{fr}, ρ::ProjSpec, R::Int,
-                            xs...) where {OP,fr<:Binary}
-    cs = join(unique(map(x -> string(typeof(x)), xs)), ", ")
-    throw(ArgumentError(
-        "$OP⟨$(formatname(fr))⟩ received operands on $cs. Evaluating on a carrier " *
-        "wider than Float64 needs the rung-$(_rungindex(fr)) carrier, which arrives " *
-        "in Stage 6 of the K ≤ 16 extension"))
+#
+# Stage 6 turned this from a refusal into a route: it selects the head and hands
+# off. What stays refused is refused one layer down, by `oracle.jl`'s per-head
+# catch-alls — and that is the better place for it, because the thing that is
+# missing IS an `ωeval` row. A head that has no row for the carrier it was
+# handed still throws an `ArgumentError` naming the operation and the rung; a
+# head that has one evaluates. Neither outcome is decided here.
+@noinline function apply_op(op::Val, ::Type{fr}, ρ::ProjSpec, R::Int,
+                            xs...) where {fr<:Binary}
+    res = ωeval(rung(fr), op, xs...)
+    _finish_slow(fr, ρ, R, res)
 end
 
 # ---- stochastic draw plumbing (design §5.5)

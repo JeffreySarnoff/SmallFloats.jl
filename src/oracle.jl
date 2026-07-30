@@ -7,7 +7,8 @@
 #   Float64      exact result: draft-tabled specials and exactly representable finites
 #   Float128     exact result by width analysis (Class R: sums of decoded datums whose
 #                required significand width fits 113 bits — see the _DE_* thresholds)
-#   BigExactF    f() → BigFloat, exact at 2200 bits (the wide-spread tail)
+#   BigExactF    f() → BigFloat, exact at `bigprec`/`bigprec_prod` of the
+#                operands (the wide-spread tail); see carriers.jl and gate G2
 #   Enclose128F  correctly-rounded Float128 bracket (Class R: IEEE-CR sqrt/rsqrt;
 #                Divide/Recip now resolve via EncloseF's yd — see below) with the
 #                MPFR closure as grid-straddle fallback
@@ -21,7 +22,11 @@
 # the rows are the spec, not an optimization. Interpretations beyond the readable
 # draft text are marked [interp] and tracked in checkpoint.md.
 
-const _BIGP = 2200   # exact-arithmetic precision: > full Float64 exponent span + slack
+# Exact-arithmetic precision comes from `bigprec`/`bigprec_prod` (carriers.jl),
+# derived per call from the operands. It replaced `_BIGP = 2200`, which was
+# sufficient for Float64 operands by 49 bits and silently truncated the moment a
+# datum from a B > 1024 format reached these closures — 50 of the 504 formats.
+# Gate G2 recorded the red (§11 M31) before this landed.
 
 # ---- error-free transforms (Class-1 arithmetic, design §5.1)
 @inline function _twosum(a::Float64, b::Float64)
@@ -106,11 +111,13 @@ function _faa_wide(x::Float64, y::Float64, z::Float64)
 end
 
 _bigsum2(x::Float64, y::Float64) =
-    BigExactF(() -> setprecision(() -> BigFloat(x) + BigFloat(y), BigFloat, _BIGP))
+    BigExactF(() -> setprecision(() -> BigFloat(x) + BigFloat(y), BigFloat, bigprec(x, y)))
 _bigfma(x::Float64, y::Float64, z::Float64) =
-    BigExactF(() -> setprecision(() -> BigFloat(x) * BigFloat(y) + BigFloat(z), BigFloat, _BIGP))
+    BigExactF(() -> setprecision(() -> BigFloat(x) * BigFloat(y) + BigFloat(z),
+                                 BigFloat, bigprec_prod(x, y, z)))
 _bigsum3(x::Float64, y::Float64, z::Float64) =
-    BigExactF(() -> setprecision(() -> (BigFloat(x) + BigFloat(y)) + BigFloat(z), BigFloat, _BIGP))
+    BigExactF(() -> setprecision(() -> (BigFloat(x) + BigFloat(y)) + BigFloat(z),
+                                 BigFloat, bigprec(x, y, z)))
 
 # ---- MPFR directed-enclosure closures (the rigorous ladder; unchanged semantics)
 _mpfr1(f::F, x::Float64) where {F} = prec -> setprecision(BigFloat, prec) do
@@ -228,12 +235,80 @@ end
 # replaces this with the `rung(op, Fs...)` join over result and argument formats,
 # which is what makes mixed-format evaluation well-defined.
 @inline ωeval(::HeadF64, op::Val, xs::Float64...) = ωeval(op, xs...)
+# The mixed-carrier hole, closed by method rather than left to a MethodError.
+# `apply_op` selects the head from the RESULT format, so a narrow result with
+# wide operands selects HeadF64 and arrives here on a carrier it has no row for.
+# The `rung(op, Fs...)` join is what makes that case well-defined; until it
+# lands, this is the third route to a refusal (§11 M28's class) and it has to
+# name the operation like the other two.
+@noinline ωeval(::HeadF64, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
+    "$OP selected the rung-1 (Float64) carrier from its result format but " *
+    "received operands on $(join(unique(map(x -> string(typeof(x)), xs)), ", ")). " *
+    "Mixed-carrier evaluation needs the rung(op, Fs...) join, which arrives in " *
+    "Stage 6 of the K ≤ 16 extension"))
 @noinline ωeval(::HeadF128, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
     "$OP on this format needs the rung-2 (Float128) carrier, which arrives in " *
     "Stage 6 of the K ≤ 16 extension"))
 @noinline ωeval(::HeadExact, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
     "$OP on this format needs the rung-3 (exact) carrier, which arrives in " *
     "Stage 6/7 of the K ≤ 16 extension"))
+
+# ---- rung 3: the exact carrier (Group A; Group C follows later in this stage).
+#
+# Specials are returned as Float64 rows, the same convention the Float64 catalog
+# uses: `_finish` dispatches on the result's type and `project` has the special
+# rows on Float64 already. The finite tail is one MPFR operation at a precision
+# that must exceed the operand spread — which is the whole subject of gate G2.
+@inline ωeval(h::HeadExact, op::Val, xs::BigFloat...) = _ωexact(h, op, xs...)
+
+# Group A is implemented; Group B/C on the exact carrier is item 9 of this stage
+# (the enclosure ladder retargeted at BigFloat). The row above accepts EVERY
+# operation, so without this the unimplemented ones would surface as a
+# `MethodError` naming `_ωexact` — an internal function, and a static-analysis
+# defect rather than a decision. M17's rule, which I broke and JET caught:
+# **refuse by method, and let the method throw.**
+@noinline _ωexact(::HeadExact, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
+    "$OP has no rung-3 (exact) ω-semantics yet: Group A is implemented on the " *
+    "exact carrier, Groups B and C arrive with the enclosure ladder later in " *
+    "Stage 6 of the K ≤ 16 extension"))
+
+function _ωexact(::HeadExact, ::Val{:Add}, x::BigFloat, y::BigFloat)
+    (isnan(x) | isnan(y)) && return NaN
+    if isinf(x) || isinf(y)
+        (isinf(x) && isinf(y) && x != y) && return NaN
+        return Float64(isinf(x) ? sign(x) : sign(y)) * Inf
+    end
+    setprecision(() -> x + y, BigFloat, bigprec(x, y))
+end
+_ωexact(h::HeadExact, ::Val{:Subtract}, x::BigFloat, y::BigFloat) =
+    _ωexact(h, Val(:Add), x, isnan(y) ? y : (iszero(y) ? zero(y) : -y))
+function _ωexact(::HeadExact, ::Val{:Multiply}, x::BigFloat, y::BigFloat)
+    (isnan(x) | isnan(y)) && return NaN
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN
+    (isinf(x) || isinf(y)) && return Float64(sign(x)) * Float64(sign(y)) * Inf
+    setprecision(() -> x * y, BigFloat, bigprec_prod(x, y))
+end
+function _ωexact(::HeadExact, ::Val{:FMA}, x::BigFloat, y::BigFloat, z::BigFloat)
+    (isnan(x) | isnan(y) | isnan(z)) && return NaN
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN
+    if isinf(x) || isinf(y) || isinf(z)
+        ps = Float64(sign(x)) * Float64(sign(y))
+        (isinf(x) || isinf(y)) && isinf(z) && (ps * Inf != Float64(sign(z)) * Inf) && return NaN
+        return (isinf(x) || isinf(y)) ? ps * Inf : Float64(sign(z)) * Inf
+    end
+    setprecision(() -> x * y + z, BigFloat, bigprec_prod(x, y, z))
+end
+function _ωexact(::HeadExact, ::Val{:FAA}, x::BigFloat, y::BigFloat, z::BigFloat)
+    (isnan(x) | isnan(y) | isnan(z)) && return NaN
+    if isinf(x) || isinf(y) || isinf(z)
+        hasp = (x == Inf) | (y == Inf) | (z == Inf)
+        hasn = (x == -Inf) | (y == -Inf) | (z == -Inf)
+        (hasp & hasn) && return NaN
+        return hasp ? Inf : -Inf
+    end
+    setprecision(() -> (x + y) + z, BigFloat, bigprec(x, y, z))
+end
+_ωexact(::HeadExact, ::Val{:Convert}, x::BigFloat) = x
 
 # `Convert` is registry arity 1 but registry group `:conv`, and it is the one
 # operation with no ω-semantics of its own: the conversion IS the projection into
