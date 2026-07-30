@@ -100,10 +100,10 @@ end
         X = [1.5f0, -0.26f0, 3.4f38, -1.0f-6, 0.0f0, Inf32, NaN32]
         # code-point comparison: `==` on Binary is IEEE-numeric (NaN unordered)
         samecodes(A, B) = codepoint.(A) == codepoint.(B)
-        @test samecodes(Convert(T, RNE_SatNone, X), [Convert(T, RNE_SatNone, x) for x in X])
+        @test samecodes(Convert(T, RNE_SN, X), [Convert(T, RNE_SN, x) for x in X])
         Xb = BFloat16.([1.5, -0.25, 100.0])
-        @test samecodes(Convert(T, RNE_SatNone, Xb), [Convert(T, RNE_SatNone, x) for x in Xb])
-        ρ = RSA_SatNone(8)                     # stochastic: same seeded stream ⇒ same codes
+        @test samecodes(Convert(T, RNE_SN, Xb), [Convert(T, RNE_SN, x) for x in Xb])
+        ρ = RSA_SN(8)                     # stochastic: same seeded stream ⇒ same codes
         @test samecodes(Convert(T, ρ, X; rng=Xoshiro(42)),
                         let rng = Xoshiro(42); [Convert(T, ρ, x; rng) for x in X] end)
     end
@@ -143,25 +143,25 @@ end
         # each registration measures κ exhaustively; κ = 0 is the shipped claim.
         # Multiply⟨8p1ue, SatPropagate⟩ exercises the overflow guard, Divide the
         # zero-divisor guard, Sqrt the negative-argument guard.
-        for (op, T, ρ) in ((:Add, T3, RNE_SatNone),
-                           (:Multiply, T1e, RNE_SatPropagate),
-                           (:Divide, T3, RNE_SatNone))
+        for (op, T, ρ) in ((:Add, T3, RNE_SN),
+                           (:Multiply, T1e, RNE_SP),
+                           (:Divide, T3, RNE_SN))
             impl = register_f32!(op, T, (T, T), ρ)
             push!(names, impl.name)
             @test kappa(impl) == 0.0
             @test impl.exhaustive
         end
-        impl = register_f32!(:Sqrt, T3, (T3,), RNE_SatNone)
+        impl = register_f32!(:Sqrt, T3, (T3,), RNE_SN)
         push!(names, impl.name)
         @test kappa(impl) == 0.0 && impl.exhaustive
         # retrieval by name; the kernel agrees with the defined result
         fn = approx(names[1]).fn
-        @test fn(T3(1.5), T3(0.25)) == Add(T3, RNE_SatNone, T3(1.5), T3(0.25))
+        @test fn(T3(1.5), T3(0.25)) == Add(T3, RNE_SN, T3(1.5), T3(0.25))
         # conformance reflects the registrations
         @test all(n -> any(a -> a.name == n, conformance().approximate), names)
         # policy gates: directed ρ and unaudited ops are rejected at build time
-        @test_throws ArgumentError f32_impl(:Add, T3, RTZ_SatNone)
-        @test_throws ArgumentError f32_impl(:Exp, T3, RNE_SatNone)
+        @test_throws ArgumentError f32_impl(:Add, T3, RTZ_SN)
+        @test_throws ArgumentError f32_impl(:Exp, T3, RNE_SN)
     finally
         foreach(unregister_approx!, names)     # leave the registry as found
     end

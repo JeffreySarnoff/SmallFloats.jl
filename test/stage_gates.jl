@@ -52,8 +52,8 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
     # narrow operands with a wide result need no wide carrier at all, and refusing
     # them was always wrong — the exact sum of two Float64 datums is a Float64.
     x = Binary8p4se(1.0)
-    @test Add(Binary16p2se, RNE_SatNone, x, x) === Binary16p2se(2.0)
-    @test Multiply(Binary16p1uf, RNE_SatNone, Binary8p4se(1.5), Binary8p4se(0.5)) ===
+    @test Add(Binary16p2se, RNE_SN, x, x) === Binary16p2se(2.0)
+    @test Multiply(Binary16p1uf, RNE_SN, Binary8p4se(1.5), Binary8p4se(0.5)) ===
           Binary16p1uf(0.75)
 
     # Same-format wide arithmetic reaches the evaluator by a DIFFERENT route, and
@@ -65,15 +65,15 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
     let W2 = Binary16p5se, v = W2(0x0100), u = W2(1.5)   # B = 1024, rung 2
         @test rung(W2) === HeadF128()
         @test decode(v) isa Float128
-        for f in (() -> Add(W2, RNE_SatNone, u, v), () -> Subtract(W2, RNE_SatNone, u, v),
-                  () -> Multiply(W2, RNE_SatNone, u, v), () -> FMA(W2, RNE_SatNone, u, v, u),
-                  () -> FAA(W2, RNE_SatNone, u, v, u))
+        for f in (() -> Add(W2, RNE_SN, u, v), () -> Subtract(W2, RNE_SN, u, v),
+                  () -> Multiply(W2, RNE_SN, u, v), () -> FMA(W2, RNE_SN, u, v, u),
+                  () -> FAA(W2, RNE_SN, u, v, u))
             @test f() isa W2
         end
         # Mixed carriers: the operands decode to different types and no `ωeval`
         # row is written for a mixed pair. `lift` closes that, and the join is
         # what guarantees it never has to narrow.
-        @test Add(W2, RNE_SatNone, u, Binary8p4se(1.5)) === W2(3.0)
+        @test Add(W2, RNE_SN, u, Binary8p4se(1.5)) === W2(3.0)
 
         # The enclosure ladder LANDED at every rung, so the two rows that asserted
         # `Exp` and `Sqrt` still refused here went red by being implemented —
@@ -84,9 +84,9 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         # decides alone. `EncloseF.yd` is a `Float64` field and `fq` narrows to
         # `Float128`, so for a wide datum neither can even represent the operand;
         # dropping them is structural, not a tuning choice.
-        for f in (() -> Exp(W2, RNE_SatNone, v), () -> Sqrt(W2, RNE_SatNone, v),
-                  () -> Divide(W2, RNE_SatNone, u, v), () -> Hypot(W2, RNE_SatNone, u, v),
-                  () -> SinPi(W2, RNE_SatNone, u), () -> Softplus(W2, RNE_SatNone, u))
+        for f in (() -> Exp(W2, RNE_SN, v), () -> Sqrt(W2, RNE_SN, v),
+                  () -> Divide(W2, RNE_SN, u, v), () -> Hypot(W2, RNE_SN, u, v),
+                  () -> SinPi(W2, RNE_SN, u), () -> Softplus(W2, RNE_SN, u))
             @test f() isa W2
         end
         # The ladder-only shape, asserted directly rather than inferred from the
@@ -106,7 +106,7 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         # `Convert` was never refused, and legitimately so: it has no ω-semantics
         # to evaluate — it is a bare projection, and the projection engine is
         # carrier-generic already (§1 C10).
-        @test decode(Convert(W2, RNE_SatNone, Binary8p4se(1.5))) == 1.5
+        @test decode(Convert(W2, RNE_SN, Binary8p4se(1.5))) == 1.5
     end
 
     # ---- Wide decode LANDED in Stage 4; what remains asserted is that the two
@@ -130,12 +130,12 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
     # rather than throwing, while `get_table` — whose contract is to *return a
     # table* — still throws, and now names the budget rather than a stage.
     let W = Binary12p5se, a = W(1.5), b = W(0.25)
-        @test vmap!(similar([a, b]), Val(:Add), W, RNE_SatNone, [a, b], [b, a]) ==
-              [Add(W, RNE_SatNone, a, b), Add(W, RNE_SatNone, b, a)]
-        @test SmallFloats.table_for(:Add, W, W, W, RNE_SatNone) === nothing   # 24 bits > 16
-        @test SmallFloats.table_for(:Exp, W, W, RNE_SatNone) isa Memory{UInt16}
+        @test vmap!(similar([a, b]), Val(:Add), W, RNE_SN, [a, b], [b, a]) ==
+              [Add(W, RNE_SN, a, b), Add(W, RNE_SN, b, a)]
+        @test SmallFloats.table_for(:Add, W, W, W, RNE_SN) === nothing   # 24 bits > 16
+        @test SmallFloats.table_for(:Exp, W, W, RNE_SN) isa Memory{UInt16}
         e = try (SmallFloats.get_table(:Add, Binary16p8se, Binary16p8se,
-                                       Binary16p8se, RNE_SatNone); nothing) catch e; e end
+                                       Binary16p8se, RNE_SN); nothing) catch e; e end
         @test e isa ArgumentError
         @test occursin("budget", e.msg) && !occursin("Stage", e.msg)
     end

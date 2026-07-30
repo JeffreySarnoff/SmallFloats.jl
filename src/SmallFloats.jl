@@ -153,15 +153,15 @@ export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,
        SaturationMode, SatFinite, SatPropagate, SatNone,
        ProjSpec, RoundOf, SatOf, roundingmode, saturationmode,
        isstochastic, nrandbits,
-       RNE_SatFinite, RNE_SatPropagate, RNE_SatNone,
-       RNA_SatFinite, RNA_SatPropagate, RNA_SatNone,
-       RTP_SatFinite, RTP_SatPropagate, RTP_SatNone,
-       RTN_SatFinite, RTN_SatPropagate, RTN_SatNone,
-       RTZ_SatFinite, RTZ_SatPropagate, RTZ_SatNone,
-       RTO_SatFinite, RTO_SatPropagate, RTO_SatNone,
-       RSA_SatFinite, RSA_SatPropagate, RSA_SatNone,
-       RSB_SatFinite, RSB_SatPropagate, RSB_SatNone,
-       RSC_SatFinite, RSC_SatPropagate, RSC_SatNone,
+       RNE_SF, RNE_SP, RNE_SN,
+       RNA_SF, RNA_SP, RNA_SN,
+       RTP_SF, RTP_SP, RTP_SN,
+       RTN_SF, RTN_SP, RTN_SN,
+       RTZ_SF, RTZ_SP, RTZ_SN,
+       RTO_SF, RTO_SP, RTO_SN,
+       RSA_SF, RSA_SP, RSA_SN,
+       RSB_SF, RSB_SP, RSB_SN,
+       RSC_SF, RSC_SP, RSC_SN,
        default_projspec, projmode
 
 # session defaults (defaults.jl)
@@ -217,17 +217,17 @@ export conformance, conformance_dict, conformance_report, draft_revision,
     @compile_workload begin
         T = Binary8p4se; S = Binary8p3se
         a, b = T(1.5), T(0.25)
-        Add(T, RNE_SatNone, a, b); Multiply(T, RNE_SatFinite, a, b)
-        Exp(T, RNE_SatNone, a); Convert(S, RNE_SatNone, a)
+        Add(T, RNE_SN, a, b); Multiply(T, RNE_SF, a, b)
+        Exp(T, RNE_SN, a); Convert(S, RNE_SN, a)
         a + b; exp(b); fma(a, b, a); min(a, b)
-        get_table(:Exp, T, T, RNE_SatNone)
+        get_table(:Exp, T, T, RNE_SN)
         A = [a, b, a, b]; B = [b, a, b, a]; d = similar(A)
-        vmap!(d, Val(:Add), T, RNE_SatNone, A, B)
-        vmap!(d, Val(:Exp), T, RNE_SatNone, A)
-        ScaledAdd(T, RNE_SatNone, one(S), a, one(S), b)
+        vmap!(d, Val(:Add), T, RNE_SN, A, B)
+        vmap!(d, Val(:Exp), T, RNE_SN, A)
+        ScaledAdd(T, RNE_SN, one(S), a, one(S), b)
         bx = Block(one(S), (a, b, a, b)); by = Block(one(S), (b, a, b, a))
-        BlockDotProduct(T, RNE_SatNone, bx, by)
-        BlockAdd(T, RNE_SatNone, bx, by, one(S))
+        BlockDotProduct(T, RNE_SN, bx, by)
+        BlockAdd(T, RNE_SN, bx, by, one(S))
 
         # ---- exactly one wide format per carrier, and no more.
         #
@@ -248,10 +248,10 @@ export conformance, conformance_dict, conformance_report, draft_revision,
         W3 = Binary16p1uf        # rung 3 — Dyadic carrier (the MX scale shape)
         for WF in (W2, W3)
             w1 = WF(1.5); w2 = WF(0.25)
-            Add(WF, RNE_SatNone, w1, w2)          # Group A, per-head ωeval
-            Multiply(WF, RNE_SatFinite, w1, w2)
-            Exp(WF, RNE_SatNone, w1)              # Group B, the enclosure ladder
-            Convert(T, RNE_SatNone, w1)           # wide → narrow, across the seam
+            Add(WF, RNE_SN, w1, w2)          # Group A, per-head ωeval
+            Multiply(WF, RNE_SF, w1, w2)
+            Exp(WF, RNE_SN, w1)              # Group B, the enclosure ladder
+            Convert(T, RNE_SN, w1)           # wide → narrow, across the seam
             decode(w1); codepoint(w1); w1 < w2    # the veneers a user reaches first
         end
 

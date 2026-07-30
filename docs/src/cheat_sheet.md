@@ -11,7 +11,7 @@ using SmallFloats
 using Random: Xoshiro
 
 T = Binary8p4se
-ρ = RNE_SatNone
+ρ = RNE_SN
 
 x = T(1.6)
 y = T(0.25)
@@ -130,8 +130,8 @@ rand(T); rand(T, dims); rand!(A)      # uniform on [0, 1)
 randn(T); randn(T, dims); randn!(A)   # standard normal, always finite
 rand(Xoshiro(1), T)                   # explicit rng as usual
 
-rand(rng, T;  projection=RTP_SatNone)   # scalar forms: land under any ProjSpec
-randn(rng, T; projection=RTZ_SatFinite) # (stochastic ρ draws R from same rng)
+rand(rng, T;  projection=RTP_SN)   # scalar forms: land under any ProjSpec
+randn(rng, T; projection=RTZ_SF) # (stochastic ρ draws R from same rng)
 ```
 
 Classification and stepping:
@@ -159,14 +159,14 @@ saturationmode(ρ)
 
 | Rounding | `SatFinite` | `SatPropagate` | `SatNone` |
 |---|---|---|---|
-| nearest, ties even | `RNE_SatFinite` | `RNE_SatPropagate` | `RNE_SatNone` |
-| nearest, ties away | `RNA_SatFinite` | `RNA_SatPropagate` | `RNA_SatNone` |
-| toward +∞ | `RTP_SatFinite` | `RTP_SatPropagate` | `RTP_SatNone` |
-| toward −∞ | `RTN_SatFinite` | `RTN_SatPropagate` | `RTN_SatNone` |
-| toward zero | `RTZ_SatFinite` | `RTZ_SatPropagate` | `RTZ_SatNone` |
-| round to odd | `RTO_SatFinite` | `RTO_SatPropagate` | `RTO_SatNone` |
+| nearest, ties even | `RNE_SF` | `RNE_SP` | `RNE_SN` |
+| nearest, ties away | `RNA_SF` | `RNA_SP` | `RNA_SN` |
+| toward +∞ | `RTP_SF` | `RTP_SP` | `RTP_SN` |
+| toward −∞ | `RTN_SF` | `RTN_SP` | `RTN_SN` |
+| toward zero | `RTZ_SF` | `RTZ_SP` | `RTZ_SN` |
+| round to odd | `RTO_SF` | `RTO_SP` | `RTO_SN` |
 
-`RNE_SatNone` is the package-wide default. Saturation modes mean:
+`RNE_SN` is the package-wide default. Saturation modes mean:
 
 | Mode | Out-of-range behavior |
 |---|---|
@@ -180,14 +180,14 @@ Constructors are grouped by stochastic variant:
 
 | Variant | `SatFinite` | `SatPropagate` | `SatNone` |
 |---|---|---|---|
-| A | `RSA_SatFinite(N)` | `RSA_SatPropagate(N)` | `RSA_SatNone(N)` |
-| B | `RSB_SatFinite(N)` | `RSB_SatPropagate(N)` | `RSB_SatNone(N)` |
-| C | `RSC_SatFinite(N)` | `RSC_SatPropagate(N)` | `RSC_SatNone(N)` |
+| A | `RSA_SF(N)` | `RSA_SP(N)` | `RSA_SN(N)` |
+| B | `RSB_SF(N)` | `RSB_SP(N)` | `RSB_SN(N)` |
+| C | `RSC_SF(N)` | `RSC_SP(N)` | `RSC_SN(N)` |
 
 `N` is the random-bit budget, `1 ≤ N ≤ 60`. Omitting it uses `N = 8`.
 
 ```julia
-σ = RSA_SatNone(8)
+σ = RSA_SN(8)
 
 Add(T, σ, x, y; rng=Xoshiro(1))  # reproducible stream
 Add(T, σ, x, y; R=17)            # exact draw, ideal for tests
@@ -207,7 +207,7 @@ DefaultType()            # Binary8p2se     DefaultType!(Binary8p4se)
 DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
-DefaultProjection()      # RNE_SatNone
+DefaultProjection()      # RNE_SN
 DefaultRNG()             # Xoshiro         DefaultRNG!(Xoshiro(42))
 DefaultRbits()           # 8               DefaultRbits!(16)
 ```
@@ -253,7 +253,7 @@ FMA(x, y, z)
 | Ternary | `FMA`, `FAA`, `Clamp` |
 | Conversion | `Convert` |
 
-Common Base spellings under `RNE_SatNone`:
+Common Base spellings under `RNE_SN`:
 
 ```julia
 x + y; x - y; x * y; x / y

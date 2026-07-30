@@ -203,7 +203,7 @@ exact_rq_any(x::Real)      = Rational{BigInt}(x)
                    :Maximum, :MinimumMagnitude, :Divide, :Sqrt, :Exp)
             V = Val(op); ar = SmallFloats.opinfo(op).arity
             bad = Tuple{Symbol,UInt,UInt,Symbol}[]
-            for ρ in (RNE_SatNone, RTP_SatFinite, RTN_SatFinite, RTO_SatNone)
+            for ρ in (RNE_SN, RTP_SF, RTN_SF, RTO_SN)
                 for x in vs, y in (ar == 1 ? vs[1:1] : vs)
                     dx, dy = decode(x), decode(y)
                     args_big = ar == 1 ? (dx,) : (ar == 2 ? (dx, dy) : (dx, dy, dx))

@@ -142,7 +142,7 @@ end
     # any size promotes the result to the next datum; at 2 200 bits the residual
     # is 30× below the rounding position and vanishes, so the truncated engine
     # returns the operand unchanged.
-    let a = W(1.0), b = MinPositiveOf(W), ρ = RTP_SatFinite
+    let a = W(1.0), b = MinPositiveOf(W), ρ = RTP_SF
         da, db = decode(a), decode(b)
         @test Base.exponent(da) == 0 && Base.exponent(db) == -32767
 
@@ -162,11 +162,11 @@ end
     let a = W(1.0), b = MinPositiveOf(W), one_ = W(1.0)
         exact = exact_rq(decode(a)) - exact_rq(decode(b))
         sgn, S, Q = refround(precision(W), expbias(W), TowardNegative(), 0, exact)
-        @test exact_rq(decode(Subtract(W, RTN_SatFinite, a, b))) == sgn * RQ(S) * pow2r(Q)
+        @test exact_rq(decode(Subtract(W, RTN_SF, a, b))) == sgn * RQ(S) * pow2r(Q)
 
         exact3 = exact_rq(decode(a)) * exact_rq(decode(one_)) + exact_rq(decode(b))
         sgn3, S3, Q3 = refround(precision(W), expbias(W), TowardPositive(), 0, exact3)
-        @test exact_rq(decode(FMA(W, RTP_SatFinite, a, one_, b))) == sgn3 * RQ(S3) * pow2r(Q3)
+        @test exact_rq(decode(FMA(W, RTP_SF, a, one_, b))) == sgn3 * RQ(S3) * pow2r(Q3)
     end
 
     # FMA's worst case, where `bigprec`'s margin is thinnest — and the reason it
@@ -198,7 +198,7 @@ end
         # gate whose red is unreadable costs more than it pays. The rational
         # comparison is still made — it is the line above, against a reference
         # datum small enough to print — and this line ties the engine to it.
-        @test FMA(W, RTP_SatFinite, x, y, z) === MaxFiniteOf(W)
+        @test FMA(W, RTP_SF, x, y, z) === MaxFiniteOf(W)
     end
 
     let V = Binary16p1sf                            # B = 16384, rung 3 as well
@@ -206,7 +206,7 @@ end
         a, b = V(1.0), MinPositiveOf(V)
         exact = exact_rq(decode(a)) + exact_rq(decode(b))
         sgn, S, Q = refround(precision(V), expbias(V), TowardPositive(), 0, exact)
-        @test exact_rq(decode(Add(V, RTP_SatFinite, a, b))) == sgn * RQ(S) * pow2r(Q)
+        @test exact_rq(decode(Add(V, RTP_SF, a, b))) == sgn * RQ(S) * pow2r(Q)
     end
 
     # ---- RUNG 2 must be covered separately, and the reason is a defect this
@@ -236,14 +236,14 @@ end
         sgn, S, Q = refround(precision(U), expbias(U), TowardPositive(), 0, exact)
         want = sgn * RQ(S) * pow2r(Q)
         @test want > exact_rq(decode(a))                # the residual survives rounding
-        @test exact_rq(decode(Add(U, RTP_SatFinite, a, b))) == want
+        @test exact_rq(decode(Add(U, RTP_SF, a, b))) == want
 
         # every Group A row at this rung, so a missing one is a failure and not a
         # silently untested carrier
-        for (op, f) in ((:Subtract, () -> Subtract(U, RTN_SatFinite, a, b)),
-                        (:Multiply, () -> Multiply(U, RNE_SatNone, a, b)),
-                        (:FMA, () -> FMA(U, RTP_SatFinite, a, U(1.0), b)),
-                        (:FAA, () -> FAA(U, RTP_SatFinite, a, b, b)))
+        for (op, f) in ((:Subtract, () -> Subtract(U, RTN_SF, a, b)),
+                        (:Multiply, () -> Multiply(U, RNE_SN, a, b)),
+                        (:FMA, () -> FMA(U, RTP_SF, a, U(1.0), b)),
+                        (:FAA, () -> FAA(U, RTP_SF, a, b, b)))
             @test (op, f() isa U) == (op, true)
         end
     end
@@ -251,7 +251,7 @@ end
     # ---- Non-regression at rung 1: the formats G5 pins must be untouched by the
     # switch from a constant to a function. `refproject`'s encode scan is K ≤ 8,
     # so here it is safe to use the reference end to end.
-    for T in (Binary8p4se, Binary8p3se, Binary6p3se), ρ in (RNE_SatNone, RTP_SatFinite)
+    for T in (Binary8p4se, Binary8p3se, Binary6p3se), ρ in (RNE_SN, RTP_SF)
         for ca in 0x00:0x0f, cb in 0x00:0x0f
             x, y = T(ca), T(cb)
             r = refop2(:Add, x, y)

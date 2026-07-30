@@ -138,7 +138,7 @@ function indomain_pool(op::Symbol, ::Type{T}, arity::Int, n) where {T<:Binary}
     tries = 0
     while length(tuples) < n && tries < 64n
         t = ntuple(_ -> rand(finite), arity)
-        r = apply_op(Val(op), T, RNE_SatNone, 0, map(decode, t)...)
+        r = apply_op(Val(op), T, RNE_SN, 0, map(decode, t)...)
         isnan(decode(r)) || push!(tuples, t)
         tries += 1
     end
@@ -179,14 +179,14 @@ const _SELECTIONS = (Maximum, Minimum, MaximumMagnitude, MinimumFinite, CopySign
 
 function preflight(::Type{T}) where {T<:Binary}
     a, b, c = T(1.5), T(0.25), T(2.0)
-    prj(d) = project(T, RNE_SatNone, d);     prj(2.3)
+    prj(d) = project(T, RNE_SN, d);     prj(2.3)
     @allocated(prj(2.3)) == 0 ||
         error("preflight failed: `project` allocates on the warm path — " *
               "measurements would reflect dispatch, not arithmetic")
 
     # The unconditional claim, at whatever rung `T` sits on.
     for f in _SELECTIONS
-        g(x, y) = f(T, RNE_SatNone, x, y); g(a, b)
+        g(x, y) = f(T, RNE_SN, x, y); g(a, b)
         @allocated(g(a, b)) == 0 || error(
             "preflight failed: $(nameof(f)) allocates on the warm path for $T. " *
             "An exact selection returns one of its operands and cannot escalate, " *
@@ -196,8 +196,8 @@ function preflight(::Type{T}) where {T<:Binary}
 
     # Group A on the format's own carrier: allocation-free when the operands do
     # not force an escalation, which these do not (adjacent magnitudes).
-    add2(x, y) = Add(T, RNE_SatNone, x, y);  add2(a, b)
-    fma3(x, y, z) = FMA(T, RNE_SatNone, x, y, z); fma3(a, b, c)
+    add2(x, y) = Add(T, RNE_SN, x, y);  add2(a, b)
+    fma3(x, y, z) = FMA(T, RNE_SN, x, y, z); fma3(a, b, c)
     (@allocated(add2(a, b)) == 0 && @allocated(fma3(a, b, c)) == 0) ||
         error("preflight failed: narrow-spread Add/FMA allocate for $T — these " *
               "operands are adjacent in magnitude and cannot force an MPFR " *
@@ -207,8 +207,8 @@ function preflight(::Type{T}) where {T<:Binary}
     # also be allocation-free — it replaced a BigFloat-allocating fallback.
     W = Binary8p1se
     wa, wb, wc = W(2.0^60), W(2.0^-100), W(2.0^-100)
-    wfma(x, y, z) = FMA(W, RNE_SatNone, x, y, z); wfma(wa, wb, wc)
-    wfaa(x, y, z) = FAA(W, RNE_SatNone, x, y, z); wfaa(wa, wb, wc)
+    wfma(x, y, z) = FMA(W, RNE_SN, x, y, z); wfma(wa, wb, wc)
+    wfaa(x, y, z) = FAA(W, RNE_SN, x, y, z); wfaa(wa, wb, wc)
     wok = @allocated(wfma(wa, wb, wc)) == 0 && @allocated(wfaa(wa, wb, wc)) == 0
     wok || error("preflight failed: wide-spread FMA/FAA (sticky-head escalation) allocates")
     nothing
@@ -219,10 +219,10 @@ that produced it. Meaningless without the operand spread beside it, which is why
 it is a report row and not an abort condition (§11 M46)."""
 function allocation_profile(::Type{T}) where {T<:Binary}
     a, b, c = T(1.5), T(0.25), T(2.0)
-    sel(x, y) = Maximum(T, RNE_SatNone, x, y);  sel(a, b)
-    add2(x, y) = Add(T, RNE_SatNone, x, y);     add2(a, b)
-    fma3(x, y, z) = FMA(T, RNE_SatNone, x, y, z); fma3(a, b, c)
-    lad(x) = Exp(T, RNE_SatNone, x);            lad(a)
+    sel(x, y) = Maximum(T, RNE_SN, x, y);  sel(a, b)
+    add2(x, y) = Add(T, RNE_SN, x, y);     add2(a, b)
+    fma3(x, y, z) = FMA(T, RNE_SN, x, y, z); fma3(a, b, c)
+    lad(x) = Exp(T, RNE_SN, x);            lad(a)
     (; rung = SmallFloats.rungindex(SmallFloats.rung(T)),
        carrier = nameof(SmallFloats.carriertype(SmallFloats.rung(T))),
        selection = @allocated(sel(a, b)),
@@ -244,7 +244,7 @@ function bench_primitives(::Type{T}) where {T<:Binary}
     push!(rows, Row("TotalOrder",    @be (rand(pool), rand(pool)) (t -> TotalOrder(t[1], t[2]))(_)))
     push!(rows, Row("Class",         @be rand(pool) Class(_)))
     push!(rows, Row("NextGreaterThan", @be rand(pool) NextGreaterThan(_)))
-    push!(rows, Row("project (RNE·SatNone)", @be decode(rand(pool)) project(T, RNE_SatNone, _)))
+    push!(rows, Row("project (RNE·SatNone)", @be decode(rand(pool)) project(T, RNE_SN, _)))
     push!(rows, Row("project (StochasticA[8], R drawn)",
                     @be decode(rand(pool)) project(T, σ, _)))
     rows
@@ -256,19 +256,19 @@ end
 # than in the sensitivity table). Passing `f` through an argument specializes on
 # its concrete function type.
 _bench_op(f::F, ::Type{T}, pool, ::Val{1}) where {F,T} =
-    @be rand(pool) f(T, RNE_SatNone, _)
+    @be rand(pool) f(T, RNE_SN, _)
 _bench_op(f::F, ::Type{T}, pool, ::Val{2}) where {F,T} =
-    @be (rand(pool), rand(pool)) (t -> f(T, RNE_SatNone, t[1], t[2]))(_)
+    @be (rand(pool), rand(pool)) (t -> f(T, RNE_SN, t[1], t[2]))(_)
 _bench_op(f::F, ::Type{T}, pool, ::Val{3}) where {F,T} =
-    @be (rand(pool), rand(pool), rand(pool)) (t -> f(T, RNE_SatNone, t[1], t[2], t[3]))(_)
+    @be (rand(pool), rand(pool), rand(pool)) (t -> f(T, RNE_SN, t[1], t[2], t[3]))(_)
 
 # tuple-pool twins of _bench_op for the per-op :indomain pools
 _bench_op_nt(f::F, ::Type{T}, tpool, ::Val{1}) where {F,T} =
-    @be rand(tpool) (t -> f(T, RNE_SatNone, t[1]))(_)
+    @be rand(tpool) (t -> f(T, RNE_SN, t[1]))(_)
 _bench_op_nt(f::F, ::Type{T}, tpool, ::Val{2}) where {F,T} =
-    @be rand(tpool) (t -> f(T, RNE_SatNone, t[1], t[2]))(_)
+    @be rand(tpool) (t -> f(T, RNE_SN, t[1], t[2]))(_)
 _bench_op_nt(f::F, ::Type{T}, tpool, ::Val{3}) where {F,T} =
-    @be rand(tpool) (t -> f(T, RNE_SatNone, t[1], t[2], t[3]))(_)
+    @be rand(tpool) (t -> f(T, RNE_SN, t[1], t[2], t[3]))(_)
 
 function bench_scalar_ops(::Type{T}, names, arity; class::Symbol=:all) where {T<:Binary}
     rows = Row[]
@@ -301,7 +301,7 @@ end
 function bench_modes(::Type{T}) where {T<:Binary}
     pool = [decode(v) for v in codes_pool(T, 4096)]
     rows = Row[]
-    for (nm, ρ) in [("NearestTiesToEven", RNE_SatNone),
+    for (nm, ρ) in [("NearestTiesToEven", RNE_SN),
                     ("NearestTiesToAway", ProjSpec(NearestTiesToAway(), SatNone())),
                     ("TowardPositive", ProjSpec(TowardPositive(), SatNone())),
                     ("TowardNegative", ProjSpec(TowardNegative(), SatNone())),
@@ -310,7 +310,7 @@ function bench_modes(::Type{T}) where {T<:Binary}
                     ("StochasticA[8]", ProjSpec(StochasticA{8}(), SatNone())),
                     ("StochasticB[8]", ProjSpec(StochasticB{8}(), SatNone())),
                     ("StochasticC[8]", ProjSpec(StochasticC{8}(), SatNone())),
-                    ("RNE · SatFinite", RNE_SatFinite),
+                    ("RNE · SatFinite", RNE_SF),
                     ("RNE · SatPropagate", ProjSpec(NearestTiesToEven(), SatPropagate()))]
         push!(rows, Row(nm, @be rand(pool) project(T, ρ, _)))
     end
@@ -320,21 +320,21 @@ end
 function bench_kernels(::Type{T}; n=65536) where {T<:Binary}
     A = codes_pool(T, n); B = codes_pool(T, n); C = codes_pool(T, n)
     σ = ProjSpec(StochasticA{8}(), SatNone())
-    get_table(:Exp, T, T, RNE_SatNone)               # warm the caches: measure gather, not build
-    get_table(:Add, T, T, T, RNE_SatNone)
+    get_table(:Exp, T, T, RNE_SN)               # warm the caches: measure gather, not build
+    get_table(:Add, T, T, T, RNE_SN)
     perel(b, m) = string(round(median(b).time / m * 1e9; digits=2), " ns/elem — ",
                          round(m / median(b).time / 1e9; digits=2), " Gelem/s")
     rows = Row[]
-    b = @be similar(A) vmap!(_, Val(:Exp), T, RNE_SatNone, A) evals=1
+    b = @be similar(A) vmap!(_, Val(:Exp), T, RNE_SN, A) evals=1
     push!(rows, Row("vmap unary (table gather), n=$n", b; extra=perel(b, n)))
-    b = @be similar(A) vmap!(_, Val(:Add), T, RNE_SatNone, A, B) evals=1
+    b = @be similar(A) vmap!(_, Val(:Add), T, RNE_SN, A, B) evals=1
     push!(rows, Row("vmap binary (table gather), n=$n", b; extra=perel(b, n)))
-    b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SatNone, A, B, C) evals=1
+    b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SN, A, B, C) evals=1
     push!(rows, Row("vmap ternary (scalar loop), n=$n", b; extra=perel(b, n)))
     b = @be (similar(A), Xoshiro(1)) (t -> vmap!(t[1], Val(:Add), T, σ, A, B, t[2]))(_) evals=1
     push!(rows, Row("vmap binary stochastic (scalar loop), n=$n", b; extra=perel(b, n)))
     pv = PackedVector(A)
-    b = @be SmallFloats.vmap(:Exp, T, RNE_SatNone, pv) evals=1
+    b = @be SmallFloats.vmap(:Exp, T, RNE_SN, pv) evals=1
     push!(rows, Row("vmap unary through PackedVector, n=$n", b; extra=perel(b, n)))
     rows
 end
@@ -356,13 +356,13 @@ function bench_ternary_tiers(; n=65536)
                              ("K=8 (compute)",     Binary8p3se, false))
         A = codes_pool(T, n); B = codes_pool(T, n); C = codes_pool(T, n)
         empty_tables!()
-        tabled && get_table(:FMA, T, T, T, T, RNE_SatNone)   # warm: measure gather, not build
-        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SatNone, A, B, C) evals=1
+        tabled && get_table(:FMA, T, T, T, T, RNE_SN)   # warm: measure gather, not build
+        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SN, A, B, C) evals=1
         push!(rows, Row("FMA $tag, n=$n", b; extra=perel(b, n)))
         olde, olda, oldt = TERNARY_EAGER_BITS[], TERNARY_ADAPTIVE_BITS[], THREADED_KERNELS[]
         TERNARY_EAGER_BITS[] = 0; TERNARY_ADAPTIVE_BITS[] = 0; THREADED_KERNELS[] = false
         empty_tables!()
-        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SatNone, A, B, C) evals=1
+        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SN, A, B, C) evals=1
         push!(rows, Row("FMA $tag, scalar-loop baseline, n=$n", b; extra=perel(b, n)))
         TERNARY_EAGER_BITS[] = olde; TERNARY_ADAPTIVE_BITS[] = olda; THREADED_KERNELS[] = oldt
         empty_tables!()
@@ -372,11 +372,11 @@ function bench_ternary_tiers(; n=65536)
         A = codes_pool(T, n); B = codes_pool(T, n); C = codes_pool(T, n)
         old = THREAD_MIN_ELEMS[]
         THREAD_MIN_ELEMS[] = 1
-        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SatNone, A, B, C) evals=1
+        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SN, A, B, C) evals=1
         push!(rows, Row("FMA K=8 (compute), threaded [$(Threads.nthreads())t], n=$n", b;
                         extra=perel(b, n)))
         THREAD_MIN_ELEMS[] = typemax(Int)
-        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SatNone, A, B, C) evals=1
+        b = @be similar(A) vmap!(_, Val(:FMA), T, RNE_SN, A, B, C) evals=1
         push!(rows, Row("FMA K=8 (compute), sequential [1t], n=$n", b; extra=perel(b, n)))
         THREAD_MIN_ELEMS[] = old
     end
@@ -398,11 +398,11 @@ end
 function bench_table_builds()
     T = Binary8p4se; U = Binary8p1uf
     rows = Row[]
-    specs = [("Exp⟨8p4se⟩ (256 entries)",        () -> get_table(:Exp, T, T, RNE_SatNone)),
-             ("Tanh⟨8p4se⟩ (256 entries)",       () -> get_table(:Tanh, T, T, RNE_SatNone)),
-             ("Add⟨8p4se×8p4se⟩ (64 K entries)", () -> get_table(:Add, T, T, T, RNE_SatNone)),
-             ("Divide⟨8p4se×8p4se⟩ (64 K)",      () -> get_table(:Divide, T, T, T, RNE_SatNone)),
-             ("Add⟨8p1uf×8p1uf⟩ (64 K, wide-spread)", () -> get_table(:Add, U, U, U, RNE_SatNone))]
+    specs = [("Exp⟨8p4se⟩ (256 entries)",        () -> get_table(:Exp, T, T, RNE_SN)),
+             ("Tanh⟨8p4se⟩ (256 entries)",       () -> get_table(:Tanh, T, T, RNE_SN)),
+             ("Add⟨8p4se×8p4se⟩ (64 K entries)", () -> get_table(:Add, T, T, T, RNE_SN)),
+             ("Divide⟨8p4se×8p4se⟩ (64 K)",      () -> get_table(:Divide, T, T, T, RNE_SN)),
+             ("Add⟨8p1uf×8p1uf⟩ (64 K, wide-spread)", () -> get_table(:Add, U, U, U, RNE_SN))]
     for (nm, f) in specs
         f()                                           # JIT warm; builds are cache-evicted per sample
         b = @be empty_tables!() (_ -> f())(_) evals=1 seconds=3
@@ -420,14 +420,14 @@ function bench_blocks(::Type{FE}, ::Type{FS}; B=32) where {FE<:Binary,FS<:Binary
     x = mk(); y = mk()
     perlane(b) = string(round(median(b).time / B * 1e9; digits=2), " ns/lane")
     rows = Row[]
-    b = @be (mk(), mk()) (t -> BlockAdd(FE, RNE_SatNone, t[1], t[2], one(FS)))(_)
+    b = @be (mk(), mk()) (t -> BlockAdd(FE, RNE_SN, t[1], t[2], one(FS)))(_)
     push!(rows, Row("BlockAdd (B=$B)", b; extra=perlane(b)))
-    b = @be (mk(), mk()) (t -> BlockDotProduct(Binary8p4se, RNE_SatNone, t[1], t[2]))(_)
+    b = @be (mk(), mk()) (t -> BlockDotProduct(Binary8p4se, RNE_SN, t[1], t[2]))(_)
     push!(rows, Row("BlockDotProduct → 8p4se (B=$B)", b; extra=perlane(b)))
-    b = @be mk() BlockReduceAdd(Binary8p4se, RNE_SatNone, _)
+    b = @be mk() BlockReduceAdd(Binary8p4se, RNE_SN, _)
     push!(rows, Row("BlockReduceAdd → 8p4se (B=$B)", b; extra=perlane(b)))
     tup = ntuple(_ -> rawvalue(FE, UInt8(rand(0:(1 << bitwidth(FE)) - 1))), B)
-    b = @be ConvertToBlockMaxAbsFinite(FS, FE, RNE_SatNone, RNE_SatNone, tup)
+    b = @be ConvertToBlockMaxAbsFinite(FS, FE, RNE_SN, RNE_SN, tup)
     push!(rows, Row("ConvertToBlockMaxAbsFinite (B=$B)", b; extra=perlane(b)))
     rows
 end
@@ -446,9 +446,9 @@ function bench_conversions()
     push!(rows, Row("T(::Float64) numeric constructor (projects)",
                     @be rand(dpool) Binary8p4se(_)))
     push!(rows, Row("Convert 8p4se → 8p3se (scalar)",
-                    @be rand(pool) Convert(S, RNE_SatNone, _)))
+                    @be rand(pool) Convert(S, RNE_SN, _)))
     push!(rows, Row("Float64 → 8p4se (project)",
-                    @be rand(dpool) project(T, RNE_SatNone, _)))
+                    @be rand(dpool) project(T, RNE_SN, _)))
     b = @be PackedVector(A) evals=1
     push!(rows, Row("PackedVector pack, n=65536", b;
                     extra=string(round(median(b).time / 65536 * 1e9; digits=2), " ns/elem")))

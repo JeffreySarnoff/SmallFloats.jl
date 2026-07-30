@@ -86,7 +86,27 @@ hardest duty — exactness detection for an algebraic op.
 **Step 1 — registry** (`src/ops_scalar.jl`): append `:Cbrt` to `_UNARY_OPS`.
 The loop registers it as group `:B` with arity 1.
 
-**Step 2 — ω-semantics** (`src/oracle.jl`), with every duty discharged:
+**Step 2 — ω-semantics** (`src/oracle.jl`), with every duty discharged.
+
+!!! warning "Type the row `::AbstractFloat`, not `::Float64`"
+    An enclosure-ladder row is reached at **every rung**. `_LADDER_OPS` is
+    derived by subtraction in `oracle.jl` — whatever is neither an exact
+    selection, nor exact arithmetic, nor `Convert` — so a new registry operation
+    automatically gets `_ωf128`, `_ωexact` and `_ωdyadic` rows that forward to
+    *this* method with `Float128`, `BigFloat` or converted-from-`Dyadic`
+    operands.
+
+    A row typed `::Float64` therefore works for the 432 formats at rung 1 and
+    raises a `MethodError` for the other 72. The package types 22 of its own
+    ladder rows `::AbstractFloat` for exactly this reason; the 6 that are
+    `::Float64` are the exact-arithmetic rows, which have per-head siblings
+    written separately.
+
+    Gate G10 catches the omission — it calls every registry operation at every
+    rung and asserts only that the call returns — and G4 asserts that
+    `_EXACT_SELECTION`, `_EXACT_ARITH`, `_LADDER_OPS` and `Convert` partition
+    `OP_REGISTRY` exactly, so an operation cannot be classified into none of
+    them and silently lose its wide-rung rows.
 
 ```julia
 # Exact-cube detection (termination duty): x = ±m·2^(3k) with m an odd perfect
@@ -104,7 +124,7 @@ function _exact_cbrt(x::Float64)
     nothing
 end
 
-function ωeval(::Val{:Cbrt}, x::Float64)
+function ωeval(::Val{:Cbrt}, x::AbstractFloat)     # ::AbstractFloat, NOT ::Float64
     isnan(x) && return NaN                      # special rows first: they are spec
     isinf(x) && return x                        # cbrt(±∞) = ±∞
     iszero(x) && return 0.0
@@ -144,7 +164,7 @@ Float64 (`yd`), Float128 (`fq`), and BigFloat (the ladder):
 # valid enclosure (the same argument Softplus records).
 _logaddexp(a, b) = (h = max(a, b); l = min(a, b); h + log1p(exp(l - h)))
 
-function ωeval(::Val{:LogAddExp}, x::Float64, y::Float64)
+function ωeval(::Val{:LogAddExp}, x::AbstractFloat, y::AbstractFloat)
     (isnan(x) | isnan(y)) && return NaN
     (x == Inf || y == Inf) && return Inf        # ∞ dominates
     x == -Inf && return y                       # log(0 + eʸ) = y, exactly
@@ -263,9 +283,23 @@ function ωeval(::Val{:FMMA}, x::Float64, y::Float64, z::Float64, w::Float64)
     (_f128() && !iszero(p) && !iszero(q) && _expdiff(p, q) <= _DE_FMMA) &&
         return Float128(p) + Float128(q)          # exact by width
     BigExactF(() -> setprecision(() ->
-        BigFloat(x) * BigFloat(y) + BigFloat(z) * BigFloat(w), BigFloat, _BIGP))
+        BigFloat(x) * BigFloat(y) + BigFloat(z) * BigFloat(w),
+        BigFloat, bigprec_prod(x, y, z, w)))     # DERIVED, never a constant
 end
 ```
+
+!!! warning "Derive the precision from the operands — never a constant"
+    This escalation used to read `_BIGP`, a 2200-bit constant. It was ample for
+    every format that existed at K ≤ 8 and **insufficient for 50 of the 504**,
+    and it did not announce that: it returned a plausible wrong number, which
+    gate G2 was written red to record (`1//1` where the exact answer is `2//1`,
+    the operand returned unchanged because a residual 30 000 binades below the
+    rounding position fell off the accumulator).
+
+    `bigprec(F…)` derives the precision from the formats; `bigprec(x…)` and
+    `bigprec_prod(x…)` derive it from the operands in flight. Gate G2 asserts
+    the derivation is sufficient across the whole grid, so a new operation that
+    uses it inherits that proof. A new constant would need its own.
 
 **Testing duty is heavier at arity 4**: the full cross-product is 2³² tuples,
 so the suite entry must be *sampled* (seeded, ladder-referenced, ≥ 10⁵ tuples
@@ -301,16 +335,35 @@ projected against a *unit* result scale:
 function ScaledAffine(fr::Type{<:Binary}, ρ::ProjSpec,
                       s1::Binary, x::Binary, s2::Binary, y::Binary;
                       rng::MaybeRNG=nothing)
-    a = ωeval(Val(:Multiply), decode(s1), decode(x))::Float64   # exact lanes
-    b = ωeval(Val(:Multiply), decode(s2), decode(y))::Float64
-    _bp_element(fr, ρ, _drawR(ρ, rng, nothing), ωeval(Val(:Add), a, b), 1.0)
+    # Each (scale, element) pair is a TWO-FACTOR MONOMIAL and gets its own head
+    # from the two formats — the same rule `blockdecode` applies to a block.
+    h1 = rung(Val(:Multiply), typeof(s1), typeof(x))
+    h2 = rung(Val(:Multiply), typeof(s2), typeof(y))
+    a = ωeval(h1, Val(:Multiply), lift(h1, decode(s1)), lift(h1, decode(x)))::carriertype(h1)
+    b = ωeval(h2, Val(:Multiply), lift(h2, decode(s2)), lift(h2, decode(y)))::carriertype(h2)
+    # The two products may land on DIFFERENT carriers, so the add runs at their
+    # join with each operand lifted into it.
+    h = _joinheads(a, b)
+    res = ωeval(h, Val(:Add), lift(h, a), lift(h, b))
+    _bp_element(fr, ρ, _drawR(ρ, rng, nothing), res, 1.0)
 end
 ```
 
-The `::Float64` assertions are load-bearing: lane decodes are exact by width
-(≤ 17-bit significands), and the assertion turns that analysis into a runtime
-check. The `Add` result may be any kind in the protocol — `_bp_element`
-finishes all of them. Dividing by a scale of `1.0` is the identity fast path.
+**The assertion is `::carriertype(h)`, and writing `::Float64` there is a real
+defect rather than a stylistic choice.** It is true for the 432 formats at
+rung 1 and an outright `TypeError` for the other 72, whose lanes decode to
+`Float128` or to the exact dyadic carrier. The generated `Scaled*` surface in
+`blocks.jl` carried exactly that mistake and it is recorded as §11 M44 in the
+execution log — the guidance here used to teach it.
+
+What the assertion *is* load-bearing for survives the correction: `Multiply` is
+closed on the carrier at every rung (gate G4 pins this), so the row cannot
+escalate to a lazy `BigExactF` here, and saying so is what lets `_joinheads`
+below see carrier values only. JET finds the missing statement before any test
+can.
+
+The `Add` result may be any kind in the protocol — `_bp_element` finishes all of
+them. Dividing by a scale of `1.0` is the identity fast path.
 
 ### Adding an elementwise block operation
 

@@ -89,8 +89,8 @@ function t1_sweep(::Type{T}) where {T<:Binary}
 
         # (2) ωProject of an exact datum is the identity on the code point,
         # including NaN and ±Inf.
-        codepoint(project(T, RNE_SatNone, d)) == u ||
-            push_bad!(:project_identity, c, codepoint(project(T, RNE_SatNone, d)))
+        codepoint(project(T, RNE_SN, d)) == u ||
+            push_bad!(:project_identity, c, codepoint(project(T, RNE_SN, d)))
 
         # (3) Class against a decode-derived reference. `signbit`, not `d > 0`:
         # at rung 3 `d` is a `Dyadic` with no promotion to `Int` (§11 M44).

@@ -81,7 +81,7 @@ const TERNARY_SIGS = (
     (Binary4p2se, Binary4p2se, Binary4p2se, Binary4p2se),
     (Binary4p2se, Binary9p4se, Binary3p1se, Binary3p1se),   # 15 bits, wide operand
 )
-const SHAPE_RHOS = (RNE_SatNone, RNE_SatFinite, RTZ_SatPropagate, RTP_SatNone)
+const SHAPE_RHOS = (RNE_SN, RNE_SF, RTZ_SP, RTP_SN)
 
 let ncmp = 0, nsig = 0
     @testset "Shape A ≡ Shape B" begin
@@ -107,8 +107,8 @@ let ncmp = 0, nsig = 0
             # …and the boundary is where it was said to be: 8×8 fits, 9×8 does not.
             @test tablebits(Binary8p4se, Binary8p4se, Binary8p4se) == 16
             @test tablebits(Binary9p4se, Binary9p4se, Binary8p4se) == 18
-            @test table_for(:Add, Binary8p4se, Binary8p4se, Binary8p4se, RNE_SatNone) !== nothing
-            @test table_for(:Add, Binary9p4se, Binary9p4se, Binary8p4se, RNE_SatNone) === nothing
+            @test table_for(:Add, Binary8p4se, Binary8p4se, Binary8p4se, RNE_SN) !== nothing
+            @test table_for(:Add, Binary9p4se, Binary9p4se, Binary8p4se, RNE_SN) === nothing
             # The byte budget is a separate question from the build band, and it
             # is the one that must never be computed by shifting: 3 × K = 16 is
             # 2^48 entries, and `1 << 48` is a perfectly ordinary `Int`.
@@ -142,7 +142,7 @@ let ncmp = 0, nsig = 0
         end
 
         @testset "ternary" begin
-            for (FR, F1, F2, F3) in TERNARY_SIGS, ρ in (RNE_SatNone, RTZ_SatPropagate),
+            for (FR, F1, F2, F3) in TERNARY_SIGS, ρ in (RNE_SN, RTZ_SP),
                 op in _ops(3)
                 A, B = crossvals(F1, F2)
                 U3 = codeunit_type(F3)
@@ -161,7 +161,7 @@ let ncmp = 0, nsig = 0
         # still agree with the scalar path element by element.
         @testset "over-budget signatures fall back on their own" begin
             W = Binary12p5se
-            @test table_for(:Add, W, W, W, RNE_SatNone) === nothing      # 24 bits > 16
+            @test table_for(:Add, W, W, W, RNE_SN) === nothing      # 24 bits > 16
             A = [rawvalue(W, UInt16(c)) for c in 0:255:4095]
             B = reverse(A)
             for ρ in SHAPE_RHOS, op in (:Add, :Subtract, :Multiply, :Divide)

@@ -49,15 +49,15 @@ Binary8p4se(1.625 ≡ 0x45)
 julia> x + Binary8p4se(0.25)         # Base operators use the format's default spec
 Binary8p4se(1.875 ≡ 0x47)
 
-julia> Add(Binary8p4se, RTP_SatNone, x, Binary8p4se(0.25))
+julia> Add(Binary8p4se, RTP_SN, x, Binary8p4se(0.25))
 Binary8p4se(1.875 ≡ 0x47)            # spec-named register: any mode, explicitly
 
-julia> σ = RSA_SatNone();            # stochastic rounding, default N = 8 bits
+julia> σ = RSA_SN();            # stochastic rounding, default N = 8 bits
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); R = 255)
 Binary8p4se(2.25 ≡ 0x49)             # explicit draw R makes it reproducible
 
-julia> Exp(Binary8p4se, RNE_SatNone, Binary8p4se.([-1.0, 0.5, 2.0]))
+julia> Exp(Binary8p4se, RNE_SN, Binary8p4se.([-1.0, 0.5, 2.0]))
 3-element Vector{Binary8p4se}:       # array methods route through 256-byte tables
  Binary8p4se(0.375 ≡ 0x34)
  Binary8p4se(1.625 ≡ 0x45)

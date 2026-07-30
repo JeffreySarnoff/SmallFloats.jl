@@ -121,21 +121,21 @@ end
 
 # ---- projection specifications, in a fixed order ---------------------------
 
-const PURE_RHO = (RNE_SatFinite, RNE_SatPropagate, RNE_SatNone,
-                  RNA_SatFinite, RNA_SatPropagate, RNA_SatNone,
-                  RTP_SatFinite, RTP_SatPropagate, RTP_SatNone,
-                  RTN_SatFinite, RTN_SatPropagate, RTN_SatNone,
-                  RTZ_SatFinite, RTZ_SatPropagate, RTZ_SatNone,
-                  RTO_SatFinite, RTO_SatPropagate, RTO_SatNone)
+const PURE_RHO = (RNE_SF, RNE_SP, RNE_SN,
+                  RNA_SF, RNA_SP, RNA_SN,
+                  RTP_SF, RTP_SP, RTP_SN,
+                  RTN_SF, RTN_SP, RTN_SN,
+                  RTZ_SF, RTZ_SP, RTZ_SN,
+                  RTO_SF, RTO_SP, RTO_SN)
 
-const STOCH_RHO = (RSA_SatFinite(4), RSA_SatPropagate(4), RSA_SatNone(4),
-                   RSB_SatFinite(4), RSB_SatPropagate(4), RSB_SatNone(4),
-                   RSC_SatFinite(4), RSC_SatPropagate(4), RSC_SatNone(4))
+const STOCH_RHO = (RSA_SF(4), RSA_SP(4), RSA_SN(4),
+                   RSB_SF(4), RSB_SP(4), RSB_SN(4),
+                   RSC_SF(4), RSC_SP(4), RSC_SN(4))
 
 """The ρ set most sections sweep: three pure families plus one stochastic,
 chosen to exercise nearest / directed / odd / sub-grid behaviour without
 paying for all 27."""
-const CORE_RHO = (RNE_SatNone, RTZ_SatFinite, RTP_SatPropagate, RTO_SatNone)
+const CORE_RHO = (RNE_SN, RTZ_SF, RTP_SP, RTO_SN)
 
 # ---- a structured carrier-value set (binade edges, ties, subnormal landings) --
 
@@ -251,7 +251,7 @@ sec_unary_default_lazy(s::Sink) = _unary_default(s, lazy_sample(golden_formats()
 
 function _unary_default(s::Sink, fmts)
     for F in fmts, op in _unary_ops()
-        tbl = SmallFloats.get_table(op, F, F, RNE_SatNone)
+        tbl = SmallFloats.get_table(op, F, F, RNE_SN)
         for i in eachindex(tbl)
             emit!(s, UInt64(tbl[i]))
         end
@@ -276,13 +276,13 @@ sec_unary_rho_lazy(s::Sink) = _unary_rho(s, lazy_sample(representative_formats()
 function _unary_rho(s::Sink, fmts)
     ops = _unary_ops()
     for F in fmts
-        for op in ops, ρ in (RTZ_SatFinite, RTP_SatPropagate)
+        for op in ops, ρ in (RTZ_SF, RTP_SP)
             tbl = SmallFloats.get_table(op, F, F, ρ)
             for i in eachindex(tbl)
                 emit!(s, UInt64(tbl[i]))
             end
         end
-        for op in ops, ρ in (RSA_SatNone(4), RSC_SatFinite(4))
+        for op in ops, ρ in (RSA_SN(4), RSC_SF(4))
             V = Val(op)
             for c in subcodes(F, 16), R in (0, 5, 15)
                 emit!(s, SmallFloats.apply_op(V, F, ρ, R, decode(rawvalue(F, c))))
@@ -314,7 +314,7 @@ function _binary(s::Sink, fmts, repfmts)
     end
     for F in repfmts
         cs = subcodes(F, 12)
-        for op in dear, ρ in (RNE_SatNone, RTZ_SatFinite)
+        for op in dear, ρ in (RNE_SN, RTZ_SF)
             V = Val(op)
             for c1 in cs, c2 in cs
                 emit!(s, SmallFloats.apply_op(V, F, ρ, 0,
@@ -330,7 +330,7 @@ work will later touch, so this section is the one that would notice."""
 function sec_ternary(s::Sink)
     for F in golden_formats()
         cs = subcodes(F, 6)
-        for op in (:FMA, :FAA, :Clamp), ρ in (RNE_SatNone, RTZ_SatFinite)
+        for op in (:FMA, :FAA, :Clamp), ρ in (RNE_SN, RTZ_SF)
             V = Val(op)
             for c1 in cs, c2 in cs, c3 in cs
                 emit!(s, SmallFloats.apply_op(V, F, ρ, 0, decode(rawvalue(F, c1)),
@@ -354,7 +354,7 @@ function sec_blocks(s::Sink)
                                 rawvalue(FE, b), rawvalue(FE, a)))
                 by = Block(sv, (rawvalue(FE, b), rawvalue(FE, a),
                                 rawvalue(FE, a), rawvalue(FE, b)))
-                for ρ in (RNE_SatNone, RTZ_SatFinite)
+                for ρ in (RNE_SN, RTZ_SF)
                     emit!(s, BlockDotProduct(FR, ρ, bx, by))
                     emit!(s, BlockReduceAdd(FR, ρ, bx))
                     emit!(s, BlockReduceMultiply(FR, ρ, bx))

@@ -142,8 +142,8 @@ _wider(::HeadExact) = nothing
             Binary16p6se, Binary16p8se,                     # rung 1, K = 16
             Binary16p5se, Binary16p4se,                     # rung 2
             Binary16p1uf, Binary16p1sf)                     # rung 3
-    RHOS = (RNE_SatNone, RNE_SatFinite, RTP_SatFinite, RTN_SatFinite,
-            RTZ_SatNone, RTO_SatNone,
+    RHOS = (RNE_SN, RNE_SF, RTP_SF, RTN_SF,
+            RTZ_SN, RTO_SN,
             ProjSpec(StochasticA{8}(), SatNone()),          # stochastic, explicit R
             ProjSpec(StochasticC{8}(), SatFinite()))
 
@@ -238,7 +238,7 @@ _wider(::HeadExact) = nothing
     for (S, E) in QUADS
         bad = Tuple{Symbol,Symbol,Float64,Float64,UInt,UInt}[]
         for sv in (S(1.0), S(-1.0), S(0.5)), xv in (E(1.5), E(0.25), E(-2.0))
-            for ρ in (RNE_SatNone, RNE_SatFinite, RTZ_SatNone)
+            for ρ in (RNE_SN, RNE_SF, RTZ_SN)
                 got = codepoint(ScaledMultiply(E, ρ, sv, xv, S(1.0), E(0.25)))
                 want = ref4(E, ρ, sv, xv, S(1.0), E(0.25), :mul)
                 quads += 1
@@ -259,9 +259,9 @@ _wider(::HeadExact) = nothing
                    BigFloat(decode(by.s)) * BigFloat(decode(by.x[i]))
             r = t(1) + t(2)
             iszero(r) && (r = zero(BigFloat))
-            codepoint(SmallFloats.project(E, RNE_SatNone, r))
+            codepoint(SmallFloats.project(E, RNE_SN, r))
         end
-        @test (nameof(S), nameof(E), codepoint(BlockDotProduct(E, RNE_SatNone, bx, by))) ==
+        @test (nameof(S), nameof(E), codepoint(BlockDotProduct(E, RNE_SN, bx, by))) ==
               (nameof(S), nameof(E), want)
         quads += 1
 
@@ -270,9 +270,9 @@ _wider(::HeadExact) = nothing
             r = (BigFloat(decode(bx.s)) * BigFloat(decode(bx.x[1]))) *
                 (BigFloat(decode(bx.s)) * BigFloat(decode(bx.x[2])))
             iszero(r) && (r = zero(BigFloat))
-            codepoint(SmallFloats.project(E, RNE_SatNone, r))
+            codepoint(SmallFloats.project(E, RNE_SN, r))
         end
-        @test (nameof(S), nameof(E), codepoint(BlockReduceMultiply(E, RNE_SatNone, bx))) ==
+        @test (nameof(S), nameof(E), codepoint(BlockReduceMultiply(E, RNE_SN, bx))) ==
               (nameof(S), nameof(E), wantp)
         quads += 1
     end

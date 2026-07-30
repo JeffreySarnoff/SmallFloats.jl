@@ -86,10 +86,10 @@ end
 const UNOPS = (:Exp, :Exp2, :Log, :Log2, :LogOnePlus, :Softplus, :Sinh, :Cosh,
                :Tanh, :ArcSinh, :Sin, :Cos, :Tan, :ArcTan, :Recip, :RSqrt)
 modes() = [
-    (RNE_SatNone, 0), (ProjSpec(NearestTiesToAway(), SatNone()), 0),
+    (RNE_SN, 0), (ProjSpec(NearestTiesToAway(), SatNone()), 0),
     (ProjSpec(TowardPositive(), SatNone()), 0), (ProjSpec(TowardNegative(), SatNone()), 0),
     (ProjSpec(TowardZero(), SatNone()), 0), (ProjSpec(ToOdd(), SatNone()), 0),
-    (RNE_SatFinite, 0), (ProjSpec(NearestTiesToEven(), SatPropagate()), 0),
+    (RNE_SF, 0), (ProjSpec(NearestTiesToEven(), SatPropagate()), 0),
     (ProjSpec(TowardNegative(), SatFinite()), 0),
     (ProjSpec(StochasticA{8}(), SatNone()), 0),
     (ProjSpec(StochasticA{8}(), SatNone()), 137),
@@ -118,7 +118,7 @@ function divide_diff()
     dm = 0; dt = 0
     T = Binary8p4se
     codes = [decode(rawvalue(T, UInt8(c))) for c in 0:255]
-    for (ρ, R) in [(RNE_SatNone, 0), (ProjSpec(TowardNegative(), SatFinite()), 0),
+    for (ρ, R) in [(RNE_SN, 0), (ProjSpec(TowardNegative(), SatFinite()), 0),
                    (ProjSpec(ToOdd(), SatNone()), 0), (ProjSpec(StochasticA{8}(), SatNone()), 200)]
         for x in codes, y in codes
             got = codepoint(apply_op(Val(:Divide), T, ρ, R, x, y))
@@ -131,8 +131,8 @@ function divide_diff()
     rng = Xoshiro(9); ucodes = [decode(rawvalue(U, UInt8(c))) for c in 0:255]
     for _ in 1:4096
         x = rand(rng, ucodes); y = rand(rng, ucodes)
-        got = codepoint(apply_op(Val(:Divide), U, RNE_SatNone, 0, x, y))
-        want = refcode(:Divide, U, RNE_SatNone, 0, x, y)
+        got = codepoint(apply_op(Val(:Divide), U, RNE_SN, 0, x, y))
+        want = refcode(:Divide, U, RNE_SN, 0, x, y)
         dt += 1
         got != want && (dm += 1)
     end
@@ -146,8 +146,8 @@ println("\n== Part C: adversarial edges ==")
 function edge_checks()
     ok = true
     r1 = ωeval(Val(:Recip), 5.0e-324)            # q = Inf ⇒ yd = NaN ⇒ fq/ladder path
-    c1 = codepoint(SmallFloats._finish(Binary8p4se, RNE_SatNone, 0, r1))
-    c1r = codepoint(project_interval(Binary8p4se, RNE_SatNone, r1.f))
+    c1 = codepoint(SmallFloats._finish(Binary8p4se, RNE_SN, 0, r1))
+    c1r = codepoint(project_interval(Binary8p4se, RNE_SN, r1.f))
     ok &= (r1 isa EncloseF && isnan(r1.yd) && c1 == c1r)
     println("Recip(5e-324): yd=NaN routed, finish==ladder: ", c1 == c1r)
     r2 = ωeval(Val(:Divide), floatmax(), 5.0e-324)   # q = Inf
@@ -166,8 +166,8 @@ function edge_checks()
     for x in (3.141592653589793, 6.283185307179586, 1.5707963267948966,
               1.0e15 - 0.7853981633974483, 708.0, -708.0)
         for op in (:Sin, :Cos, :Tan, :Exp)
-            got = codepoint(apply_op(Val(op), Binary8p4se, RNE_SatNone, 0, x))
-            want = refcode(op, Binary8p4se, RNE_SatNone, 0, x)
+            got = codepoint(apply_op(Val(op), Binary8p4se, RNE_SN, 0, x))
+            want = refcode(op, Binary8p4se, RNE_SN, 0, x)
             got == want || (hok = false; println("EDGE MISMATCH $op($x)"))
         end
     end

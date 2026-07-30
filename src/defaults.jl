@@ -156,7 +156,7 @@ DefaultSaturationMode!(S::Type{<:SaturationMode}) = DefaultSaturationMode!(S())
     DefaultProjection!(m, s) -> ProjSpec
 
 The session's default projection specification. Initialized to
-`(DefaultRoundingMode(), DefaultSaturationMode())` = `RNE_SatNone`.
+`(DefaultRoundingMode(), DefaultSaturationMode())` = `RNE_SN`.
 Setting it directly decomposes ρ into [`DefaultRoundingMode`](@ref) and
 [`DefaultSaturationMode`](@ref), so the three stay coherent in both directions.
 """

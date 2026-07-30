@@ -207,7 +207,7 @@ include("stage_gates.jl")
 
 @testset "projspec" begin
     ρ = ProjSpec(NearestTiesToEven(), SatNone())
-    @test ρ === RNE_SatNone && sizeof(ρ) == 0
+    @test ρ === RNE_SN && sizeof(ρ) == 0
     @test RoundOf(ρ) === NearestTiesToEven() && SatOf(ρ) === SatNone()
     @test !isstochastic(ρ) && nrandbits(ρ) == 0
     σ = ProjSpec(StochasticB{4}(), SatFinite())
@@ -220,14 +220,14 @@ include("stage_gates.jl")
     @test projmode(RoundUp) === TowardPositive()
     @test projmode(RoundToZero) === TowardZero()
     @test projmode(ToOdd()) === ToOdd()
-    @test default_projspec(Binary8p4se) === RNE_SatNone
+    @test default_projspec(Binary8p4se) === RNE_SN
     @test sprint(show, ρ) == "(NearestTiesToEven, SatNone)"
     @test sprint(show, σ) == "(StochasticB[4], SatFinite)"
-    @test Base.issingletontype(typeof(RNE_SatFinite))
+    @test Base.issingletontype(typeof(RNE_SF))
     T = Binary8p4se   # P=4 ⇒ ulp = 0.25 in [2,4)
-    @test decode(project(T, RNE_SatNone, 2.1)) == 2.0
+    @test decode(project(T, RNE_SN, 2.1)) == 2.0
     @test decode(project(T, ProjSpec(TowardPositive(), SatNone()), 2.1)) == 2.25
-    @test decode(project(T, RNE_SatNone, 2.125)) == 2.0          # exact tie → even
+    @test decode(project(T, RNE_SN, 2.125)) == 2.0          # exact tie → even
     @test decode(project(T, ProjSpec(NearestTiesToAway(), SatNone()), 2.125)) == 2.25
 end
 
@@ -241,7 +241,7 @@ end
     @test DefaultReturnType() === Binary8p2se
     @test DefaultRoundingMode() === NearestTiesToEven()
     @test DefaultSaturationMode() === SatNone()
-    @test DefaultProjection() === RNE_SatNone
+    @test DefaultProjection() === RNE_SN
     @test DefaultRNG() === Random.Xoshiro
     @test DefaultRbits() == 8
 
@@ -251,19 +251,19 @@ end
 
     # component setters update the projection
     @test DefaultRoundingMode!(TowardZero()) === TowardZero()
-    @test DefaultProjection() === RTZ_SatNone
+    @test DefaultProjection() === RTZ_SN
     @test coherent()
     @test DefaultSaturationMode!(SatFinite()) === SatFinite()
-    @test DefaultProjection() === RTZ_SatFinite
+    @test DefaultProjection() === RTZ_SF
     @test DefaultRoundingMode() === TowardZero()        # unchanged by the sat setter
     @test coherent()
 
     # type-argument convenience forms
     DefaultRoundingMode!(NearestTiesToAway)
     @test DefaultRoundingMode() === NearestTiesToAway()
-    @test DefaultProjection() === RNA_SatFinite
+    @test DefaultProjection() === RNA_SF
     DefaultSaturationMode!(SatPropagate)
-    @test DefaultProjection() === RNA_SatPropagate
+    @test DefaultProjection() === RNA_SP
     @test coherent()
 
     # direct projection setter updates both components
@@ -272,7 +272,7 @@ end
     @test DefaultSaturationMode() === SatNone()
     @test coherent()
     DefaultProjection!(TowardPositive(), SatFinite)     # (mode, sat) convenience
-    @test DefaultProjection() === RTP_SatFinite
+    @test DefaultProjection() === RTP_SF
     @test DefaultRoundingMode() === TowardPositive()
     @test DefaultSaturationMode() === SatFinite()
     @test coherent()
@@ -296,7 +296,7 @@ end
     # restore initial state for any later consumer
     DefaultType!(Binary8p2se)
     DefaultReturnType!(Binary8p2se)
-    DefaultProjection!(RNE_SatNone)
+    DefaultProjection!(RNE_SN)
     DefaultRNG!(Random.Xoshiro)
     DefaultRbits!(8)
     @test coherent()
@@ -309,7 +309,7 @@ end
     # fast path (defaults at initial values): correct on every combinator
     @test with_default_type(mkval, 1.5) === Binary8p2se(1.5)
     @test with_default_returntype(mkval, 1.5) === Binary8p2se(1.5)
-    @test with_default_projection(addρ, a4, b4) === Add(Binary8p4se, RNE_SatNone, a4, b4)
+    @test with_default_projection(addρ, a4, b4) === Add(Binary8p4se, RNE_SN, a4, b4)
     # Allocation contract (see defaults.jl): zero-alloc + concrete inference hold
     # when f's result type does not depend on the default — the projection
     # combinator's normal shape (caller fixes the formats, ρ steers rounding).
@@ -322,9 +322,9 @@ end
     # slow path (defaults changed): same answers as passing the default explicitly
     DefaultType!(Binary6p3se)
     @test with_default_type(mkval, 1.5) === Binary6p3se(1.5)
-    DefaultProjection!(RTZ_SatFinite)
-    @test with_default_projection(addρ, a4, b4) === Add(Binary8p4se, RTZ_SatFinite, a4, b4)
-    DefaultType!(Binary8p2se); DefaultProjection!(RNE_SatNone)
+    DefaultProjection!(RTZ_SF)
+    @test with_default_projection(addρ, a4, b4) === Add(Binary8p4se, RTZ_SF, a4, b4)
+    DefaultType!(Binary8p2se); DefaultProjection!(RNE_SN)
     @test coherent()
 end
 
@@ -389,7 +389,7 @@ end
     @test length(OP_REGISTRY) == 52                       # 31 unary(+Convert) + 18 binary + 3 ternary
     @test opinfo(:FMA).arity == 3 && opinfo(:Exp).arity == 1
 
-    ρs = [RNE_SatNone, ProjSpec(NearestTiesToAway(), SatFinite()),
+    ρs = [RNE_SN, ProjSpec(NearestTiesToAway(), SatFinite()),
           ProjSpec(TowardPositive(), SatNone()), ProjSpec(TowardNegative(), SatPropagate()),
           ProjSpec(TowardZero(), SatNone()), ProjSpec(ToOdd(), SatNone())]
 
@@ -436,12 +436,12 @@ end
 
     # Divide semantics (Annex A.3) + interval path
     z, o = zero(T), one(T)
-    @test isnan(Divide(T, RNE_SatNone, o, z))                       # x/0 → NaN, all x
-    @test isnan(Divide(T, RNE_SatNone, z, z))
-    @test iszero(Divide(T, RNE_SatNone, o, rawvalue(T, posinf_code(T))))
+    @test isnan(Divide(T, RNE_SN, o, z))                       # x/0 → NaN, all x
+    @test isnan(Divide(T, RNE_SN, z, z))
+    @test iszero(Divide(T, RNE_SN, o, rawvalue(T, posinf_code(T))))
     thr = T(3.0)
-    @test decode(Divide(T, RNE_SatNone, o, thr)) ==
-          decode(refbin(T, RNE_SatNone, /, o, thr))                 # 1/3 via enclosure
+    @test decode(Divide(T, RNE_SN, o, thr)) ==
+          decode(refbin(T, RNE_SN, /, o, thr))                 # 1/3 via enclosure
 
     # stochastic plumbing: explicit R deterministic; drawn R in range; rng honored
     σ = ProjSpec(StochasticA{2}(), SatNone())
@@ -457,24 +457,24 @@ end
     @test [decode(Add(T, σ, a, b; R=r)) for r in 0:3] == [2.0, 2.0, 2.0, 3.0]
 
     # Base register ≡ spec register; mixed formats have no silent promotion
-    @test codepoint(a + b) == codepoint(Add(T, RNE_SatNone, a, b))
-    @test codepoint(exp(b)) == codepoint(Exp(T, RNE_SatNone, b))
+    @test codepoint(a + b) == codepoint(Add(T, RNE_SN, a, b))
+    @test codepoint(exp(b)) == codepoint(Exp(T, RNE_SN, b))
     @test codepoint(-a) == codepoint(Negate(a))
     @test_throws Union{MethodError,ErrorException} a + one(Binary8p4se)
 
     # Convert: exact big Integer, Float32, BigFloat carrier, default constructor loop
     T8 = Binary8p4se
     n = Int64(2)^60 + 1
-    @test decode(Convert(T8, RNE_SatNone, n)) ==
-          setprecision(() -> decode(project(T8, RNE_SatNone, BigFloat(n))), BigFloat, 128)
-    @test decode(Convert(T8, RNE_SatNone, Float32(2.1))) == decode(T8(Float64(Float32(2.1))))
-    @test T8(2.0) === Convert(T8, RNE_SatNone, 2.0) && decode(one(T8)) == 1.0
+    @test decode(Convert(T8, RNE_SN, n)) ==
+          setprecision(() -> decode(project(T8, RNE_SN, BigFloat(n))), BigFloat, 128)
+    @test decode(Convert(T8, RNE_SN, Float32(2.1))) == decode(T8(Float64(Float32(2.1))))
+    @test T8(2.0) === Convert(T8, RNE_SN, 2.0) && decode(one(T8)) == 1.0
     @test decode(eps(T8)) == 0.125
 
     # Tanh asymptote through the enclosure protocol (design §4.7):
     # tanh(maxfinite) = 1⁻ ⇒ RNE → 1, TowardNegative → greatest datum below 1
     mx = MaxFiniteOf(T8)
-    @test decode(Tanh(T8, RNE_SatNone, mx)) == 1.0
+    @test decode(Tanh(T8, RNE_SN, mx)) == 1.0
     below1 = decode(NextLessThan(one(T8)))
     @test decode(Tanh(T8, ProjSpec(TowardNegative(), SatNone()), mx)) == below1
     @test decode(Tanh(T8, ProjSpec(TowardPositive(), SatNone()), Negate(mx))) == -below1
@@ -500,7 +500,7 @@ end
 
 T8 = Binary8p3se
 codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
-ρ4 = [RNE_SatNone, ProjSpec(TowardPositive(), SatNone()),
+ρ4 = [RNE_SN, ProjSpec(TowardPositive(), SatNone()),
       ProjSpec(TowardNegative(), SatFinite()), ProjSpec(ToOdd(), SatNone())]
 
 @testset "oracle.jl §5" begin
@@ -530,7 +530,7 @@ codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
                     :ArcTan, :ArcTanPi, :ArcSin, :ArcSinPi)
             prev = -Inf
             for v in finv
-                d = decode(apply_op(Val(opn), T8, RNE_SatNone, 0, decode(v)))
+                d = decode(apply_op(Val(opn), T8, RNE_SN, 0, decode(v)))
                 isnan(d) && continue
                 @test d >= prev
                 prev = d
@@ -540,7 +540,7 @@ codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
             prev = -Inf
             for v in finv
                 dv = decode(v)
-                d = decode(apply_op(Val(opn), T8, RNE_SatNone, 0, dv))
+                d = decode(apply_op(Val(opn), T8, RNE_SN, 0, dv))
                 isnan(d) && continue
                 @test d >= prev
                 prev = d
@@ -550,7 +550,7 @@ codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
 
     # semantic pins (draft rows / exact identities)
     @testset "pins" begin
-        ρ0 = RNE_SatNone
+        ρ0 = RNE_SN
         val(op, x, ρ=ρ0; R=0) = decode(apply_op(Val(op), T8, ρ, R, Float64(x)))
         val2(op, x, y, ρ=ρ0) = decode(apply_op(Val(op), T8, ρ, 0, Float64(x), Float64(y)))
         @test val(:Exp, 0) == 1 && val(:Log, 1) == 0
@@ -568,7 +568,7 @@ codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
         @test val(:TanPi, 0.25, ProjSpec(TowardNegative(), SatNone())) == 1   # exact even directed
         @test val2(:ArcTan2Pi, 3, 3) == 0.25 && val2(:ArcTan2Pi, 3, -3) == 0.75
         @test val2(:ArcTan2Pi, -3, 3) == -0.25 && val2(:ArcTan2Pi, -3, -3) == -0.75
-        @test decode(apply_op(Val(:TanPi), Binary8p3sf, RNE_SatNone, 0, 0.5)) |> isnan  # Finite domain: ∞→NaN
+        @test decode(apply_op(Val(:TanPi), Binary8p3sf, RNE_SN, 0, 0.5)) |> isnan  # Finite domain: ∞→NaN
         @test val(:ArcTanPi, 1) == 0.25 && val(:ArcTanPi, Inf) == 0.5
         @test val(:ArcCosPi, -1) == 1 && val(:ArcCosPi, 0) == 0.5
         @test val2(:Hypot, 3, 4) == 5 && val2(:Hypot, Inf, NaN) == Inf
@@ -596,13 +596,13 @@ codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
         mx = maxfinite_datum(T8); b1 = decode(NextLessThan(one(T8)))
         up = ProjSpec(TowardPositive(), SatNone()); dn = ProjSpec(TowardNegative(), SatNone())
         @test decode(apply_op(Val(:Tanh), T8, dn, 0, mx)) == b1
-        @test decode(apply_op(Val(:Tanh), T8, RNE_SatNone, 0, mx)) == 1
+        @test decode(apply_op(Val(:Tanh), T8, RNE_SN, 0, mx)) == 1
         @test decode(apply_op(Val(:Exp), T8, up, 0, -mx)) == decode(MinPositiveOf(T8))
-        @test decode(apply_op(Val(:Exp), T8, RNE_SatNone, 0, -mx)) == 0
+        @test decode(apply_op(Val(:Exp), T8, RNE_SN, 0, -mx)) == 0
         @test decode(apply_op(Val(:Exp), T8, ProjSpec(ToOdd(), SatNone()), 0, -mx)) == decode(MinPositiveOf(T8))
         @test decode(apply_op(Val(:ExpMinusOne), T8, up, 0, -mx)) == -b1
         @test decode(apply_op(Val(:Softplus), T8, up, 0, mx)) == Inf     # Mhi+ε rounds up, saturates
-        @test decode(apply_op(Val(:Softplus), T8, RNE_SatNone, 0, mx)) == mx
+        @test decode(apply_op(Val(:Softplus), T8, RNE_SN, 0, mx)) == mx
         @test decode(apply_op(Val(:Softplus), T8, dn, 0, mx)) == mx
     end
 
@@ -621,7 +621,7 @@ codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
     @testset "ternary exhaustive" begin
         T4 = Binary4p2se
         v4 = [decode(rawvalue(T4, UInt8(c))) for c in 0:15]
-        for ρ in (RNE_SatNone, ProjSpec(TowardZero(), SatNone())), x in v4, y in v4, z in v4
+        for ρ in (RNE_SN, ProjSpec(TowardZero(), SatNone())), x in v4, y in v4, z in v4
             g_fma = decode(apply_op(Val(:FMA), T4, ρ, 0, x, y, z))
             w_fma = if isnan(x) || isnan(y) || isnan(z) ||
                        (iszero(x) && isinf(y)) || (isinf(x) && iszero(y))
@@ -678,8 +678,8 @@ T8 = Binary8p3se; T5 = Binary5p2se; S4 = Binary4p2se; R5 = Binary5p3se
 @testset "tables.jl + kernels.jl §7" begin
     empty_tables!()
     # --- table ≡ scalar path, exhaustively
-    for (op, fr, f1, ρ) in ((:Exp, T8, T8, RNE_SatNone), (:Log, T8, T8, ρup),
-                            (:Sqrt, T5, T5, RNE_SatNone), (:Convert, T5, T8, ρup))
+    for (op, fr, f1, ρ) in ((:Exp, T8, T8, RNE_SN), (:Log, T8, T8, ρup),
+                            (:Sqrt, T5, T5, RNE_SN), (:Convert, T5, T8, ρup))
         tbl = get_table(op, fr, f1, ρ)
         @test length(tbl) == 1 << bitwidth(f1)
         for c in 0:(1 << bitwidth(f1)) - 1
@@ -688,19 +688,19 @@ T8 = Binary8p3se; T5 = Binary5p2se; S4 = Binary4p2se; R5 = Binary5p3se
             @test tbl[c + 1] == want
         end
     end
-    tbl2 = get_table(:Subtract, T5, T5, T5, RNE_SatNone)     # asymmetric op: catches index-order bugs
+    tbl2 = get_table(:Subtract, T5, T5, T5, RNE_SN)     # asymmetric op: catches index-order bugs
     @test length(tbl2) == 1 << 10
     for c1 in 0:31, c2 in 0:31
-        want = codepoint(apply_op(Val(:Subtract), T5, RNE_SatNone, 0,
+        want = codepoint(apply_op(Val(:Subtract), T5, RNE_SN, 0,
                                   decode(rawvalue(T5, UInt8(c1))), decode(rawvalue(T5, UInt8(c2)))))
         @test tbl2[(c1 << 5) + c2 + 1] == want
     end
     # mixed formats: Multiply Binary4p2se × Binary4p2se → Binary5p3se
-    tblm = get_table(:Multiply, R5, S4, S4, RNE_SatNone)
+    tblm = get_table(:Multiply, R5, S4, S4, RNE_SN)
     @test length(tblm) == 256
 
     # --- cache identity, byte accounting, reset
-    @test get_table(:Exp, T8, T8, RNE_SatNone) === get_table(:Exp, T8, T8, RNE_SatNone)
+    @test get_table(:Exp, T8, T8, RNE_SN) === get_table(:Exp, T8, T8, RNE_SN)
     @test table_bytes() == 256 + 256 + 32 + 256 + 1024 + 256
     empty_tables!(); @test table_bytes() == 0
     @test_throws ArgumentError get_table(:Exp, T8, T8, ProjSpec(StochasticA{2}(), SatNone()))
@@ -708,22 +708,22 @@ T8 = Binary8p3se; T5 = Binary5p2se; S4 = Binary4p2se; R5 = Binary5p3se
     # --- vmap ≡ scalar map (unary, binary, mixed-format, asymmetric)
     codesA = [rawvalue(T5, UInt8(rand(0:31))) for _ in 1:K4B]
     codesB = [rawvalue(T5, UInt8(rand(0:31))) for _ in 1:K4B]
-    out = Subtract(T5, RNE_SatNone, codesA, codesB)
-    @test all(codepoint(out[i]) == codepoint(Subtract(T5, RNE_SatNone, codesA[i], codesB[i])) for i in eachindex(out))
+    out = Subtract(T5, RNE_SN, codesA, codesB)
+    @test all(codepoint(out[i]) == codepoint(Subtract(T5, RNE_SN, codesA[i], codesB[i])) for i in eachindex(out))
     a4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:K1]
     b4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:K1]
     om = Multiply(R5, ρup, a4, b4)
     @test eltype(om) == R5
     @test all(codepoint(om[i]) == codepoint(Multiply(R5, ρup, a4[i], b4[i])) for i in eachindex(om))
-    ou = Exp(T8, RNE_SatNone, [rawvalue(T8, UInt8(c)) for c in 0:255])
-    @test all(codepoint(ou[c + 1]) == codepoint(Exp(T8, RNE_SatNone, rawvalue(T8, UInt8(c)))) for c in 0:255)
+    ou = Exp(T8, RNE_SN, [rawvalue(T8, UInt8(c)) for c in 0:255])
+    @test all(codepoint(ou[c + 1]) == codepoint(Exp(T8, RNE_SN, rawvalue(T8, UInt8(c)))) for c in 0:255)
     oc = Convert(T5, ρup, [rawvalue(T8, UInt8(c)) for c in 0:255])
     @test all(codepoint(oc[c + 1]) == codepoint(Convert(T5, ρup, rawvalue(T8, UInt8(c)))) for c in 0:255)
 
     # --- ternary Shape B
     c4 = [rawvalue(S4, UInt8(rand(0:15))) for _ in 1:K1]
-    of = FMA(S4, RNE_SatNone, a4, b4, c4)
-    @test all(codepoint(of[i]) == codepoint(FMA(S4, RNE_SatNone, a4[i], b4[i], c4[i])) for i in eachindex(of))
+    of = FMA(S4, RNE_SN, a4, b4, c4)
+    @test all(codepoint(of[i]) == codepoint(FMA(S4, RNE_SN, a4[i], b4[i], c4[i])) for i in eachindex(of))
 
     # --- stochastic arrays: reproducible under the same rng; matches a manual
     #     scalar loop consuming the identical draw sequence
@@ -738,27 +738,27 @@ T8 = Binary8p3se; T5 = Binary5p2se; S4 = Binary4p2se; R5 = Binary5p3se
 
     # --- warm-path allocation: gather loops allocate nothing beyond the output
     dest = similar(codesA); v = Val(:Add)
-    vmap!(dest, v, T5, RNE_SatNone, codesA, codesB)
-    @test (@allocated vmap!(dest, v, T5, RNE_SatNone, codesA, codesB)) == 0
+    vmap!(dest, v, T5, RNE_SN, codesA, codesB)
+    @test (@allocated vmap!(dest, v, T5, RNE_SN, codesA, codesB)) == 0
     destu = similar(ou); vu = Val(:Exp); srcu = [rawvalue(T8, UInt8(rand(0:255))) for _ in 1:K4B]
     du = similar(srcu)
-    vmap!(du, vu, T8, RNE_SatNone, srcu)
-    @test (@allocated vmap!(du, vu, T8, RNE_SatNone, srcu)) == 0
+    vmap!(du, vu, T8, RNE_SN, srcu)
+    @test (@allocated vmap!(du, vu, T8, RNE_SN, srcu)) == 0
 
     # --- views and strides (AbstractArray contract)
     V = view(codesA, 100:2:900)
-    ov = Exp(T5, RNE_SatNone, V)
-    @test all(codepoint(ov[i]) == codepoint(Exp(T5, RNE_SatNone, V[i])) for i in eachindex(V))
+    ov = Exp(T5, RNE_SN, V)
+    @test all(codepoint(ov[i]) == codepoint(Exp(T5, RNE_SN, V[i])) for i in eachindex(V))
 
     # --- throughput smoke (informational, not asserted)
     n = 1 << 18   # informational throughput smoke, kept small for CI
     bigA = [rawvalue(T8, UInt8(rand(0:255))) for _ in 1:n]
     bigB = [rawvalue(T8, UInt8(rand(0:255))) for _ in 1:n]
     bd = similar(bigA)
-    vmap!(bd, Val(:Add), T8, RNE_SatNone, bigA, bigB)                      # warm + build 64 KiB table
-    t = @elapsed vmap!(bd, Val(:Add), T8, RNE_SatNone, bigA, bigB)
+    vmap!(bd, Val(:Add), T8, RNE_SN, bigA, bigB)                      # warm + build 64 KiB table
+    t = @elapsed vmap!(bd, Val(:Add), T8, RNE_SN, bigA, bigB)
     println("Shape-A 8×8 Add gather: ", round(3n / t / 1e9; digits=2), " GB/s effective (", n, " elems)")
-    tu = @elapsed vmap!(du, Val(:Exp), T8, RNE_SatNone, srcu)
+    tu = @elapsed vmap!(du, Val(:Exp), T8, RNE_SN, srcu)
     println("Shape-A unary gather:   ", round(2 * length(srcu) / tu / 1e9; digits=2), " GB/s effective")
 end
 println("tables.jl + kernels.jl verified")
@@ -807,7 +807,7 @@ end
 
 T5 = Binary5p2se; T8 = Binary8p3se; U1 = Binary8p1uf
 rnd(T) = rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1)))
-ρ2 = (RNE_SatNone, ProjSpec(TowardPositive(), SatNone()))
+ρ2 = (RNE_SN, ProjSpec(TowardPositive(), SatNone()))
 
 @testset "blocks.jl §8" begin
     # --- blockdecode ≡ independent lane semantics, incl 0·∞ and NaN
@@ -859,19 +859,19 @@ rnd(T) = rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1)))
     # --- BlockProject S-special rows (draft §5.1.2 NOTEs 1–2)
     nanT5 = rawvalue(T5, nan_code(T5)); infT5 = rawvalue(T5, posinf_code(T5))
     xs = (one(T5), Negate(one(T5)), zero(T5), nanT5)
-    bz = ConvertToBlock(T5, T8, RNE_SatNone, xs, zero(T5))
+    bz = ConvertToBlock(T5, T8, RNE_SN, xs, zero(T5))
     @test decode.(bz.x) === (0.0, 0.0, 0.0) .* 1 || all(i -> i == 4 ? isnan(decode(bz.x[i])) : decode(bz.x[i]) == 0.0, 1:4)
-    bi = ConvertToBlock(T5, T8, RNE_SatNone, xs, infT5)
+    bi = ConvertToBlock(T5, T8, RNE_SN, xs, infT5)
     @test decode(bi.x[1]) == 1.0 && decode(bi.x[2]) == -1.0 && decode(bi.x[3]) == 0.0 && isnan(decode(bi.x[4]))
 
     # --- ScaledOp ≡ B=1 BlockOp with unit result scale (draft §5.5)
     for _ in 1:H1
         s1, x1, s2, x2 = rnd(T5), rnd(T5), rnd(T5), rnd(T5)
-        r1 = ScaledAdd(T8, RNE_SatNone, s1, x1, s2, x2)
-        r2 = BlockAdd(T8, RNE_SatNone, Block(s1, (x1,)), Block(s2, (x2,)), one(T5))
+        r1 = ScaledAdd(T8, RNE_SN, s1, x1, s2, x2)
+        r2 = BlockAdd(T8, RNE_SN, Block(s1, (x1,)), Block(s2, (x2,)), one(T5))
         @test codepoint(r1) == codepoint(r2.x[1])
-        r3 = ScaledDivide(T8, RNE_SatNone, s1, x1, s2, x2)
-        r4 = BlockDivide(T8, RNE_SatNone, Block(s1, (x1,)), Block(s2, (x2,)), one(T5))
+        r3 = ScaledDivide(T8, RNE_SN, s1, x1, s2, x2)
+        r4 = BlockDivide(T8, RNE_SN, Block(s1, (x1,)), Block(s2, (x2,)), one(T5))
         @test codepoint(r3) == codepoint(r4.x[1])
     end
 
@@ -884,9 +884,9 @@ rnd(T) = rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1)))
         want = if any(isnan, X); NaN
         elseif any(==(Inf), X) && any(==(-Inf), X); NaN
         elseif any(isinf, X); X[findfirst(isinf, X)]
-        else setprecision(() -> decode(project(T8, RNE_SatNone, sum(BigFloat, X; init=BigFloat(0)))), BigFloat, 3000)
+        else setprecision(() -> decode(project(T8, RNE_SN, sum(BigFloat, X; init=BigFloat(0)))), BigFloat, 3000)
         end
-        @test isequal(decode(BlockReduceAdd(T8, RNE_SatNone, b)), want)
+        @test isequal(decode(BlockReduceAdd(T8, RNE_SN, b)), want)
         # DotProduct incl >53-bit lane products
         by = Block(rnd(T5), ntuple(_ -> rnd(T5), B))
         Y = blockdecode(by)
@@ -899,50 +899,50 @@ rnd(T) = rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1)))
                 (any(==(Inf), cls) && any(==(-Inf), cls)) ? NaN : cls[findfirst(isinf, cls)]
             else
                 setprecision(BigFloat, 3000) do
-                    decode(project(T8, RNE_SatNone, sum(BigFloat(X[i]) * BigFloat(Y[i]) for i in 1:B; init=BigFloat(0))))
+                    decode(project(T8, RNE_SN, sum(BigFloat(X[i]) * BigFloat(Y[i]) for i in 1:B; init=BigFloat(0))))
                 end
             end
         end
-        @test isequal(decode(BlockDotProduct(T8, RNE_SatNone, b, by)), wdot)
+        @test isequal(decode(BlockDotProduct(T8, RNE_SN, b, by)), wdot)
     end
     # 64-bit lane-product stress: full-significand scales × full-significand elements
     smax = MaxFiniteOf(T5)
     bx = Block(smax, ntuple(_ -> MaxFiniteOf(T5), 4))
     by = Block(MinPositiveOf(T5), ntuple(_ -> MinPositiveOf(T5), 4))
     wexact = setprecision(BigFloat, 3000) do
-        decode(project(T8, RNE_SatNone, 4 * BigFloat(decode(smax))^2 * BigFloat(decode(MinPositiveOf(T5)))^2))
+        decode(project(T8, RNE_SN, 4 * BigFloat(decode(smax))^2 * BigFloat(decode(MinPositiveOf(T5)))^2))
     end
-    @test decode(BlockDotProduct(T8, RNE_SatNone, bx, by)) == wexact
+    @test decode(BlockDotProduct(T8, RNE_SN, bx, by)) == wexact
     # ReduceMultiply pins: 0 present with ∞ → NaN; sign of ∞ product; plain product
     b0i = Block(one(T5), (zero(T5), rawvalue(T5, posinf_code(T5))))
-    @test isnan(decode(BlockReduceMultiply(T8, RNE_SatNone, b0i)))
+    @test isnan(decode(BlockReduceMultiply(T8, RNE_SN, b0i)))
     bni = Block(one(T5), (Negate(one(T5)), rawvalue(T5, posinf_code(T5))))
-    @test decode(BlockReduceMultiply(T8, RNE_SatNone, bni)) == -Inf
+    @test decode(BlockReduceMultiply(T8, RNE_SN, bni)) == -Inf
     bp = Block(T5(2.0), (T5(3.0), T5(2.0)))
-    @test decode(BlockReduceMultiply(T8, RNE_SatNone, bp)) == 24.0
+    @test decode(BlockReduceMultiply(T8, RNE_SN, bp)) == 24.0
 
     # --- ConvertToBlockMaxAbsFinite: the five draft NOTEs
     ρs_up = ProjSpec(TowardPositive(), SatNone())
     allnan = ntuple(_ -> nanT5, 3)
-    r = ConvertToBlockMaxAbsFinite(T5, T8, RNE_SatNone, RNE_SatNone, allnan)
+    r = ConvertToBlockMaxAbsFinite(T5, T8, RNE_SN, RNE_SN, allnan)
     @test isnan(decode(r.s)) && all(isnan ∘ decode, r.x)                       # NOTE 1
     allinf = ntuple(_ -> infT5, 3)
-    r = ConvertToBlockMaxAbsFinite(T5, T8, RNE_SatNone, RNE_SatNone, allinf)
+    r = ConvertToBlockMaxAbsFinite(T5, T8, RNE_SN, RNE_SN, allinf)
     @test decode(r.s) == Inf && all(v -> decode(v) == 1.0, r.x)                # NOTE 2 (SatNone: s=∞, elems ±1)
     mixed = (infT5, T5(2.0), Negate(infT5))
-    r = ConvertToBlockMaxAbsFinite(T5, T8, RNE_SatNone, RNE_SatNone, mixed)
+    r = ConvertToBlockMaxAbsFinite(T5, T8, RNE_SN, RNE_SN, mixed)
     @test decode(r.s) == 2.0                                                   # NOTE 3: ∞ doesn't set scale
     @test decode(r.x[1]) == Inf && decode(r.x[3]) == -Inf && decode(r.x[2]) == 1.0
     tiny = ntuple(_ -> MinPositiveOf(T5), 3)                                    # NOTE 4 shape: scale→0 ⇒ all zero
-    rz = ConvertToBlockMaxAbsFinite(Binary3p1se, T8, ProjSpec(TowardZero(), SatFinite()), RNE_SatNone, tiny)
+    rz = ConvertToBlockMaxAbsFinite(Binary3p1se, T8, ProjSpec(TowardZero(), SatFinite()), RNE_SN, tiny)
     if iszero(decode(rz.s)); @test all(v -> decode(v) == 0.0, rz.x); end
-    r5 = ConvertToBlockMaxAbsFinite(U1, T8, ρs_up, RNE_SatFinite, (T5(3.0), T5(0.5), Negate(T5(2.0))))
+    r5 = ConvertToBlockMaxAbsFinite(U1, T8, ρs_up, RNE_SF, (T5(3.0), T5(0.5), Negate(T5(2.0))))
     @test decode(r5.s) == 4.0                                                  # NOTE 5: TowardPositive P=1 scale
     @test decode(r5.x[1]) == 0.75 && decode(r5.x[2]) == 0.125 && decode(r5.x[3]) == -0.5
 
     # --- P=1 scale exactness: division by 2^k collapses to the exact path
     bU = Block(U1(4.0), (T5(3.0), T5(0.5)))
-    g = BlockAdd(T8, RNE_SatNone, bU, Block(U1(1.0), (zero(T5), zero(T5))), U1(2.0))
+    g = BlockAdd(T8, RNE_SN, bU, Block(U1(1.0), (zero(T5), zero(T5))), U1(2.0))
     @test decode(g.x[1]) == 6.0 && decode(g.x[2]) == 1.0                       # (4·3+0)/2, (4·0.5+0)/2
 
     # --- stochastic block ops: reproducible per seeded rng
@@ -969,30 +969,30 @@ println("blocks.jl verified")
 T8 = Binary8p4se; T5 = Binary5p2se
 @testset "approx.jl §9" begin
     # --- κ of the exact path is 0 (exhaustive, unary and binary)
-    exact_exp(x) = Exp(T8, RNE_SatNone, x)
-    @test measure_kappa(exact_exp, :Exp, T8, (T8,), RNE_SatNone) === (0.0, true)
-    exact_add(x, y) = Add(T5, RNE_SatNone, x, y)
-    @test measure_kappa(exact_add, :Add, T5, (T5, T5), RNE_SatNone) === (0.0, true)
+    exact_exp(x) = Exp(T8, RNE_SN, x)
+    @test measure_kappa(exact_exp, :Exp, T8, (T8,), RNE_SN) === (0.0, true)
+    exact_add(x, y) = Add(T5, RNE_SN, x, y)
+    @test measure_kappa(exact_add, :Add, T5, (T5, T5), RNE_SN) === (0.0, true)
     # ternary exhaustive at K=4 (2^12 inputs)
     T4 = Binary4p2se
-    exact_fma(x, y, z) = FMA(T4, RNE_SatNone, x, y, z)
-    @test measure_kappa(exact_fma, :FMA, T4, (T4, T4, T4), RNE_SatNone) === (0.0, true)
+    exact_fma(x, y, z) = FMA(T4, RNE_SN, x, y, z)
+    @test measure_kappa(exact_fma, :FMA, T4, (T4, T4, T4), RNE_SN) === (0.0, true)
 
     # --- synthetic known-κ implementations: perturb the defined result by k steps
-    step2(x) = (r = Exp(T8, RNE_SatNone, x);
+    step2(x) = (r = Exp(T8, RNE_SN, x);
                 isfinite(decode(r)) ? NextGreaterThan(NextGreaterThan(r)) : r)
-    κ2, exh = measure_kappa(step2, :Exp, T8, (T8,), RNE_SatNone)
+    κ2, exh = measure_kappa(step2, :Exp, T8, (T8,), RNE_SN)
     @test exh
     @test κ2 >= 2.0     # ≥: stepping can also cross into a region ≥2 keys away
     # NaN mismatch: return a number where the defined result is NaN
-    denan(x) = (r = Log(T8, RNE_SatNone, x); isnan(decode(r)) ? zero(T8) : r)
-    @test measure_kappa(denan, :Log, T8, (T8,), RNE_SatNone)[1] |> isnan
+    denan(x) = (r = Log(T8, RNE_SN, x); isnan(decode(r)) ? zero(T8) : r)
+    @test measure_kappa(denan, :Log, T8, (T8,), RNE_SN)[1] |> isnan
     # finite→Inf deviation is also NaN-κ
     toinf(x) = rawvalue(T8, posinf_code(T8))
-    @test measure_kappa(toinf, :Abs, T8, (T8,), RNE_SatNone)[1] |> isnan
+    @test measure_kappa(toinf, :Abs, T8, (T8,), RNE_SN)[1] |> isnan
 
     # --- FTZ worked example (draft Annex): flush subnormal results, ties to zero
-    ρf = RNE_SatFinite
+    ρf = RNE_SF
     ftz = ftz_variant(:Exp, T8, T8, ρf)
     # behavior: every subnormal defined result maps to 0 or ±MinNormal, nearest, ties→0
     P = precision(T8); half = 1 << (P - 2); mn = decode(MinNormalOf(T8))
@@ -1022,8 +1022,8 @@ T8 = Binary8p4se; T5 = Binary5p2se
     @test_throws ArgumentError register_approx!(:lie, :Exp, T8, (T8,), ρf, ftz; κ=1)      # understated
     ok = register_approx!(:generous, :Exp, T8, (T8,), ρf, ftz; κ=10)                       # overstated OK
     @test kappa(ok) == 10 && kappa_measured(ok) == κf
-    @test_throws ArgumentError register_approx!(:nanimpl, :Log, T8, (T8,), RNE_SatNone, denan)  # NaN needs κ=NaN
-    nreg = register_approx!(:nanimpl, :Log, T8, (T8,), RNE_SatNone, denan; κ=NaN)
+    @test_throws ArgumentError register_approx!(:nanimpl, :Log, T8, (T8,), RNE_SN, denan)  # NaN needs κ=NaN
+    nreg = register_approx!(:nanimpl, :Log, T8, (T8,), RNE_SN, denan; κ=NaN)
     @test isnan(kappa(nreg))
     @test_throws ArgumentError register_approx!(:badop, :Nope, T8, (T8,), ρf, ftz)
     @test_throws ArgumentError measure_kappa(ftz, :Exp, T8, (T8,), ProjSpec(StochasticA{2}(), SatNone()))
@@ -1032,8 +1032,8 @@ T8 = Binary8p4se; T5 = Binary5p2se
 
     # --- conformance declaration reflects registry, cache, and approx state
     empty_tables!()
-    get_table(:Exp, T8, T8, RNE_SatNone)
-    get_table(:Add, T5, T5, T5, RNE_SatNone)
+    get_table(:Exp, T8, T8, RNE_SN)
+    get_table(:Add, T5, T5, T5, RNE_SN)
     c = conformance()
     # The declaration enumerates the whole grid, so its length is a claim about
     # KMIN:KMAX and must be derived from them — a literal here goes stale the
@@ -1060,7 +1060,7 @@ println("approx.jl verified")
 @testset "Float128 revision plan §7" begin
     # --- carrier equivalence: project(Float64 d) ≡ project(Float128(d)),
     #     exhaustive over all datums of representative formats × ρ × R-sweep
-    ρs = [RNE_SatNone, ProjSpec(TowardPositive(), SatNone()),
+    ρs = [RNE_SN, ProjSpec(TowardPositive(), SatNone()),
           ProjSpec(TowardNegative(), SatFinite()), ProjSpec(ToOdd(), SatNone()),
           ProjSpec(NearestTiesToAway(), SatPropagate())]
     for T in (Binary8p4se, Binary8p1uf, Binary5p2se, Binary3p1se), ρ in ρs
@@ -1078,14 +1078,14 @@ println("approx.jl verified")
     # Float128 inputs must not double-round through Float64 at a target midpoint.
     x128 = Float128(0.53125) + ldexp(one(Float128), -101)
     @test Float64(x128) == 0.53125
-    @test decode(Convert(Binary8p4se, RNE_SatNone, x128)) == 0.5625
+    @test decode(Convert(Binary8p4se, RNE_SN, x128)) == 0.5625
 
     # The interval ladder must honor a non-power-of-two precision ceiling exactly.
     seen_precisions = Int[]
     unresolved = p -> (push!(seen_precisions, p); (BigFloat(0.7), BigFloat(0.8)))
-    @test_throws ErrorException project_interval(Binary3p2se, RNE_SatNone, unresolved; maxprec=300)
+    @test_throws ErrorException project_interval(Binary3p2se, RNE_SN, unresolved; maxprec=300)
     @test seen_precisions == [256, 300]
-    @test_throws ArgumentError project_interval(Binary3p2se, RNE_SatNone, unresolved; maxprec=1)
+    @test_throws ArgumentError project_interval(Binary3p2se, RNE_SN, unresolved; maxprec=1)
 
     # sticky semantics on the Float128 carrier (the asymptote machinery)
     @test decode(project(Binary8p4se, ProjSpec(TowardNegative(), SatNone()),
@@ -1102,7 +1102,7 @@ println("approx.jl verified")
         _USE_FLOAT128[] = true; empty_tables!()
         (t1, t0)
     end
-    ρd = (RNE_SatNone, ProjSpec(TowardPositive(), SatNone()),
+    ρd = (RNE_SN, ProjSpec(TowardPositive(), SatNone()),
           ProjSpec(TowardNegative(), SatFinite()), ProjSpec(ToOdd(), SatNone()))
     for opn in _UNARY_OPS, ρ in ρd, T in (Binary8p3se, Binary8p4se)
         t1, t0 = build_both(opn, T, T, ρ)
@@ -1210,9 +1210,9 @@ println("approx.jl verified")
 
     # --- runtime switch semantics: identical results either way
     a, b = Binary8p1uf(2.0^60), Binary8p1uf(2.0^-60)
-    r_on = Add(Binary8p1uf, RNE_SatNone, a, b)
+    r_on = Add(Binary8p1uf, RNE_SN, a, b)
     _USE_FLOAT128[] = false
-    r_off = Add(Binary8p1uf, RNE_SatNone, a, b)
+    r_off = Add(Binary8p1uf, RNE_SN, a, b)
     _USE_FLOAT128[] = true
     @test codepoint(r_on) == codepoint(r_off)
 end
@@ -1275,7 +1275,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         end
     end
     # subnormal-Float64 inputs route to the generic core and still project correctly
-    @test decode(project(Binary8p4se, RNE_SatNone, 5.0e-324)) == 0.0
+    @test decode(project(Binary8p4se, RNE_SN, 5.0e-324)) == 0.0
     @test decode(project(Binary8p4se, ProjSpec(TowardPositive(), SatNone()), 5.0e-324)) ==
           decode(MinPositiveOf(Binary8p4se))
 
@@ -1316,7 +1316,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
     a, b = Binary5p2se(2.0), Binary5p2se(0.25)
     @test Add(Binary5p2se, σ, a, b; rng=Xoshiro(1)) === Add(Binary5p2se, σ, a, b; rng=Xoshiro(1))
     @test Add(Binary5p2se, σ, a, b; R=3) === Add(Binary5p2se, σ, a, b; R=3)
-    @test Add(Binary5p2se, RNE_SatNone, a, b) === Add(Binary5p2se, RNE_SatNone, a, b)
+    @test Add(Binary5p2se, RNE_SN, a, b) === Add(Binary5p2se, RNE_SN, a, b)
 
     # ---- K5: packed storage
     for T in (Binary3p1se, Binary4p2se, Binary5p2se, Binary6p3se, Binary7p3se, Binary8p4se)
@@ -1332,8 +1332,8 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         A = [rawvalue(T, UInt8(rand(0:(1 << bitwidth(T)) - 1))) for _ in 1:K1]
         pv = PackedVector(A)
         @test sizeof(pv.data) <= cld(1000 * bitwidth(T), 64) * 8 + 8
-        o1 = SmallFloats.vmap(:Exp, T, RNE_SatNone, pv)       # kernel-through-packed ≡ bytes
-        o2 = SmallFloats.vmap(:Exp, T, RNE_SatNone, A)
+        o1 = SmallFloats.vmap(:Exp, T, RNE_SN, pv)       # kernel-through-packed ≡ bytes
+        o2 = SmallFloats.vmap(:Exp, T, RNE_SN, A)
         @test codepoint.(o1) == codepoint.(o2)
     end
 end
@@ -1348,17 +1348,17 @@ end
     a, b, c = T(1.5), T(0.25), T(2.0)
     σ = ProjSpec(StochasticA{3}(), SatNone())
     # concrete inferred return types at public entry points, kwarg paths included
-    @test Base.return_types(project, Tuple{Type{T}, typeof(RNE_SatNone), Float64}) == [T]
+    @test Base.return_types(project, Tuple{Type{T}, typeof(RNE_SN), Float64}) == [T]
     for f in (Add, Multiply, Divide, Exp, FMA)
         n = f === FMA ? 3 : (f in (Add, Multiply, Divide) ? 2 : 1)
-        sig = Tuple{Type{T}, typeof(RNE_SatNone), ntuple(_ -> T, n)...}
+        sig = Tuple{Type{T}, typeof(RNE_SN), ntuple(_ -> T, n)...}
         @test Base.return_types(f, sig) == [T]
     end
     @test Base.return_types((x, y) -> Add(T, σ, x, y; rng=Xoshiro(1), R=nothing), Tuple{T,T}) == [T]
     # zero allocation on warm public scalar paths (pure ρ) and the engine
-    add2(x, y) = Add(T, RNE_SatNone, x, y); add2(a, b)
-    prj(d) = project(T, RNE_SatNone, d); prj(2.3)
-    fma3(x, y, z) = FMA(T, RNE_SatNone, x, y, z); fma3(a, b, c)
+    add2(x, y) = Add(T, RNE_SN, x, y); add2(a, b)
+    prj(d) = project(T, RNE_SN, d); prj(2.3)
+    fma3(x, y, z) = FMA(T, RNE_SN, x, y, z); fma3(a, b, c)
     cmp2(x, y) = x < y; cmp2(a, b)
     @test @allocated(add2(a, b)) == 0
     @test @allocated(prj(2.3)) == 0
@@ -1389,8 +1389,8 @@ end
     @testset "per-head warm-path allocation" begin
         function selalloc(::Type{F}, f::G) where {F<:SmallFloats.Binary,G}
             x = F(1.5); y = F(0.25)
-            f(F, RNE_SatNone, x, y); f(F, RNE_SatNone, x, y)
-            @allocated f(F, RNE_SatNone, x, y)
+            f(F, RNE_SN, x, y); f(F, RNE_SN, x, y)
+            @allocated f(F, RNE_SN, x, y)
         end
         for F in (Binary8p4se,                       # rung 1, K ≤ 8
                   Binary16p6se,                      # rung 1, K = 16
@@ -1424,14 +1424,14 @@ end
         # and the guard must not pin the *value*: a changed default is honored,
         # matching the explicit call, on the slow path
         try
-            DefaultProjection!(RTZ_SatFinite)
-            @test Add(a, b) === Add(T, RTZ_SatFinite, a, b)
-            @test T(200.0) * T(2.0) === Multiply(T, RTZ_SatFinite, T(200.0), T(2.0))
-            @test T(2.1) === Convert(T, RTZ_SatFinite, 2.1)
+            DefaultProjection!(RTZ_SF)
+            @test Add(a, b) === Add(T, RTZ_SF, a, b)
+            @test T(200.0) * T(2.0) === Multiply(T, RTZ_SF, T(200.0), T(2.0))
+            @test T(2.1) === Convert(T, RTZ_SF, 2.1)
         finally
-            DefaultProjection!(RNE_SatNone)
+            DefaultProjection!(RNE_SN)
         end
-        @test Add(a, b) === Add(T, RNE_SatNone, a, b)
+        @test Add(a, b) === Add(T, RNE_SN, a, b)
     end
 end
 
@@ -1471,7 +1471,7 @@ end
         @test Binary8p4se(U(2)) === rawvalue(Binary8p4se, 0x02)
     end
     @test_throws ArgumentError Binary5p2se(UInt64(64))   # range-checked at every width
-    @test decode(Convert(Binary8p4se, RNE_SatNone, 0x02)) == 2.0   # Convert stays numeric
+    @test decode(Convert(Binary8p4se, RNE_SN, 0x02)) == 2.0   # Convert stays numeric
     # Rational disambiguation policy
     @test_throws ArgumentError Binary8p4se(1//2)
     # method-table hygiene and specialization
@@ -1538,9 +1538,9 @@ end
     # The definition IS the spec: rand floor-projects the Float64 uniform
     # stream, randn round-to-nearest-projects the normal stream with SatFinite.
     r1, r2 = Xoshiro(7), Xoshiro(7)
-    @test all(rand(r1, T) === Convert(T, RTZ_SatNone, rand(r2, Float64)) for _ in 1:10_000)
+    @test all(rand(r1, T) === Convert(T, RTZ_SN, rand(r2, Float64)) for _ in 1:10_000)
     r1, r2 = Xoshiro(7), Xoshiro(7)
-    @test all(randn(r1, T) === Convert(T, RNE_SatFinite, randn(r2)) for _ in 1:10_000)
+    @test all(randn(r1, T) === Convert(T, RNE_SF, randn(r2)) for _ in 1:10_000)
 
     # range and finiteness, across signedness/domain variants
     for F in (Binary8p4se, Binary8p4sf, Binary6p3ue, Binary5p5uf, Binary3p1se)
@@ -1585,29 +1585,29 @@ end
 
     # ---- the projection keyword (scalar ::Type methods only)
     # explicit default ≡ implicit default, both functions, all four spellings
-    @test rand(Xoshiro(3), T; projection=RTZ_SatNone) === rand(Xoshiro(3), T)
-    @test randn(Xoshiro(3), T; projection=RNE_SatFinite) === randn(Xoshiro(3), T)
-    @test rand(T; projection=RTZ_SatNone) isa T
-    @test randn(T; projection=RNE_SatNone) isa T
+    @test rand(Xoshiro(3), T; projection=RTZ_SN) === rand(Xoshiro(3), T)
+    @test randn(Xoshiro(3), T; projection=RNE_SF) === randn(Xoshiro(3), T)
+    @test rand(T; projection=RTZ_SN) isa T
+    @test randn(T; projection=RNE_SN) isa T
     # a non-default projection is the same draw, differently projected
     r1, r2 = Xoshiro(7), Xoshiro(7)
-    @test all(rand(r1, T; projection=RTP_SatNone) ===
-              Convert(T, RTP_SatNone, rand(r2, Float64)) for _ in 1:K2)
+    @test all(rand(r1, T; projection=RTP_SN) ===
+              Convert(T, RTP_SN, rand(r2, Float64)) for _ in 1:K2)
     r1, r2 = Xoshiro(7), Xoshiro(7)
-    @test all(randn(r1, T; projection=RTZ_SatFinite) ===
-              Convert(T, RTZ_SatFinite, randn(r2)) for _ in 1:K2)
+    @test all(randn(r1, T; projection=RTZ_SF) ===
+              Convert(T, RTZ_SF, randn(r2)) for _ in 1:K2)
     # stochastic projections draw R from the SAME rng: seeded streams reproduce
-    σ8 = RSA_SatNone(8)
+    σ8 = RSA_SN(8)
     draws(seed) = [codepoint(rand(Xoshiro(seed), T; projection=σ8)) for _ in 1:TEN5]
     @test draws(5) == draws(5)
     @test draws(5) != draws(6)
     ndraws(seed) = [codepoint(randn(Xoshiro(seed), T; projection=σ8)) for _ in 1:TEN5]
     @test ndraws(5) == ndraws(5)
     # unsigned randn throws on the keyword spelling too
-    @test_throws ArgumentError randn(Xoshiro(1), Binary6p3ue; projection=RNE_SatFinite)
+    @test_throws ArgumentError randn(Xoshiro(1), Binary6p3ue; projection=RNE_SF)
     # keyword path stays allocation-free and concretely inferred
-    srk(rng) = rand(rng, T; projection=RTZ_SatNone); srk(r)
-    snk(rng) = randn(rng, T; projection=RNE_SatFinite); snk(r)
+    srk(rng) = rand(rng, T; projection=RTZ_SN); srk(r)
+    snk(rng) = randn(rng, T; projection=RNE_SF); snk(r)
     @test @allocated(srk(r)) == 0
     @test @allocated(snk(r)) == 0
     @test Base.return_types(srk, Tuple{Xoshiro}) == [T]

@@ -178,7 +178,7 @@ end
             r = _try(o.name, () -> begin
                 for x in vs[1:min(end, 4)], y in vs[1:min(end, 4)]
                     args = ar == 1 ? (x,) : ar == 2 ? (x, y) : (x, y, vs[end])
-                    res = f(T, RNE_SatFinite, args...)
+                    res = f(T, RNE_SF, args...)
                     res isa T || error("returned $(typeof(res)), not $T")
                 end
             end)
@@ -223,7 +223,7 @@ end
         for (lbl, f) in ((:sort, sort), (:maximum, maximum), (:minimum, minimum),
                          (:extrema, extrema), (:sum_decoded, a -> sum(decode.(a))),
                          (:broadcast_add, a -> a .+ a),
-                         (:vmap, a -> Add.(T, Ref(RNE_SatFinite), a, a)))
+                         (:vmap, a -> Add.(T, Ref(RNE_SF), a, a)))
             r = _try(lbl, () -> f(A))
             r === nothing || push!(bad, r)
         end
@@ -267,14 +267,14 @@ end
                                all(x -> x isa C, X) ||
                                    error("lane type $(typeof(X[1])) ≠ $C")
                            end),
-                          ("BlockReduceAdd", () -> BlockReduceAdd(E, RNE_SatNone, b1)),
-                          ("BlockReduceMultiply", () -> BlockReduceMultiply(E, RNE_SatNone, b1)),
-                          ("BlockDotProduct", () -> BlockDotProduct(E, RNE_SatNone, b1, b2)),
-                          ("ConvertFromBlock", () -> ConvertFromBlock(E, RNE_SatNone, b1)),
+                          ("BlockReduceAdd", () -> BlockReduceAdd(E, RNE_SN, b1)),
+                          ("BlockReduceMultiply", () -> BlockReduceMultiply(E, RNE_SN, b1)),
+                          ("BlockDotProduct", () -> BlockDotProduct(E, RNE_SN, b1, b2)),
+                          ("ConvertFromBlock", () -> ConvertFromBlock(E, RNE_SN, b1)),
                           ("ConvertToBlock",
-                           () -> ConvertToBlock(S, E, RNE_SatNone, (E(1.5), E(0.25)), S(1.0))),
+                           () -> ConvertToBlock(S, E, RNE_SN, (E(1.5), E(0.25)), S(1.0))),
                           ("ConvertToBlockMaxAbsFinite",
-                           () -> ConvertToBlockMaxAbsFinite(S, E, RNE_SatNone, RNE_SatNone,
+                           () -> ConvertToBlockMaxAbsFinite(S, E, RNE_SN, RNE_SN,
                                                             (E(1.5), E(0.25)))))
             r = _try("$tag $lbl", th)
             r === nothing || push!(bad, r)
@@ -286,9 +286,9 @@ end
             sf = getfield(SmallFloats, Symbol(:Scaled, o.name))
             bs = ntuple(i -> iseven(i) ? b2 : b1, o.arity)
             sx = collect(Iterators.flatten((S(1.0), E(1.5)) for _ in 1:o.arity))
-            r = _try("$tag Block$(o.name)", () -> bf(E, RNE_SatNone, bs..., S(1.0)))
+            r = _try("$tag Block$(o.name)", () -> bf(E, RNE_SN, bs..., S(1.0)))
             r === nothing || push!(bad, r)
-            r = _try("$tag Scaled$(o.name)", () -> sf(E, RNE_SatNone, sx...))
+            r = _try("$tag Scaled$(o.name)", () -> sf(E, RNE_SN, sx...))
             r === nothing || push!(bad, r)
         end
         @test (tag, bad) == (tag, String[])

@@ -1739,7 +1739,7 @@ it bought repetition rather than coverage. Two-per-cell gives 46.
 differs. Sweeping three pure ρ therefore ran the MPFR ladder three times to
 exercise three projection modes — roughly **350 s of the 532 s** spent
 recomputing identical intermediates. Cut to two directed modes on opposite
-sides (`RTZ_SatFinite`, `RTP_SatPropagate`); `RTO` remains covered exhaustively
+sides (`RTZ_SF`, `RTP_SP`); `RTO` remains covered exhaustively
 over all 120 formats by the `project` section, which is carrier-cheap.
 
 *What was deliberately NOT done.* The tempting fix is to call `ωeval` once and
@@ -2193,11 +2193,11 @@ below is the evidence that writing it naively is wrong:
 gates_g2.jl:147  RQ(decode(got)) == want                    1//1 == 2//1
 gates_g2.jl:148  got === W(2.0)
                  Binary16p1uf(1.0 ≡ 0x8000) === Binary16p1uf(2.0 ≡ 0x8001)
-gates_g2.jl:155  Subtract(W, RTN_SatFinite, a, b)           1//1 == 1//2
-gates_g2.jl:159  FMA(W, RTP_SatFinite, a, one_, b)          1//1 == 2//1
-gates_g2.jl:191  FMA(W, RTP_SatFinite, x, y, z) === MaxFiniteOf(W)
+gates_g2.jl:155  Subtract(W, RTN_SF, a, b)           1//1 == 1//2
+gates_g2.jl:159  FMA(W, RTP_SF, a, one_, b)          1//1 == 2//1
+gates_g2.jl:191  FMA(W, RTP_SF, x, y, z) === MaxFiniteOf(W)
                  Binary16p1uf(1.8e+9863 ≡ 0xfffd) === Binary16p1uf(3.5e+9863 ≡ 0xfffe)
-gates_g2.jl:201  Add(V, RTP_SatFinite, a, b)                1//1 == 2//1
+gates_g2.jl:201  Add(V, RTP_SF, a, b)                1//1 == 2//1
 G2 — bigprec sufficiency | 4071 passed  6 failed
 ```
 
@@ -2762,7 +2762,7 @@ enclosure endpoints land on ½'s code point and the ladder resolves on the first
 iteration, so every gate that projects under a nearest mode — which is most of
 them — sees nothing. The answer depends on *which side* of ½ the value falls only
 under a directed or stochastic rule. G10 sweeps every operation at rung 2, and
-missed it because it sweeps them under `RNE_SatFinite`.
+missed it because it sweeps them under `RNE_SF`.
 
 That last point is the general one, and it is the same shape as M45's: **a gate
 that fixes one axis to its common value cannot see a defect that lives on that

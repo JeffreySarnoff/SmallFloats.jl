@@ -63,7 +63,7 @@ let nchecked = 0
         @test !isempty(_WIDE_A)
         @test length(_WIDE_A) == 312          # 432 rung-1 formats less the 120 narrow
 
-        ρ = RNE_SatNone
+        ρ = RNE_SN
         for nm in _WIDE_A
             T = getfield(SmallFloats, nm)
             @test (nm, datumcarrier(T)) == (nm, Float64)
@@ -94,8 +94,8 @@ let nchecked = 0
                 v = rawvalue(T, c); d = decode(v)
                 a = isnan(d) ? d : abs(d)
                 n = isnan(d) ? d : (iszero(d) ? d : -d)
-                ok &= codepoint(Abs(T, RNE_SatNone, v))    == codepoint(project(T, RNE_SatNone, a))
-                ok &= codepoint(Negate(T, RNE_SatNone, v)) == codepoint(project(T, RNE_SatNone, n))
+                ok &= codepoint(Abs(T, RNE_SN, v))    == codepoint(project(T, RNE_SN, a))
+                ok &= codepoint(Negate(T, RNE_SN, v)) == codepoint(project(T, RNE_SN, n))
                 nchecked += 2
             end
             @test (nm, ok) == (nm, true)
@@ -104,8 +104,8 @@ let nchecked = 0
         # Julia's own operators reach the same place.
         let T = Binary12p5se
             a, b = T(1.5), T(0.25)
-            @test a + b === Add(T, RNE_SatNone, a, b)
-            @test a * b === Multiply(T, RNE_SatNone, a, b)
+            @test a + b === Add(T, RNE_SN, a, b)
+            @test a * b === Multiply(T, RNE_SN, a, b)
             @test decode(a + b) == 1.75
         end
     end

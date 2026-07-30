@@ -137,15 +137,15 @@ Binary8p4se(1.625 ≡ 0x45)
 julia> x + Binary8p4se(0.25)         # Base operators use the format's default spec
 Binary8p4se(1.875 ≡ 0x47)
 
-julia> Add(Binary8p4se, RTP_SatNone, x, Binary8p4se(0.25))
+julia> Add(Binary8p4se, RTP_SN, x, Binary8p4se(0.25))
 Binary8p4se(1.875 ≡ 0x47)            # spec-named register: any mode, explicitly
 
-julia> σ = RSA_SatNone();            # stochastic rounding, default N = 8 bits
+julia> σ = RSA_SN();            # stochastic rounding, default N = 8 bits
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); R = 255)
 Binary8p4se(2.25 ≡ 0x49)             # explicit draw R makes it reproducible
 
-julia> Exp(Binary8p4se, RNE_SatNone, Binary8p4se.([-1.0, 0.5, 2.0]))
+julia> Exp(Binary8p4se, RNE_SN, Binary8p4se.([-1.0, 0.5, 2.0]))
 3-element Vector{Binary8p4se}:       # array methods route through 256-byte tables
  Binary8p4se(0.375 ≡ 0x34)
  Binary8p4se(1.625 ≡ 0x45)
@@ -251,7 +251,7 @@ using SmallFloats
 using Random: Xoshiro
 
 T = Binary8p4se
-ρ = RNE_SatNone
+ρ = RNE_SN
 
 x = T(1.6)
 y = T(0.25)
@@ -415,8 +415,8 @@ rand(T); rand(T, dims); rand!(A)      # uniform on [0, 1)
 randn(T); randn(T, dims); randn!(A)   # standard normal, always finite
 rand(Xoshiro(1), T)                   # explicit rng as usual
 
-rand(rng, T;  projection=RTP_SatNone)   # scalar forms: land under any ProjSpec
-randn(rng, T; projection=RTZ_SatFinite) # (stochastic ρ draws R from same rng)
+rand(rng, T;  projection=RTP_SN)   # scalar forms: land under any ProjSpec
+randn(rng, T; projection=RTZ_SF) # (stochastic ρ draws R from same rng)
 \end{minted}
 
 
@@ -543,7 +543,7 @@ C & \texttt{RSC\_\allowbreak{}SatFinite(N)} & \texttt{RSC\_\allowbreak{}SatPropa
 
 
 \begin{minted}{julia}
-σ = RSA_SatNone(8)
+σ = RSA_SN(8)
 
 Add(T, σ, x, y; rng=Xoshiro(1))  # reproducible stream
 Add(T, σ, x, y; R=17)            # exact draw, ideal for tests
@@ -577,7 +577,7 @@ DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
 DefaultAccumulatorType() # binary32        DefaultAccumulatorType!(binary64)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
-DefaultProjection()      # RNE_SatNone
+DefaultProjection()      # RNE_SN
 DefaultRNG()             # Xoshiro         DefaultRNG!(Xoshiro(42))
 DefaultRbits()           # 8               DefaultRbits!(16)
 \end{minted}
@@ -985,7 +985,7 @@ Binary8p4se(1.625 ≡ 0x45)
 julia> rawvalue(Binary8p4se, 0x45)       # same, unchecked — the kernel-internal route
 Binary8p4se(1.625 ≡ 0x45)
 
-julia> Convert(Binary8p4se, RNE_SatNone, 3)   # explicit conversion, any mode
+julia> Convert(Binary8p4se, RNE_SN, 3)   # explicit conversion, any mode
 Binary8p4se(3.0 ≡ 0x4c)
 
 julia> decode(x)                          # exact datum as Float64 (always exact)
@@ -1141,13 +1141,13 @@ Feed array draws straight into the storage layers when that is the goal: \texttt
 
 \nopagebreak[4]
 \begin{minted}{jlcon}
-julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SatNone)    # ceiling
+julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SN)    # ceiling
 Binary8p4se(0.0029296875 ≡ 0x03)
 
-julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SatFinite) # toward zero
+julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SF) # toward zero
 Binary8p4se(-1.875 ≡ 0xc7)
 
-julia> rand(Xoshiro(4), Binary8p4se; projection = RSA_SatNone(8)) # stochastic
+julia> rand(Xoshiro(4), Binary8p4se; projection = RSA_SN(8)) # stochastic
 Binary8p4se(0.8125 ≡ 0x3d)
 \end{minted}
 
@@ -1177,7 +1177,7 @@ Rounding modes: \texttt{NearestTiesToEven}, \texttt{NearestTiesToAway}, \texttt{
 julia> ρ = ProjSpec(TowardPositive(), SatFinite())
 (TowardPositive, SatFinite)
 
-julia> RTP_SatFinite === ρ                # every pairing is also predefined
+julia> RTP_SF === ρ                # every pairing is also predefined
 true
 \end{minted}
 
@@ -1222,10 +1222,10 @@ The stochastic families are parameterized by the random-bit budget \texttt{N}, s
 
 \nopagebreak[4]
 \begin{minted}{jlcon}
-julia> RSA_SatNone()                      # StochasticA with the default N = 8
+julia> RSA_SN()                      # StochasticA with the default N = 8
 (StochasticA[8], SatNone)
 
-julia> RSC_SatFinite(16) === ProjSpec(StochasticC{16}(), SatFinite())
+julia> RSC_SF(16) === ProjSpec(StochasticC{16}(), SatFinite())
 true
 \end{minted}
 
@@ -1244,13 +1244,13 @@ Rounding chooses the neighbor; saturation decides what out-of-range results beco
 \begin{minted}{jlcon}
 julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);
 
-julia> Multiply(Binary8p4se, RNE_SatNone, w, two)       # overflow → ±Inf
+julia> Multiply(Binary8p4se, RNE_SN, w, two)       # overflow → ±Inf
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> Multiply(Binary8p4se, RNE_SatFinite, w, two)     # overflow → MaxFinite
+julia> Multiply(Binary8p4se, RNE_SF, w, two)     # overflow → MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
 
-julia> Multiply(Binary8p4se, RTZ_SatNone, w, two)
+julia> Multiply(Binary8p4se, RTZ_SN, w, two)
 Binary8p4se(224.0 ≡ 0x7e)   # SatNone + directed-toward-zero clamps finite
 \end{minted}
 
@@ -1276,7 +1276,7 @@ Stochastic modes consume \texttt{N} random bits per projection. You control the 
 
 \nopagebreak[4]
 \begin{minted}{jlcon}
-julia> σ = RSA_SatNone();                 # ≡ ProjSpec(StochasticA{8}(), SatNone())
+julia> σ = RSA_SN();                 # ≡ ProjSpec(StochasticA{8}(), SatNone())
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); rng = Xoshiro(1))
 Binary8p4se(2.0 ≡ 0x48)
@@ -1340,7 +1340,7 @@ TowardZero()
 julia> DefaultProjection()               # followed the component
 (TowardZero, SatNone)
 
-julia> DefaultProjection!(RNA_SatFinite)
+julia> DefaultProjection!(RNA_SF)
 (NearestTiesToAway, SatFinite)
 
 julia> DefaultRoundingMode(), DefaultSaturationMode()   # followed the projection
@@ -1357,15 +1357,15 @@ julia> DefaultRoundingMode(), DefaultSaturationMode()   # followed the projectio
 \begin{minted}{jlcon}
 julia> x, y = Binary8p4se(200.0), Binary8p4se(2.0);
 
-julia> x * y                              # RNE_SatNone: overflow → +Inf
+julia> x * y                              # RNE_SN: overflow → +Inf
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> DefaultProjection!(RTZ_SatFinite);
+julia> DefaultProjection!(RTZ_SF);
 
 julia> x * y                              # now clamps to MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
 
-julia> Multiply(Binary8p4se, RNE_SatNone, x, y)   # explicit ρ is unaffected
+julia> Multiply(Binary8p4se, RNE_SN, x, y)   # explicit ρ is unaffected
 Binary8p4se(Inf ≡ 0x7f)
 \end{minted}
 
@@ -1437,7 +1437,7 @@ Allocation contract: when \texttt{f}{\textquotesingle}s result type does not dep
 julia> exp(Binary8p4se(0.25))                       # Base register
 Binary8p4se(1.25 ≡ 0x42)
 
-julia> Exp(Binary8p4se, RNE_SatNone, Binary8p4se(0.25))   # identical, explicit
+julia> Exp(Binary8p4se, RNE_SN, Binary8p4se(0.25))   # identical, explicit
 Binary8p4se(1.25 ≡ 0x42)
 \end{minted}
 
@@ -1468,7 +1468,7 @@ julia> A = Binary8p4se.(randn(Xoshiro(7), 4) .* 2)
  Binary8p4se(-3.25 ≡ 0xcd)
  Binary8p4se(2.25 ≡ 0x49)
 
-julia> Exp(Binary8p4se, RNE_SatNone, A)
+julia> Exp(Binary8p4se, RNE_SN, A)
 4-element Vector{Binary8p4se}:
  Binary8p4se(0.40625 ≡ 0x35)
  Binary8p4se(56.0 ≡ 0x6e)
@@ -1528,13 +1528,13 @@ julia> b = Block(Binary8p1uf(4.0), Binary8p4se(1.5), Binary8p4se(-0.75),
                  Binary8p4se(2.0), Binary8p4se(0.5))
 Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(4.0 ≡ 0x82), (…))
 
-julia> ConvertFromBlock(Binary8p3se, RNE_SatNone, b)   # decode scale×elem, project
+julia> ConvertFromBlock(Binary8p3se, RNE_SN, b)   # decode scale×elem, project
 (Binary8p3se(6.0 ≡ 0x4a), Binary8p3se(-3.0 ≡ 0xc6), Binary8p3se(8.0 ≡ 0x4c), Binary8p3se(2.0 ≡ 0x44))
 
-julia> BlockReduceAdd(Binary8p4se, RNE_SatNone, b)     # exact Σ scale·xᵢ, then project
+julia> BlockReduceAdd(Binary8p4se, RNE_SN, b)     # exact Σ scale·xᵢ, then project
 Binary8p4se(13.0 ≡ 0x5d)
 
-julia> ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SatNone, RNE_SatNone,
+julia> ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SN, RNE_SN,
            (Binary8p4se(100.0), Binary8p4se(-12.0), Binary8p4se(0.5), Binary8p4se(3.0)))
 Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(64.0 ≡ 0x86), (…))
 \end{minted}
@@ -1592,10 +1592,10 @@ The default API is bit-exact, always. If you \emph{want} a faster inexact kernel
 
 \nopagebreak[4]
 \begin{minted}{jlcon}
-julia> ftz = ftz_variant(:Exp, Binary8p4se, Binary8p4se, RNE_SatFinite);  # Annex example
+julia> ftz = ftz_variant(:Exp, Binary8p4se, Binary8p4se, RNE_SF);  # Annex example
 
 julia> impl = register_approx!(:my_fast_exp, :Exp, Binary8p4se, (Binary8p4se,),
-                               RNE_SatFinite, ftz);
+                               RNE_SF, ftz);
 
 julia> kappa(:my_fast_exp)      # measured max code-point deviation, verified exhaustively
 4.0
@@ -1758,10 +1758,10 @@ This is a good way to build intuition for a format before committing to it: you 
 \begin{minted}{jlcon}
 julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);   # MaxFinite is 224
 
-julia> Multiply(Binary8p4se, RNE_SatNone, w, two)
+julia> Multiply(Binary8p4se, RNE_SN, w, two)
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> Multiply(Binary8p4se, RNE_SatFinite, w, two)
+julia> Multiply(Binary8p4se, RNE_SF, w, two)
 Binary8p4se(224.0 ≡ 0x7e)
 \end{minted}
 
@@ -1787,13 +1787,13 @@ julia> rand(Xoshiro(2), Float64)                # the underlying uniform draw
 julia> rand(Xoshiro(2), Binary8p4se)            # default: floor (stays in [0,1))
 Binary8p4se(0.001953125 ≡ 0x02)
 
-julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SatNone)   # ceiling
+julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SN)   # ceiling
 Binary8p4se(0.0029296875 ≡ 0x03)
 
-julia> rand(Xoshiro(2), Binary8p4se; projection = RNE_SatNone)   # nearest
+julia> rand(Xoshiro(2), Binary8p4se; projection = RNE_SN)   # nearest
 Binary8p4se(0.001953125 ≡ 0x02)
 
-julia> rand(Xoshiro(2), Binary8p4se; projection = RSA_SatNone(8))  # stochastic
+julia> rand(Xoshiro(2), Binary8p4se; projection = RSA_SN(8))  # stochastic
 Binary8p4se(0.001953125 ≡ 0x02)
 \end{minted}
 
@@ -1813,7 +1813,7 @@ The same keyword on \texttt{randn} — here the draw is \texttt{-1.9757…}:
 julia> randn(Xoshiro(6), Binary8p4se)           # default: nearest + SatFinite
 Binary8p4se(-2.0 ≡ 0xc8)
 
-julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SatFinite)  # toward zero
+julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SF)  # toward zero
 Binary8p4se(-1.875 ≡ 0xc7)
 \end{minted}
 
@@ -1829,7 +1829,7 @@ Where the saturation half of the default earns its keep: \texttt{Binary3p1se} ha
 julia> randn(Xoshiro(360), Binary3p1se)         # SatFinite clamps the tail
 Binary3p1se(1.0 ≡ 0x02)
 
-julia> randn(Xoshiro(360), Binary3p1se; projection = RNE_SatNone)
+julia> randn(Xoshiro(360), Binary3p1se; projection = RNE_SN)
 Binary3p1se(Inf ≡ 0x03)                         # opt out, get the overflow
 \end{minted}
 
@@ -1867,7 +1867,7 @@ function logodds_demo(nalarms)
     llr = Binary8p3se(log(0.85 / 0.30))      # quantized evidence weight
     acc = Binary8p3se(0.0)
     for _ in 1:nalarms
-        acc = Add(Binary8p3se, RNE_SatNone, acc, llr)
+        acc = Add(Binary8p3se, RNE_SN, acc, llr)
     end
     post(l) = 1 / (1 + exp(-l))
     exact = nalarms * log(0.85 / 0.30)
@@ -1914,9 +1914,9 @@ warm = F(trap(26.0, 15, 20, 24, 28))         # membership of 26 °C in "warm"
 hot  = F(trap(26.0, 24, 30, 100, 101))       # … and in "hot"
 
 (decode(warm), decode(hot),
- decode(Minimum(F, RNE_SatNone, warm, hot)),      # warm AND hot
- decode(Maximum(F, RNE_SatNone, warm, hot)),      # warm OR hot
- decode(Multiply(F, RNE_SatFinite, warm, hot)))   # product t-norm
+ decode(Minimum(F, RNE_SN, warm, hot)),      # warm AND hot
+ decode(Maximum(F, RNE_SN, warm, hot)),      # warm OR hot
+ decode(Multiply(F, RNE_SF, warm, hot)))   # product t-norm
 \end{minted}
 
 
@@ -2032,7 +2032,7 @@ For the same Gaussian tensor, \texttt{K = 8} formats trade significand bits agai
 \begin{minted}{julia}
 rng = Xoshiro(7); x = randn(rng, 50_000)
 for F in (Binary8p5se, Binary8p4se, Binary8p3se, Binary8p2se)
-    back = [decode(Convert(F, RNE_SatFinite, xi)) for xi in x]
+    back = [decode(Convert(F, RNE_SF, xi)) for xi in x]
     println(rpad(formatname(F), 12), " rmse = ", round(sqrt(mean((x .- back).^2)); sigdigits=3),
             "   maxfinite = ", decode(MaxFiniteOf(F)))
 end
@@ -2072,7 +2072,7 @@ Nearest rounding maps 0.30078125 to 0.3125 every single time — a systematic +0
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
 target = 0.30078125                       # ν = 3/16 of an ulp above 0.296875
-σ = RSA_SatNone(16)                       # StochasticA{16} with SatNone
+σ = RSA_SN(16)                       # StochasticA{16} with SatNone
 rng = Xoshiro(1)
 m = mean(decode(Convert(Binary8p4se, σ, target; rng)) for _ in 1:200_000)
 (decode(Binary8p4se(target)), m)
@@ -2124,8 +2124,8 @@ function mx_rows(W, ::Type{FST}, ::Type{FS}, ::Type{FE}, ::Val{B}) where {FST,FS
     n, m = size(W)
     [begin
         # stage through a WIDE-RANGE format so nothing clamps before scaling
-        seg = ntuple(k -> Convert(FST, RNE_SatFinite, W[i, (j-1)*B + k]), Val(B))
-        ConvertToBlockMaxAbsFinite(FS, FE, RNE_SatNone, RNE_SatNone, seg)
+        seg = ntuple(k -> Convert(FST, RNE_SF, W[i, (j-1)*B + k]), Val(B))
+        ConvertToBlockMaxAbsFinite(FS, FE, RNE_SN, RNE_SN, seg)
     end for i in 1:n, j in 1:m ÷ B]
 end
 
@@ -2133,7 +2133,7 @@ blocks = mx_rows(W, Binary8p2se, Binary8p1uf, Binary8p4se, Val(32))
 recon = [let b = blocks[i, (j-1) ÷ 32 + 1]
              decode(b.s) * decode(b.x[(j-1) % 32 + 1])
          end for i in 1:64, j in 1:64]
-plain = [decode(Convert(Binary8p4se, RNE_SatFinite, w)) for w in W]
+plain = [decode(Convert(Binary8p4se, RNE_SF, w)) for w in W]
 
 relerr(A) = sqrt(mean(((W .- A) ./ max.(abs.(W), 1e-9)).^2))
 relerr(plain), relerr(recon)
@@ -2177,9 +2177,9 @@ At \texttt{B = 32} with an 8-bit scale the storage cost is 8.25 bits/value.
 \begin{minted}{julia}
 rng = Xoshiro(9)
 a64, b64 = randn(rng, 32), randn(rng, 32)
-qb(v) = ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SatNone, RNE_SatNone,
-            ntuple(i -> Convert(Binary8p4se, RNE_SatFinite, v[i]), Val(32)))
-dq = BlockDotProduct(Binary8p4se, RNE_SatNone, qb(a64), qb(b64))
+qb(v) = ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SN, RNE_SN,
+            ntuple(i -> Convert(Binary8p4se, RNE_SF, v[i]), Val(32)))
+dq = BlockDotProduct(Binary8p4se, RNE_SN, qb(a64), qb(b64))
 (a64'b64, decode(dq))
 \end{minted}
 
@@ -2210,11 +2210,11 @@ Accumulate 400 gradient steps of 0.011 into a \texttt{Binary8p3se} accumulator. 
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
 function accumulate_demo(nsteps, g)
-    σ = RSA_SatNone(16)
+    σ = RSA_SN(16)
     rng = Xoshiro(11)
     acc_rne = Binary8p3se(0.0); acc_sto = Binary8p3se(0.0)
     for _ in 1:nsteps
-        acc_rne = Add(Binary8p3se, RNE_SatNone, acc_rne, Convert(Binary8p3se, RNE_SatNone, g))
+        acc_rne = Add(Binary8p3se, RNE_SN, acc_rne, Convert(Binary8p3se, RNE_SN, g))
         acc_sto = Add(Binary8p3se, σ, acc_sto, Convert(Binary8p3se, σ, g; rng); rng)
     end
     (nsteps * g, decode(acc_rne), decode(acc_sto))
@@ -2256,7 +2256,7 @@ using SmallFloats, Random
 empty_tables!()
 rng = Xoshiro(4)
 pre = Binary8p4se.(randn(rng, 4096) .* 2.5)       # pre-activations, ±2.5σ
-act = Tanh(Binary8p4se, RNE_SatNone, pre)          # table-gather kernel
+act = Tanh(Binary8p4se, RNE_SN, pre)          # table-gather kernel
 
 (table_bytes(),
  round(count(v -> abs(decode(v)) == 1.0, act) / 4096; digits=3),
@@ -2284,7 +2284,7 @@ Two things worth staring at. First, \textbf{saturation is severe at this input s
 \nopagebreak[4]
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
-actS = Softplus(Binary8p4se, RNE_SatNone, pre)
+actS = Softplus(Binary8p4se, RNE_SN, pre)
 (length(unique(codepoint.(actS))), table_bytes())
 \end{minted}
 
@@ -2379,10 +2379,10 @@ Because the veneers follow the session default projection, changing it changes t
 
 \nopagebreak[4]
 \begin{minted}{jlcon}
-julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # RNE_SatNone: overflow → Inf
+julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # RNE_SN: overflow → Inf
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> DefaultProjection!(RTZ_SatFinite);
+julia> DefaultProjection!(RTZ_SF);
 
 julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # now clamps to MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
@@ -2461,7 +2461,7 @@ Binary8p4se(1.625 ≡ 0x45)
 
 \nopagebreak[4]
 \begin{minted}{jlcon}
-julia> x + Convert(Binary8p4se, RNE_SatNone, Binary5p3sf(1.0))
+julia> x + Convert(Binary8p4se, RNE_SN, Binary5p3sf(1.0))
 Binary8p4se(2.5 ≡ 0x4a)
 \end{minted}
 
@@ -2937,9 +2937,9 @@ Binary8p4se(0.9375 ≡ 0x3f)     # == NextLessThan(1.0): the engine crossed the 
 \begin{minted}{julia}
 using SmallFloats: get_table
 empty_tables!()
-tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SatNone)
+tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN)
 (tbl[Int(0x45) + 1],
- codepoint(Exp(Binary8p4se, RNE_SatNone, rawvalue(Binary8p4se, 0x45))),
+ codepoint(Exp(Binary8p4se, RNE_SN, rawvalue(Binary8p4se, 0x45))),
  table_bytes())
 \end{minted}
 
@@ -3014,7 +3014,7 @@ function monotone_conversion(::Type{From}, ::Type{To}) where {From,To}
     prev = nothing
     for v in sort(From.(0x00:UInt8(2^bitwidth(From) - 1)))
         isnan(decode(v)) && continue
-        g = Convert(To, RNE_SatNone, v)
+        g = Convert(To, RNE_SN, v)
         prev !== nothing && order_key(g) < order_key(prev) && return false
         prev = g
     end
@@ -3055,15 +3055,15 @@ Search under a compute budget often wants a cheap, approximate evaluation functi
 \begin{minted}{julia}
 using SmallFloats: order_key
 
-fast(x) = (r = Exp(Binary8p4se, RNE_SatNone, x);
+fast(x) = (r = Exp(Binary8p4se, RNE_SN, x);
            isfinite(decode(r)) ? NextGreaterThan(NextGreaterThan(r)) : r)
-κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone)
+κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 
 function margin_audit(fast, κ)
     codes = [rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
     safe = violations = 0
     for a in codes, b in codes
-        da, db = Exp(Binary8p4se, RNE_SatNone, a), Exp(Binary8p4se, RNE_SatNone, b)
+        da, db = Exp(Binary8p4se, RNE_SN, a), Exp(Binary8p4se, RNE_SN, b)
         (isnan(decode(da)) || isnan(decode(db))) && continue
         codedistance(da, db) > 2κ || continue
         safe += 1
@@ -3125,7 +3125,7 @@ function verify_quantizer()
     for c in 0x00:0xff
         x = decode(rawvalue(Binary8p3se, c))
         (isfinite(x) && abs(x) <= decode(MaxFiniteOf(Binary8p4se))) || continue
-        got = Convert(Binary8p4se, RNE_SatNone, x)
+        got = Convert(Binary8p4se, RNE_SN, x)
         ok &= abs(decode(got) - x) == Float64(ref_nearest_distance(Binary8p4se, x))
     end
     ok
@@ -3163,10 +3163,10 @@ Register an approximate kernel and the registry measures it; understate the boun
 \nopagebreak[4]
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
-step2(x) = (r = Exp(Binary8p4se, RNE_SatNone, x);
+step2(x) = (r = Exp(Binary8p4se, RNE_SN, x);
             isfinite(decode(r)) ? NextGreaterThan(NextGreaterThan(r)) : r)
 
-measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone)
+measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 \end{minted}
 
 
@@ -3180,7 +3180,7 @@ measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone)
 
 
 \begin{minted}{julia}
-register_approx!(:cheater, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone, step2; κ=1)
+register_approx!(:cheater, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN, step2; κ=1)
 \end{minted}
 
 
@@ -3250,8 +3250,8 @@ function verify_dots(trials)
         (any(!isfinite, lx) || any(!isfinite, ly)) && continue
         truth = setprecision(() -> sum(BigFloat(lx[i]) * BigFloat(ly[i]) for i in 1:32),
                              BigFloat, 512)
-        got = BlockDotProduct(Binary8p4se, RNE_SatNone, bx, by)
-        ref = setprecision(() -> SmallFloats.project(Binary8p4se, RNE_SatNone, truth), BigFloat, 512)
+        got = BlockDotProduct(Binary8p4se, RNE_SN, bx, by)
+        ref = setprecision(() -> SmallFloats.project(Binary8p4se, RNE_SN, truth), BigFloat, 512)
         codepoint(got) == codepoint(ref) || return false
     end
     true
@@ -3289,7 +3289,7 @@ Every stochastic projection is a deterministic function of the draw \texttt{R}, 
 \nopagebreak[4]
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
-σ4 = RSA_SatNone(4)                  # ≡ ProjSpec(StochasticA{4}(), SatNone())
+σ4 = RSA_SN(4)                  # ≡ ProjSpec(StochasticA{4}(), SatNone())
 x = 2.0 + 3/64
 count(decode(SmallFloats.project(Binary8p4se, σ4, x; R)) == 2.25 for R in 0:15)
 \end{minted}
@@ -3325,9 +3325,9 @@ Hardware activation units often ship piecewise approximations. The κ machinery 
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
 one4 = Binary8p4se(1.0)
-hardtanh(x) = Clamp(Binary8p4se, RNE_SatNone, x, Negate(one4), one4)
+hardtanh(x) = Clamp(Binary8p4se, RNE_SN, x, Negate(one4), one4)
 
-κ, exhaustive = measure_kappa(hardtanh, :Tanh, Binary8p4se, (Binary8p4se,), RNE_SatNone)
+κ, exhaustive = measure_kappa(hardtanh, :Tanh, Binary8p4se, (Binary8p4se,), RNE_SN)
 (κ, exhaustive)
 \end{minted}
 
@@ -3351,7 +3351,7 @@ Where is it worst? At \texttt{x = 1.0}: hard-tanh returns 1.0 while the defined 
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
 impl = register_approx!(:hardtanh_act, :Tanh, Binary8p4se, (Binary8p4se,),
-                        RNE_SatNone, hardtanh; κ=4)
+                        RNE_SN, hardtanh; κ=4)
 (kappa(:hardtanh_act), kappa_measured(impl), :hardtanh_act in list_approx())
 \end{minted}
 
@@ -3390,7 +3390,7 @@ using Statistics: median
 
 function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
     pool = [rawvalue(T, rand(UInt8)) for _ in 1:4096]
-    @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SatNone, t[1], t[2]))(_)
+    @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
 end
 
 b = bench_add(Binary8p4se)

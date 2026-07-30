@@ -25,7 +25,7 @@ to `src/` or `test/`.*
 | ωDecode is BFloat16-exact, all formats | same, via `BFloat16s.BFloat16` | **PASS**, 120/120 |
 | Multiply is Float32-carrier-exact | all finite same-format pairs, 120 formats | **118/120** — fails only `Binary8p1ue`, `Binary8p1uf` (witness: `2^-127 · 2^-127` underflows to `0.0f0`; exact `2^-254`) |
 | Add is Float32-carrier-exact | same | **88/120** (list in §3.2; worst inexact fraction `Binary8p1uf` = 0.183) |
-| decode32→op32→project kernels, RNE: κ = 0 | `measure_kappa`, exhaustive | full sweeps, all 120 formats × 5 ops (§4.4): `RNE_SatNone` **600/600**, `RNE_SatFinite` **600/600**, `RNE_SatPropagate` 598/600 — the two exceptions (`8p1ue` Multiply/Divide, Float32 overflow vs SatPropagate's Inf/finite distinction) re-measure **κ = 0** with the §4.2 overflow guard |
+| decode32→op32→project kernels, RNE: κ = 0 | `measure_kappa`, exhaustive | full sweeps, all 120 formats × 5 ops (§4.4): `RNE_SN` **600/600**, `RNE_SF` **600/600**, `RNE_SP` 598/600 — the two exceptions (`8p1ue` Multiply/Divide, Float32 overflow vs SatPropagate's Inf/finite distinction) re-measure **κ = 0** with the §4.2 overflow guard |
 | Directed modes after RN32 compute break | `measure_kappa` | confirmed: Add `8p3se` RTZ κ = 1; Add `8p3se` **RTP κ = NaN** (witness: `7.6e-6 + 49152.0` — defined `+Inf`, kernel `49152.0`); Multiply `8p1ue` RTZ κ = NaN |
 | IEEE ≠ P3109 specials must be guarded | `measure_kappa` + witness hunt | confirmed: unguarded Divide κ = NaN on *every* tested format — witness `x/0.0`: P3109 (one unsigned zero) defines NaN, IEEE gives Inf. With the guard: κ = 0 everywhere tested, including RTZ `8p3se` |
 | κ machinery enforces invariant 5 | `register_approx!` round-trip | confirmed: f32 Multiply kernel registered with measured κ = 0 (exhaustive); understated `κ=0` declaration against true κ = 1 **rejected**; stochastic ρ **rejected** by `measure_kappa` |
@@ -34,11 +34,11 @@ Three of these were surprises worth internalizing:
 
 1. **RNE κ = 0 holds far beyond the analytic gate.** Multiply on `Binary8p1u*`
    is *not* carrier-exact (over/underflow), yet the full kernel measures κ = 0
-   under `RNE_SatNone` and `RNE_SatFinite`: an overflowed `Inf32` and the true
+   under `RNE_SN` and `RNE_SF`: an overflowed `Inf32` and the true
    huge-finite value happen to project identically under those ρ, and an
    underflowed `0.0f0` and the true tiny value both round to zero under RNE.
    This is a coincidence of ρ semantics, **not** transferable — the same format
-   under `RTZ_SatNone` measures κ = NaN. Consequence: κ must be measured per
+   under `RTZ_SN` measures κ = NaN. Consequence: κ must be measured per
    (op, formats, ρ) specialization, never generalized from a neighbor. The
    registry already enforces exactly this.
 2. **Directed-mode failure is a saturation-boundary failure.** The RTP witness
@@ -341,9 +341,9 @@ sweep** removed the sampling entirely:
 
 > **All 120 formats × {Add, Subtract, Multiply, Divide (guarded), Sqrt
 > (guarded)}, verified exhaustively per kernel:**
-> - `RNE_SatNone`: **κ = 0 in 600/600.**
-> - `RNE_SatFinite`: **κ = 0 in 600/600.**
-> - `RNE_SatPropagate`: κ = 0 in 598/600; the two exceptions (Multiply and
+> - `RNE_SN`: **κ = 0 in 600/600.**
+> - `RNE_SF`: **κ = 0 in 600/600.**
+> - `RNE_SP`: κ = 0 in 598/600; the two exceptions (Multiply and
 >   Divide on `Binary8p1ue`, κ = NaN) are the Float32-overflow
 >   misclassification — SatPropagate distinguishes true Inf from
 >   finite-over-range where SatNone/SatFinite happen not to. **With the
@@ -357,13 +357,13 @@ the counter-cases:
 
 | counter-case (do not register) | κ |
 |---|---|
-| Add `8p3se` RTZ_SatNone | 1.0 |
-| Add `8p3se` RTP_SatNone | NaN |
-| Multiply `8p1ue` RTZ_SatNone | NaN |
+| Add `8p3se` RTZ_SN | 1.0 |
+| Add `8p3se` RTP_SN | NaN |
+| Multiply `8p1ue` RTZ_SN | NaN |
 | any unguarded Divide (all formats tested) | NaN |
 
 (One directed-mode curiosity from the spot checks: guarded Divide `8p3se`
-under RTZ_SatNone also measured κ = 0 — measured fact for that specialization
+under RTZ_SN also measured κ = 0 — measured fact for that specialization
 only; the RTZ Add/Multiply failures above show it does not generalize, which is
 why directed modes stay outside the policy.)
 
@@ -460,44 +460,44 @@ k2(op, T, ρ) = BF.measure_kappa((x, y) -> BF.project(T, ρ,
                    op, T, (T, T), ρ)[1]
 k1(op, T, ρ) = BF.measure_kappa(x -> BF.project(T, ρ, Float64(_g(op)(Float32(BF.decode(x))))),
                    op, T, (T,), ρ)[1]
-for (op, T, ρ) in [(:Add, BF.Binary8p4se, BF.RNE_SatNone), (:Add, BF.Binary8p3se, BF.RNE_SatNone),
-                   (:Add, BF.Binary8p1uf, BF.RNE_SatNone), (:Add, BF.Binary8p3se, BF.RTZ_SatNone),
-                   (:Add, BF.Binary8p3se, BF.RTP_SatNone), (:Subtract, BF.Binary8p3se, BF.RNE_SatNone),
-                   (:Multiply, BF.Binary8p4se, BF.RNE_SatNone), (:Multiply, BF.Binary8p1ue, BF.RNE_SatNone),
-                   (:Multiply, BF.Binary8p1ue, BF.RTZ_SatNone), (:Divide, BF.Binary8p3se, BF.RNE_SatNone),
-                   (:Divide, BF.Binary8p1uf, BF.RNE_SatNone), (:Divide, BF.Binary8p3se, BF.RTZ_SatNone)]
+for (op, T, ρ) in [(:Add, BF.Binary8p4se, BF.RNE_SN), (:Add, BF.Binary8p3se, BF.RNE_SN),
+                   (:Add, BF.Binary8p1uf, BF.RNE_SN), (:Add, BF.Binary8p3se, BF.RTZ_SN),
+                   (:Add, BF.Binary8p3se, BF.RTP_SN), (:Subtract, BF.Binary8p3se, BF.RNE_SN),
+                   (:Multiply, BF.Binary8p4se, BF.RNE_SN), (:Multiply, BF.Binary8p1ue, BF.RNE_SN),
+                   (:Multiply, BF.Binary8p1ue, BF.RTZ_SN), (:Divide, BF.Binary8p3se, BF.RNE_SN),
+                   (:Divide, BF.Binary8p1uf, BF.RNE_SN), (:Divide, BF.Binary8p3se, BF.RTZ_SN)]
     println(op, "  ", BF.formatname(T), "  ", ρ, "  κ = ", k2(op, T, ρ))
 end
-for (T, ρ) in [(BF.Binary8p1uf, BF.RNE_SatNone), (BF.Binary8p3se, BF.RNE_SatNone)]
+for (T, ρ) in [(BF.Binary8p1uf, BF.RNE_SN), (BF.Binary8p3se, BF.RNE_SN)]
     println(:Sqrt, "  ", BF.formatname(T), "  ", ρ, "  κ = ", k1(:Sqrt, T, ρ))
 end
 
 # V6 — registry enforcement round-trip
 T = BF.Binary8p4se
-impl = BF.register_approx!(Symbol("f32/Multiply/demo"), :Multiply, T, (T, T), BF.RNE_SatNone,
-    (x, y) -> BF.project(T, BF.RNE_SatNone, Float64(Float32(BF.decode(x)) * Float32(BF.decode(y)))))
+impl = BF.register_approx!(Symbol("f32/Multiply/demo"), :Multiply, T, (T, T), BF.RNE_SN,
+    (x, y) -> BF.project(T, BF.RNE_SN, Float64(Float32(BF.decode(x)) * Float32(BF.decode(y)))))
 @assert BF.kappa(impl) == 0.0 && impl.exhaustive
 @assert try   # understated declaration must be rejected (true κ = 1)
     BF.register_approx!(:bad, :Add, BF.Binary8p3se, (BF.Binary8p3se, BF.Binary8p3se),
-        BF.RTZ_SatNone, (x, y) -> BF.project(BF.Binary8p3se, BF.RTZ_SatNone,
+        BF.RTZ_SN, (x, y) -> BF.project(BF.Binary8p3se, BF.RTZ_SN,
             Float64(Float32(BF.decode(x)) + Float32(BF.decode(y)))); κ=0); false
 catch e; e isa ArgumentError end
 @assert try   # stochastic ρ must be rejected by measurement
-    BF.measure_kappa((x, _) -> x, :Add, T, (T, T), BF.RSA_SatNone(8)); false
+    BF.measure_kappa((x, _) -> x, :Add, T, (T, T), BF.RSA_SN(8)); false
 catch e; e isa ArgumentError end
 BF.unregister_approx!(Symbol("f32/Multiply/demo"))
 println("V6 PASS")
 
-# Full-sweep confirmation of §4.4: all 120 formats × 5 ops, RNE_SatNone
+# Full-sweep confirmation of §4.4: all 120 formats × 5 ops, RNE_SN
 nz = nt = 0
 for (name, T) in FORMATS
     for op in (:Add, :Subtract, :Multiply, :Divide)
-        nt += 1; nz += (k2(op, T, BF.RNE_SatNone) == 0.0)
+        nt += 1; nz += (k2(op, T, BF.RNE_SN) == 0.0)
     end
-    nt += 1; nz += (k1(:Sqrt, T, BF.RNE_SatNone) == 0.0)
+    nt += 1; nz += (k1(:Sqrt, T, BF.RNE_SN) == 0.0)
 end
 println("sweep: κ = 0 for $nz / $nt")   # measured 2026-07-24: 600 / 600
-# Repeating with ρ = BF.RNE_SatFinite: 600/600. With BF.RNE_SatPropagate:
+# Repeating with ρ = BF.RNE_SF: 600/600. With BF.RNE_SP:
 # 598/600 (Multiply/Divide on Binary8p1ue κ = NaN — Float32 overflow vs
 # SatPropagate's Inf/finite-over distinction); adding the §4.2 overflow guard
 #   ovf(z, x, y) = (isinf(z) && isfinite(x) && isfinite(y)) ?

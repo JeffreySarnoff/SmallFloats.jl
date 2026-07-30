@@ -14,8 +14,8 @@ using SmallFloats
 x = Binary8p4se(1.5)
 y = Binary8p4se(0.25)
 
-Add(Binary8p4se, RNE_SatFinite, x, y)      # round-nearest-even, saturating
-Multiply(Binary8p4se, RTZ_SatNone, x, y)   # a different projection, same operands
+Add(Binary8p4se, RNE_SF, x, y)      # round-nearest-even, saturating
+Multiply(Binary8p4se, RTZ_SN, x, y)   # a different projection, same operands
 ```
 
 ## Formats
