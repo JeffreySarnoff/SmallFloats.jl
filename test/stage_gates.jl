@@ -39,35 +39,50 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         bitwidth(T) <= KSPLIT && @test (nm, rung(T)) == (nm, HeadF64())
     end
 
-    # ---- Rung 2 and rung 3 arithmetic: missing METHODS, named by stage.
+    # ---- Group A arithmetic at every rung LANDED in Stage 6, and the two rows
+    # that used to assert it refused went red by being implemented — the intended
+    # way for a row here to die.
+    #
+    # Their replacement is the correction that made them die, which is worth an
+    # assertion of its own. Stage 3 selected the carrier from the RESULT format as
+    # a stand-in gate. `carriers.jl` states the opposite rule: the carrier is a
+    # property of values in flight, never of the format being projected into. So
+    # narrow operands with a wide result need no wide carrier at all, and refusing
+    # them was always wrong — the exact sum of two Float64 datums is a Float64.
     x = Binary8p4se(1.0)
-    let e = try (Add(Binary16p2se, RNE_SatNone, x, x); nothing) catch e; e end
-        @test e isa ArgumentError
-        @test occursin("rung-2", e.msg) && occursin("Stage 6", e.msg)
-    end
-    let e = try (Multiply(Binary16p1uf, RNE_SatNone, x, x); nothing) catch e; e end
-        @test e isa ArgumentError
-        @test occursin("rung-3", e.msg)
-    end
+    @test Add(Binary16p2se, RNE_SatNone, x, x) === Binary16p2se(2.0)
+    @test Multiply(Binary16p1uf, RNE_SatNone, Binary8p4se(1.5), Binary8p4se(0.5)) ===
+          Binary16p1uf(0.75)
 
-    # Same-format wide arithmetic reaches the refusal by a DIFFERENT route, and
-    # the two must both be covered. Above, the operands are narrow and the
-    # *result* is wide, so `apply_op` is entered with `Float64`s and Stage 3's
-    # `ωeval(rung(fr), …)` gate fires. Here the operands decode to `Float128`
-    # and never match `apply_op`'s `Float64` signature at all — which was a
-    # `MethodError` until Stage 5 added the generic refusal. The gap was open
-    # for one whole stage because this row did not exist.
-    let W2 = Binary16p5se, v = W2(0x0100)     # B = 1024, rung 2
+    # Same-format wide arithmetic reaches the evaluator by a DIFFERENT route, and
+    # both are still covered. Above, the operands are narrow, so `apply_op`'s
+    # `Float64` method is entered. Here they decode to `Float128` and take the
+    # generic method, which joins the operands' heads and lifts onto the winner.
+    # That gap was a `MethodError` for a whole stage (§11 M28) because no row
+    # exercised this second route.
+    let W2 = Binary16p5se, v = W2(0x0100), u = W2(1.5)   # B = 1024, rung 2
         @test rung(W2) === HeadF128()
-        for f in (() -> Exp(W2, RNE_SatNone, v), () -> Add(W2, RNE_SatNone, v, v),
-                  () -> Sqrt(W2, RNE_SatNone, v))
+        @test decode(v) isa Float128
+        for f in (() -> Add(W2, RNE_SatNone, u, v), () -> Subtract(W2, RNE_SatNone, u, v),
+                  () -> Multiply(W2, RNE_SatNone, u, v), () -> FMA(W2, RNE_SatNone, u, v, u),
+                  () -> FAA(W2, RNE_SatNone, u, v, u))
+            @test f() isa W2
+        end
+        # Mixed carriers: the operands decode to different types and no `ωeval`
+        # row is written for a mixed pair. `lift` closes that, and the join is
+        # what guarantees it never has to narrow.
+        @test Add(W2, RNE_SatNone, u, Binary8p4se(1.5)) === W2(3.0)
+
+        # Groups B and C on a wide carrier are still refused — the enclosure
+        # ladder retargeted at Float128/BigFloat is the remaining Stage 6 item.
+        for f in (() -> Exp(W2, RNE_SatNone, v), () -> Sqrt(W2, RNE_SatNone, v))
             e = try (f(); nothing) catch e; e end
             @test e isa ArgumentError
             @test occursin("Stage 6", e.msg)
         end
-        # `Convert` is the exception, and legitimately so: it has no ω-semantics
+        # `Convert` was never refused, and legitimately so: it has no ω-semantics
         # to evaluate — it is a bare projection, and the projection engine is
-        # carrier-generic already (§1 C10). Refusing it would be arbitrary.
+        # carrier-generic already (§1 C10).
         @test decode(Convert(W2, RNE_SatNone, Binary8p4se(1.5))) == 1.5
     end
 

@@ -27,7 +27,57 @@ has actually happened, what is verified, and what is not.***
 | **3 — `Code16` and the 504-format grid** | **done, verified** |
 | **4 — decode/encode/keys/sort/packed widened** | **done, verified** |
 | **5 — table and kernel policy** | **done, verified** |
-| 6–9 | not started |
+| **6 — the carrier lattice** | **in progress** — G2, `bigprec`, the `rung(op, Fs…)` join, exact arithmetic *and* exact selections at every rung, `blockdecode`, the `_DE_*` corrections, **G1** and **G4** are done and verified; the enclosure ladder at the wide rungs (32 operations) and carrier-aware `promote_rule` remain |
+| 7–9 | not started |
+
+**Stage 6 so far.** Gate **G2** was written red and the failure recorded (§11
+M31): the engine returned `1//1` where the exact answer is `2//1` — the operand
+unchanged, because a residual 30 000 binades below the rounding position fell off
+a 2 200-bit accumulator. `_BIGP` was insufficient for **50 of the 504 formats**,
+not the 8 that need rung 3.
+
+Group A now evaluates at every rung. The carrier comes from the **operands**,
+not the result format (§11 M32) — Stage 3's `rung(fr)` gate was a stand-in that
+contradicted `carriers.jl`'s own stated rule, and correcting it made two
+`stage_gates.jl` rows go green by being implemented. `rung(op, Fs…)` joins a
+monomial bound against an operand bound (§11 M33); dropping the latter would
+send `Abs` on a B = 1024 format to a carrier its datums do not live on.
+`blockdecode` keys on the **sum** of the scale and element biases, since two
+rung-1 formats can compose into a lane product that is not (§11 M35).
+
+Three defects, each caught by a standing gate rather than by review: ambiguous
+`bigprec` methods at N = 0 (`detect_ambiguities`), Group B/C at rung 3 surfacing
+as a `MethodError` on an internal function — M17's rule broken by the commit
+citing it (JET), and `Base.precision` not existing for `Float128` at all, which
+rung-3 coverage structurally could not find (§11 M34).
+
+**Gate G4 is green at 152 064 rung-forced comparisons** — every specialization
+evaluated again with its carrier forced to `r+1` and `r+2`, agreeing on the code
+point across 9 formats straddling every rung boundary, 8 ρ families and 3 `R`
+values. That is the lattice's central premise: `rung` is an optimization, never
+a semantics. G4 also reports its own gaps — 20 operations have rows at every
+rung, **32 still reach rungs 2/3 only through the enclosure ladder**, which is
+what remains of the stage.
+
+"Group A at every rung" was **false when first reported** (§11 M37): the five
+arithmetic rows had per-head implementations, the fourteen exact selections did
+not. They now share one `::AbstractFloat` implementation per operation rather
+than three per-carrier copies, because those rows are transcriptions of the
+draft's special-value tables and three copies could drift.
+
+**Gate G1 is green at 52 620 assertions**, and its band-contiguity part
+reproduces §1 C2's prediction from the other direction: enumerating all 256
+`(P₁, P₂)` cells, the middle band is nonempty for **exactly one**, `(16, 16)`
+(§11 M36). The `_DE_*` thresholds now read `_sigwidth` of the datums, which
+makes the K ≤ 8 fixed point `(100, 92, 98)` structural rather than adjusted.
+C1 and C2 were the stage's highest-risk items because a too-wide threshold
+accepts an *inexact* Float128 sum as exact and nothing downstream re-checks it.
+
+**M30 is corrected by M35.** `16B + 128` is not bias-scaled — that reading was
+right — but `16 = 8 + 8` is `P_S + P_E` with `P = 8` hardcoded, so it agrees
+*exactly* at K ≤ 8 and understates by up to 2× above it. A constant that is
+provably correct across the entire existing test domain is the hardest kind of
+wide-K defect to see, because every gate agrees with it.
 
 **Stage 5 evidence.** Array operations work at every K. A K = 16 unary op runs
 the table gather on a `Memory{UInt16}` at **0.16 ns/elem**; a K = 16 binary op

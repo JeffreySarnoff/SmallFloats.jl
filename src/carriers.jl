@@ -78,12 +78,19 @@ what lets block and scaled operations compose without a second rule."""
 # B ≤ 8192 — verified to give the same 432/64/8 partition of the 504-format grid
 # either way (implementextensions Appendix C).
 
+"""Rung index for a monomial whose factor biases sum to `ΣB`. This is the
+primitive form of the boundary rule stated above; the per-format answer is its
+`n = 2` same-format case."""
+@inline _rungindex_span(ΣB::Int) = ΣB <= 1024 ? 1 : ΣB <= 16384 ? 2 : 3
+
 """Per-format rung index from the exponent bias. A pure `Int` function of the
-type parameters, so `Val(_rungindex(F))` is a compile-time constant."""
-@inline function _rungindex(::Type{F}) where {F<:Binary}
-    B = expbias(F)
-    B <= 512 ? 1 : B <= 8192 ? 2 : 3
-end
+type parameters, so `Val(_rungindex(F))` is a compile-time constant.
+
+Stated on `2B` rather than `B` so it is visibly the `n = 2` case of
+`_rungindex_span` and not an independent constant pair. `B ≤ 512 ⟺ 2B ≤ 1024`
+and `B ≤ 8192 ⟺ 2B ≤ 16384`, so the 432/64/8 partition is unchanged — G9
+enumerates it."""
+@inline _rungindex(::Type{F}) where {F<:Binary} = _rungindex_span(2 * expbias(F))
 
 """
     rung(F) -> Head
@@ -98,6 +105,42 @@ formats can need a wider carrier than either operand does.
 @inline _rung(::Val{2}, ::Type{<:Binary}) = HeadF128()
 @inline _rung(::Val{3}, ::Type{<:Binary}) = HeadExact()
 @inline rung(v::Binary) = rung(typeof(v))
+
+"""
+    rung(op::Val, Fs::Type{<:Binary}...) -> Head
+
+The carrier for evaluating `op` over operands of formats `Fs`. A **join of two
+lower bounds**, and both are necessary:
+
+  * the **monomial bound** — `op`'s exact result is a sum of monomials in at
+    most `opfactors(op)` datum factors, so it needs `_rungindex_span(nf · maxB)`
+    (`nf · maxB` rather than `ΣBᵢ` over the actual operands: it dominates every
+    monomial shape, including `x²` from `Hypot`, which `ΣBᵢ` does not, and it
+    coincides with the tight bound in the same-format case that is virtually all
+    traffic);
+  * the **operand bound** — `decode(v::Fᵢ)` has already produced a value on
+    `datumcarrier(Fᵢ)`, so the head can never be narrower than any operand's own
+    rung regardless of what the monomial needs.
+
+Omitting the second is the subtle error. `Abs` has one factor, so the monomial
+bound alone would pick rung 1 for a B = 1024 format — whose datums arrive as
+`Float128`, for which `ωeval(::HeadF64, …)` has no row. The join makes `lift`'s
+missing narrowing method a consequence rather than a hazard: the head dominates
+every operand, so nothing ever needs narrowing.
+
+For the same format at two factors this agrees with `rung(F)` exactly, which is
+what keeps the 432/64/8 partition and every K ≤ 8 result unchanged.
+"""
+@inline function rung(op::Val, F::Type{<:Binary}, Fs::Vararg{Type{<:Binary},N}) where {N}
+    h = rung(F)                       # operand bound, accumulated
+    maxB = expbias(F)
+    for G in Fs
+        h = joinhead(h, rung(G))
+        maxB = max(maxB, expbias(G))
+    end
+    joinhead(h, _rung(Val(_rungindex_span(opfactors(op) * maxB)), F))
+end
+@inline rung(op::Val, v::Binary, vs::Binary...) = rung(op, typeof(v), map(typeof, vs)...)
 
 # ---- the two carrier traits, deliberately distinct ---------------------------
 #
@@ -268,8 +311,23 @@ end
 @inline function _spanstep(v::AbstractFloat, lo::Int, hi::Int, pmax::Int)
     (isfinite(v) & !iszero(v)) || return (lo, hi, pmax)
     e = Base.exponent(v)
-    (min(lo, e), max(hi, e), max(pmax, Base.precision(v)))
+    (min(lo, e), max(hi, e), max(pmax, _sigbits(v)))
 end
+
+# Significand width of a value in flight, by dispatch rather than through
+# `Base.precision`. Quadmath supplies **no** `precision` method for `Float128` —
+# neither the value form nor the type form, which falls through to Base's
+# `_precision_with_base_2` and errors there. So the ladder's own carriers are
+# spelled out, and only the incidental externals defer to Base.
+#
+# Rung-3 coverage could not have found this: `BigFloat` has both forms, and is
+# the one carrier where the per-VALUE precision is the meaningful quantity rather
+# than the type's. Two carriers, one of which happens to support the spelling the
+# other does not — G2 now exercises both.
+@inline _sigbits(::Float64)      = 53
+@inline _sigbits(::Float128)     = 113
+@inline _sigbits(v::BigFloat)    = Base.precision(v)
+@inline _sigbits(v::AbstractFloat) = Base.precision(typeof(v))   # Float32/16, BFloat16
 
 """
     bigprec_prod(xs...) -> Int
@@ -288,9 +346,9 @@ sum method would understate the spread. Its significand is `P₁ + P₂` bits wi
         e = Base.exponent(z)
         lo = min(lo, e); hi = max(hi, e)
     end
-    pmax = Base.precision(x) + Base.precision(y)
+    pmax = _sigbits(x) + _sigbits(y)
     for z in zs
-        pmax = max(pmax, Base.precision(z))
+        pmax = max(pmax, _sigbits(z))
     end
     (hi - lo) + pmax + 64
 end

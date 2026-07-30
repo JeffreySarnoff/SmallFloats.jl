@@ -143,7 +143,7 @@ end
         da, db = decode(a), decode(b)
         @test Base.exponent(da) == 0 && Base.exponent(db) == -32767
 
-        exact = RQ(da) + RQ(db)                     # the ω-semantics, exactly
+        exact = exact_rq(da) + exact_rq(db)                     # the ω-semantics, exactly
         sgn, S, Q = refround(precision(W), expbias(W), roundingmode(ρ), 0, exact)
         want = sgn * RQ(S) * pow2r(Q)               # the defined result, as a rational
         # in range, so ωSaturate is the identity and the code point follows the datum
@@ -151,19 +151,19 @@ end
         @test want == RQ(2)                         # 1.0 promoted one binade (P = 1)
 
         got = Add(W, ρ, a, b)
-        @test RQ(decode(got)) == want
+        @test exact_rq(decode(got)) == want
         @test got === W(2.0)
     end
 
     # Subtract and FMA reach the same wide-spread tail by different routes.
     let a = W(1.0), b = MinPositiveOf(W), one_ = W(1.0)
-        exact = RQ(decode(a)) - RQ(decode(b))
+        exact = exact_rq(decode(a)) - exact_rq(decode(b))
         sgn, S, Q = refround(precision(W), expbias(W), TowardNegative(), 0, exact)
-        @test RQ(decode(Subtract(W, RTN_SatFinite, a, b))) == sgn * RQ(S) * pow2r(Q)
+        @test exact_rq(decode(Subtract(W, RTN_SatFinite, a, b))) == sgn * RQ(S) * pow2r(Q)
 
-        exact3 = RQ(decode(a)) * RQ(decode(one_)) + RQ(decode(b))
+        exact3 = exact_rq(decode(a)) * exact_rq(decode(one_)) + exact_rq(decode(b))
         sgn3, S3, Q3 = refround(precision(W), expbias(W), TowardPositive(), 0, exact3)
-        @test RQ(decode(FMA(W, RTP_SatFinite, a, one_, b))) == sgn3 * RQ(S3) * pow2r(Q3)
+        @test exact_rq(decode(FMA(W, RTP_SatFinite, a, one_, b))) == sgn3 * RQ(S3) * pow2r(Q3)
     end
 
     # FMA's worst case, where `bigprec`'s margin is thinnest — and the reason it
@@ -185,7 +185,7 @@ end
     let x = W(ldexp(BigFloat(1), 16383)), y = W(ldexp(BigFloat(1), 16382)),
         z = MinPositiveOf(W)
         @test Base.exponent(decode(x)) == 16383 && Base.exponent(decode(y)) == 16382
-        exact = RQ(decode(x)) * RQ(decode(y)) + RQ(decode(z))
+        exact = exact_rq(decode(x)) * exact_rq(decode(y)) + exact_rq(decode(z))
         sgn, S, Q = refround(precision(W), expbias(W), TowardPositive(), 0, exact)
         want = sgn * RQ(S) * pow2r(Q)
         @test want == datum_rq(MaxFiniteOf(W))         # promoted, still in range
@@ -198,14 +198,51 @@ end
         @test FMA(W, RTP_SatFinite, x, y, z) === MaxFiniteOf(W)
     end
 
-    # ---- The same shape at rung 2, where Float128's 113 bits are also exceeded:
-    # B = 8192 gives a spread of 16381, so this is not a Float128-vs-MPFR question.
     let V = Binary16p1sf                            # B = 16384, rung 3 as well
         @test rung(V) === HeadExact()
         a, b = V(1.0), MinPositiveOf(V)
-        exact = RQ(decode(a)) + RQ(decode(b))
+        exact = exact_rq(decode(a)) + exact_rq(decode(b))
         sgn, S, Q = refround(precision(V), expbias(V), TowardPositive(), 0, exact)
-        @test RQ(decode(Add(V, RTP_SatFinite, a, b))) == sgn * RQ(S) * pow2r(Q)
+        @test exact_rq(decode(Add(V, RTP_SatFinite, a, b))) == sgn * RQ(S) * pow2r(Q)
+    end
+
+    # ---- RUNG 2 must be covered separately, and the reason is a defect this
+    # gate did not catch when it only exercised rung 3.
+    #
+    # `bigprec` reads each operand's significand width. `Base.precision(v)` looks
+    # like the way to get it — and Quadmath defines `precision(::Type{Float128})`
+    # but **no value method**, so every rung-2 escalation was a `MethodError`.
+    # Rung 3 could not reveal it: `BigFloat` *does* have a value method, and it
+    # is the one where the per-value precision is what you actually want. Two
+    # carriers, one of which happens to support the sloppy spelling.
+    #
+    # `Binary16p4se` has B = 2048: rung 2 by `2B = 4096 ≤ 16384`, and wide enough
+    # that the retired constant was genuinely insufficient — which the assertion
+    # below states rather than assumes, so this row cannot quietly become a
+    # restatement of a case 2200 bits already covered.
+    let U = Binary16p4se
+        @test rung(U) === SmallFloats.HeadF128()
+        @test expbias(U) == 2048
+        a = U(ldexp(BigFloat(1), 1000)); b = MinPositiveOf(U)
+        @test Base.exponent(decode(a)) == 1000
+        realized = 1000 - Base.exponent(decode(b)) + precision(U) + 1
+        @test realized > _RETIRED_BIGP            # would have truncated
+        @test bigprec(U) >= realized              # does not
+
+        exact = exact_rq(decode(a)) + exact_rq(decode(b))
+        sgn, S, Q = refround(precision(U), expbias(U), TowardPositive(), 0, exact)
+        want = sgn * RQ(S) * pow2r(Q)
+        @test want > exact_rq(decode(a))                # the residual survives rounding
+        @test exact_rq(decode(Add(U, RTP_SatFinite, a, b))) == want
+
+        # every Group A row at this rung, so a missing one is a failure and not a
+        # silently untested carrier
+        for (op, f) in ((:Subtract, () -> Subtract(U, RTN_SatFinite, a, b)),
+                        (:Multiply, () -> Multiply(U, RNE_SatNone, a, b)),
+                        (:FMA, () -> FMA(U, RTP_SatFinite, a, U(1.0), b)),
+                        (:FAA, () -> FAA(U, RTP_SatFinite, a, b, b)))
+            @test (op, f() isa U) == (op, true)
+        end
     end
 
     # ---- Non-regression at rung 1: the formats G5 pins must be untouched by the

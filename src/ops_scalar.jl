@@ -128,9 +128,26 @@ function _finish(::Type{fr}, ρ::ProjSpec, R::Int, z::Enclose128F) where {fr<:Bi
 end
 
 """apply_op(Val(op), fr, ρ, R, xs...) — evaluate `op`'s ω-semantics on decoded
-Float64 operands and project the result into `fr` under ρ (with random bits R)."""
+operands and project the result into `fr` under ρ (with random bits R).
+
+The evaluation carrier comes from the **operands**, not from `fr`. That is
+`carriers.jl`'s stated rule — the carrier constrains what `ωeval` may form, never
+what may be projected into a format, because `round_to_precision` works in
+`(P, B)` integer space and is exact for any exact input. Stage 3 selected on
+`rung(fr)` instead, as a deliberate stand-in while `decode` still refused K ≥ 9;
+keeping that would have refused `Add(Binary16p2se, ρ, x8, y8)`, whose operands
+are ordinary `Float64` datums and whose exact sum needs no wide carrier at all.
+
+Completeness of the operand-only rule rests on one premise, stated because
+Stage 3's version of it is what M28 was: the spec register's maximum factor
+count is **2**, and the rung boundaries are stated on `2B` precisely so that a
+datum on carrier `C` guarantees its square is also on `C`. Beyond two factors —
+`ScaledMultiply`'s four — the monomial bound stops following from the operand
+types and `rung(op, Fs...)` must be used with the formats in hand. That is why
+`blocks.jl` calls the join and this does not.
+"""
 @inline function apply_op(op::Val, ::Type{fr}, ρ::ProjSpec, R::Int, xs::Float64...) where {fr<:Binary}
-    res = ωeval(rung(fr), op, xs...)
+    res = ωeval(HeadF64(), op, xs...)
     # bitops plan Phase 0(a): explicit fast split — Class-1/selection results are
     # Float64 for every ordinary input; keep the widened union off the hot path.
     # Justification: like-for-like measurement (both variants under identical
@@ -139,6 +156,14 @@ Float64 operands and project the result into `fr` under ρ (with random bits R).
     res isa Float64 && return project(fr, ρ, res; R)
     _finish_slow(fr, ρ, R, res)
 end
+
+# The head of a value in flight. `decode` produced these, so the map is total
+# over the carriers the ladder defines and needs no fallback.
+@inline _headof(::Float64)  = HeadF64()
+@inline _headof(::Float128) = HeadF128()
+@inline _headof(::BigFloat) = HeadExact()
+@inline _joinheads(x) = _headof(x)
+@inline _joinheads(x, ys...) = joinhead(_headof(x), _joinheads(ys...))
 @noinline _finish_slow(::Type{fr}, ρ::ProjSpec, R::Int, res) where {fr<:Binary} =
     _finish(fr, ρ, R, res)
 
@@ -159,15 +184,22 @@ end
 # The `Float64` method above is strictly more specific, so this costs the working
 # path nothing.
 #
-# Stage 6 turned this from a refusal into a route: it selects the head and hands
-# off. What stays refused is refused one layer down, by `oracle.jl`'s per-head
-# catch-alls — and that is the better place for it, because the thing that is
-# missing IS an `ωeval` row. A head that has no row for the carrier it was
-# handed still throws an `ArgumentError` naming the operation and the rung; a
-# head that has one evaluates. Neither outcome is decided here.
+# Stage 6 turned this from a refusal into a route: it joins the operands' heads,
+# lifts every operand onto the winner, and hands off. What stays refused is
+# refused one layer down, by `oracle.jl`'s per-head catch-alls — the better place
+# for it, because the thing that is missing IS an `ωeval` row. A head with no row
+# for the carrier it was handed throws an `ArgumentError` naming the operation and
+# the rung; a head with one evaluates. Neither outcome is decided here.
+#
+# The `lift` step is why mixed-format wide arithmetic works at all: operands of
+# different formats decode to different carriers, and no `ωeval` row is written
+# for a mixed pair. `lift` has no narrowing method by design, and the join is
+# what makes that absence unreachable rather than a hazard — the head dominates
+# every operand's own carrier, so every lift widens or is the identity.
 @noinline function apply_op(op::Val, ::Type{fr}, ρ::ProjSpec, R::Int,
                             xs...) where {fr<:Binary}
-    res = ωeval(rung(fr), op, xs...)
+    h = _joinheads(xs...)
+    res = ωeval(h, op, map(x -> lift(h, x), xs)...)
     _finish_slow(fr, ρ, R, res)
 end
 
@@ -208,9 +240,23 @@ struct OpInfo
     name::Symbol
     arity::Int
     group::Symbol   # :A arithmetic, :B elementary, :C extremum/misc, :conv
+    # Maximum number of datum factors in any monomial of the exact result. It is
+    # the carrier-width driver, not the arity: `FAA` takes three operands and
+    # forms `x + y + z`, whose monomials are single factors, while `Multiply`
+    # takes two and forms `x·y`. The carrier join reads this and nothing else
+    # about the operation.
+    #
+    # It lives here rather than in a table beside `blocks.jl` because the
+    # `Block*`/`Scaled*` variants are GENERATED from these rows and derive their
+    # own counts by adding scale factors (invariant 7). A hand-maintained second
+    # list is exactly the divergence the registry exists to prevent — and this
+    # column is the one whose staleness would be silent, since a factor count
+    # that is too low picks a carrier that overflows rather than one that errors.
+    factors::Int
 end
 const OP_REGISTRY = OpInfo[]
-register_op!(name::Symbol, arity::Int, group::Symbol) = push!(OP_REGISTRY, OpInfo(name, arity, group))
+register_op!(name::Symbol, arity::Int, group::Symbol, factors::Int=1) =
+    push!(OP_REGISTRY, OpInfo(name, arity, group, factors))
 opinfo(name::Symbol) = OP_REGISTRY[findfirst(o -> o.name === name, OP_REGISTRY)]
 
 const _UNARY_OPS = (:Abs, :Negate, :Sqrt, :RSqrt, :Recip, :Exp, :Log, :ExpMinusOne,
@@ -223,10 +269,28 @@ const _BINARY_OPS = (:CopySign, :Add, :Subtract, :Multiply, :Divide, :Hypot,
     :MinimumMagnitudeNumber, :MinimumFinite, :MaximumFinite)
 const _TERNARY_OPS = (:FMA, :FAA, :Clamp)
 
-for n in _UNARY_OPS;   register_op!(n, 1, n in (:Abs, :Negate) ? :A : :B); end
-for n in _BINARY_OPS;  register_op!(n, 2, n in (:Add, :Subtract, :Multiply, :Divide, :CopySign) ? :A : :C); end
-for n in _TERNARY_OPS; register_op!(n, 3, :A); end
-register_op!(:Convert, 1, :conv)
+# The two-factor operations, named once. Everything else forms sums or selections
+# of single datums. `Divide`'s exact result spans `e_x − e_y`, which is the same
+# width as a product's `e_x + e_y`; `Hypot` forms `x² + y²`; `FMA` forms `x·y + z`.
+# `RSqrt`/`Recip` are one factor: `1/x` spans `−e_x`, no wider than `x` itself.
+const _TWO_FACTOR_OPS = (:Multiply, :Divide, :Hypot, :FMA)
+_nfactors(n::Symbol) = n in _TWO_FACTOR_OPS ? 2 : 1
+
+for n in _UNARY_OPS;   register_op!(n, 1, n in (:Abs, :Negate) ? :A : :B, _nfactors(n)); end
+for n in _BINARY_OPS;  register_op!(n, 2, n in (:Add, :Subtract, :Multiply, :Divide, :CopySign) ? :A : :C, _nfactors(n)); end
+for n in _TERNARY_OPS; register_op!(n, 3, :A, _nfactors(n)); end
+register_op!(:Convert, 1, :conv, 1)
+
+# Registry-driven, so the carrier join reads the same rows that generate the
+# operations (invariant 7). Dispatched on `Val` so `opfactors(op)` folds to a
+# literal wherever the operation is statically known — which is what lets
+# `rung(op, Fs...)` fold, and G9 pins that.
+for op in OP_REGISTRY
+    @eval @inline opfactors(::Val{$(QuoteNode(op.name))}) = $(op.factors)
+end
+@noinline opfactors(::Val{OP}) where {OP} = throw(ArgumentError(
+    "$OP is not in OP_REGISTRY, so its factor count — and therefore its " *
+    "evaluation carrier — is undefined"))
 
 # ---- generated spec register + same-format convenience methods
 # Spec form follows the draft's parameterization order: Op(f_r, ρ, operands...).

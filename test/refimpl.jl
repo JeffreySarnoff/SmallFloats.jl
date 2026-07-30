@@ -1,6 +1,7 @@
 # Independent reference implementation of ωRoundToPrecision/ωSaturate/ωEncode using
 # Rational{BigInt} arithmetic — shares no code with the engine under test.
 using SmallFloats
+using Quadmath: Float128
 using SmallFloats: nan_code, posinf_code, neginf_code, rawvalue, codepoint
 
 const RQ = Rational{BigInt}
@@ -65,7 +66,15 @@ function refround(P::Int, B::Int, mode, R::Int, X::RQ; approx::Bool=false)
     (sgn, S, Q)
 end
 
-datum_rq(v) = RQ(decode(v))   # decode is exact in Float64 (asserted elsewhere)
+# A datum as an exact rational, at every carrier. `decode` now returns Float64,
+# Float128 or BigFloat depending on the format's rung, and Base's
+# `Rational{BigInt}(::Float128)` routes through `precision(::Float128)`, which
+# Quadmath does not define — so the Float128 case goes via BigFloat, which is
+# exact (the ambient precision is ≥ 256 ≫ 113). Every conversion here is exact;
+# none of them rounds.
+exact_rq(x::Real) = RQ(x)
+exact_rq(x::Float128) = RQ(BigFloat(x))
+datum_rq(v) = exact_rq(decode(v))
 
 function refproject(::Type{T}, ρ::ProjSpec, X::Union{RQ,Float64}; R::Int=0, approx::Bool=false) where {T<:Binary}
     mode = SmallFloats.roundingmode(ρ); sat = SmallFloats.saturationmode(ρ)

@@ -41,10 +41,27 @@ blocksize(::Block{B}) where {B} = B
 scaleformat(::Block{B,FS,FE}) where {B,FS,FE} = FS
 elemformat(::Block{B,FS,FE}) where {B,FS,FE} = FE
 
-"""ωBlockDecode (draft §5.1.1): per lane ωMultiply(decode(s), decode(xᵢ)) — exact Float64."""
-@inline function blockdecode(b::Block{B}) where {B}
-    S = decode(b.s)
-    ntuple(i -> ωeval(Val(:Multiply), S, decode(b.x[i]))::Float64, Val(B))
+"""ωBlockDecode (draft §5.1.1): per lane ωMultiply(decode(s), decode(xᵢ)), exact on
+the carrier the block's two formats jointly require.
+
+The carrier is keyed on `rung(Val(:Multiply), FS, FE)` — **not** on either
+format's own rung, and that distinction is the whole content of this method. A
+block's scale and element formats are independent, and what has to fit is their
+*product*: `carriers.jl`'s rule is `ΣBᵢ ≤ emax`, so two formats that are each
+rung 1 at `2B ≤ 1024` can compose into a lane product needing `B_S + B_E` well
+past it. Asserting `carriertype(rung(FE))` would be wrong in the worst way
+available here — the overflow produces `±Inf`, a plausible special value, rather
+than an error.
+
+The assertion stays because it is load-bearing for more than documentation: it
+is what keeps the returned `NTuple` concretely typed, and with it the reductions
+downstream allocation-free. It now names a carrier computed from both formats
+instead of a constant."""
+@inline function blockdecode(b::Block{B,FS,FE}) where {B,FS,FE}
+    h = rung(Val(:Multiply), FS, FE)
+    C = carriertype(h)
+    S = lift(h, decode(b.s))
+    ntuple(i -> ωeval(h, Val(:Multiply), S, lift(h, decode(b.x[i])))::C, Val(B))
 end
 
 # ---- ωBlockProject element pipeline (draft §5.1.2)
@@ -208,7 +225,27 @@ for op in OP_REGISTRY
 end
 
 # ---- reductions (draft §5.3): specials by the fold algebra, then an exact sum/product
-const _REDPREC = 2400   # ≥ Float64 span (~2100) + 64-bit terms + log₂B slack: exact for any B here
+#
+# The exact accumulator's precision is DERIVED from the block's two formats and
+# its length, never a constant. It replaced `_REDPREC = 2400`, the sibling of
+# `_BIGP = 2200`: ample through B ≈ 512 and silently truncating above it, with
+# the same failure mode gate G2 records — a plausible wrong number (§11 M31).
+#
+# Two different quantities, because two different exactness analyses:
+#
+#   sums     — the lanes span `2(B_S + B_E)` binades and each carries
+#              `P_S + P_E` significand bits, plus `⌈log₂ B⌉` for the carries.
+#   products — the exponent only shifts (MPFR's range covers any B here), but
+#              the significand is the SUM over lanes: `B · (P_S + P_E)`.
+#
+# The product form is what `16B + 128` always was: `16 = 8 + 8` is `P_S + P_E`
+# with `P = 8` hardcoded, so at K ≤ 8 the two agree exactly and above it the
+# constant understated by up to 2×. That is why it is written out in terms of
+# the formats now — the coefficient was a K ≤ 8 premise wearing a magic number.
+@inline _lane_sum_prec(::Type{FS}, ::Type{FE}, B::Int) where {FS<:Binary,FE<:Binary} =
+    2 * (expbias(FS) + expbias(FE) + precision(FS) + precision(FE)) + 64 + _log2ceil(B)
+@inline _lane_prod_prec(::Type{FS}, ::Type{FE}, B::Int) where {FS<:Binary,FE<:Binary} =
+    B * (precision(FS) + precision(FE)) + 128
 
 # Span filter (plan Site E, Class R): decoded lanes carry ≤17-bit significands; a
 # B-term sum is exactly representable in Float128 when
@@ -225,7 +262,7 @@ const _REDPREC = 2400   # ≥ Float64 span (~2100) + 64-bit terms + log₂B slac
 end
 @inline _log2ceil(B::Int) = 8 * sizeof(Int) - leading_zeros(B - 1 > 0 ? B - 1 : 1)
 
-function _reduce_add_datum(X)
+function _reduce_add_datum(X, prec::Int)
     any(isnan, X) && return NaN
     hasp = any(==(Inf), X); hasn = any(==(-Inf), X)
     (hasp & hasn) && return NaN
@@ -240,19 +277,21 @@ function _reduce_add_datum(X)
         end
         return acc
     end
-    BigExactF(() -> setprecision(() -> sum(BigFloat, X; init=BigFloat(0)), BigFloat, _REDPREC))
+    BigExactF(() -> setprecision(() -> sum(BigFloat, X; init=BigFloat(0)), BigFloat, prec))
 end
 
 """BlockReduceAdd (draft §5.3.1): project(reduce(ωAdd, [0, X…]))."""
-function BlockReduceAdd(fr::Type{<:Binary}, ρ::ProjSpec, b::Block;
-                        rng::MaybeRNG=nothing, R::MaybeR=nothing)
-    _finish(fr, ρ, _drawR(ρ, rng, R), _reduce_add_datum(blockdecode(b)))
+function BlockReduceAdd(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B,FS,FE};
+                        rng::MaybeRNG=nothing, R::MaybeR=nothing) where {B,FS,FE}
+    _finish(fr, ρ, _drawR(ρ, rng, R),
+            _reduce_add_datum(blockdecode(b), _lane_sum_prec(FS, FE, B)))
 end
 
 """BlockReduceMultiply (draft §5.3.1): project(reduce(ωMultiply, [1, X…]))."""
-function BlockReduceMultiply(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B};
-                             rng::MaybeRNG=nothing, R::MaybeR=nothing) where {B}
+function BlockReduceMultiply(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B,FS,FE};
+                             rng::MaybeRNG=nothing, R::MaybeR=nothing) where {B,FS,FE}
     X = blockdecode(b)
+    lanebits = precision(FS) + precision(FE)                    # significand bits per lane
     res = if any(isnan, X) || (any(iszero, X) && any(isinf, X))
         NaN                                                     # 0·∞ arises in the fold → NaN
     elseif any(isinf, X)
@@ -260,20 +299,21 @@ function BlockReduceMultiply(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B};
         s * Inf
     elseif any(iszero, X)
         0.0
-    # `B` here is `Block{B}` — the BLOCKSIZE, not the exponent bias — and `16` is
-    # max P at K = 16, so both bounds read "lanes × significand bits (+ slack)".
-    # A product's significand width is the SUM of its factors' widths; its
-    # exponent only shifts, and MPFR's exponent range covers any B. So neither
-    # line is bias-dependent and neither needs the K ≤ 16 widening. Said plainly
-    # because `16B` invites being read as bias-scaled (§11 M30).
-    elseif _f128() && 16B + 8 <= 112                            # exact product by width (B ≤ 6)
+    # `B` is `Block{B}` — the BLOCKSIZE, not the exponent bias. A product's
+    # significand width is the SUM of its factors' widths and its exponent only
+    # shifts, so neither bound is bias-dependent. What IS K-dependent is the
+    # per-lane width: the previous `16B` read `16 = 8 + 8`, i.e. `P_S + P_E` with
+    # `P = 8` baked in, so it agreed exactly at K ≤ 8 and understated by up to 2×
+    # above it. Written from the formats now (§11 M30, corrected).
+    elseif _f128() && lanebits * B + 8 <= 112                   # exact product by width
         acc = Float128(1)
         for v in X
             acc *= Float128(v)
         end
         acc
     else
-        BigExactF(() -> setprecision(() -> prod(BigFloat, X; init=BigFloat(1)), BigFloat, 16B + 128))
+        BigExactF(() -> setprecision(() -> prod(BigFloat, X; init=BigFloat(1)),
+                                     BigFloat, _lane_prod_prec(FS, FE, B)))
     end
     _finish(fr, ρ, _drawR(ρ, rng, R), res)
 end
@@ -281,9 +321,15 @@ end
 """BlockDotProduct (draft §5.3.2). Lane products can carry 64 significant bits, so the
 products and their sum are formed in the exact accumulator, with the ∞/NaN fold algebra
 resolved on the Float64 classifications first."""
-function BlockDotProduct(fr::Type{<:Binary}, ρ::ProjSpec, bx::Block{B}, by::Block{B};
-                         rng::MaybeRNG=nothing, R::MaybeR=nothing) where {B}
+function BlockDotProduct(fr::Type{<:Binary}, ρ::ProjSpec,
+                         bx::Block{B,FS1,FE1}, by::Block{B,FS2,FE2};
+                         rng::MaybeRNG=nothing, R::MaybeR=nothing) where {B,FS1,FE1,FS2,FE2}
     X = blockdecode(bx); Y = blockdecode(by)
+    # Each term is a product of FOUR datums (two scales, two elements), so both
+    # the span and the significand width double relative to the sum reduction.
+    # `_lane_sum_prec` over the union of the four formats bounds the span; the
+    # `+64` slack covers the widths, since 4·max Pᵢ ≤ 64 for every P ≤ 16.
+    dotprec = _lane_sum_prec(FS1, FE1, B) + _lane_sum_prec(FS2, FE2, B)
     pcls = ntuple(Val(B)) do i
         x, y = X[i], Y[i]
         (isnan(x) | isnan(y)) && return NaN
@@ -313,7 +359,7 @@ function BlockDotProduct(fr::Type{<:Binary}, ρ::ProjSpec, bx::Block{B}, by::Blo
             end
             acc
         else
-            BigExactF(() -> setprecision(BigFloat, _REDPREC) do
+            BigExactF(() -> setprecision(BigFloat, dotprec) do
                 acc = BigFloat(0)
                 for i in 1:B
                     acc += BigFloat(X[i]) * BigFloat(Y[i])      # exact products, exact sum

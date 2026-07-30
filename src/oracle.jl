@@ -35,14 +35,62 @@
     (s, (a - (s - bb)) + (b - bb))
 end
 
-# ---- Float128 exactness-by-width thresholds (plan Site B, Class R).
-# Decoded datums carry ≤8-bit significands (Float64-exact products ≤17); a sum is
-# exactly representable in Float128 (113-bit) when operand bits + exponent spread
-# + carry fit. Escalation is only reached when the Float64 residual ≠ 0 (spread > 44),
-# so Float128 covers the whole escalation band except the P ∈ {1,2} extreme tail.
-const _DE_ADD = 100    # 9 + ΔE ≤ 113, margin 4
-const _DE_FMA = 92     # 17-bit exact product + 8-bit addend: 18 + ΔE ≤ 113, margin 3
-const _DE_FAA = 98     # three 8-bit terms: 11 + span ≤ 113, margin 4
+# ---- Float128 exactness-by-width thresholds (plan Site B, Class R; §1 C1/C2).
+#
+# A sum is exactly representable in Float128 (113 bits) when the operands'
+# significand bits plus the exponent spread plus a carry fit. These were the
+# constants `(100, 92, 98)`, correct for the ≤8-bit datums of a K ≤ 8 format and
+# **wrong the moment a P = 16 datum appears** — and wrong in the one direction no
+# other test can see: a widened threshold accepts an *inexact* Float128 sum as
+# exact. Nothing downstream re-checks it.
+#
+# The widths come from the DATUMS, not from a format parameter, because `ωeval`
+# receives values. That also keeps K ≤ 8 bit-identical for a reason rather than
+# by adjustment: a datum of a P-bit format carries at most P significant bits, so
+# `_sigwidth ≤ 8` reproduces `(100, 92, 98)` exactly — the fixed point gate G1(i)
+# asserts. Nothing is consulted until the Float64 residual is already nonzero, so
+# this is off the common path.
+#
+# C1's correction is in `_de_fma`: the accounting is `P₁ + P₂ + 2` (product plus
+# carry), which the source comment always stated ("18 + ΔE ≤ 113") while the
+# inherited generalization wrote `P₁ + P₂ + 1`.
+@inline function _sigwidth(x::Float64)
+    (isfinite(x) & !iszero(x)) || return 1
+    u = reinterpret(UInt64, x)
+    m = u & 0x000f_ffff_ffff_ffff
+    if (u & 0x7ff0_0000_0000_0000) == 0                  # subnormal: no implicit bit
+        return (64 - leading_zeros(m)) - trailing_zeros(m)
+    end
+    m == 0 ? 1 : 53 - trailing_zeros(m)
+end
+@inline _de_add(x::Float64, y::Float64) =
+    113 - (max(_sigwidth(x), _sigwidth(y)) + 1) - 4
+# `z` is unused and the signature keeps it anyway: the FMA bound is set by the
+# exact product's width, and spelling the addend at the definition makes the
+# asymmetry with `_de_add`/`_de_faa` visible where it is decided rather than
+# inferable only from the call site.
+@inline _de_fma(x::Float64, y::Float64, ::Float64) =
+    113 - (_sigwidth(x) + _sigwidth(y) + 2) - 3
+@inline _de_faa(x::Float64, y::Float64, z::Float64) =
+    113 - (max(_sigwidth(x), _sigwidth(y), _sigwidth(z)) + 3) - 4
+
+# C2 — the sticky-head shortcut has a SECOND premise, independent of width.
+#
+# `StickyF` neglects a tail, and soundness needs that tail below both (a) the
+# head's distance to any off-grid rounding threshold and (b) the finest
+# stochastic sub-grid unit, `2^(e_head − (P−1) − N)`. Only (a) is a width bound;
+# (b) requires `ΔE > (P − 1) + N + 2`. At P ≤ 8 the width bound is stricter, so
+# the collision is invisible today — and at P = 16 with N > 15 it inverts:
+# `_de_fma = 76 < 77`.
+#
+# Neither `P` (the RESULT format's) nor `N` (the rounding mode's) is visible to
+# `ωeval`, and threading ρ down to it would be worse than the maximum: both are
+# bounded by the grid, so `(16 − 1) + 60 + 2` covers every cell. The band between
+# the two bounds falls to the exact MPFR path and is empty for every P ≤ 15,
+# which is what makes this a generalization with a fixed point rather than a
+# behaviour change. Gate G1 asserts band contiguity — that no ΔE is uncovered.
+const _STICKY_MIN = 77     # (P_max − 1) + N_max + 2 = 15 + 60 + 2
+
 @inline _expdiff(a::Float64, b::Float64) = abs(exponent(a) - exponent(b))
 @inline function _span3(x::Float64, y::Float64, z::Float64)
     lo = typemax(Int); hi = typemin(Int)
@@ -64,7 +112,8 @@ end
 # ---- wide-spread sticky escalations (non-allocating replacements for the
 # BigFloat tail; see StickyF's soundness note in ops_scalar.jl).
 #
-# FMA, ΔE(p, z) > _DE_FMA = 92: the exact 17-bit product p and the ≤8-bit addend z
+# FMA, ΔE(p, z) past BOTH bands (`_de_fma` for width, `_STICKY_MIN` for the
+# stochastic sub-grid — see C2 above): the exact product p and the addend z
 # are bit-disjoint by > 75 binades, so the larger term is the head and the smaller
 # contributes only its sign. Threshold-grid bound (head h, tail w): h is a multiple
 # of 2^(e_h−16) while |w| < |h|·2^-92, far below both the finest stochastic
@@ -75,7 +124,9 @@ end
                        StickyF(z, signbit(p) ? -1 : 1)
 end
 
-# FAA, span > _DE_FAA = 98 (cancellation among x, y, z possible): distill the three
+# FAA, span past BOTH bands (`_de_faa` and `_STICKY_MIN`; cancellation among
+# x, y, z is possible here, which is why the span rather than a pairwise ΔE
+# governs): distill the three
 # exact Float128 terms into (v1, v2, v3) with v1+v2+v3 invariant (each 2sum pass is
 # an exact transform) until v1 = fl128(Σ) up to its own lsb and the residual
 # v2 + v3 has a determinable sign strictly below lsb(v1) = 2^(e₁−112):
@@ -110,12 +161,16 @@ function _faa_wide(x::Float64, y::Float64, z::Float64)
     _bigsum3(x, y, z)
 end
 
-_bigsum2(x::Float64, y::Float64) =
+# Signatures are `AbstractFloat`, not `Float64`: rung 2 escalates into these too.
+# Conversion into BigFloat is exact from either carrier (`bigprec` is ≥ 113 by its
+# own `+64` term), so the escalation is one exact conversion plus one exact
+# operation at a derived precision, exactly as at rung 1.
+_bigsum2(x::AbstractFloat, y::AbstractFloat) =
     BigExactF(() -> setprecision(() -> BigFloat(x) + BigFloat(y), BigFloat, bigprec(x, y)))
-_bigfma(x::Float64, y::Float64, z::Float64) =
+_bigfma(x::AbstractFloat, y::AbstractFloat, z::AbstractFloat) =
     BigExactF(() -> setprecision(() -> BigFloat(x) * BigFloat(y) + BigFloat(z),
                                  BigFloat, bigprec_prod(x, y, z)))
-_bigsum3(x::Float64, y::Float64, z::Float64) =
+_bigsum3(x::AbstractFloat, y::AbstractFloat, z::AbstractFloat) =
     BigExactF(() -> setprecision(() -> (BigFloat(x) + BigFloat(y)) + BigFloat(z),
                                  BigFloat, bigprec(x, y, z)))
 
@@ -249,6 +304,76 @@ end
 @noinline ωeval(::HeadF128, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
     "$OP on this format needs the rung-2 (Float128) carrier, which arrives in " *
     "Stage 6 of the K ≤ 16 extension"))
+
+# ---- rung 2: the Float128 carrier (Group A).
+#
+# Structurally identical to the Float64 catalog one rung down, and deliberately
+# so: an error-free transform decides exactness, and a nonzero residual escalates
+# to the same MPFR closures (whose signatures are `AbstractFloat` for exactly this
+# reason). What differs is only which transform and which threshold.
+#
+# The width argument that makes `Multiply` exact here: a rung-2 format has
+# B ≤ 8192, so a datum's exponent is at most B − 1 and the product's at most
+# 16 382 — inside Float128's 16 383 by one binade, which is the ΣB ≤ emax rule
+# doing its job. The significands are ≤ 16 bits each, so 32 ≤ 113 covers the
+# product exactly. The `isfinite` guard is defence on a cold path, not a
+# correctness dependency.
+@inline ωeval(h::HeadF128, op::Val, xs::Float128...) = _ωf128(h, op, xs...)
+
+@noinline _ωf128(::HeadF128, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
+    "$OP has no rung-2 (Float128) ω-semantics yet: Group A is implemented on " *
+    "the Float128 carrier, Groups B and C arrive with the enclosure ladder " *
+    "later in Stage 6 of the K ≤ 16 extension"))
+
+function _ωf128(::HeadF128, ::Val{:Add}, x::Float128, y::Float128)
+    (isnan(x) | isnan(y)) && return NaN
+    if isinf(x) || isinf(y)
+        (isinf(x) && isinf(y) && x != y) && return NaN      # ∞ + (−∞) → NaN
+        return isinf(x) ? x : y
+    end
+    s, e = _twosum128(x, y)
+    iszero(e) && return iszero(s) ? zero(Float128) : s      # exact in Float128
+    _bigsum2(x, y)
+end
+_ωf128(h::HeadF128, ::Val{:Subtract}, x::Float128, y::Float128) =
+    _ωf128(h, Val(:Add), x, isnan(y) ? y : (iszero(y) ? zero(y) : -y))
+function _ωf128(::HeadF128, ::Val{:Multiply}, x::Float128, y::Float128)
+    (isnan(x) | isnan(y)) && return NaN
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN   # 0·∞ → NaN
+    p = x * y
+    isfinite(p) && return iszero(p) ? zero(Float128) : p
+    isinf(x) || isinf(y) ? p : _bigmul2(x, y)              # true ∞ vs Float128 overflow
+end
+function _ωf128(::HeadF128, ::Val{:FMA}, x::Float128, y::Float128, z::Float128)
+    (isnan(x) | isnan(y) | isnan(z)) && return NaN
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN
+    p = x * y
+    if isinf(p) || isinf(z)
+        (isinf(p) && isinf(z) && p != z) && return NaN
+        return isinf(p) ? p : z
+    end
+    s, e = _twosum128(p, z)
+    (iszero(e) && fma(x, y, -p) == 0) && return iszero(s) ? zero(Float128) : s
+    _bigfma(x, y, z)                                        # p may itself be inexact
+end
+function _ωf128(::HeadF128, ::Val{:FAA}, x::Float128, y::Float128, z::Float128)
+    (isnan(x) | isnan(y) | isnan(z)) && return NaN
+    if isinf(x) || isinf(y) || isinf(z)
+        hasp = (x == Inf) | (y == Inf) | (z == Inf)
+        hasn = (x == -Inf) | (y == -Inf) | (z == -Inf)
+        (hasp & hasn) && return NaN
+        return hasp ? Inf : -Inf
+    end
+    s1, e1 = _twosum128(x, y)
+    s2, e2 = _twosum128(s1, z)
+    (iszero(e1) && iszero(e2)) && return iszero(s2) ? zero(Float128) : s2
+    _bigsum3(x, y, z)
+end
+_ωf128(::HeadF128, ::Val{:Convert}, x::Float128) = x
+
+_bigmul2(x::AbstractFloat, y::AbstractFloat) =
+    BigExactF(() -> setprecision(() -> BigFloat(x) * BigFloat(y),
+                                 BigFloat, bigprec_prod(x, y)))
 @noinline ωeval(::HeadExact, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
     "$OP on this format needs the rung-3 (exact) carrier, which arrives in " *
     "Stage 6/7 of the K ≤ 16 extension"))
@@ -310,6 +435,37 @@ function _ωexact(::HeadExact, ::Val{:FAA}, x::BigFloat, y::BigFloat, z::BigFloa
 end
 _ωexact(::HeadExact, ::Val{:Convert}, x::BigFloat) = x
 
+# ---- exact selections, at every rung, from ONE implementation.
+#
+# `Abs`, `Negate`, `CopySign`, the extremum family and `Clamp` have no width
+# analysis and no escalation: their ω-semantics selects an operand or flips a
+# sign, which is exact on any carrier. So the rows in the "exact selection"
+# section below are written `::AbstractFloat` and every head delegates to them.
+# Writing per-carrier copies would be three transcriptions of the draft's
+# special-value tables that could drift from each other — the divergence
+# invariant 7 exists to prevent, in the one part of the catalog where the rows
+# ARE the spec.
+#
+# The list is explicit because it does not coincide with a registry group:
+# `Abs`/`Negate`/`CopySign`/`Clamp` are group `:A` alongside the arithmetic, and
+# group `:C` contains `Hypot`/`ArcTan2`/`ArcTan2Pi`, which are enclosures rather
+# than selections. Being explicit is only safe if it is checked — `test/gates_g4.jl`
+# asserts this set partitions `OP_REGISTRY` against the ops that have per-head
+# rows, so an operation added to the registry cannot silently belong to neither.
+const _EXACT_SELECTION = (:Abs, :Negate, :CopySign, :Clamp,
+                          :Maximum, :Minimum, :MaximumNumber, :MinimumNumber,
+                          :MaximumMagnitude, :MinimumMagnitude,
+                          :MaximumMagnitudeNumber, :MinimumMagnitudeNumber,
+                          :MinimumFinite, :MaximumFinite)
+for nm in _EXACT_SELECTION
+    @eval begin
+        @inline _ωf128(::HeadF128, op::Val{$(QuoteNode(nm))}, xs::Float128...) =
+            ωeval(op, xs...)
+        @inline _ωexact(::HeadExact, op::Val{$(QuoteNode(nm))}, xs::BigFloat...) =
+            ωeval(op, xs...)
+    end
+end
+
 # `Convert` is registry arity 1 but registry group `:conv`, and it is the one
 # operation with no ω-semantics of its own: the conversion IS the projection into
 # the target format, so on the datum it is the identity. Spelling that identity
@@ -327,41 +483,41 @@ _ωexact(::HeadExact, ::Val{:Convert}, x::BigFloat) = x
 # ============================================================================
 # Group "exact selection": Abs, Negate, CopySign, extremum family, Clamp
 # ============================================================================
-ωeval(::Val{:Abs}, x::Float64) = isnan(x) ? NaN : abs(x)
-ωeval(::Val{:Negate}, x::Float64) = isnan(x) ? NaN : (iszero(x) ? 0.0 : -x)
-function ωeval(::Val{:CopySign}, x::Float64, y::Float64)
+ωeval(::Val{:Abs}, x::AbstractFloat) = isnan(x) ? NaN : abs(x)
+ωeval(::Val{:Negate}, x::AbstractFloat) = isnan(x) ? NaN : (iszero(x) ? 0.0 : -x)
+function ωeval(::Val{:CopySign}, x::AbstractFloat, y::AbstractFloat)
     (isnan(x) | isnan(y)) && return NaN                     # [interp]: NaN sign source → NaN
     v = copysign(x, y)
     iszero(v) ? 0.0 : v                                     # single zero
 end
 
-ωeval(::Val{:Maximum}, x::Float64, y::Float64) = (isnan(x) | isnan(y)) ? NaN : max(x, y)
-ωeval(::Val{:Minimum}, x::Float64, y::Float64) = (isnan(x) | isnan(y)) ? NaN : min(x, y)
-ωeval(::Val{:MaximumNumber}, x::Float64, y::Float64) =
+ωeval(::Val{:Maximum}, x::AbstractFloat, y::AbstractFloat) = (isnan(x) | isnan(y)) ? NaN : max(x, y)
+ωeval(::Val{:Minimum}, x::AbstractFloat, y::AbstractFloat) = (isnan(x) | isnan(y)) ? NaN : min(x, y)
+ωeval(::Val{:MaximumNumber}, x::AbstractFloat, y::AbstractFloat) =
     isnan(x) ? (isnan(y) ? NaN : y) : (isnan(y) ? x : max(x, y))
-ωeval(::Val{:MinimumNumber}, x::Float64, y::Float64) =
+ωeval(::Val{:MinimumNumber}, x::AbstractFloat, y::AbstractFloat) =
     isnan(x) ? (isnan(y) ? NaN : y) : (isnan(y) ? x : min(x, y))
-function ωeval(::Val{:MaximumMagnitude}, x::Float64, y::Float64)
+function ωeval(::Val{:MaximumMagnitude}, x::AbstractFloat, y::AbstractFloat)
     (isnan(x) | isnan(y)) && return NaN
     abs(x) > abs(y) ? x : abs(y) > abs(x) ? y : max(x, y)
 end
-function ωeval(::Val{:MinimumMagnitude}, x::Float64, y::Float64)
+function ωeval(::Val{:MinimumMagnitude}, x::AbstractFloat, y::AbstractFloat)
     (isnan(x) | isnan(y)) && return NaN
     abs(x) < abs(y) ? x : abs(y) < abs(x) ? y : min(x, y)
 end
-function ωeval(::Val{:MaximumMagnitudeNumber}, x::Float64, y::Float64)
+function ωeval(::Val{:MaximumMagnitudeNumber}, x::AbstractFloat, y::AbstractFloat)
     isnan(x) && return isnan(y) ? NaN : y
     isnan(y) && return x
     abs(x) > abs(y) ? x : abs(y) > abs(x) ? y : max(x, y)
 end
-function ωeval(::Val{:MinimumMagnitudeNumber}, x::Float64, y::Float64)
+function ωeval(::Val{:MinimumMagnitudeNumber}, x::AbstractFloat, y::AbstractFloat)
     isnan(x) && return isnan(y) ? NaN : y
     isnan(y) && return x
     abs(x) < abs(y) ? x : abs(y) < abs(x) ? y : min(x, y)
 end
 # Finite variants (§4.11.3): prefer finite operands; then infinities beat NaN.
 # These are the reduction semantics ConvertToBlockMaxAbsFinite's NaN seed relies on.
-function ωeval(::Val{:MaximumFinite}, x::Float64, y::Float64)
+function ωeval(::Val{:MaximumFinite}, x::AbstractFloat, y::AbstractFloat)
     fx, fy = isfinite(x), isfinite(y)
     fx & fy && return max(x, y)
     fx && return x
@@ -370,7 +526,7 @@ function ωeval(::Val{:MaximumFinite}, x::Float64, y::Float64)
     isnan(y) && return x
     max(x, y)
 end
-function ωeval(::Val{:MinimumFinite}, x::Float64, y::Float64)
+function ωeval(::Val{:MinimumFinite}, x::AbstractFloat, y::AbstractFloat)
     fx, fy = isfinite(x), isfinite(y)
     fx & fy && return min(x, y)
     fx && return x
@@ -379,7 +535,7 @@ function ωeval(::Val{:MinimumFinite}, x::Float64, y::Float64)
     isnan(y) && return x
     min(x, y)
 end
-function ωeval(::Val{:Clamp}, x::Float64, lo::Float64, hi::Float64)
+function ωeval(::Val{:Clamp}, x::AbstractFloat, lo::AbstractFloat, hi::AbstractFloat)
     (isnan(x) | isnan(lo) | isnan(hi)) && return NaN
     min(max(x, lo), hi)
 end
@@ -395,7 +551,7 @@ function ωeval(::Val{:Add}, x::Float64, y::Float64)
     end
     s, e = _twosum(x, y)
     e == 0.0 && return iszero(s) ? 0.0 : s
-    (_f128() && _expdiff(x, y) <= _DE_ADD) && return Float128(x) + Float128(y)   # exact by width
+    (_f128() && _expdiff(x, y) <= _de_add(x, y)) && return Float128(x) + Float128(y)  # exact by width
     _bigsum2(x, y)
 end
 ωeval(::Val{:Subtract}, x::Float64, y::Float64) =
@@ -417,8 +573,11 @@ function ωeval(::Val{:FMA}, x::Float64, y::Float64, z::Float64)
     s, e = _twosum(p, z)
     e == 0.0 && return iszero(s) ? 0.0 : s
     if _f128()                                               # e ≠ 0 ⇒ p, z both nonzero
-        _expdiff(p, z) > _DE_FMA && return _fma_wide(p, z)   # sticky head, no allocation
-        return Float128(p) + Float128(z)                     # p exact ⇒ sum exact by width
+        d = _expdiff(p, z)
+        d <= _de_fma(x, y, z) && return Float128(p) + Float128(z)  # p exact ⇒ exact by width
+        d > _STICKY_MIN && return _fma_wide(p, z)            # sticky head, no allocation
+        # C2's middle band: too wide for Float128, too narrow for the sticky
+        # argument's stochastic premise. Empty for every P ≤ 15.
     end
     _bigfma(x, y, z)
 end
@@ -434,9 +593,11 @@ function ωeval(::Val{:FAA}, x::Float64, y::Float64, z::Float64)
     s2, e2 = _twosum(s1, z)
     (e1 == 0.0 && e2 == 0.0) && return iszero(s2) ? 0.0 : s2
     if _f128()
-        _span3(x, y, z) <= _DE_FAA &&
+        sp = _span3(x, y, z)
+        sp <= _de_faa(x, y, z) &&
             return (Float128(x) + Float128(y)) + Float128(z) # every partial exact by width
-        return _faa_wide(x, y, z)                            # sticky head, no allocation
+        sp > _STICKY_MIN && return _faa_wide(x, y, z)        # sticky head, no allocation
+        # C2's middle band, as in FMA above. Empty for every P ≤ 15.
     end
     _bigsum3(x, y, z)
 end

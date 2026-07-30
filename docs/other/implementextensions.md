@@ -2193,6 +2193,190 @@ bounded by the format's own spread, which is what `bigprec` is built from. The
 margin at the witness is 67 bits and is now pinned by a test rather than by this
 paragraph.
 
+**M32 — the carrier is a property of the operands. Stage 3's gate said otherwise,
+and correcting it made two `stage_gates.jl` rows go green.** `apply_op` selected
+the head from `rung(fr)` — the *result* format. `carriers.jl` states the opposite
+in its own header: the carrier constrains what `ωeval` may form, never what may
+be projected *into* a format, because `round_to_precision` works in `(P, B)`
+integer space and is exact for any exact input. Under `rung(fr)`,
+`Add(Binary16p2se, ρ, x8, y8)` was refused — two ordinary `Float64` datums whose
+exact sum is a `Float64`, needing no wide carrier at all. It now evaluates.
+
+Completeness of the operand-only rule rests on a premise, stated here because
+Stage 3's version of exactly this is what M28 was: **the spec register's maximum
+factor count is 2**, and the rung boundaries are stated on `2B` precisely so that
+a datum on carrier `C` guarantees its square is on `C` too. Past two factors the
+monomial bound stops following from the operand types, which is why `blocks.jl`
+calls `rung(op, Fs...)` with the formats in hand and `apply_op` does not.
+
+**M33 — the join is two lower bounds, and dropping either one is a defect.**
+`rung(op, Fs...)` maxes the **monomial bound** (`nf · maxB` through
+`_rungindex_span`) against the **operand bound** (`joinhead` over each
+`rung(Fᵢ)`). Omitting the second is the subtle error: `Abs` has one factor, so
+the monomial bound alone picks rung 1 for a B = 1024 format — whose datums
+arrive as `Float128`, for which `ωeval(::HeadF64, …)` has no row. With the join
+in place, `lift`'s deliberately absent narrowing method becomes *unreachable*
+rather than a hazard, because the head dominates every operand's own carrier.
+
+`_rungindex` is now `_rungindex_span(2 * expbias(F))` rather than an independent
+`B ≤ 512 / B ≤ 8192` pair, so the per-format answer is visibly the `n = 2` case
+of one rule. Verified: `rung(Val(:Multiply), F, F) === rung(F)` for all 504
+formats, 0 mismatches, so the 432/64/8 partition is untouched.
+
+`factors` is an `OpInfo` column and `opfactors` is generated from it (invariant
+7). Two-factor operations are `Multiply`, `Divide` (whose `e_x − e_y` is as wide
+as a product's `e_x + e_y`), `Hypot` (`x² + y²`) and `FMA`. `FAA` is one factor
+despite arity 3; `Recip`/`RSqrt` are one factor because `1/x` spans `−e_x`.
+
+**M34 — `Base.precision` does not exist for `Float128`, and rung-3 coverage
+could not have found it.** `bigprec` reads each operand's significand width.
+`Base.precision(v)` is the obvious spelling, and Quadmath defines **neither** the
+value form nor the type form — the latter falls through to Base's
+`_precision_with_base_2` and errors there. So every rung-2 escalation was a
+`MethodError`.
+
+Rung 3 cannot reveal this: `BigFloat` has both forms, and is the one carrier
+where the per-*value* precision is the meaningful quantity rather than the
+type's. Two carriers, one of which happens to support the spelling the other
+does not — and G2's Tier B only exercised the forgiving one. The fix is
+`_sigbits` by dispatch with the ladder's own carriers written out; the gate now
+has a rung-2 row that asserts the retired constant *would* have truncated there,
+so it cannot decay into a restatement of a case 2200 bits already covered.
+
+The same hole exists test-side: `Rational{BigInt}(::Float128)` routes through the
+same missing method, so `refimpl` gained `exact_rq`, which goes via `BigFloat`
+(exact — ambient precision ≫ 113).
+
+**M35 — `blockdecode`'s carrier is keyed on the SUM of two biases, and
+`16B + 128` was a K ≤ 8 premise wearing a magic number.** A block's scale and
+element formats are independent, and what must fit is their *product*: the rule
+is `ΣBᵢ ≤ emax`, so two formats that are each rung 1 can compose into a lane
+product that is not. Asserting `carriertype(rung(FE))` would have been wrong in
+the worst way available — the overflow yields `±Inf`, a plausible special value,
+not an error. `blockdecode` now uses `rung(Val(:Multiply), FS, FE)` and lifts
+both operands onto it, keeping the `NTuple` concretely typed and the reductions
+allocation-free.
+
+`_REDPREC = 2400` is gone with it, replaced by two derived quantities, because
+sums and products need different analyses: `_lane_sum_prec` (the lanes span
+`2(B_S + B_E)` binades, carry `P_S + P_E` bits, plus `⌈log₂ B⌉`) and
+`_lane_prod_prec` (`B · (P_S + P_E)`, since a product's significand is the sum
+over lanes while its exponent only shifts).
+
+**This corrects M30.** I read `16B + 128` as bias-scaled, found it was not, and
+concluded it needed no change. The first half was right and the conclusion was
+wrong: `16 = 8 + 8` is `P_S + P_E` with `P = 8` hardcoded, so the two agree
+*exactly* at K ≤ 8 — which is why the K ≤ 8 suite could never have flagged it —
+and the constant understates by up to 2× above it. The lesson is narrower than
+"read carefully": a constant that is provably correct across the entire existing
+test domain is the hardest kind of wide-K defect to see, because every gate
+agrees with it.
+
+**M36 — the `_DE_*` thresholds read the datums, and G1 confirms C2's arithmetic
+independently.** C1 and C2 are both threshold errors found by arithmetic rather
+than by testing, and neither is visible at K ≤ 8 because at K ≤ 8 both formulas
+are correct. That is what makes them the highest-risk items in the stage: a
+too-wide threshold accepts an **inexact Float128 sum as exact**, and nothing
+downstream re-checks it — every consumer trusts the answer precisely because
+this decision was made.
+
+The thresholds now derive from `_sigwidth` of the **datums**, not from a format
+parameter, for the same reason `bigprec` does: `ωeval` receives values. It also
+makes the fixed point structural rather than adjusted — a datum of a P-bit
+format carries at most P significant bits, so `_sigwidth ≤ 8` reproduces
+`(100, 92, 98)` exactly. C1's correction is `P₁ + P₂ + 2` in `_de_fma`, the
+accounting the source comment always stated (`18 + ΔE ≤ 113`) against the
+inherited generalization's `P₁ + P₂ + 1`.
+
+C2's second premise is now a real band. Neither `P` (the result format's) nor
+`N` (the mode's) is visible to `ωeval`, and threading ρ down would be worse than
+taking the maximum, since both are bounded by the grid: `_STICKY_MIN = 15 + 60
++ 2 = 77` covers every cell.
+
+**G1 written and green — 52 620 assertions — and its part (iii) reproduces C2's
+prediction from the other direction.** Enumerating all 256 `(P₁, P₂)` cells, the
+middle band (too wide for Float128, too narrow for the sticky argument's
+stochastic premise) is nonempty for **exactly one**: `(16, 16)`. `_de_faa` and
+`_de_add` never collide at any width ≤ 16, which is the plan's `P ≤ 22` / `P ≤
+23` claim, now checked rather than asserted. Part (iv) verifies soundness at and
+just inside every threshold against MPFR at 4 096 bits — far above any claim
+being made, so the reference cannot inherit the bug it checks.
+
+One test-side note worth keeping: G1 builds its operands with an explicit
+`_mk(width, binade)` rather than by projecting through a format. The widths that
+matter include ones no shipped format produces, and a gate that can only reach
+the widths the package already emits cannot check a claim about widths in
+general.
+
+**Two existing rows in the Float128-plan testset went red, and they were the
+tests, not the code.** `ωeval(Val(:Add), 2.0^101, 1.0) isa BigExactF` and the
+matching FMA row pinned tier selection using **powers of two** — operands with
+*one* significant bit, pinning thresholds derived for *eight*. Under constant
+thresholds that distinction was invisible: a 1-bit pair and an 8-bit pair got
+the same number. Under derived thresholds a 1-bit pair gets
+`_de_add = 113 − 2 − 4 = 107`, so `2^101 + 1` — needing 102 bits, comfortably
+inside 113 — stays exact in Float128 instead of escalating to MPFR.
+
+Diagnosed before touching anything, because the two possible readings differ
+completely: a cheaper tier reaching the same answer, or a widened exactness
+claim of exactly the kind C1 warns about. **G5 was run at the `full` tier
+first — 33/33 byte-identical, 11m34s, exhaustive over all 120 K ≤ 8 formats.**
+No result moved, so the rows are corrections. They now pin the boundary with
+8-significant-bit operands *and* assert that the widened 1-bit band is still
+exact, so the width dependence is tested rather than lost.
+
+*The general shape, which is worth more than the instance:* replacing a constant
+with a derived quantity re-tests every assertion that pinned the constant, and
+some of them were only ever true for operands the constant did not describe. The
+failing test is then evidence about the test. Distinguishing that from a
+regression is what the golden gate is for — and running it at the tier that
+settles the question, rather than the routine one, is the whole reason `full`
+exists.
+
+**M37 — "Group A works at every rung" was false when I said it, and the missing
+half wanted one implementation rather than three.** The five arithmetic rows
+(`Add`, `Subtract`, `Multiply`, `FMA`, `FAA`) had per-head implementations; the
+other fourteen group-`:A`-and-`:C` operations — `Abs`, `Negate`, `CopySign`,
+`Clamp` and the ten-member extremum family — were still hitting the rung-2/3
+refusals. My report of Group A being complete described the rows I had written,
+not the group.
+
+Those fourteen have no width analysis and no escalation: their ω-semantics
+selects an operand or flips a sign, exact on any carrier. So the fix is to widen
+the existing rows to `::AbstractFloat` and have each head delegate, not to write
+three copies. The copies would have been three transcriptions of the draft's
+special-value tables, free to drift — invariant 7's divergence, in the one part
+of the catalog where the rows *are* the spec.
+
+`_EXACT_SELECTION` is an explicit list because it does not coincide with a
+registry group: `Abs`/`Negate`/`CopySign`/`Clamp` are `:A` alongside the
+arithmetic, and `:C` contains `Hypot`/`ArcTan2`/`ArcTan2Pi`, which are enclosures
+rather than selections. Explicit is only safe when checked, so G4 asserts the set
+partitions `OP_REGISTRY` against the arithmetic rows — an operation added later
+cannot silently belong to neither.
+
+**M38 — G4 green, and a gate that only speaks on failure is a bad gate.**
+152 064 rung-forced comparisons over 9 formats straddling every rung boundary ×
+8 ρ families (stochastic included, with explicit `R`) × 3 `R` values, forcing
+each specialization's carrier to `r+1` and `r+2` and asserting the code point is
+identical. That is the premise the lattice rests on: **`rung` is an optimization,
+never a semantics.** A too-narrow rung does not throw — it computes in a carrier
+that silently rounded or overflowed and returns a plausible number, which is the
+failure `rung` itself cannot report.
+
+The first shape of the comparison loop emitted a `@test` only on mismatch, so a
+green run recorded 56 assertions for 152 064 comparisons — and a loop that
+silently stopped iterating would have looked exactly like one that passed. It
+now asserts once per `(format, operation)` cell with the *disagreements* as the
+compared value, so a failure names the operands rather than a count, and the
+accounting matches G3's and G6's.
+
+G4 also **reports what it cannot cover**: 20 operations have rows at every rung,
+32 reach rungs 2/3 only through the enclosure ladder (`Divide`, `Hypot`,
+`ArcTan2`, `ArcTan2Pi`, `Sqrt`, `RSqrt`, `Recip`, and all of Group B). Printing
+the pending list is the difference between a gate that is honest about its scope
+and one that reads as broader coverage than it has.
+
 ---
 
 ## Appendix A — the exact-signature sweep

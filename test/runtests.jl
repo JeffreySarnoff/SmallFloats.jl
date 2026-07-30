@@ -1136,10 +1136,31 @@ println("approx.jl verified")
     end
 
     # --- width thresholds: escalation picks Float128 exactly within the band
+    #
+    # The band is now a function of the OPERANDS' significand widths rather than
+    # a constant (§11 M36, from §1 C1/C2), so these rows have to say which width
+    # they are pinning. `w8` carries exactly 8 significant bits — the widest a
+    # K ≤ 8 datum can be, and the width `(100, 92, 98)` was derived for.
+    #
+    # Written with powers of two (one significant bit) these rows pinned the OLD
+    # constants against operands the constants did not describe. Under derived
+    # thresholds a 1-bit pair gets `_de_add = 113 − 2 − 4 = 107`, so `2^101 + 1`
+    # — which needs 102 bits, comfortably inside 113 — stays exact in Float128
+    # instead of escalating to MPFR. That is a cheaper tier for the same answer,
+    # not a behaviour change: G5 is byte-identical at the `full` tier across all
+    # 120 K ≤ 8 formats. The assertions below cover both widths so the
+    # distinction is tested rather than lost.
+    w8(e) = ldexp(Float64((UInt64(1) << 7) | UInt64(1)), e - 7)   # 8 significant bits
     e40 = 2.0^40
-    @test ωeval(Val(:Add), 2.0^100, 1.0) isa Float128
-    @test ωeval(Val(:Add), 2.0^101, 1.0) isa BigExactF
+    @test ωeval(Val(:Add), w8(100), w8(0)) isa Float128            # ΔE = 100 = _de_add
+    @test ωeval(Val(:Add), w8(101), w8(0)) isa BigExactF           # 101 > 100
     @test ωeval(Val(:Add), e40, 1.0) isa Float64              # within Float64: no escalation
+    # A 1-bit pair has a wider band, and the wider band is still exact — the
+    # property that matters, checked rather than assumed.
+    let x = 2.0^101, y = 1.0, r = ωeval(Val(:Add), x, y)
+        @test r isa Float128
+        @test setprecision(() -> BigFloat(r) == BigFloat(x) + BigFloat(y), BigFloat, 300)
+    end
     # and the Float128 band is *exact*: compare against the BigFloat truth
     for ΔE in (60, 80, 100)
         x, y = 2.0^ΔE, 1.0 + 0.5^7
@@ -1147,9 +1168,15 @@ println("approx.jl verified")
         @test r isa Float128
         @test setprecision(() -> BigFloat(r) == BigFloat(x) + BigFloat(y), BigFloat, 300)
     end
-    @test ωeval(Val(:FMA), 2.0^46, 2.0^46, 1.0) isa Float128       # ΔE(p,z) = 92
-    let r = ωeval(Val(:FMA), 2.0^47, 2.0^46, 1.0)                  # 93 > 92: sticky head
-        @test r isa StickyF{Float64} && r.v == 2.0^93 && r.sgn == 1
+    @test ωeval(Val(:FMA), w8(46), w8(46), 1.0) isa Float128       # ΔE(p,z) = 92 = _de_fma
+    let x = w8(47), y = w8(46), r = ωeval(Val(:FMA), x, y, 1.0)    # 93 > 92: sticky head
+        @test r isa StickyF{Float64} && r.v == x * y && r.sgn == 1
+    end
+    # the same pair at one significant bit each stays in Float128, and exactly so
+    let x = 2.0^47, y = 2.0^46, r = ωeval(Val(:FMA), x, y, 1.0)
+        @test r isa Float128
+        @test setprecision(() -> BigFloat(r) == BigFloat(x) * BigFloat(y) + 1,
+                           BigFloat, 300)
     end
     @test ωeval(Val(:FAA), 2.0^98, 1.0, 1.0) isa Float128
     let r = ωeval(Val(:FAA), 2.0^99, 1.0, 1.0)                     # 99 > 98: distilled, exact
@@ -1585,6 +1612,9 @@ include("ternary_opt.jl")
 
 # ==========================================================================
 # K ≤ 16 extension standing gates (docs/other/implementextensions.md §5)
+#   G1 — the Float128 exactness-by-width thresholds and the sticky-head
+#        soundness bound: fixed point at the shipped constants, positivity,
+#        band contiguity, and soundness against MPFR (§1 C1/C2).
 #   G2 — `bigprec` sufficiency: the exact-arithmetic precision is derived and
 #        adequate, checked against `Rational{BigInt}` at the maximal-spread
 #        witness. Written RED first and the failure recorded (§11 M31).
@@ -1595,7 +1625,11 @@ include("ternary_opt.jl")
 #   G5 — K ≤ 8 golden non-regression, captured before the refactor began.
 #        Tier from SMALLFLOATS_G5 ∈ {fast, lazy, full, off}; defaults to lazy.
 # ==========================================================================
+include("gates_g1.jl")
 include("gates_g2.jl")
+# G4 — rung-selection equivalence: forcing a wider carrier must never change a
+# code point, because every rung is exact for the operands it accepts.
+include("gates_g4.jl")
 include("gates_g3.jl")
 include("gates_g6.jl")
 # Stage 5's central claim: which shape an array kernel takes is a policy
