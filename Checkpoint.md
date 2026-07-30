@@ -27,10 +27,17 @@ has actually happened, what is verified, and what is not.***
 | **3 — `Code16` and the 504-format grid** | **done, verified** |
 | **4 — decode/encode/keys/sort/packed widened** | **done, verified** |
 | **5 — table and kernel policy** | **done, verified** |
-| **6 — the carrier lattice** | **in progress** — G2, `bigprec`, the `rung(op, Fs…)` join, exact arithmetic *and* exact selections at every rung, `blockdecode`, the `_DE_*` corrections, **G1** and **G4** are done and verified; the enclosure ladder at the wide rungs (32 operations) and carrier-aware `promote_rule` remain |
+| **6 — the carrier lattice** | **done, verified** |
 | 7–9 | not started |
 
-**Stage 6 so far.** Gate **G2** was written red and the failure recorded (§11
+**Stage 6 complete.** Every operation in `OP_REGISTRY` now evaluates at every
+rung: exact arithmetic and exact selections by per-head and shared rows, the
+quotient family and Group B through the enclosure ladder. `promote_rule` targets
+`promotecarrier(F)`, closing the one wide-K defect reachable from ordinary user
+code with no P3109 operation involved — `x + 1.0` on a B = 32 768 datum returned
+±Inf from a finite value (§11 M40).
+
+Gate **G2** was written red and the failure recorded (§11
 M31): the engine returned `1//1` where the exact answer is `2//1` — the operand
 unchanged, because a residual 30 000 binades below the rounding position fell off
 a 2 200-bit accumulator. `_BIGP` was insufficient for **50 of the 504 formats**,
@@ -50,6 +57,16 @@ Three defects, each caught by a standing gate rather than by review: ambiguous
 as a `MethodError` on an internal function — M17's rule broken by the commit
 citing it (JET), and `Base.precision` not existing for `Float128` at all, which
 rung-3 coverage structurally could not find (§11 M34).
+
+**The enclosure ladder reaches every rung** — 96 calls verified across rungs 1,
+2 and 3 (all 28 unary transcendentals plus `Divide`, `Hypot`, `ArcTan2`,
+`ArcTan2Pi`). It could not simply be widened: two of its shortcuts are exactness
+**proofs** (`fma(q, y, -x) == 0`) that hold only where `fma` is exact, and
+MPFR's rounds — so at rung 3 the same test declares inexact quotients exact
+(§11 M39). They are guarded, not widened. Widening also surfaced a real bug the
+tests could not have: `_mpfr1`/`_mpfr2` converted operands to `BigFloat` at the
+ladder's ambient precision, which *rounds* a wide operand and encloses the wrong
+value.
 
 **Gate G4 is green at 152 064 rung-forced comparisons** — every specialization
 evaluated again with its carrier forced to `r+1` and `r+2`, agreeing on the code

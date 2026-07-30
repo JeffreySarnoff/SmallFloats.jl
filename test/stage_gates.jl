@@ -18,6 +18,7 @@
 # user-facing contract of a staged release.
 
 using Test, SmallFloats
+using Quadmath: Float128
 using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExact,
                    decodepolicy, TableDecode, ComputeDecode, expbias, bitwidth
 
@@ -73,12 +74,33 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         # what guarantees it never has to narrow.
         @test Add(W2, RNE_SatNone, u, Binary8p4se(1.5)) === W2(3.0)
 
-        # Groups B and C on a wide carrier are still refused — the enclosure
-        # ladder retargeted at Float128/BigFloat is the remaining Stage 6 item.
-        for f in (() -> Exp(W2, RNE_SatNone, v), () -> Sqrt(W2, RNE_SatNone, v))
-            e = try (f(); nothing) catch e; e end
-            @test e isa ArgumentError
-            @test occursin("Stage 6", e.msg)
+        # The enclosure ladder LANDED at every rung, so the two rows that asserted
+        # `Exp` and `Sqrt` still refused here went red by being implemented —
+        # again the intended way for a row in this file to die.
+        #
+        # What replaces them is the property that made widening safe: at rungs 2
+        # and 3 the `yd`/`fq` filters are dropped and the rigorous MPFR ladder
+        # decides alone. `EncloseF.yd` is a `Float64` field and `fq` narrows to
+        # `Float128`, so for a wide datum neither can even represent the operand;
+        # dropping them is structural, not a tuning choice.
+        for f in (() -> Exp(W2, RNE_SatNone, v), () -> Sqrt(W2, RNE_SatNone, v),
+                  () -> Divide(W2, RNE_SatNone, u, v), () -> Hypot(W2, RNE_SatNone, u, v),
+                  () -> SinPi(W2, RNE_SatNone, u), () -> Softplus(W2, RNE_SatNone, u))
+            @test f() isa W2
+        end
+        # The ladder-only shape, asserted directly rather than inferred from the
+        # result: a wide operand must produce an `EncloseF` with no filters.
+        let r = SmallFloats.ωeval(SmallFloats.HeadF128(), Val(:Exp), decode(v))
+            @test r isa SmallFloats.EncloseF
+            @test r.fq === nothing
+            @test isnan(r.yd)
+        end
+        # …while the Float64 tier keeps both filters, so this is a carrier
+        # distinction and not a silent loss of the fast path.
+        let r = SmallFloats.ωeval(Val(:Exp), 1.5)
+            @test r isa SmallFloats.EncloseF
+            @test r.fq !== nothing
+            @test !isnan(r.yd)
         end
         # `Convert` was never refused, and legitimately so: it has no ω-semantics
         # to evaluate — it is a bare projection, and the projection engine is
@@ -116,6 +138,30 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         @test e isa ArgumentError
         @test occursin("budget", e.msg) && !occursin("Stage", e.msg)
     end
+
+    # ---- Carrier-aware promotion (§2 R-E). `Binary ⋄ external` targets
+    # `promotecarrier(F)`, not `Float64`.
+    #
+    # This is the one wide-K defect that was reachable from ordinary user code
+    # with no P3109 operation involved at all: `x + 1.0` promoted a B = 32 768
+    # datum into a carrier that cannot represent it. The result was not an error
+    # — it was ±Inf from a perfectly finite value.
+    @test promote_type(Binary8p4se, Float64) === Float64
+    @test promote_type(Binary16p6se, Float64) === Float64      # rung 1 at K = 16
+    @test promote_type(Binary16p5se, Float64) === Float128     # rung 2
+    @test promote_type(Binary16p1uf, Float64) === BigFloat     # rung 3
+    @test promote_type(Binary16p1uf, Int) === BigFloat
+    @test promote_type(Binary8p4se, Float128) === Float128     # never narrows
+    @test promote_type(Binary8p4se, BigFloat) === BigFloat
+    let s = MaxFiniteOf(Binary16p1uf) + 1.0
+        @test s isa BigFloat
+        @test isfinite(s)                                      # was ±Inf under Float64
+        @test s > big(2)^32765
+    end
+    @test Binary8p4se(1.5) + 0.25 === 1.75                     # narrow path unchanged
+    # the conversions promotion resolves to must exist and be exact
+    @test BigFloat(Binary16p1uf(1.0)) == 1
+    @test Float128(Binary16p5se(1.5)) == Float128(1.5)
 
     # ---- `show` must never be the thing that throws: a failing testset has to
     # be able to print the values it is comparing, at every carrier.

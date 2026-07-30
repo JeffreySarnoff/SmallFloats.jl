@@ -525,13 +525,40 @@ Base.issubnormal(v::Binary) = issubnormal_3109(v)
 Base.one(T::Type{<:Binary}) = T(1.0)
 Base.one(::T) where {T<:Binary} = one(T)
 
-# Promotion (design §2.4): Binary ⋄ external float promotes to Float64 (the exact carrier);
-# no automatic promotion between distinct Binary formats.
-Base.promote_rule(::Type{<:Binary}, ::Type{Float64}) = Float64
-Base.promote_rule(::Type{<:Binary}, ::Type{Float32}) = Float64
-Base.promote_rule(::Type{<:Binary}, ::Type{Float16}) = Float64
-Base.promote_rule(::Type{<:Binary}, ::Type{BFloat16}) = Float64
-Base.promote_rule(::Type{<:Binary}, ::Type{<:Integer}) = Float64
+# Promotion (design §2.4; §2 R-E): `Binary ⋄ external` promotes to the format's
+# **promotion carrier**, not to `Float64`; no automatic promotion between distinct
+# Binary formats.
+#
+# `Float64` was right for every K ≤ 8 format and silently wrong above it: a
+# B = 32 768 datum has no Float64 representation at all, so `x + 1.0` would have
+# promoted to a carrier that cannot hold `x` and produced ±Inf or 0.0 from a
+# perfectly ordinary value. The target is `promotecarrier(F)` — deliberately the
+# PUBLIC carrier trait rather than `datumcarrier`, because the promoted type owes
+# a caller the whole `Real` interface, which an internal carrier (`Dyadic`, from
+# Stage 7) does not implement.
+#
+# `promote_rule` is inherently type-returning and is resolved by the compiler at
+# the type level, so it is an explicit carve-out from the "no trait returns a
+# Type from a branch" rule (invariant 9) — but it is still *derived from a
+# trait*, never computed at a call site, which is what that rule is protecting.
+#
+# The signatures take `::Type{F} where {F<:Binary}` rather than `::Type{<:Binary}`
+# because the carrier is a function of the format's parameters: the abstract form
+# has none to read (invariant 8's concern, in the one place promotion touches it).
+Base.promote_rule(::Type{F}, ::Type{Float64}) where {F<:Binary} = promotecarrier(F)
+Base.promote_rule(::Type{F}, ::Type{Float32}) where {F<:Binary} = promotecarrier(F)
+Base.promote_rule(::Type{F}, ::Type{Float16}) where {F<:Binary} = promotecarrier(F)
+Base.promote_rule(::Type{F}, ::Type{BFloat16}) where {F<:Binary} = promotecarrier(F)
+Base.promote_rule(::Type{F}, ::Type{<:Integer}) where {F<:Binary} = promotecarrier(F)
+# The two wide carriers themselves: a narrow format meeting a `Float128` must not
+# come back down to `Float64`. `joinfloat` takes the wider of the two, so the
+# result holds both operands exactly.
+Base.promote_rule(::Type{F}, ::Type{Float128}) where {F<:Binary} =
+    _joinfloat(promotecarrier(F), Float128)
+Base.promote_rule(::Type{F}, ::Type{BigFloat}) where {F<:Binary} = BigFloat
+@inline _joinfloat(::Type{BigFloat}, ::Type{<:AbstractFloat}) = BigFloat
+@inline _joinfloat(::Type{Float128}, ::Type{Float128}) = Float128
+@inline _joinfloat(::Type{Float64}, ::Type{Float128}) = Float128
 # The three external-float conversions are ROUNDING conversions, in the ordinary
 # Julia sense: `Float32(x)` means "give me the nearest Float32". They were exact
 # for every K ≤ 8 format and are still exact for every format where
@@ -550,6 +577,19 @@ Base.Float32(v::Binary) = _tofloat32(decodepolicy(typeof(v)), v)
     @inbounds _decode_table32(typeof(v))[Int(codepoint(v)) + 1]
 @inline _tofloat32(::ComputeDecode, v::Binary) = Float32(decode(v))
 (::Type{BFloat16})(v::Binary) = BFloat16(Float64(v))
+# The two wide carriers. `promote_rule` names them as targets, so promotion needs
+# the conversions to exist — `x + 1.0` on a rung-2 or rung-3 format resolves to
+# `+(::Float128, ::Float128)` or `+(::BigFloat, ::BigFloat)` and gets here.
+#
+# `BigFloat` is EXACT for every format at any ambient precision ≥ 16 bits (a
+# datum's significand is at most P ≤ 16 bits, and MPFR's exponent range covers
+# every B). `Float128` is a rounding conversion in the ordinary Julia sense, like
+# `Float32(x)` above: exact wherever `datumsexact(Float128, F)` holds and
+# overflowing to ±Inf beyond it. Only the first is reachable by promotion from a
+# format that needs it, because `promotecarrier` never names `Float128` for a
+# format whose datums exceed it.
+(::Type{Float128})(v::Binary) = Float128(decode(v))
+Base.BigFloat(v::Binary) = BigFloat(decode(v))
 (::Type{T})(v::Binary) where {T<:Binary} = _convert_default(T, v)
 (::Type{T})(x::Real) where {T<:Binary} = _convert_default(T, x)
 # Disambiguates against Base's (::Type{T})(::Rational) where T<:AbstractFloat

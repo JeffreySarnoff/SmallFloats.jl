@@ -1164,6 +1164,34 @@ band contiguity for every `P ≤ 16`, `N ≤ 60`; **G4** including the four-fact
 `ScaledMultiply` case and stochastic ρ with explicit `R`; the disable-Float128
 configuration bit-identical for Group B.
 
+**Achieved.** Every operation in `OP_REGISTRY` evaluates at every rung.
+**G2** 4 088 assertions, written red first with the failure recorded (§11 M31) —
+the engine returned the operand unchanged where the exact answer was one binade
+higher. **G1** 52 620 assertions; its band-contiguity part reproduces C2's hand
+derivation from the other direction (the middle band is nonempty for exactly one
+of 256 `(P₁, P₂)` cells: `(16, 16)`). **G4** 152 064 rung-forced comparisons over
+9 formats straddling every rung boundary × 8 ρ families × 3 `R` values, all
+agreeing on the code point. **G5 33/33 byte-identical**, including one run at the
+`full` tier (11m34s, exhaustive over all 120 K ≤ 8 formats) taken *before* two
+red rows were edited, to settle whether a result had moved or only a tier.
+
+Warm scalar paths allocate zero (`Add`, `FMA`, `Maximum`, `Abs`); narrow
+`vmap!` Add **0.209 ns/elem**, unchanged across the stage; rung-3 `Add` 2.5 µs
+and `Exp` 4.4 µs at MPFR precision derived per call.
+
+*Six defects, each caught by a standing gate rather than by review:* ambiguous
+`bigprec` at N = 0 (`detect_ambiguities`); Group B/C at rung 3 surfacing as a
+`MethodError` on an internal function — M17's rule broken by the commit citing
+it (JET); `Base.precision` absent for `Float128` entirely, which rung-3 coverage
+structurally could not find (§11 M34); the ladder's `BigFloat` conversion
+rounding a wide operand and enclosing the wrong value (§11 M39); the
+`fma`-exactness proofs being unsound under MPFR (§11 M39); and `promote_rule`
+returning ±Inf from a finite value with no package operation involved (§11 M40).
+
+*Two claims corrected mid-stage:* `16B + 128` did need changing (§11 M35
+correcting M30), and "Group A at every rung" described five rows rather than the
+group (§11 M37).
+
 ---
 
 ### Stage 7 — `Dyadic`
@@ -2376,6 +2404,79 @@ G4 also **reports what it cannot cover**: 20 operations have rows at every rung,
 `ArcTan2`, `ArcTan2Pi`, `Sqrt`, `RSqrt`, `Recip`, and all of Group B). Printing
 the pending list is the difference between a gate that is honest about its scope
 and one that reads as broader coverage than it has.
+
+**M39 — the enclosure ladder could not simply be widened, because two of its
+shortcuts are *proofs* that only hold on fixed-width carriers.** The quotient
+rows accept a candidate with `fma(q, y, -x) == 0` — sound exactly where `fma` is
+exact, which IEEE requires of Float64 and Float128. **MPFR's `fma` rounds to the
+ambient precision**, and `q·y` needs twice the operand width, so at rung 3 the
+same test yields *false positives*: an inexact quotient declared exact,
+projected and returned, with nothing downstream re-checking it. That is the
+`_DE_*` hazard class again, reached by a different road.
+
+So the shortcuts are **guarded** (`_fma_is_exact`) rather than widened, and rung
+3 goes straight to the rigorous ladder — which was always the correct answer,
+merely the slower one. Five sites; the guard is the whole difference between a
+widening and a soundness bug.
+
+**Both filter stages turn out to be structurally Float64-tier**, not merely
+tuned for it: `EncloseF.yd` is a `Float64` *field* and `fq` narrows to
+`Float128`, so for a B = 32 768 datum neither can represent the operand at all.
+Wide carriers drop both. This is not a reduced-quality path — the ladder decides
+in every case regardless; the filters only allow it to be *skipped* when they
+already agree on a code point. `stage_gates.jl` now asserts the shape directly
+(a wide operand yields `EncloseF` with `fq === nothing` and `isnan(yd)`, while
+Float64 keeps both), so the distinction is pinned rather than inferred from a
+result.
+
+**A real bug, found by widening rather than by testing.** `_mpfr1`/`_mpfr2`
+converted the operand to `BigFloat` at the ladder's *ambient* precision. For a
+`BigFloat` operand whose own precision exceeds the ladder's first rungs that
+conversion **rounds**, so the bracket would enclose the wrong value — an
+enclosure that is sound-looking and false. Fixed with `_ladderprec`, the same
+floor `_encl_div_scale` already applies in `blocks.jl`; the precedent existed and
+the ladder simply predated the possibility of a wide operand.
+
+`_LADDER_OPS` is **derived**, not listed: whatever is neither an exact selection,
+nor exact arithmetic, nor `Convert` resolves through an enclosure. Adding an
+operation to `OP_REGISTRY` gives it wide-rung rows automatically, and
+mis-classifying one is caught by G4's partition assertion rather than by a
+`MethodError` at a call site far from the mistake (§11 M9's trap, closed by
+construction this time).
+
+Verified: 96 ladder calls across rungs 1, 2 and 3 — all 28 unary transcendentals
+plus `Divide`, `Hypot`, `ArcTan2`, `ArcTan2Pi` — on `Binary8p4se`,
+`Binary16p5se` and `Binary16p1uf`.
+
+**M40 — `promote_rule` was the one wide-K defect reachable from ordinary user
+code with no P3109 operation involved.** `Binary ⋄ external` promoted to
+`Float64` unconditionally. Right for every K ≤ 8 format and silently wrong above
+it: a B = 32 768 datum has no Float64 representation, so `x + 1.0` promoted into
+a carrier that cannot hold `x` and returned **±Inf from a perfectly finite
+value** — no operation of the package's own involved, no error raised.
+
+The target is now `promotecarrier(F)`, deliberately the *public* carrier trait
+rather than `datumcarrier`: the promoted type owes the caller a full `Real`
+interface, which an internal carrier (`Dyadic`, at Stage 7) does not implement.
+`promote_rule` is inherently type-returning and resolved at the type level, so it
+is an explicit carve-out from invariant 9's "no trait returns a Type from a
+branch" — but it is still derived from a trait, never computed at a call site,
+which is what the rule protects.
+
+Promotion also needed the conversions it names to exist: `BigFloat(v::Binary)`
+(exact for every format — a datum's significand is ≤ 16 bits and MPFR's exponent
+range covers every B) and `Float128(v::Binary)` (a rounding conversion in the
+ordinary Julia sense, and unreachable by promotion from a format that would
+overflow it, since `promotecarrier` never names `Float128` for such a format).
+
+*JET caught a second instance of M39's class here, and the right answer was a
+better precondition rather than a filter.* Analysing the widened rows abstractly,
+JET pairs a `Float64` operand with a `Float128` eager estimate — a combination no
+concrete call produces. `EncloseF.yd` **is** a `Float64` field, so "there is an
+eager estimate" and "the estimate is a `Float64`" are the same condition; saying
+so in the signature (`yd::Float64` on the narrow methods) makes the wide method
+catch everything the narrow one cannot construct. A filter would have hidden the
+report; the honest precondition removes it.
 
 ---
 
