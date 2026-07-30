@@ -762,17 +762,33 @@ without touching its neighbours.
 *No source changes. Everything here is a thing that must exist before an edit
 is safe.*
 
+0. **Make the repository build** (§11 M1 — discovered during execution, not by
+   the audit). `Project.toml` was rejected outright by Pkg: `Julia = "1.12"` in
+   `[compat]` must be lowercase `julia`, and `author` must be `authors`. Until
+   both are fixed `Pkg.instantiate()` fails, so *nothing* — not the suite, not
+   the golden, not a single `using` — can run. C9 understated the state of the
+   rename: the tree was not merely missing its doctrine file, it did not build.
 1. **Reconstitute the doctrine file** (C9). Recompose the seven invariants, the
    include-order rule, the enumerate-don't-sample doctrine, the
    `SmallFloats_Float128` dual-configuration contract, and the JET-filter rule
    from [`docs/src/technical_guide.md`](../src/technical_guide.md) and the
    assertions in [`test/`](../../test/). Without it, invariants 8–10 have
    nowhere to live and invariant 8's grep enforcement has nothing to cite.
-2. **Capture the K ≤ 8 golden (G5).** Run the existing suite against the
-   current tree; for each testset, SHA-256 the concatenated result code points;
-   commit as `test/golden/k8.sha256` (~50 lines, diffable — technique T12).
-   **Capture before the first edit**; a golden derived from refactored code
-   proves only self-consistency.
+2. **Capture the K ≤ 8 golden (G5).** SHA-256 one digest per section of the
+   K ≤ 8 observable surface; commit as `test/golden/k8.sha256` (~20 lines,
+   diffable — technique T12). **Capture before the first edit**; a golden
+   derived from refactored code proves only self-consistency, so
+   [`capture.jl`](../../test/golden/capture.jl) refuses to overwrite an
+   existing file without an explicit environment override.
+
+   *Implementation note (§11 M3).* The plan said "run the existing suite and
+   digest each testset". That was the wrong shape: the suite's testsets are
+   `@test` calls, not result streams, so digesting them means invasive edits to
+   1 500 lines of tests — and it couples the oracle to the *structure* of the
+   suite rather than to the *behaviour* of the package. A standalone harness
+   ([`test/golden/harness.jl`](../../test/golden/harness.jl)) enumerating the
+   surface directly is independent of how the tests happen to be organized, is
+   reproducible from one command, and is what G5 actually needs.
 3. **Record the performance baseline.** Scalar `Add`, `project`, array unary
    and binary gathers, and the zero-allocation pins, under the existing
    benchmark harness, with the machine and Julia version recorded. Stage 2 is
@@ -815,7 +831,8 @@ so Stage 2's diff is only the type refactor.*
    - **A1** — `approx.jl:60`: `UInt8(codes[i])` → `codeunit_type(argformats[i])(codes[i])`.
    - **A6/C8** — delete `_cmp_rounded_datum` ([`project.jl:237-255`](../../src/project.jl#L237)).
    - **A3/A4** — apply the §9 dispositions for `f32_exact` and
-     `DefaultAccumulatorType`.
+     `DefaultAccumulatorType`. *(A4 landed before Stage 6 instead, as a
+     deletion — §11 M29.)*
    - Budgets as `Ref`s (T9): `max_exhaustive`, the table byte budgets, the
      tier thresholds.
 6. **Write G9** (trait folding gate) and run it over the 120 formats. It is
@@ -909,10 +926,15 @@ before a single wide format exists.
 
 ### Stage 3 — `Code16` and the 504-format grid
 
-1. Populate `Code16`; open `checkformat` to `3 <= KMIN..KMAX <= 16` with the
-   range as named constants.
-2. Extend the alias loop to `3:16` → 504 names. Verify the count in the suite
-   (`length(_NAMED) == 504`), and the per-K counts `4K − 2`.
+1. Populate `Code16`; open `checkformat` to `KMIN:KMAX` with the range as named
+   constants. **Three** constants, not two: `KMIN = 3` and `KMAX = 16` are a
+   scope claim about the package, while `KSPLIT = 8` is a *representation* fact
+   (`8 * sizeof(UInt8)`) and the `Code8`/`Code16` seam. All three were being
+   written as the literal `8`, and they do not move together — that is how
+   `K <= 8` comes to mean "narrow enough for a byte" in one file and
+   "supported" in another.
+2. Extend the alias loop to `KMIN:KMAX` → 504 names. Verify the count in the
+   suite (`length(_NAMED) == 504`), and the per-K counts `4K − 2`.
 3. **Restated invariant 2** lands here: `(::Type{T})(c::Unsigned)` replaces the
    `UInt8` method (range-checked against `codemask`, so *every* `Unsigned` at
    *every* width is a code point, uniformly); `show` padding becomes
@@ -935,6 +957,19 @@ before a single wide format exists.
    `rung` stays **total** — it is a trait, and a trait that throws over a third
    of its domain is not a trait. An incomplete implementation is precisely a
    set of missing methods, which is what the method table reports.
+
+   *Reached as `ωeval(rung(fr), op, xs...)` from `apply_op`.* Gating on the
+   **result** format alone is complete at this stage and only at this stage:
+   operands arrive already decoded, `decode` refuses every K ≥ 9 format until
+   Stage 4, and every K ≤ 8 format has B ≤ 128 and is therefore rung 1. Stage 6
+   replaces it with the `rung(op, Fs...)` join (R-B). Measured: the tag argument
+   is free — warm scalar paths still allocate zero and `vmap!` still runs at
+   0.26 ns/elem on the table path.
+
+   *Same discipline, wider than the plan said:* `decode` is gated too (§11 M17).
+   It is not arithmetic, but `_decode_compute`'s Float64 bit-assembly tail is
+   the one wide route that would have been **silently wrong** rather than
+   loudly missing.
 6. Update [`approx.jl:313`](../../src/approx.jl#L313)'s conformance banner
    (`K ∈ 3:8` → the constants) so the declaration cannot go stale.
 7. `test/runtests.jl:118`'s `Binary{9,4,true,true}` invalidity assertion moves
@@ -942,6 +977,13 @@ before a single wide format exists.
 
 **Exit:** the full lattice sweep passes at every K; every Group B/C arithmetic
 call throws with a message naming its stage; G5 still byte-identical.
+
+**Achieved.** Lattice sweep 504 formats × 7 602 160 code points, exhaustive,
+10 s (`test/sweep_lattice.jl`). Stage gates 634 assertions
+(`test/stage_gates.jl`) — a new file that *shrinks* as the extension lands, and
+whose rows are meant to go red by being implemented. G9 4 290 assertions over
+the whole grid. **G5 33/33 byte-identical** through the grid opening. Aqua and
+both JET passes green with no new filter. Warm scalar paths allocate zero.
 
 ---
 
@@ -959,6 +1001,8 @@ call throws with a message naming its stage; G5 still byte-identical.
    `Int64` and needs no change (`Eb ≤ 2^16`, `S ≤ 2^16`).
 3. **Order keys**: `orderkeytype` (R-A), `nan_order_key(F) = typemax(orderkeytype(F))`
    replacing the `NAN_ORDER_KEY` const, `codedistance` follows.
+   **→ landed in Stage 3 (§11 M16):** a `UInt16` key wraps silently to 0 at
+   K = 16, and Stage 3's whole discipline is that wide formats fail *loudly*.
 4. **Counting sort**: `key2code::Vector{codeunit_type(T)}`, and the length
    gate
    ```julia
@@ -968,6 +1012,10 @@ call throws with a message naming its stage; G5 still byte-identical.
    At K = 16 the unconditional setup is 512 KiB and 65 536 iterations before
    touching the data. The gate is a generalization, not a behavior change: at
    K ≤ 8 it almost never fires.
+   **→ landed in Stage 3 (§11 M16)**, with item 3: the sort reads
+   `NAN_ORDER_KEY`, so it had to move when the key type did, and a sort that
+   *works* while allocating 512 KiB for a three-element vector is the kind of
+   thing that gets measured before it gets fixed.
 5. **`PackedVector`**: `U(c & mask)` for `U = codeunit_type(F)`; `_codemask(K)`
    already returns `UInt64` and is correct to K = 63. **Refuse loudly at
    K = 16** — packing is the identity there and a silent identity invites
@@ -986,6 +1034,19 @@ call throws with a message naming its stage; G5 still byte-identical.
 **Exit:** **G3** (`_rtp_f64` bit ≡ generic over the widened `(P ≤ 16, B ≤ 512)`
 grid — the first stage where P > 8 reaches the bit path); **G6**; the full
 lattice sweep still green; Group A operational at every K.
+
+**Achieved.** **G3** green over **135 `(P, B)` cells** — every pair the grid
+realizes, not just the rung-1 ones (§11 M22) — 4 839 210 bit-vs-generic
+comparisons, 1.1 s. **G6** green over **19 976 144 `(datum, head)` pairs**,
+exhaustive, 27 s. **Group A verified at every K** by
+[test/wide_ops.jl](../../test/wide_ops.jl): 321 984 results on the 312 wide
+rung-1 formats, each recomputed from the draft definition in MPFR rather than
+compared against the package's own oracle. Ordering and the counting sort
+checked against decoded datums at K = 16, which is the first point at which
+Stage 3's key retyping could be verified against values rather than structure.
+G5 33/33 byte-identical; lattice sweep, G9, Aqua and both JET passes green;
+warm scalar paths allocate zero on **both** narrow and wide formats and the
+narrow array path holds 0.26 ns/elem.
 
 ---
 
@@ -1023,6 +1084,32 @@ lattice sweep still green; Group A operational at every K.
 **Exit:** K = 16 unary array ops run on tables; K = 16 binary array ops run on
 the compute kernel; no signature attempts an impossible allocation; first-call
 latency for the largest eager table is recorded.
+
+**Achieved, and items 4–5 withdrawn on measurement.** All four exit conditions
+hold: a K = 16 unary array op runs Shape A on a `Memory{UInt16}` at
+**0.16 ns/elem**; a K = 16 binary op runs Shape B; no signature attempts an
+impossible allocation (the budget is compared as bits and never shifts); and
+first-call latency for the largest eager table is **0.085 s** (65 536 entries,
+~1 µs/entry).
+
+That last measurement retires two of this stage's own items. §4 items 4
+(parallel build) and 5 (cost-aware eager band) both exist to solve a first-call
+latency I had estimated at ~200 µs/entry — "a K = 16 unary `Exp` table … 65 536
+oracle trips, plausibly seconds". Measured, it is 0.085 s, because ~200 µs is
+the *rigorous MPFR ladder* cost from the golden capture and the ordinary path
+almost never reaches the ladder: the Float64 and Float128 filters resolve first.
+Threading the builder — the one function invariant 6 makes every result depend
+on — to save 0.08 s is not a trade worth making. **Both items are withdrawn as
+solving a problem that measurement says does not exist**, which is the benchmark
+doctrine applied to my own plan rather than to the code.
+
+Item 6 landed as `table_policy(op, fr, fs…, ρ)`, returning
+`(; shape, entries, bytes, reason)`.
+
+**G5 33/33 byte-identical.** New gate: **Shape A ≡ Shape B**
+([test/gates_shape.jl](../../test/gates_shape.jl)) — 920 signatures,
+**2 503 312 element comparisons**, exhaustive over each signature's input space,
+every arity, both sides of the code-unit seam.
 
 ---
 
@@ -1076,6 +1163,34 @@ latency for the largest eager table is recorded.
 band contiguity for every `P ≤ 16`, `N ≤ 60`; **G4** including the four-factor
 `ScaledMultiply` case and stochastic ρ with explicit `R`; the disable-Float128
 configuration bit-identical for Group B.
+
+**Achieved.** Every operation in `OP_REGISTRY` evaluates at every rung.
+**G2** 4 088 assertions, written red first with the failure recorded (§11 M31) —
+the engine returned the operand unchanged where the exact answer was one binade
+higher. **G1** 52 620 assertions; its band-contiguity part reproduces C2's hand
+derivation from the other direction (the middle band is nonempty for exactly one
+of 256 `(P₁, P₂)` cells: `(16, 16)`). **G4** 152 064 rung-forced comparisons over
+9 formats straddling every rung boundary × 8 ρ families × 3 `R` values, all
+agreeing on the code point. **G5 33/33 byte-identical**, including one run at the
+`full` tier (11m34s, exhaustive over all 120 K ≤ 8 formats) taken *before* two
+red rows were edited, to settle whether a result had moved or only a tier.
+
+Warm scalar paths allocate zero (`Add`, `FMA`, `Maximum`, `Abs`); narrow
+`vmap!` Add **0.209 ns/elem**, unchanged across the stage; rung-3 `Add` 2.5 µs
+and `Exp` 4.4 µs at MPFR precision derived per call.
+
+*Six defects, each caught by a standing gate rather than by review:* ambiguous
+`bigprec` at N = 0 (`detect_ambiguities`); Group B/C at rung 3 surfacing as a
+`MethodError` on an internal function — M17's rule broken by the commit citing
+it (JET); `Base.precision` absent for `Float128` entirely, which rung-3 coverage
+structurally could not find (§11 M34); the ladder's `BigFloat` conversion
+rounding a wide operand and enclosing the wrong value (§11 M39); the
+`fma`-exactness proofs being unsound under MPFR (§11 M39); and `promote_rule`
+returning ±Inf from a finite value with no package operation involved (§11 M40).
+
+*Two claims corrected mid-stage:* `16B + 128` did need changing (§11 M35
+correcting M30), and "Group A at every rung" described five rows rather than the
+group (§11 M37).
 
 ---
 
@@ -1151,14 +1266,38 @@ failure).
 **Exit:** `Pkg.test()` in the same wall-clock class as today; the nightly sweep
 green; every knowingly-uncovered area (§6.4) stated in one place.
 
+**Exit met, with one number reported rather than met.** The nightly sweep is
+green (38 min, 0 failures, 35 580 747 units, 9 of 13 gates exhaustive), and
+§6.4's list is printed by `test/rollcall.jl` at the end of every green run
+rather than living only in this document.
+
+The wall clock moved: **17.1 min against ≈ 10 before Stage 7.** Whether that is
+"the same class" is a judgement, so here is the ratio instead of the adjective —
+**1.7× the time for 4.0× the compared units** (8.9 M → 35.3 M), and the growth
+is almost entirely specialization rather than arithmetic. The lever, if a
+faster inner loop is wanted, is `SMALLFLOATS_G5=fast` (~1 min instead of 4m20),
+which is what that tier exists for.
+
 ---
 
 ### Stage 9 — Docs, exports, benchmarks, release
 
-1. **Exports**: the opt-in `SmallFloats.Formats` submodule re-exporting all 504
-   aliases; the 120 K ≤ 8 names exported as today (no breakage);
-   `format(K,P,Σ,Δ)` for programmatic use. Asymmetric reversibility settles
-   this: exporting more later is non-breaking, un-exporting is not.
+1. **Exports** — **DECIDED and implemented at Stage 8, not Stage 9** (open item
+   O3 closed). All 504 aliases are *defined* in `SmallFloats`; `using
+   SmallFloats` exports the **120 at K ≤ 8**, exactly as before the extension;
+   `using SmallFloats.Formats` adds the other 384. `format(K,P,Σ,Δ)`,
+   `reptype` and `codeunit_type` are now exported — `format`'s own docstring
+   already called it "the supported replacement for spelling `Binary{K,P,Σ,Δ}`",
+   which an unexported binding could not be.
+
+   *Why it moved earlier.* The branch had been exporting **all 504** since
+   Stage 3. Narrowing is free before release and breaking after it, so the
+   window to apply asymmetric reversibility closes at the release, not at
+   Stage 9 — and Stage 8's derived format selection was being written against
+   the export surface at the same moment. Both now use `_NAMED[nm]`, the
+   registry, rather than `getfield(SmallFloats, nm)`, the binding: a test
+   harness should not be the thing that constrains a naming decision, and with
+   the dictionary lookup the suite survives the aliases moving either way.
 2. **Documentation.** The `3–8` range is stated in
    [`index.md`](../src/index.md), [`introduction.md`](../src/introduction.md)
    (twice), [`user_guide.md`](../src/user_guide.md),
@@ -1172,7 +1311,31 @@ green; every knowingly-uncovered area (§6.4) stated in one place.
    `docs/src/*.md`, so a stale range propagates into a released PDF. Purge the
    stale `ByteFloats` artifacts in `docs/build_latex/` and `docs/pdf/` (C9).
 4. **`benchmarking/`** has its own environment: `Pkg.develop` refresh, per-rung
-   report sections, and the preflight abort condition made **per-head** (T8).
+   report sections, and the preflight abort condition made
+   **per-operation-class** — *revised at Stage 8 from the original "per-head",
+   which measurement showed to be the wrong axis (§11 M46).*
+
+   The original wording asked for `HeadF64` and `HeadF128` to be
+   zero-allocation abort conditions and for `HeadExact`'s MPFR fallback to be a
+   recorded property. That is false as stated and was never a statement about
+   the head: a `Binary16p6se` add can span 1 024 binades, exceed `Float64`'s
+   exact range, escalate to MPFR and allocate — **at rung 1**. Allocation on the
+   arithmetic path is a function of the *operand spread against the carrier's
+   exact range*, and the head only sets the range.
+
+   What the preflight must therefore do:
+
+   * **Abort** if any *exact selection* allocates, at any rung. `Maximum`,
+     `Minimum`, `MaximumMagnitude`, `MinimumFinite`, `CopySign` return an
+     operand; there is nothing for them to escalate into, so zero is
+     unconditional and a regression there is always a defect. (Pinned as a
+     deterministic regression in `test/runtests.jl` over six formats spanning
+     all three heads.)
+   * **Record, not gate,** arithmetic and enclosure-ladder allocation, with the
+     operand spread reported alongside it — the number is meaningful only
+     against the spread that produced it.
+   * Report per *rung* in the sections, because that is what a reader wants to
+     compare; just do not turn the rung into the abort condition.
 5. **Precompile workload**: stays K ≤ 8 for tier-1 entries plus exactly one
    Group A wide format and one Group B format, so the wide paths compile but
    the image does not grow with the grid. Compare against the Stage 0
@@ -1236,7 +1399,57 @@ way to reach a wrong answer from user code.
 
 **G5 — K ≤ 8 golden non-regression.** Captured at Stage 0 *before* any edit,
 compared byte-for-byte. The exit criterion for Stages 1 and 2 and a standing
-gate thereafter.
+gate thereafter. Implemented in [`test/golden/`](../../test/golden/); the gate
+is [`test/golden.jl`](../../test/golden.jl).
+
+**Two tiers** (measured — see §11 M2). The full sweep costs ~5 minutes, which
+is right for a stage exit and wrong for a gate you want to run after every
+edit, so:
+
+| tier | sections | cost | when |
+|---|---|---|---|
+| `:fast` | meta, decode, lattice, order, project, packed, sort | **57 s** | after **every** edit |
+| `:lazy` | + the cheap full sections in full, and a ~1/6 format sample of the three expensive ones | ~3 min | **stage exit** (the routine gate) |
+| `:full` | + convert, unary_default, unary_rho, binary, ternary, blocks, kernels, juliacompat | ~10 min | **Stage 2 exit** and release |
+
+**Why `:lazy` is the routine stage gate, and where it is not enough.** The
+expensive sections are defence in depth: an arithmetic result cannot move
+without `decode`, `project` or the code lattice moving first, and those are in
+`:fast`, exhaustive over all 120 formats at every tier. Sampling the operation
+catalogue therefore trades a small amount of redundancy for a 3× shorter gate,
+which is the right trade for a gate run at every stage boundary.
+
+**Stage 2 is the exception and must exit on `:full`.** It is the one commit
+that changes the type of every value in the package, and the one place where a
+defect could plausibly be format-specific rather than systematic — precisely
+the failure a 1-in-6 format sample can miss. The same applies to release.
+
+*Figures measured, not estimated (§11 M2, M12). `:full` is dominated by two
+sections — `unary_rho` and `unary_default` — because a unary table entry is one
+oracle trip and 24 of the 30 unary operations are MPFR directed-enclosure
+ladders at ~0.5–1 ms each. Everything else together is under 2 minutes.*
+
+**The `:lazy` sections carry their own names and their own golden entries**
+(`unary_rho~lazy`, `unary_default~lazy`, `binary~lazy`). That is forced rather
+than stylistic: a digest over a sampled format list is a different number from
+the digest over the whole list, so reusing the full section's name would make
+every lazy run report a spurious mismatch. `capture.jl` writes every tier's
+sections into the one file, so any tier is checkable against it.
+
+The sample is **deterministic** — a fixed stride over the format list, always
+including the first and last entries so the extremes of the grid are never
+dropped. A golden whose contents depend on a random draw is not a golden.
+
+The split is a wall-clock decision, not a coverage concession: the fast tier is
+exhaustive over all 120 formats for exactly the stages a type refactor can
+move — storage, traits, constructors, the decode/encode plumbing, and the
+projection engine. An arithmetic result cannot change without one of those
+changing first. The full tier measures that claim rather than asserting it.
+
+*What is digested is semantic observables only* — code points, decoded bit
+patterns, class tags, order keys — never printed type names, because Stage 2
+changes `show` for the abstract format on purpose. A golden that fires on an
+intended change is a golden that gets disabled.
 
 **G6 — carrier-lift exactness (new).** Every `lift(h, decode(v))` is exact for
 every datum of every format, and no narrowing `lift` method exists. A T1-tier
@@ -1389,12 +1602,15 @@ Four. Each is cheap to answer now and expensive to reverse later.
    can only return `true` in the high-P corner of the wide grid. The
    alternatives are building the consumer (the SIMD stochastic loop sketched in
    [Float32more.md §3.4](Float32more.md), never written) or deprecating.
-3. **`DefaultAccumulatorType`** (A4, unconsumed; a full setter/getter/combinator
-   surface over `_GUARD_ACCUM = binary32` that nothing reads, while `blocks.jl`
-   uses its own exact wide-precision accumulator). Recommended: **wire it into
-   the reduction accumulator's precision choice**, where wide K makes it
-   genuinely useful — or document it as advisory. Do not carry an unconsumed
-   knob into a 504-format grid.
+3. ~~**`DefaultAccumulatorType`** (A4, unconsumed…). Recommended: wire it into
+   the reduction accumulator's precision choice, or document it as advisory.~~
+   **RESOLVED — deleted, before Stage 6 (§11 M29).** Both recommended answers
+   were wrong. `blocks.jl`'s accumulator choice is a *proof of exactness*
+   selected from the measured operand span, not a speed/accuracy preference;
+   overriding it from a session default makes `BlockDotProduct` inexact through
+   the default API, which invariant 5 forbids. The knob is also a `Type` where
+   the decision is a precision-plus-proof. Removed together with the two stale
+   suite copies (M30).
 4. **`PackedVector` at K = 16.** Recommended: **refuse loudly**, with a message
    pointing at `Vector`. Packing is the identity there and a silent identity
    invites benchmark confusion.
@@ -1428,6 +1644,1199 @@ within 1.5× of `Float64` on scalar `Add` at K ≤ 8.
 | 14 | **C9: the doctrine file does not exist in this repository** | Both predecessors instruct amending a `CLAUDE.md` that was not copied with the rename. Invariants 8–10 have nowhere to live; a Stage 0 blocker |
 | 15 | **G6–G9 added; G1 extended to band contiguity** | Each new gate corresponds to a defect class introduced above that the inherited five do not cover |
 | 16 | **Stage 0 added; nine stages became ten** | Golden capture, doctrine reconstitution, baselines, and the four decisions are prerequisites, not step 1 of the first edit |
+
+---
+
+## 11. Execution log — modifications made while implementing
+
+*Appended as each stage is executed. A plan is a hypothesis; this is what
+contact with the code changed about it. Items are numbered `M<n>` and are
+referenced from the stage and gate text above.*
+
+### Stage 0
+
+**M1 — the repository did not build; C9 understated the state of the rename.**
+`Project.toml` was rejected by Pkg outright: `[compat]` had `Julia = "1.12"`
+(the key must be lowercase `julia`) and the metadata key was `author` rather
+than `authors`. `Pkg.instantiate()` therefore failed, and with it every
+subsequent action — the suite, the golden, a bare `using`. C9 reported a
+missing doctrine file; the truth was that the copy from `ByteFloats.jl` left
+the tree **unbuildable**, which is a stronger reason for Stage 0 to exist than
+the one given. Fixed, plus `SHA` declared in `[extras]`/`[targets]` for the
+golden harness. *Baseline once building: the full suite passes — ~8.9 M
+assertions, 2 m 33 s.*
+
+**M2 — G5 is tiered, because the full sweep costs 15 minutes.** The first
+capture attempt ran 13 minutes before failing. Profiling by section showed the
+cost is almost entirely the unary catalogue: 30 operations × 4 ρ × 120 formats
+≈ 14 400 tables, and a table entry is one oracle trip at a measured **~200 µs**
+for the MPFR-backed transcendentals. A gate that costs minutes is a gate that
+gets skipped, so G5 splits into `:fast` (**57 s** measured, run after every
+edit) and `:full` (**15 min 13 s** measured, run at stage exit).
+
+*The tiering worked; the sizing estimate did not.* This entry first claimed
+`:full` would cost ~5 minutes after the M4 subsetting. Measured: 913 s, of which
+`unary_rho` is 532 s and `unary_default` 196 s — 80 % in two sections. M4 cut
+the format count for ρ-breadth but the surviving 46 representative formats ×
+30 ops × 3 ρ is still ~4 100 MPFR-backed tables. The lesson is the one this
+project keeps relearning: **a cost model over MPFR work is worthless until
+measured.** If `:full` needs to come down further, the lever is ρ-breadth on
+the transcendental catalogue, not format count.
+
+**M3 — the golden is a standalone harness, not instrumented testsets.** See
+Stage 0 step 2. Digesting the existing suite's testsets would couple the oracle
+to the suite's *structure*; enumerating the surface directly couples it to the
+package's *behaviour*, which is what is being protected.
+
+**M4 — ρ-breadth for the expensive catalogue is bought on a derived
+representative subset.** Sweeping 30 unary ops × 4 ρ over all 120 formats is
+~3.7 M MPFR ladders. The full-grid claim that matters for G5 — that no format's
+decode, projection, ordering or code lattice moved — is carried exhaustively by
+the fast tier; ρ-breadth over the operation catalogue is defence in depth and
+runs on a subset **derived from the grid** (for each `(K, Σ, Δ)`, the extreme
+and middle precisions), never hand-listed. This is Stage 8's
+"derived-not-hand-listed" rule applied a stage early, where it first bites.
+
+**M5 — there is deliberately no `conformance` section in the golden.**
+`conformance_dict()` embeds `collect(keys(TABLE_CACHE))`, so its value depends
+on which tables happen to be cached when it is called — nondeterministic across
+runs and across section orderings — and it lists the 120 format names, which
+Stage 3 changes to 504 **on purpose**. Digesting a *declaration* byte-exact
+guarantees false positives of both kinds. Invariant 5's real content (κ
+measured by exhaustive enumeration at registration) is pinned by the suite.
+
+### Stage 1
+
+**M7 — the disposition-(a) signature widening moves from Stage 2 to Stage 1.**
+Appendix A splits the 29 exact `::Type{Binary{K,P,S,E}}` signatures into
+(a) widen to `<:`, (b) retarget to the representation, (c) keep exact. The plan
+put all three in Stage 2. But while `Binary` is still concrete,
+`::Type{<:Binary{K,P,S,E}}` and `::Type{Binary{K,P,S,E}}` **match exactly the
+same single type**, so every (a) site can be widened at Stage 1 as a provably
+zero-behaviour-change edit — and Stage 1's exit is G5, which verifies that
+completely.
+
+Doing so is strictly better than the plan: it removes ~21 of the 29 sites from
+the diff of the single riskiest commit in the project, leaving Stage 2 to carry
+only the edits that genuinely need the type refactor (the (b) sites, which must
+route through `reptype`). *Rule generalized:* **any edit that is a no-op while
+`Binary` is concrete belongs in Stage 1, not Stage 2.** The same argument moved
+the T11 complement migration there, and for the same reason.
+
+**M12 — M4's "representative subset" was 58 % of the grid, and the ρ sweep paid
+for work it re-derived.** Measuring `:full` by section exposed two sizing errors
+in my own harness, both of the same kind: a claimed reduction that was not
+computed.
+
+*The subset was not a subset.* `representative_formats()` took three precisions
+per `(K, Σ, Δ)` cell — the two extremes and the midpoint — giving **70 of 120
+formats**. Since `B` is monotone in `P` at fixed `K`, the midpoint is
+interpolation between the two ends for every trait these sections exercise, so
+it bought repetition rather than coverage. Two-per-cell gives 46.
+
+*The ρ sweep re-derived ρ-independent work.* For a given `(op, format, code)`,
+`ωeval` yields the same exact value or enclosure whatever ρ is; only `project`
+differs. Sweeping three pure ρ therefore ran the MPFR ladder three times to
+exercise three projection modes — roughly **350 s of the 532 s** spent
+recomputing identical intermediates. Cut to two directed modes on opposite
+sides (`RTZ_SF`, `RTP_SP`); `RTO` remains covered exhaustively
+over all 120 formats by the `project` section, which is carrier-cheap.
+
+*What was deliberately NOT done.* The tempting fix is to call `ωeval` once and
+project it under each ρ. That would be correct arithmetic and wrong testing:
+the golden's job is to exercise the scalar path invariant 6 names, and a
+harness that bypasses that path no longer protects it. **Cut the breadth, keep
+the mechanism.**
+
+### Stage 2
+
+**M13 — the `similar` normalization is only implementable on the `Array`
+family.** §1's migration plan specifies
+`Base.similar(A::AbstractArray, ::Type{Binary{K,P,S,E}}, dims)`. That method is
+more specific in the element-type slot and *less* specific in the container
+slot than every container-specialized `similar` in Base and the stdlibs, so it
+is ambiguous with all of them — measured: `Diagonal`, `Hermitian`,
+`SymTridiagonal`, `LowerTriangular`, `UnitLowerTriangular`, `UpperHessenberg`,
+`Adjoint`/`Transpose` (vector and matrix forms), `ReinterpretArray`. That family
+is **open-ended**: any package defining `similar(::MyArray, ::Type{T})` adds
+another, so adding disambiguators does not terminate, and Aqua's ambiguity gate
+is in the shipped suite.
+
+Resolution: scope the normalization to `Vector`, `Matrix` and `Array`, which is
+what the package's own kernels and `similar(A, fr)` calls actually use, and
+which shadows exactly Base's three specializations — closed and ambiguity-free.
+Every other container keeps stock Base behaviour, which fails loudly on an
+abstract element type. That is the correct outcome, since the aliases and
+`format(K,P,Σ,Δ)` are the supported route.
+
+*Two arities are needed, not one.* `similar(a, T)` does not funnel through the
+three-argument method for `Array` — it reaches `Array{S,N}(undef, size(a))`
+directly — so a three-argument-only normalization is silently bypassed for
+exactly the container people use. Found by test, not by reading.
+
+**M14 — every representation trait needs an abstract-format forwarder.**
+`codeunit_type`, `decodepolicy` and `orderkeytype` dispatch on `Code8`/`Code16`
+(the seam), but Group M and the extremal queries are bounded by
+`::Type{<:Binary{K,P,S,E}}`, which **admits the abstract format itself** — and
+asking a *format* for its extremal code point is legitimate usage that both the
+suite and the documentation do (`MaxFiniteOf(Binary{5,2,true,true})`). Without a
+forwarder those calls reach `codeunit_type` with an abstract argument and die
+with a `MethodError`. Each trait therefore gets three methods: one per
+representation, plus an exact `::Type{Binary{K,P,S,E}}` forwarder through
+`reptype`. The exact signature matches only the abstract type, so it cannot be
+ambiguous with the two `<:Code*` methods.
+
+*Related, same cause:* the `Val(:code)` constructor forwarder must narrow the
+code to the representation's unit **before** reaching the inner constructor.
+Without that, a `UInt8` code aimed at a `Code16` format raises a `MethodError`
+before `@boundscheck` can run `checkformat`, turning a parameter-validation
+error (`ArgumentError` for K = 9 at this stage) into a dispatch error. That path
+is deliberately not `@inbounds`: it is the checked route and the check is the
+point.
+
+**M15 — G5's own completeness check failed `:full` by construction.** The Stage 2
+exit run reported `30 passed, 3 failed` and the three failures were *not* moved
+results: all fifteen digests `:full` computes matched the oracle byte for byte.
+The gate's second loop — "a section in the oracle but absent from the harness is
+a deletion" — was written as `for name in keys(want); @test any(p -> first(p) ==
+name, got)`, comparing the oracle's **18** entries against the **15** a `:full`
+run produces. The three `~lazy` sample sections are in the oracle (`capture.jl`
+writes every tier's entries, by design — §4 Stage 8) and are never computed at
+`:full`, so they failed every time. The check was testing the tier table, not the
+harness.
+
+Fixed by comparing the oracle's names against `all_sections()` — the harness's
+declared set — which is what "did a section disappear" actually means, and which
+is correct at *every* tier, so the check no longer needs to be `:full`-gated.
+
+*Second defect, same file:* a stray guard forced `ENV["SMALLFLOAT_G5"]` (missing
+the `S`) to `"lazy"` whenever it was unset **or equal to `"full"`**. The typo
+made it dead code; had it been spelled correctly it would have silently
+downgraded exactly the tier Stage 2 mandates. Replaced with
+`get!(ENV, "SMALLFLOATS_G5", "lazy")`: `lazy` becomes the routine default (which
+is what the suite should run per edit), and an explicitly requested tier is
+always honoured. **A gate that quietly runs less than it was told to is worse
+than no gate.**
+
+**M10 — G9's predicate is `Base.isdispatchelem`, not `isconcretetype`.** The
+obvious spelling of "this trait folded to one exact answer" is
+`isconcretetype(only(Base.return_types(trait, Tuple{Type{F}})))`. It is wrong
+for exactly the traits G9 exists to protect: a type-valued trait infers to
+`Type{Float64}` / `Type{UInt8}` / `Type{Code8{…}}`, and **`isconcretetype(Type{Float64})`
+is `false`** — `Type{X}` is a kind, not a concrete type, even though it has one
+inhabitant. The mistake fails every type-valued trait while passing every
+tag-valued one, which reads exactly like a real defect in the trait design and
+is not. `Base.isdispatchelem` is the correct predicate: true for a concrete
+type and for a `Type{X}` singleton, false for a `Union` and for `Any` — which
+is precisely "inference resolved this call to one exact answer". Written down
+because the false reading would have sent the next person to re-introduce D3's
+2 520 generated methods to fix a problem that does not exist.
+
+**M11 — the golden was captured from a clean `main` worktree, not from HEAD.**
+Checkpoint §6 flagged this as the one property that can only be lost once:
+`src/formats.jl` already carried the (asserted zero-change) Stage 1 edits, so
+capturing in place would have made G5 partly self-referential. Resolved by
+`git worktree add` at `main`, copying in only `Project.toml` (the build fix —
+without it the worktree cannot instantiate) and the harness, and capturing
+there. The golden's header records `git: 51abb00`, which is the commit the
+oracle actually describes. **G5 fast then passed 7/7 against the Stage 1 tree**,
+which is the intended use: the oracle is independent of the code it judges.
+
+**M8 — `_cu(F, x)` as the single narrowing point.** The T11 rewrite needs the
+storage unit at a dozen sites (`signmask`, `nan_code`, the four extremal
+codes …). Spelling `codeunit_type(F)(x)` at each is noisy and invites someone
+to shortcut it back to a `UInt8` literal. One `@inline _cu(::Type{F}, x)`
+helper makes the unit a single grep-able point and keeps every constant a
+literal after folding. The special-code block now reads as arithmetic on
+`signmask`/`codemask` rather than on `1 << K`, which is also what makes the
+four `MaxFiniteOf` rows collapse into one expression.
+
+**M9 — `Convert` is registry arity 1 but registry group `:conv`, and every
+consumer that filters by arity alone walks into it.** The first harness built
+its unary list as `arity == 1` and died in `apply_op` with
+`MethodError: no method matching ωeval(::Val{:Convert}, ::Float64)` — `Convert`
+has no ω-semantics, and `tables.jl`'s `_scalar_code` special-cases it into a
+bare projection. Recorded here because **Stage 6 adds `factors` as an `OpInfo`
+column** and will iterate the registry the same way: `factors(:Convert)` must
+be defined (or `:conv` excluded) or the same trap fires in the carrier
+selection, where it would be far less obvious. The rule for every registry
+consumer is **filter by `(arity, group)`, never by arity alone.**
+*Closed in Stage 3 by giving `Convert` the ω-semantics it actually has — the
+identity on the datum. See M18.*
+
+### Stage 3
+
+**M16 — two Stage 4 items moved into Stage 3, on a hazard-class rule.** Stage 3
+opens the grid to 504 formats while the wide *paths* land in Stages 4–7, so the
+stage's whole discipline is that an unimplemented route fails loudly. Sorting
+the changes by how they fail rather than by which stage listed them gives a
+rule: **a route that would fail loudly waits for its stage; a route that would
+be silently wrong does not.**
+
+Two of Stage 4's items are the second kind:
+
+* *Order keys.* `order_key` computed `UInt16(c) + UInt16(1)`. At K = 16 the top
+  code is `0xffff`, so the largest datum's key **wraps to 0** and sorts below
+  the smallest — no exception, no warning, a total order that is not one.
+  `orderkeytype` already returned `UInt32` for `Code16`; the key function simply
+  was not reading it. Now `nan_order_key(F) = typemax(orderkeytype(F))` per
+  format, replacing the `NAN_ORDER_KEY` constant.
+* *Counting sort.* It reads `NAN_ORDER_KEY` and builds `Vector{UInt8}`, so it had
+  to move with the key type regardless; the `n < 2^K` length gate came with it
+  rather than leaving a sort that works while allocating 512 KiB of buckets to
+  order three elements.
+
+Everything else Stage 4 owns — `decode`'s wide path, `PackedVector`, the
+Float32 surface — throws today and stays where the plan put it.
+
+**M17 — `decode` and `_decode_table` refuse by METHOD, and the refusal has to be
+a method that throws rather than a method that is absent.** `decode` now
+dispatches on `decodepolicy` (R-F, a Stage 4 item in shape but forced here):
+`_decode_compute`'s tail is still the Float64 bit assembly whose justifying
+comment is *literally* the K ≤ 8 premise, and at B ≈ 1024 a format's minimum
+datum is a Float64 subnormal where the assembly returns garbage rather than
+failing. So `ComputeDecode` throws until Stage 4 gives it the `ldexp` body.
+
+`_decode_table` is bounded to `Code8` by *signature*, which is invariant 10
+enforced where it can be: the tuple length is `2^K`, and asking for `K = 16`
+must be an error at the call site rather than a 65 536-element constant tuple
+the compiler dutifully materializes.
+
+The first spelling of that bound made the `Code16` case an **absent** method,
+and that was wrong for a reason worth recording. The abstract-format forwarder
+(§11 M14) infers to `Union{Type{Code8{…}}, Type{Code16{…}}}` when the format
+parameters are not statically known, so an absent method turns a deliberate
+refusal into a static-analysis defect: JET's whole-package pass reports it as an
+unreachable-method bug, and the only way back to green would be a filter — which
+the verification doctrine says must be backed by a concrete-call gate proving
+the path is clean. **It is not clean; it is refused.** A method that throws says
+so, is total, and keeps the guard.
+
+*Same shape, different site:* `show` must never be the thing that throws.
+A testset that fails while comparing two wide values has to be able to print
+them, or the report becomes an error inside the error reporter. `_show_datum`
+dispatches on `decodepolicy` and prints the code point alone until decode is
+total again.
+
+**M18 — `Convert` gets its ω-semantics instead of another special case.**
+`apply_op` now reaches the catalogue through `ωeval(rung(fr), op, xs...)`, and
+that made JET see what §11 M9 predicted in prose: `ωeval(::Val{:Convert}, ::Float64)`
+has no method, because `Convert` is registry arity 1 but registry group `:conv`.
+The fix is one line — `ωeval(::Val{:Convert}, x::Float64) = x` — and it is not a
+patch. Convert's ω-semantics **is** the identity on the datum; the conversion is
+the projection into the target format, which `project` already does. Spelling it
+makes `ωeval` total over the registry, so the next consumer that filters by
+arity alone gets an answer instead of a `MethodError` far from the mistake.
+`tables.jl`'s explicit `:Convert` branch stays: that one is not redundancy, it is
+the statement that a Convert table entry is a bare projection, and it belongs at
+the site where a table entry is defined to be the defined result (invariant 6).
+
+**M19 — the K ≤ 8 test surfaces are scoped, not widened, and each for its own
+reason.** Opening `_NAMED` to 504 silently changed the meaning of every loop
+written as `for T in values(_NAMED)`. Three were affected and none of them
+should simply grow:
+
+* `golden_formats()` (G5). The oracle was captured at `51abb00` when 120 formats
+  existed; its digests *are* statements about those 120. Widening the list would
+  not strengthen the gate, it would invalidate every digest in the file.
+* `float32surface.jl`. The narrowing-exactness claim and the pinned `f32_exact`
+  counts (118/120 Multiply, 88/120 Add) are statements about the K ≤ 8 grid.
+  Stage 4 gates this surface on the datum-exactness trait; until then, reading
+  it over formats whose datums Float32 cannot represent measures nothing.
+* `gates_g9.jl`'s zero-behaviour-change pin — which is the one that *earns*
+  its scoping. Its Stage 1 comment said "when `Code16` lands this becomes a
+  statement about the K ≤ 8 subgrid only, and that is the point". It now asserts
+  120 narrow and 384 wide, that no narrow format's traits moved, and — the case
+  a width/carrier conflation would fail and nothing else would — that a K = 16
+  format can sit on **any** rung: `Binary16p14se` is rung 1, `Binary16p1uf` is
+  rung 3.
+
+The conformance-declaration length assertions were the opposite case: they were
+literal `120`s and are now `sum(4K − 2 for K in KMIN:KMAX)`, because that
+assertion is precisely a claim about the range and must move with it.
+
+---
+
+### Stage 4
+
+**M20 — `decode`'s return type is now format-dependent, and three Base
+constructors had to stop assuming otherwise.** `decode(v)` returns
+`datumcarrier(typeof(v))`: `Float64` for 432 formats, `Float128` for 64,
+`BigFloat` for 8. The consequence is easy to miss because it type-checks
+everywhere: **`Base.Float64(v) = decode(v)` became wrong** — a method named
+`Float64` returning a `Float128` for 72 of the 504 formats. It is now
+`Float64(decode(v))`, which is the identity on the rung-1 path and therefore
+free. `Float32` splits on `decodepolicy` (the narrowed-table gather for K ≤ 8,
+`Float32(decode(v))` above it) and `BFloat16` routes through `Float64`.
+
+These conversions **round**, in the ordinary Julia sense, and they always did —
+what changed is that "always exact" stopped being true incidentally. `decode` is
+the exact route; `decode!` is the exact *bulk* route and refuses rather than
+rounds; `Float32(x)` rounds. Three surfaces, three contracts, stated.
+
+*Second-order, and worth the three lines it costs:* `show` of a Group C value
+printed **~78 decimal digits** for a one-bit significand, because `ldexp`
+returns a `BigFloat` at MPFR's 256-bit default and the shortest-round-trip
+printer honours the value's precision, not its information content. `show`
+rebuilds the datum at `precision(F)` — exact, since a datum fits in `P ≤ 16`
+bits by construction — purely for display. `decode` keeps the wide precision,
+because a decoded datum goes on to be computed with. Stage 7 makes this moot by
+replacing `BigFloat` with `Dyadic`.
+
+**M21 — `PackedVector`'s "refuse at K = 16" is a rule that fires on one of two
+identical cases, so it became a predicate instead.** §4 Stage 4 item 5 asked for
+a loud refusal at K = 16 because packing is the identity there and a silent
+identity invites benchmark confusion. Both halves of that are right, and the
+boundary is still wrong: packing is *equally* the identity at K = 8, where
+`⌈n·8/64⌉` words is exactly `n` bytes — and K = 8 has shipped since before the
+extension and is enumerated by G5's packed section over all 120 formats.
+Refusing K = 16 alone would encode an accident of history as a rule; refusing
+both would be a breaking change justified by tidiness.
+
+`packing_saves(F)` exposes the fact instead of enforcing it. Benchmarks and docs
+read it; `PackedVector` at those two widths stays correct, supported, and
+pointless.
+
+**M22 — G3's domain is every `(P, B)` the grid realizes, not the rung-1 grid.**
+§5 scoped G3 to `(P ≤ 16, B ≤ 512)` — the pairs where Float64 is the format's
+*own* carrier. That is not the reachable set: `Convert(F, ρ, x::Float64)`
+projects an external Float64 into **any** format, so `_rtp_f64` runs at every
+bias in the grid, up to B = 32768. The wide-B region is exactly where the bit
+path's `d < 0` branch would be exercised, and it turns out to be unreachable for
+a normal Float64 input because `1 − B` drops below Float64's exponent range —
+a fact worth measuring rather than asserting. **135 cells**, which is the same
+135 that §1 C6 found for the engine's parameter domain, arrived at independently.
+
+**M23 — the table builders refuse wide formats by name, not by `InexactError`.**
+Stage 4 makes the *scalar* path work at every K; the tabulated path still indexes
+operands as `UInt8` into a `Memory{UInt8}` sized `2^ΣK` with no byte budget, and
+widening it is Stage 5. Left alone, a wide array operation died as
+`InexactError: trunc(UInt8, 0x0400)` from three frames inside a builder — loud,
+but naming neither the cause nor the remedy, and the remedy exists: the scalar
+path works. `get_table` now refuses at all three arities with a message naming
+Stage 5, and `test/stage_gates.jl` pins it.
+
+*The guard's first spelling cost a JET failure worth recording:*
+`all(F -> bitwidth(F) <= KSPLIT, Fs)` infers `Union{Missing, Bool}`, because
+`all` with a general predicate is three-valued. That leaked into every array
+entry point as "non-boolean `Missing` found in boolean context" — four
+concrete-call gate failures from a guard that is constant-foldable. Spelled as a
+recursion over the type tuple it is `Bool` by construction. **A predicate on
+types should never be able to return `Missing`.**
+
+**M24 — `decode!`'s Float64 gate is `datumsexact`, not `datumcarrier`, and the
+gap between them is the point.** 454 formats have Float64-exact datums; only 432
+are rung 1. The 22-format B = 1024 band decodes exactly into Float64 and still
+needs `Float128` to *compute* in, because a product of two of its datums leaves
+Float64's range even though each operand sits inside it. `datumcarrier` answers
+a question about arithmetic; `decode!` asks a question about representation.
+Using the arithmetic trait as the gate — which the plan's wording invited —
+would have refused 22 formats for which the promise holds. The two axes §3.1
+separates are separate here too.
+
+*Testing note, from the first G6 run:* `Base.decompose` puts the **sign in the
+denominator** — `decompose(-0.0078125)` is `(4503599627370496, -59, -1)`, a
+positive significand over `den = -1`. Reading `den == 1` as "finite" silently
+classifies every negative datum as non-finite, which is why the first run
+reported 444 failures that were all correct code. Zero's exponent is also
+carrier-specific (`(0, -1074, 1)` for Float64, `(0, 0, 1)` for BigFloat). Both
+are absorbed in `gates_g6.jl`'s normalizer.
+
+---
+
+### Stage 5
+
+**M25 — one budget was the wrong shape; there are two questions, not one.**
+§4 Stage 5 item 1 specified a single arity-agnostic gate keyed on **bytes**,
+with eager/adaptive bands measured in bytes too. Bytes are the right unit for
+one of the two questions and the wrong unit for the other:
+
+* *May we allocate this at all?* — memory, invariant 10, and correctly bytes.
+  `TABLE_MAX_BITS` (2^25 = 32 MiB).
+* *Is it worth building?* — **time**, which scales with **entries**, not bytes.
+  A `UInt16` table is twice the bytes of a `UInt8` table with the same number of
+  entries and costs exactly the same to build, because the cost is one scalar
+  trip per entry. `TABLE_EAGER_BITS` (2^16 entries).
+
+Collapsing them would make the build band depend on the result format's code
+unit, which has nothing to do with build cost. Two constants, each in its own
+unit, each with its own comment saying which question it answers.
+
+The byte budget is compared **as bits and never computed**: deciding whether
+`1 << ΣK` is too large by evaluating `1 << ΣK` is the exact bug the budget
+exists to prevent — at ΣK ≥ 64 the shift wraps and the impossible allocation
+looks free. `tablebits` adds exponents; nothing shifts.
+
+`TABLE_EAGER_BITS = 16` is not a chosen number: it is *exactly* the largest
+table the K ≤ 8 grid already builds (a binary 8×8 table), so no K ≤ 8 decision
+changes and G5 stays byte-identical by construction rather than by luck. It also
+admits the wide case that matters most — a K = 16 unary table is the same 65 536
+entries. `test/gates_shape.jl` asserts the non-regression on the *policy*, so
+lowering the band later reports that it also changed which shape 120 formats
+take.
+
+**M26 — `get_table` and `table_for` are two functions because they answer two
+questions.** `get_table`'s contract is "return the table", so when it cannot it
+**throws** — that is what `conformance`, the precompile workload and the suite
+want. `table_for` asks "should there be a table", and answers `nothing` without
+prejudice; kernels call it once per array operation and branch outside the loop,
+so its `Union` return costs nothing. Measured: the narrow array path is
+unchanged at 0.22 ns/elem and still allocates zero.
+
+**M27 — splitting a cache splits every consumer of it, silently.**
+`TABLE_CACHE` became `TABLE_CACHE8`/`TABLE_CACHE16` (and `TERNARY_CACHE`
+likewise), and three consumers read the old name: `table_bytes`,
+`empty_tables!`, and — the dangerous one — `conformance()`, whose entire job is
+to state truthfully what this package has specialized. A consumer that names one
+half under-reports by exactly the other half, with no error. Every consumer now
+goes through `table_bytes` / `table_count` / `ternary_count` / `table_keys`.
+Same failure class as M9: *the enumeration site is the hazard, not the split.*
+
+`table_bytes` also stopped conflating length with bytes — correct while every
+entry was one byte, wrong the moment some are two.
+
+**M28 — Stage 3's rung gate could not fire for same-format wide arithmetic, and
+the gap was open for a whole stage.** Stage 3 refused rung-2/3 evaluation with
+`ωeval(rung(fr), op, xs...)`, reached *inside* `apply_op` — which requires
+entering `apply_op`, which requires `Float64` operands. While `decode` refused
+K ≥ 9 that was every reachable call, so the gate looked complete and
+`test/stage_gates.jl` passed. Stage 4 gave `decode` the wide carriers, and from
+that moment `Exp(Binary16p5se, ρ, v)` decoded to `Float128` and missed
+`apply_op`'s `xs::Float64...` signature entirely: a `MethodError` naming an
+internal function, not the stage-naming `ArgumentError` the discipline promises.
+
+Found by a **table build**, not by a test — Stage 5 granted a table for a wide
+unary signature and the builder hit the same hole the scalar path had. Closed
+with a generic `apply_op` refusal (M17's rule: refuse by method, and let the
+method *throw* rather than be absent), and `test/stage_gates.jl` now covers both
+routes to the refusal, which is why it stayed hidden: the existing row used
+narrow operands with a wide *result*.
+
+`_scalar_code` widened past `Float64` in the same edit, deliberately: `project`
+is carrier-generic (§1 C10), so a `Convert` table is buildable at every rung and
+refusing one would be arbitrary. The restriction now lands where it is true.
+
+**M29 — `DefaultAccumulatorType` was not an unconsumed knob; it was a
+correctness switch, and invariant 5 forbids it.** §9 decision 3 framed A4 as a
+scheduling question — wire the knob into the reduction accumulator, or document
+it as advisory. Both answers are wrong, and reading `blocks.jl` says why. The
+span filter there is not trading accuracy for speed:
+
+```julia
+if _f128() && _expspan(X) + _log2ceil(B) <= 92
+    acc = Float128(0); ...                # every partial exact BY WIDTH
+else
+    BigExactF(() -> setprecision(..., BigFloat, _REDPREC))   # exact by precision
+end
+```
+
+Both branches are *proofs of exactness*; the filter measures the operands and
+picks the cheaper carrier that is provably exact for them, so either way the
+answer is the defined result (invariant 6). Wiring a session default over that
+makes `BlockDotProduct` inexact — and its shipped value, `binary32`, is the
+inexact position. An approximate result reachable from the default API is
+precisely what **invariant 5** forbids.
+
+There is a type/precision mismatch underneath, too: the knob is a `Type`, the
+decision is a *precision plus a proof*. `Float128` as a bare type is meaningless
+at that site without the span filter that licenses it.
+
+Removed rather than deferred to Stage 9. A knob documented as advisory is a
+promise that something reads it; nothing did, and the tests could only assert
+that the `Ref` stored what was put in it — the signature of unconsumed API.
+Deleting it before the 504-format grid is cheap; deleting it after a user has
+set it at K = 16 and been given bit-identical results is not. The only genuine
+user choice at that site is Float128-vs-MPFR, which is speed-only with identical
+results by doctrine and already owned by `ENV["SmallFloats_Float128"]`.
+
+*Decision 3 is therefore resolved as **deleted**, and the reason is recorded at
+the removal site in `defaults.jl` — a decision recorded as "deferred" gets
+re-litigated; one recorded with its argument does not.*
+
+**M30 — two more stale copies of the suite, and one of them was tracked.**
+O2 named `test/runtests1.jl`. A grep for the removed symbol found a third
+copy at `tmp/runtests.jl` — **tracked**, 1 532 lines, referenced by nothing,
+last touched by the same pre-branch commits that touched the real suite. Both
+are gone. The lesson is not about these two files: a *public-symbol removal is
+a duplicate detector*, because a stale copy is exactly the thing that still
+mentions the symbol. Run one before trusting that a near-duplicate inventory is
+complete.
+
+*Also corrected in this pass: `16B + 128` at [`blocks.jl:270`](../../src/blocks.jl#L270)
+was read during planning as bias-scaled and flagged as a wide-K blowup. `B`
+there is `Block{B}` — the **blocksize** — and `16` is max P at K = 16, so the
+line is `lanes × significand bits + slack` and needs no change. The comment now
+says so. Stage 6's precision unification is two constants, `_BIGP` and
+`_REDPREC`, exactly as §4 stated.*
+
+**M31 — G2 could not be written red before rung 3 existed, and the recorded red.**
+The plan says "write **G2** first and watch it fail." Taken literally that is
+impossible, and the reason is worth stating because it generalizes.
+
+`_BIGP` is consumed by `_bigsum2`/`_bigfma`/`_bigsum3`, whose signatures are
+`Float64`. Float64's own exponent span is 2 097 bits, so `2200` is sufficient
+**by 49 bits** for every operand pair those functions can currently be handed.
+The constant is not wrong today. It becomes wrong the instant a datum from a
+B = 32 768 format reaches them — which requires rung-3 evaluation to exist. A
+G2 run before that fails with the Stage-3 refusal `ArgumentError`, which proves
+only that Stage 6 has not happened yet. That is M28's lesson one layer up: **a
+refusal is not a disagreement**, and a gate satisfied by a refusal is not
+armed.
+
+So the sequence is: wire rung 3 the way one would *without* the gate (`_BIGP`
+untouched — the naive implementation, not scaffolding), run G2, fix. The red
+below is the evidence that writing it naively is wrong:
+
+```
+[ Info: G2 tier A: 504 formats, spread measured from the lattice;
+        _BIGP = 2200 insufficient for 50 of them
+gates_g2.jl:147  RQ(decode(got)) == want                    1//1 == 2//1
+gates_g2.jl:148  got === W(2.0)
+                 Binary16p1uf(1.0 ≡ 0x8000) === Binary16p1uf(2.0 ≡ 0x8001)
+gates_g2.jl:155  Subtract(W, RTN_SF, a, b)           1//1 == 1//2
+gates_g2.jl:159  FMA(W, RTP_SF, a, one_, b)          1//1 == 2//1
+gates_g2.jl:191  FMA(W, RTP_SF, x, y, z) === MaxFiniteOf(W)
+                 Binary16p1uf(1.8e+9863 ≡ 0xfffd) === Binary16p1uf(3.5e+9863 ≡ 0xfffe)
+gates_g2.jl:201  Add(V, RTP_SF, a, b)                1//1 == 2//1
+G2 — bigprec sufficiency | 4071 passed  6 failed
+```
+
+Note the shape of the failure: `1//1` where the answer is `2//1`. Not an
+exception, not a NaN, not an obviously corrupt magnitude — **the operand,
+returned unchanged**, because a residual 30 000 binades below the rounding
+position fell off a 2 200-bit accumulator and TowardPositive then had nothing
+to round up. Without the `Rational{BigInt}` reference this is indistinguishable
+from a correct answer, which is the entire argument for the gate.
+
+**`_BIGP = 2200` is insufficient for 50 of the 504 formats**, not 8 — the
+measured Tier-A number. The rung-3 formats are the ones that cannot *evaluate*
+without it, but every rung-2 format with B > 1024 also exceeds it.
+
+*Two things learned while writing it.* **(a)** G2 needs two tiers, and they must
+be labelled: the bound (`bigprec(F) ≥ spread + max Pᵢ + 1`, spread measured from
+the lattice, all 504 formats) was green from birth because `bigprec` was written
+correct in Stage 4 and merely left unwired. A G2 containing only that tier
+passes on the day it is written. **(b)** A gate's red has to be *readable*: the
+worst-case FMA row first compared two `Rational{BigInt}`s with ~32 800-bit
+numerators and buried the other five failures under 30 000 digits of output. It
+compares code points now, with the rational comparison kept one line up against
+a reference datum small enough to print.
+
+**The fix, and why it is two methods rather than one.** `apply_op` receives
+*decoded datums*, not the formats they came from, so `bigprec(Fs…)` cannot be
+reached from the escalation closures. Threading the formats down would mean a
+signature change at **~60 call sites**, including
+[`test/golden/harness.jl`](../../test/golden/harness.jl) — the G5 oracle
+generator. Churn adjacent to the digests, to obtain a bound that is *looser*
+than what the operands already state.
+
+So `bigprec` gained a second method, dispatched on argument class:
+
+```julia
+bigprec(Fs::Type{<:Binary}...)  # static:   2(maxB + maxP) + 64
+bigprec(xs::AbstractFloat...)   # realized: spread(xs) + max sigbits + 64
+bigprec_prod(x, y, zs...)       # the FMA shape: the product's exponent is e₁+e₂,
+                                # outside the operands' own range, and its
+                                # significand is P₁+P₂ wide
+```
+
+One policy — *derived, never constant* — expressed statically where formats are
+in scope and dynamically where only datums are. G2 tier A asserts the static
+bound **dominates** the realized one across the enumerable domain, so the
+relationship between the two is tested rather than asserted in a comment.
+Measured at the witness: static 65 602, realized 33 087.
+
+*Three defects in the fix itself, each caught by a standing gate rather than by
+inspection.* **(a)** The two `bigprec` methods, written as bare `Vararg`s, are
+**ambiguous at N = 0** — `bigprec()` matches both. `Test.detect_ambiguities`
+caught it; both now spell out a first argument, which also states that there is
+no exact precision for no terms. **(b)** `for v in (x, xs...)` splats, which
+allocates; replaced by a `_spanstep` fold. **(c)** The `ωeval(::HeadExact, op,
+xs::BigFloat...)` row accepts **every** operation and delegates to `_ωexact`,
+which has only Group A rows — so Group B/C at rung 3 became a `MethodError`
+naming an internal function. **This is M17's own rule, broken by the commit that
+cites it**, and JET found it: refuse by method, and let the method *throw*.
+`_ωexact` now has a catch-all that names the operation and the stage.
+
+*Also settled by writing it:* `bigprec` **is** sufficient for FMA, whose product
+carries 2P significand bits rather than P — the `+64` slack covers `P + 1` for
+every `P ≤ 63`. The subtler half is the spread: a product may be enormous, but
+if `|p|` exceeds MaxFinite then so does `p + z`, since a datum `z` cannot cancel
+it without being comparable in magnitude (which makes the spread small) — so the
+exact and the truncated evaluation land in the same saturation row either way.
+The spread reaches its maximum only when the result is in range, and there it is
+bounded by the format's own spread, which is what `bigprec` is built from. The
+margin at the witness is 67 bits and is now pinned by a test rather than by this
+paragraph.
+
+**M32 — the carrier is a property of the operands. Stage 3's gate said otherwise,
+and correcting it made two `stage_gates.jl` rows go green.** `apply_op` selected
+the head from `rung(fr)` — the *result* format. `carriers.jl` states the opposite
+in its own header: the carrier constrains what `ωeval` may form, never what may
+be projected *into* a format, because `round_to_precision` works in `(P, B)`
+integer space and is exact for any exact input. Under `rung(fr)`,
+`Add(Binary16p2se, ρ, x8, y8)` was refused — two ordinary `Float64` datums whose
+exact sum is a `Float64`, needing no wide carrier at all. It now evaluates.
+
+Completeness of the operand-only rule rests on a premise, stated here because
+Stage 3's version of exactly this is what M28 was: **the spec register's maximum
+factor count is 2**, and the rung boundaries are stated on `2B` precisely so that
+a datum on carrier `C` guarantees its square is on `C` too. Past two factors the
+monomial bound stops following from the operand types, which is why `blocks.jl`
+calls `rung(op, Fs...)` with the formats in hand and `apply_op` does not.
+
+**M33 — the join is two lower bounds, and dropping either one is a defect.**
+`rung(op, Fs...)` maxes the **monomial bound** (`nf · maxB` through
+`_rungindex_span`) against the **operand bound** (`joinhead` over each
+`rung(Fᵢ)`). Omitting the second is the subtle error: `Abs` has one factor, so
+the monomial bound alone picks rung 1 for a B = 1024 format — whose datums
+arrive as `Float128`, for which `ωeval(::HeadF64, …)` has no row. With the join
+in place, `lift`'s deliberately absent narrowing method becomes *unreachable*
+rather than a hazard, because the head dominates every operand's own carrier.
+
+`_rungindex` is now `_rungindex_span(2 * expbias(F))` rather than an independent
+`B ≤ 512 / B ≤ 8192` pair, so the per-format answer is visibly the `n = 2` case
+of one rule. Verified: `rung(Val(:Multiply), F, F) === rung(F)` for all 504
+formats, 0 mismatches, so the 432/64/8 partition is untouched.
+
+`factors` is an `OpInfo` column and `opfactors` is generated from it (invariant
+7). Two-factor operations are `Multiply`, `Divide` (whose `e_x − e_y` is as wide
+as a product's `e_x + e_y`), `Hypot` (`x² + y²`) and `FMA`. `FAA` is one factor
+despite arity 3; `Recip`/`RSqrt` are one factor because `1/x` spans `−e_x`.
+
+**M34 — `Base.precision` does not exist for `Float128`, and rung-3 coverage
+could not have found it.** `bigprec` reads each operand's significand width.
+`Base.precision(v)` is the obvious spelling, and Quadmath defines **neither** the
+value form nor the type form — the latter falls through to Base's
+`_precision_with_base_2` and errors there. So every rung-2 escalation was a
+`MethodError`.
+
+Rung 3 cannot reveal this: `BigFloat` has both forms, and is the one carrier
+where the per-*value* precision is the meaningful quantity rather than the
+type's. Two carriers, one of which happens to support the spelling the other
+does not — and G2's Tier B only exercised the forgiving one. The fix is
+`_sigbits` by dispatch with the ladder's own carriers written out; the gate now
+has a rung-2 row that asserts the retired constant *would* have truncated there,
+so it cannot decay into a restatement of a case 2200 bits already covered.
+
+The same hole exists test-side: `Rational{BigInt}(::Float128)` routes through the
+same missing method, so `refimpl` gained `exact_rq`, which goes via `BigFloat`
+(exact — ambient precision ≫ 113).
+
+**M35 — `blockdecode`'s carrier is keyed on the SUM of two biases, and
+`16B + 128` was a K ≤ 8 premise wearing a magic number.** A block's scale and
+element formats are independent, and what must fit is their *product*: the rule
+is `ΣBᵢ ≤ emax`, so two formats that are each rung 1 can compose into a lane
+product that is not. Asserting `carriertype(rung(FE))` would have been wrong in
+the worst way available — the overflow yields `±Inf`, a plausible special value,
+not an error. `blockdecode` now uses `rung(Val(:Multiply), FS, FE)` and lifts
+both operands onto it, keeping the `NTuple` concretely typed and the reductions
+allocation-free.
+
+`_REDPREC = 2400` is gone with it, replaced by two derived quantities, because
+sums and products need different analyses: `_lane_sum_prec` (the lanes span
+`2(B_S + B_E)` binades, carry `P_S + P_E` bits, plus `⌈log₂ B⌉`) and
+`_lane_prod_prec` (`B · (P_S + P_E)`, since a product's significand is the sum
+over lanes while its exponent only shifts).
+
+**This corrects M30.** I read `16B + 128` as bias-scaled, found it was not, and
+concluded it needed no change. The first half was right and the conclusion was
+wrong: `16 = 8 + 8` is `P_S + P_E` with `P = 8` hardcoded, so the two agree
+*exactly* at K ≤ 8 — which is why the K ≤ 8 suite could never have flagged it —
+and the constant understates by up to 2× above it. The lesson is narrower than
+"read carefully": a constant that is provably correct across the entire existing
+test domain is the hardest kind of wide-K defect to see, because every gate
+agrees with it.
+
+**M36 — the `_DE_*` thresholds read the datums, and G1 confirms C2's arithmetic
+independently.** C1 and C2 are both threshold errors found by arithmetic rather
+than by testing, and neither is visible at K ≤ 8 because at K ≤ 8 both formulas
+are correct. That is what makes them the highest-risk items in the stage: a
+too-wide threshold accepts an **inexact Float128 sum as exact**, and nothing
+downstream re-checks it — every consumer trusts the answer precisely because
+this decision was made.
+
+The thresholds now derive from `_sigwidth` of the **datums**, not from a format
+parameter, for the same reason `bigprec` does: `ωeval` receives values. It also
+makes the fixed point structural rather than adjusted — a datum of a P-bit
+format carries at most P significant bits, so `_sigwidth ≤ 8` reproduces
+`(100, 92, 98)` exactly. C1's correction is `P₁ + P₂ + 2` in `_de_fma`, the
+accounting the source comment always stated (`18 + ΔE ≤ 113`) against the
+inherited generalization's `P₁ + P₂ + 1`.
+
+C2's second premise is now a real band. Neither `P` (the result format's) nor
+`N` (the mode's) is visible to `ωeval`, and threading ρ down would be worse than
+taking the maximum, since both are bounded by the grid: `_STICKY_MIN = 15 + 60
++ 2 = 77` covers every cell.
+
+**G1 written and green — 52 620 assertions — and its part (iii) reproduces C2's
+prediction from the other direction.** Enumerating all 256 `(P₁, P₂)` cells, the
+middle band (too wide for Float128, too narrow for the sticky argument's
+stochastic premise) is nonempty for **exactly one**: `(16, 16)`. `_de_faa` and
+`_de_add` never collide at any width ≤ 16, which is the plan's `P ≤ 22` / `P ≤
+23` claim, now checked rather than asserted. Part (iv) verifies soundness at and
+just inside every threshold against MPFR at 4 096 bits — far above any claim
+being made, so the reference cannot inherit the bug it checks.
+
+One test-side note worth keeping: G1 builds its operands with an explicit
+`_mk(width, binade)` rather than by projecting through a format. The widths that
+matter include ones no shipped format produces, and a gate that can only reach
+the widths the package already emits cannot check a claim about widths in
+general.
+
+**Two existing rows in the Float128-plan testset went red, and they were the
+tests, not the code.** `ωeval(Val(:Add), 2.0^101, 1.0) isa BigExactF` and the
+matching FMA row pinned tier selection using **powers of two** — operands with
+*one* significant bit, pinning thresholds derived for *eight*. Under constant
+thresholds that distinction was invisible: a 1-bit pair and an 8-bit pair got
+the same number. Under derived thresholds a 1-bit pair gets
+`_de_add = 113 − 2 − 4 = 107`, so `2^101 + 1` — needing 102 bits, comfortably
+inside 113 — stays exact in Float128 instead of escalating to MPFR.
+
+Diagnosed before touching anything, because the two possible readings differ
+completely: a cheaper tier reaching the same answer, or a widened exactness
+claim of exactly the kind C1 warns about. **G5 was run at the `full` tier
+first — 33/33 byte-identical, 11m34s, exhaustive over all 120 K ≤ 8 formats.**
+No result moved, so the rows are corrections. They now pin the boundary with
+8-significant-bit operands *and* assert that the widened 1-bit band is still
+exact, so the width dependence is tested rather than lost.
+
+*The general shape, which is worth more than the instance:* replacing a constant
+with a derived quantity re-tests every assertion that pinned the constant, and
+some of them were only ever true for operands the constant did not describe. The
+failing test is then evidence about the test. Distinguishing that from a
+regression is what the golden gate is for — and running it at the tier that
+settles the question, rather than the routine one, is the whole reason `full`
+exists.
+
+**M37 — "Group A works at every rung" was false when I said it, and the missing
+half wanted one implementation rather than three.** The five arithmetic rows
+(`Add`, `Subtract`, `Multiply`, `FMA`, `FAA`) had per-head implementations; the
+other fourteen group-`:A`-and-`:C` operations — `Abs`, `Negate`, `CopySign`,
+`Clamp` and the ten-member extremum family — were still hitting the rung-2/3
+refusals. My report of Group A being complete described the rows I had written,
+not the group.
+
+Those fourteen have no width analysis and no escalation: their ω-semantics
+selects an operand or flips a sign, exact on any carrier. So the fix is to widen
+the existing rows to `::AbstractFloat` and have each head delegate, not to write
+three copies. The copies would have been three transcriptions of the draft's
+special-value tables, free to drift — invariant 7's divergence, in the one part
+of the catalog where the rows *are* the spec.
+
+`_EXACT_SELECTION` is an explicit list because it does not coincide with a
+registry group: `Abs`/`Negate`/`CopySign`/`Clamp` are `:A` alongside the
+arithmetic, and `:C` contains `Hypot`/`ArcTan2`/`ArcTan2Pi`, which are enclosures
+rather than selections. Explicit is only safe when checked, so G4 asserts the set
+partitions `OP_REGISTRY` against the arithmetic rows — an operation added later
+cannot silently belong to neither.
+
+**M38 — G4 green, and a gate that only speaks on failure is a bad gate.**
+152 064 rung-forced comparisons over 9 formats straddling every rung boundary ×
+8 ρ families (stochastic included, with explicit `R`) × 3 `R` values, forcing
+each specialization's carrier to `r+1` and `r+2` and asserting the code point is
+identical. That is the premise the lattice rests on: **`rung` is an optimization,
+never a semantics.** A too-narrow rung does not throw — it computes in a carrier
+that silently rounded or overflowed and returns a plausible number, which is the
+failure `rung` itself cannot report.
+
+The first shape of the comparison loop emitted a `@test` only on mismatch, so a
+green run recorded 56 assertions for 152 064 comparisons — and a loop that
+silently stopped iterating would have looked exactly like one that passed. It
+now asserts once per `(format, operation)` cell with the *disagreements* as the
+compared value, so a failure names the operands rather than a count, and the
+accounting matches G3's and G6's.
+
+G4 also **reports what it cannot cover**: 20 operations have rows at every rung,
+32 reach rungs 2/3 only through the enclosure ladder (`Divide`, `Hypot`,
+`ArcTan2`, `ArcTan2Pi`, `Sqrt`, `RSqrt`, `Recip`, and all of Group B). Printing
+the pending list is the difference between a gate that is honest about its scope
+and one that reads as broader coverage than it has.
+
+**M39 — the enclosure ladder could not simply be widened, because two of its
+shortcuts are *proofs* that only hold on fixed-width carriers.** The quotient
+rows accept a candidate with `fma(q, y, -x) == 0` — sound exactly where `fma` is
+exact, which IEEE requires of Float64 and Float128. **MPFR's `fma` rounds to the
+ambient precision**, and `q·y` needs twice the operand width, so at rung 3 the
+same test yields *false positives*: an inexact quotient declared exact,
+projected and returned, with nothing downstream re-checking it. That is the
+`_DE_*` hazard class again, reached by a different road.
+
+So the shortcuts are **guarded** (`_fma_is_exact`) rather than widened, and rung
+3 goes straight to the rigorous ladder — which was always the correct answer,
+merely the slower one. Five sites; the guard is the whole difference between a
+widening and a soundness bug.
+
+**Both filter stages turn out to be structurally Float64-tier**, not merely
+tuned for it: `EncloseF.yd` is a `Float64` *field* and `fq` narrows to
+`Float128`, so for a B = 32 768 datum neither can represent the operand at all.
+Wide carriers drop both. This is not a reduced-quality path — the ladder decides
+in every case regardless; the filters only allow it to be *skipped* when they
+already agree on a code point. `stage_gates.jl` now asserts the shape directly
+(a wide operand yields `EncloseF` with `fq === nothing` and `isnan(yd)`, while
+Float64 keeps both), so the distinction is pinned rather than inferred from a
+result.
+
+**A real bug, found by widening rather than by testing.** `_mpfr1`/`_mpfr2`
+converted the operand to `BigFloat` at the ladder's *ambient* precision. For a
+`BigFloat` operand whose own precision exceeds the ladder's first rungs that
+conversion **rounds**, so the bracket would enclose the wrong value — an
+enclosure that is sound-looking and false. Fixed with `_ladderprec`, the same
+floor `_encl_div_scale` already applies in `blocks.jl`; the precedent existed and
+the ladder simply predated the possibility of a wide operand.
+
+`_LADDER_OPS` is **derived**, not listed: whatever is neither an exact selection,
+nor exact arithmetic, nor `Convert` resolves through an enclosure. Adding an
+operation to `OP_REGISTRY` gives it wide-rung rows automatically, and
+mis-classifying one is caught by G4's partition assertion rather than by a
+`MethodError` at a call site far from the mistake (§11 M9's trap, closed by
+construction this time).
+
+Verified: 96 ladder calls across rungs 1, 2 and 3 — all 28 unary transcendentals
+plus `Divide`, `Hypot`, `ArcTan2`, `ArcTan2Pi` — on `Binary8p4se`,
+`Binary16p5se` and `Binary16p1uf`.
+
+**M40 — `promote_rule` was the one wide-K defect reachable from ordinary user
+code with no P3109 operation involved.** `Binary ⋄ external` promoted to
+`Float64` unconditionally. Right for every K ≤ 8 format and silently wrong above
+it: a B = 32 768 datum has no Float64 representation, so `x + 1.0` promoted into
+a carrier that cannot hold `x` and returned **±Inf from a perfectly finite
+value** — no operation of the package's own involved, no error raised.
+
+The target is now `promotecarrier(F)`, deliberately the *public* carrier trait
+rather than `datumcarrier`: the promoted type owes the caller a full `Real`
+interface, which an internal carrier (`Dyadic`, at Stage 7) does not implement.
+`promote_rule` is inherently type-returning and resolved at the type level, so it
+is an explicit carve-out from invariant 9's "no trait returns a Type from a
+branch" — but it is still derived from a trait, never computed at a call site,
+which is what the rule protects.
+
+Promotion also needed the conversions it names to exist: `BigFloat(v::Binary)`
+(exact for every format — a datum's significand is ≤ 16 bits and MPFR's exponent
+range covers every B) and `Float128(v::Binary)` (a rounding conversion in the
+ordinary Julia sense, and unreachable by promotion from a format that would
+overflow it, since `promotecarrier` never names `Float128` for such a format).
+
+*JET caught a second instance of M39's class here, and the right answer was a
+better precondition rather than a filter.* Analysing the widened rows abstractly,
+JET pairs a `Float64` operand with a `Float128` eager estimate — a combination no
+concrete call produces. `EncloseF.yd` **is** a `Float64` field, so "there is an
+eager estimate" and "the estimate is a `Float64`" are the same condition; saying
+so in the signature (`yd::Float64` on the narrow methods) makes the wide method
+catch everything the narrow one cannot construct. A filter would have hidden the
+report; the honest precondition removes it.
+
+**M41 — swapping a carrier surfaces every implicit `AbstractFloat` assumption in
+the package, one Base verb at a time.** Stage 7 flipped
+`carriertype(::HeadExact)` and `datumcarrier` rung 3 from `BigFloat` to `Dyadic`.
+Ten defects followed, and the shape of them is the finding:
+
+| what | where | why it hid |
+|---|---|---|
+| `cmp_dy` via `add_dy` | `dyadic.jl` | comparison inherited the add's alignment band and **threw** on well-defined comparisons |
+| `decompose` full-precision numerator | `dyadic_from` | a 16-bit datum at ambient 256 bits returns a 256-bit integer; the zeros are exponent, not significand |
+| double rounding | `Float64(::Dyadic)` | `ldexp(Float64(S), Q)` rounds twice once `\|S\| > 2^53`, reachable after `mul_dy` |
+| `ldexp`, `Float32`, `big`, `Rational{BigInt}`, `decompose` | Base verbs | each is somewhere a helper reached for a float verb `Dyadic` had not been given |
+| zero-arity vararg ambiguity | `ωeval` head rows | two `Vararg` methods differing only in element type collide at N = 0 |
+| stale totality claim | `_headof` | its comment said "total over the carriers the ladder defines" while listing three |
+| **silent carrier narrowing** | `_ωf128` / `_ωexact` specials | returned bare `NaN`/`Inf` — **Float64 literals** — from wide evaluations |
+
+Nine are consequences of the swap. **The last one predated it by a full stage**
+and is the one worth dwelling on: the per-head special rows I added in Stage 6
+returned Float64 `NaN` from a `Float128` evaluation, in the rows `oracle.jl`'s
+own header calls "the spec, not an optimization". The `_c*` family exists in
+`carriers.jl` precisely for this and I did not use it.
+
+It survived Stage 6's entire suite because **nothing asserted the result's
+type**, and `NaN === NaN` regardless of width, so every value comparison passed.
+`blockdecode`'s `::C` annotation is the only construct in the package that checks
+a carrier type at a use site, and only the P = 1 block test routed a NaN through
+a rung-2 block to reach it. That annotation was written as a type-stability
+guard; it earned its keep as a correctness one.
+
+Two rules follow. **A `::C` assertion at a carrier boundary is a correctness
+check, not decoration** — it is cheap and it is the only thing that can see a
+narrowing that is numerically invisible. And **a defect can hide for a whole
+stage behind a value being numerically right**: the special rows were *correct
+numbers on the wrong carrier*, which no value-comparing gate can detect.
+
+**M42 — the P = 1 block-scale path is one implementation across three carriers,
+because `ldexp` is the right primitive.** A P = 1 datum is `±2^e`, so scaling an
+element by it is an exponent add: on `Dyadic` a change to one field, on
+`Float64`/`Float128` the hardware scaling instruction. Writing it against `ldexp`
+rather than against `Dyadic` gives one method for all three, and neither can
+overflow because `rung(Val(:Multiply), FS, FE)` already reserved room for the
+product it replaces. The scale's sign travels separately (`exponent` discards
+it), and for the unsigned P = 1 formats this path exists for — E8M0 and its
+16-bit analogue — that branch is statically false.
+
+Selected by `Val(precision(FS) == 1)`, so it is dispatch rather than a branch
+(invariant 9), and G7 asserts the two paths agree over 120 block signatures.
+
+**M43 — `float(::Dyadic)` is deliberately undefined, and the absence is
+load-bearing.** `_rtp_core`'s zero row builds `zero(float(typeof(X)))`. Defining
+`float` for this carrier would silently re-open the path `Dyadic` must not take —
+the one whose replacement is `_rtp_zero_sticky`. The omission now says so at the
+definition site rather than only in the plan, next to the `big` method that does
+exist, so the asymmetry reads as a decision rather than an oversight.
+
+**M44 — the same defect M41 records was in three more places, and the reason it
+kept being missed is that every gate in the suite compares two answers.** After
+M41's seven rows the carrier swap looked closed: the suite was green, G7 agreed
+`Dyadic ≡ BigFloat` over 36 256 engine comparisons, and G5 reproduced all 33
+golden digests byte-for-byte. Reading `oracle.jl` for an unrelated reason turned
+up the *generic* exact-selection rows — the ones `_ωf128`, `_ωexact` and
+`_ωdyadic` all forward to — still returning bare `NaN` and `0.0`. M41's fix had
+corrected the three per-head wrappers and left the single implementation
+underneath them untouched, which is the more embarrassing half of the same
+mistake: the rows that exist *once* so they cannot diverge were the ones still
+wrong at three carriers.
+
+Pulling that thread found five more, all of one shape and none of them subtle:
+
+| what | where | how it failed |
+|---|---|---|
+| bare `NaN` / `0.0` literals | the generic `ωeval` exact-selection rows | `Float64` NaN returned from a `Dyadic` evaluation; return type a `Union` |
+| `any(==(Inf), X)` | `_reduce_add_datum` | compares a lane against a `Float64` literal ⇒ **threw** at rung 3 |
+| `d == Inf`, `d > 0` | `Class` | same, on a decoded datum ⇒ **threw** at rung 3 |
+| `Sdat::Float64` | `_bp_element`, `_encl_div_scale` | `MethodError` for all 72 formats above rung 1 |
+| `::Float64` on the scale product | the generated `Scaled*` surface | `blockdecode`'s Stage 6 defect, in a second location |
+| `::Float64` on the max-abs fold | `ConvertToBlockMaxAbsFinite` | a third location, plus a `Float64` NaN *seed* |
+| `_f128()` and a width filter | `BlockReduceMultiply`, `BlockDotProduct` | **did not throw** — narrowed rung-3 lanes to `Float128` and returned `Inf` |
+| `add_dy` as `Base.:+` | `dyadic.jl` | the engine's deliberately *partial* kernel exposed as the total verb |
+| no method at all | `Float16(::Binary)` | never written, at any K; not a wide-format defect |
+
+The last two are worth separating from the rest. `Base.:+` was not a narrowing
+but a **contract mismatch**: `add_dy` throws outside the C7 alignment band
+because inside the engine the caller is required to have taken the sticky path,
+and that is right for a kernel and wrong for the operator a user reaches through
+`decode`. `Binary16p1uf` spans 65 533 binades against a 94-binade band, so
+`sum(decode.(A))` threw on the *common* case there. The kernel keeps its
+obligation to check; `Base.:+` now widens to `BigFloat` — the format's own
+`promotecarrier`, so the value lands exactly where mixed arithmetic already sends
+it — at a precision computed from the operands.
+
+And `BlockReduceMultiply` is the one that returned a plausible wrong number
+rather than throwing, which makes it the most dangerous of the nine. Its filter
+bounds the *significand* (`lanebits · B + 8 ≤ 112`) while the rung is a statement
+about the *exponent*; both conditions are needed and only one was checked. The
+fix is `_f128acc(h)`, so the second condition is part of method selection rather
+than a premise nobody wrote down.
+
+**M45 — G10, and what the other nine gates cannot see.** M44's nine defects
+survived a suite of ≈ 8.9 M assertions. That is not a gap in any individual gate;
+it is a property of all of them. G1–G4, G6, G7 and G9 each compare two answers,
+and a comparison is silent about a call that throws instead of answering, and
+silent about a call no test makes. Four of the nine were `MethodError`s and two
+were outright throws — the class of failure a differential gate is structurally
+unable to report.
+
+So `test/gates_g10.jl` is the converse gate, and deliberately the shallowest one
+in the suite: it asserts only that the call *returns* and that a declared result
+type holds. It earns its place by being total instead — every operation in
+`OP_REGISTRY` on all three surfaces (scalar, `Block*`, `Scaled*`), plus the Base
+veneers, the array verbs, and the reduction and conversion families, over the
+formats above rung 1. It reproduced all nine defects on its first run.
+
+Two things about its shape are decisions rather than defaults:
+
+*The block surface is enumerated by `(FS, FE)` **shape**, and that is exhaustive
+rather than sampled.* `blockdecode`'s carrier is `rung(Val(:Multiply), FS, FE)`
+and depends on the two formats through nothing else, so covering every realized
+(rung FS, rung FE) pair in both orders, plus the `P == 1` path that has its own
+method, covers everything dispatch can select. Both orders were separately
+broken — a wide scale against narrow lanes killed `_bp_element`, a narrow scale
+against wide lanes killed the `Scaled*` assertion.
+
+*The format axis is tiered, and the reason is specialization, not evaluation.*
+Measured: 99.8 % of G10's runtime is compilation, because `Binary{K,P,S,E}` is a
+distinct type per format and 52 operations recompile for each one — ≈ 1.8 s per
+format, which puts all 504 at about two hours. `rep` (the default) takes one
+representative of each realized `(rung, P == 1?, code unit)` class plus all eight
+rung-3 formats; `full` takes all 72 above rung 1. The `@info` line names the tier
+and says "SAMPLED" in those words when it is, per the verification doctrine.
+
+**M46 — the per-head allocation profile, and one line of `apply_op` that cost
+every wide operation 304 bytes.** Stage 7's exit asks for the profile, and the
+first honest measurement of it was red:
+
+| head | carrier | exact selections | exact arithmetic | enclosure ladder |
+|---|---|---|---|---|
+| `HeadF64` | `Float64` | 0 | 0 · escalates on wide spread | 0 |
+| `HeadF128` | `Float128` | **400** | 3080 | 4336 |
+| `HeadExact` | `Dyadic` | **816** | 832 | 5904 |
+
+The selections were the tell. A selection cannot escalate — it returns one of its
+operands — so a nonzero number there is not arithmetic, it is plumbing. And every
+*component* measured zero: `decode`, `_joinheads`, `lift`, `ωeval`, `project`,
+`_finish_slow`, each individually allocation-free at all three heads. Only the
+composition allocated, and only for arity ≥ 2.
+
+The cause is `apply_op`'s wide route, written `xs...`. Without a length parameter
+on the vararg, the body's two splat calls — `_joinheads(xs...)` and
+`ωeval(h, op, map(…)...)` — compile to `Core._apply_iterate`, a dynamic apply,
+and every carrier value crossing one is boxed. The 304-vs-592 ratio is
+`sizeof(Float128)` against `sizeof(Dyadic)`, which is what identified it: the
+cost was proportional to the carrier, not to the operation. `Vararg{Any,N}`
+specializes the method per arity, the splats become static calls, and the
+profile becomes:
+
+| head | carrier | exact selections | exact arithmetic | enclosure ladder |
+|---|---|---|---|---|
+| `HeadF64` | `Float64` | 0 | 0 · escalates on wide spread | 0 |
+| `HeadF128` | `Float128` | **0** | escalates (FMA 2072–2648) | MPFR (~4.7 kB) |
+| `HeadExact` | `Dyadic` | **0** | **0** · escalates on FAA | MPFR (~5.4 kB) |
+
+Two things this measurement corrects in the plan.
+
+*The plan said "`HeadF64` and `HeadF128` are zero-allocation unconditionally".
+That is false at K ≤ 16, and it was never a statement about the head.* A
+`Binary16p6se` add over `B = 512` can span 1024 binades, which no carrier holds
+exactly, so it escalates to MPFR and allocates — **at rung 1**. Allocation on the
+arithmetic path is a function of the **operand spread** against the carrier's
+exact range, and the head only sets the range. The K ≤ 8 grid never produced a
+spread that forced it, which is why the unconditional phrasing survived.
+
+*What IS unconditional, and therefore what the regression pins, is the
+selections.* `Maximum`, `Minimum`, `MaximumMagnitude`, `MinimumFinite` and
+`CopySign` return an operand; there is nothing for them to escalate into. Zero at
+every rung, pinned in `test/runtests.jl` over six formats spanning all three
+heads. Pinning arithmetic to zero would be pinning a falsehood, and a gate that
+asserts something false is worse than no gate — so the profile is *recorded*
+here and only the invariant part is *asserted* there.
+
+**M47 — `refimpl` was out of normal form, and only a triple comparison could see
+it.** Promoting the `Rational{BigInt}` reference to the shipped suite (Stage 8
+step 2) meant widening two things: the encode step, which was an O(2^K) scan
+typed `UInt8` and therefore K ≤ 8 twice over, and `datum_rq`, which now meets a
+`Dyadic`. Both were expected.
+
+What was not expected: the first run of T2a reported a disagreement in **all 135
+`(P, B)` cells**. Engine `(sign, S, Q) = (1, 32768, −14)`, reference
+`(1, 65536, −15)` — the same value, `2.0`, written two ways. Rounding away can
+carry out of the significand, and `⌊S̃⌋ + 1` reaches `2^P` exactly when `S̃` was
+in the top ulp of its binade; the engine renormalizes, the reference did not.
+
+It had been wrong since the file was written and no test could see it, because
+`refround`'s only consumer was G2, which compares `sgn·S·2^Q` as a **value** —
+and `2^P · 2^Q == 2^(P−1) · 2^(Q+1)`. Comparing the triple is the stronger check
+and it found the reference, not the engine. Worth stating as a rule: *when an
+oracle and an implementation agree on the value, comparing the value proves less
+than comparing the representation, and an oracle out of normal form will pass a
+value comparison forever.*
+
+`refimpl` also reproduced §11 M44's own defect three days after it was recorded:
+`code_value` classified `±Inf` with `d > 0`, which needs a promotion `Dyadic`
+does not have. The engine-side lesson generalizes to the reference — a
+comparison against a literal is a conversion in disguise.
+
+**M48 — `project_interval`'s 4 096-bit ceiling was the last `_BIGP`, and the
+stochastic sub-grid found it exactly where the plan predicted.** Stage 8 step 4
+asks for every ρ family at every rung "because carrier-precision differences
+manifest on the stochastic sub-grid first". They do:
+
+```
+ArcCosPi(Binary15p2ue, ProjSpec(StochasticA{4}(), SatNone()), x)
+  → ERROR: project_interval: unresolved at 4096 bits
+```
+
+for any subnormal `x`. `Binary15p2ue` has `B = 8192`; `acos(x)/π = ½ − x/π + …`,
+so the true value sits about `2^-8194` **below the datum ½**. Deciding which side
+of ½ it falls on takes ≈ 8 200 bits, and the ladder gave up at 4 096.
+
+Three things about this are worth keeping.
+
+*It is the `_BIGP` shape exactly* (§11 M31): a fixed precision that was ample at
+K ≤ 8 — where `bigprec` never exceeds 320 — and insufficient across the wide
+grid. The ceiling is now `max(4096, bigprec(T) + 64)`, derived from the format,
+so it inherits gate G2's sufficiency proof rather than introducing a second
+unproven constant. It remains a *ceiling*: the ladder still starts at 256 bits
+and doubles, so the ordinary case pays nothing.
+
+*It is reachable from the public API and it THREW.* Better than `_BIGP`, which
+returned a plausible wrong number — but a legal operation on a legal operand of
+a legal format raising an error is a defect, not a refusal.
+
+*Nothing else in the suite could have found it.* Under `RoundNearest` both
+enclosure endpoints land on ½'s code point and the ladder resolves on the first
+iteration, so every gate that projects under a nearest mode — which is most of
+them — sees nothing. The answer depends on *which side* of ½ the value falls only
+under a directed or stochastic rule. G10 sweeps every operation at rung 2, and
+missed it because it sweeps them under `RNE_SF`.
+
+That last point is the general one, and it is the same shape as M45's: **a gate
+that fixes one axis to its common value cannot see a defect that lives on that
+axis.** G10 fixed ρ and varied the surface; `tier_rho.jl` fixes the surface and
+varies ρ. Neither substitutes for the other.
+
+The tier needs **no oracle**, which is what lets it cover Group C at rungs 2 and
+3 where `refimpl` cannot follow (a transcendental is not a rational) and where an
+MPFR reference would assume what is in question. It asserts only structure the
+draft's §4.7.4 gives the stochastic modes as functions of `R`: that StochasticA
+at `R = 0` is *exactly* `TowardZero`, that the projected magnitude is monotone in
+`R`, and that `R` at maximum moves by at most one datum. Three restrictions on
+those claims are the draft's rather than convenience, and are spelled at the
+assertions: StochasticB and StochasticC are **not** truncation at `R = 0` (B's
+`+1` makes it nearest-like; C's `RNITE` can carry), and `SatNone` is the one
+saturation mode whose rows *consult the rounding mode*, so the `R = 0` identity
+cannot hold under it and is asserted under `SatFinite`.
+
+**M49 — a switch only one of four tiers read, and a hint with nothing to attach
+to.** Two follow-ups after Stage 9, one a defect and one a recommendation that
+measurement disproved.
+
+*The defect.* `SmallFloats_EXHAUSTIVE` was read by exactly one file —
+`tier_t2.jl`. In the release-tier run recorded as green, `Tρ` swept **six
+formats** while the caller had asked for every format, and `G10` widened only
+because `SMALLFLOATS_G10=full` happened to be set alongside. Set the exhaustive
+switch alone and you get a partial G10 and a six-format `Tρ` while believing you
+asked for everything.
+
+That is CLAUDE.md's own rule broken by the suite that enforces it: *"A tier the
+caller asks for is honoured, never downgraded: a gate that quietly runs less than
+it was told to is worse than no gate."* And the roll-call's `SAMPLED` label made
+it look **intentional** — the same shape as §11 M45's finding, one level up: a
+label that is true about the run can still be false about the intent.
+
+Resolved with one dial, `SMALLFLOATS_TIER ∈ {quick, default, release}`, which
+every format-swept tier reads through `sweep_formats`. The individual switches
+remain as overrides. Two constraints, both from the doctrine: **T1 stays
+exhaustive at every tier** (§6.2 says the lattice sweep must), and the roll-call
+now **prints the tier and asserts it** — at `release` every gate that can be
+exhaustive must be, with G2/G4/G7 named as boundary-targeted exceptions so the
+exception is a list rather than a shrug; at `quick` at least one axis must be
+narrowed, so a quick run cannot masquerade as a release gate.
+
+`quick` exists for a reason worth stating: a suite with no named fast path gets
+one invented badly, by developers running single files.
+
+*The disproved recommendation.* I proposed registering an error hint for the
+abstract-format-as-concrete-type failure, reasoning that `===` was written into
+three documentation files by the same author on three occasions and that being
+told once does not stick. Checking before shipping it: **nothing errors.**
+`Binary{8,4,true,true}(1.5)`, `Add`, `zero`, `convert`, `rand` and
+`Vector{…}(undef, n)` all succeed — the package already normalizes the abstract
+format at every entry point. A hint would have been code that looks like a
+safety net and never fires, so it was removed rather than shipped.
+
+What the check *did* find is a sharper trap than the one I was aiming at:
+
+```julia
+isbitstype(eltype(Vector{Binary{8,4,true,true}}(undef, 3)))   # false
+isbitstype(eltype(Vector{Binary8p4se}(undef, 3)))             # true
+```
+
+Every element boxed, every answer still correct, and nothing said. The `===`
+distinction is at least *visibly* false; this one costs the entire performance
+story in silence. `similar(a, T)` normalizes; `Vector{T}(undef, n)` cannot be
+intercepted, so it is documented in the performance guidance and in the cheat
+sheet's trap table — the two places a reader looks for exactly this.
+
+*Also found, and it is the plan's own Stage 9 item 4.* Both `benchmarking/` and
+`docs/` pinned `SmallFloats` at the **ByteFloats-era UUID**
+(`d8c9c1d9-…` against the current `1a823dc9-…`), so neither environment could
+resolve the package at all. Repointed; the report regenerates and the docs build
+clean, with the rewritten per-operation-class preflight passing on a live run.
 
 ---
 

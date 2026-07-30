@@ -16,6 +16,7 @@
 using Test
 using Random
 using SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: project
 using Aqua
 using JET
@@ -53,20 +54,20 @@ end
     pv = PackedVector(A)
     σ = ProjSpec(StochasticA{8}(), SatNone())
 
-    JET.@test_call Add(T, RNE_SatNone, a, b)
-    JET.@test_call FMA(T, RNE_SatNone, a, b, a)
-    JET.@test_call Exp(T, RNE_SatNone, a)
-    JET.@test_call Convert(S, RNE_SatNone, a)
+    JET.@test_call Add(T, RNE_SN, a, b)
+    JET.@test_call FMA(T, RNE_SN, a, b, a)
+    JET.@test_call Exp(T, RNE_SN, a)
+    JET.@test_call Convert(S, RNE_SN, a)
     JET.@test_call a + b
-    JET.@test_call project(T, RNE_SatNone, 1.6)
-    JET.@test_call vmap!(D, Val(:Exp), T, RNE_SatNone, A)
-    JET.@test_call vmap!(D, Val(:Add), T, RNE_SatNone, A, B)
-    JET.@test_call vmap!(D, Val(:FMA), T, RNE_SatNone, A, B, A)
-    JET.@test_call BlockDotProduct(T, RNE_SatNone, bx, bx)
-    JET.@test_call BlockAdd(T, RNE_SatNone, bx, bx, one(S))
-    JET.@test_call ScaledAdd(T, RNE_SatNone, one(S), a, one(S), b)
+    JET.@test_call project(T, RNE_SN, 1.6)
+    JET.@test_call vmap!(D, Val(:Exp), T, RNE_SN, A)
+    JET.@test_call vmap!(D, Val(:Add), T, RNE_SN, A, B)
+    JET.@test_call vmap!(D, Val(:FMA), T, RNE_SN, A, B, A)
+    JET.@test_call BlockDotProduct(T, RNE_SN, bx, bx)
+    JET.@test_call BlockAdd(T, RNE_SN, bx, bx, one(S))
+    JET.@test_call ScaledAdd(T, RNE_SN, one(S), a, one(S), b)
     # the method the package-wide pass cannot verify, verified where it is called
-    JET.@test_call vmap(:Exp, T, RNE_SatNone, pv)
+    JET.@test_call vmap(:Exp, T, RNE_SN, pv)
     JET.@test_call vmap(:Exp, T, σ, pv; rng = MersenneTwister(1))
     # session-default combinators: the fast path must be statically clean
     JET.@test_call with_default_type((F, x) -> F(x), 1.5)
@@ -75,5 +76,5 @@ end
     JET.@test_call Float32(a)
     JET.@test_call decode!(zeros(Float32, 64), A)
     JET.@test_call decode!(zeros(Float64, 64), A)
-    JET.@test_call Convert(T, RNE_SatNone, zeros(Float32, 64))
+    JET.@test_call Convert(T, RNE_SN, zeros(Float32, 64))
 end

@@ -57,7 +57,13 @@ function measure_kappa(fn::F, op::Symbol, fr::Type{<:Binary},
         project(fr, ρ, decode(args[1])) :
         apply_op(Val(op), fr, ρ, 0, map(decode, args)...)
     function visit(codes::NTuple{N,Int})
-        args = ntuple(i -> rawvalue(argformats[i], UInt8(codes[i])), Val(N))
+        # A1: the code unit comes from the argument format, not from `UInt8`.
+        # `UInt8(codes[i])` is a *checked* conversion, so at K ≥ 9 this threw
+        # rather than truncating — a loud failure, not a silently wrong κ — but
+        # κ is a declared conformance property (invariant 5) and measuring it
+        # must not be the thing that discovers the format is too wide.
+        args = ntuple(i -> rawvalue(argformats[i],
+                                    codeunit_type(argformats[i])(codes[i])), Val(N))
         want = defined(args...)
         got = fn(args...)::fr
         dw, dg = decode(want), decode(got)
@@ -272,7 +278,11 @@ function conformance()
     end
     append!(blocknames, (:BlockReduceAdd, :BlockReduceMultiply, :BlockDotProduct,
                          :ConvertFromBlock, :ConvertToBlock, :ConvertToBlockMaxAbsFinite))
-    cached = lock(() -> collect(keys(TABLE_CACHE)), TABLE_LOCK)
+    # `table_keys()`, not one cache by name: the cache is split by result code
+    # unit, and naming one half under-reports by exactly the other half —
+    # silently, in the declaration whose job is to state truthfully what this
+    # package has specialized.
+    cached = table_keys()
     apx = lock(() -> [(name=a.name, op=a.op, kappa=a.kappa_declared, exhaustive=a.exhaustive)
                       for a in values(APPROX_REGISTRY)], APPROX_LOCK)
     ConformanceDeclaration(
@@ -310,7 +320,9 @@ end
 function conformance_report(io::IO=stdout, c::ConformanceDeclaration=conformance())
     println(io, "Conformance declaration — ", c.package)
     println(io, "Implements: ", c.draft)
-    println(io, "\nFormats (", length(c.formats), "): all Binary{K,P,Σ,Δ}, K ∈ 3:8, ",
+    # The range is READ FROM THE CONSTANTS, never spelled: a conformance
+    # declaration that can go stale is worse than no declaration.
+    println(io, "\nFormats (", length(c.formats), "): all Binary{K,P,Σ,Δ}, K ∈ $KMIN:$KMAX, ",
             "Σ ∈ {Signed, Unsigned}, Δ ∈ {Finite, Extended}")
     println(io, "\nScalar operations (", length(c.operations), "):")
     for a in 1:3

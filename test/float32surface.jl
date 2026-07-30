@@ -7,23 +7,56 @@
 
 using BFloat16s: BFloat16
 
+using SmallFloats: datumsexact, codeunit_type, KSPLIT
+
+# The exactness claim is no longer "every format", because at K ≤ 16 it is not
+# true of every format — it is true of every format `datumsexact` says it is
+# true of, and that predicate is what `decode!` gates on. The test therefore
+# enumerates the trait's *whole* domain and then tests its **boundary**: a
+# format where the trait fails must actually fail, or the trait is merely a
+# conservative guess wearing a theorem's clothes. (§4 Stage 4 item 6.)
+const _NAMES = sort!(collect(keys(SmallFloats._NAMED)))
+const _K8_FORMATS = filter(nm -> bitwidth(getfield(SmallFloats, nm)) <= KSPLIT, _NAMES)
+const _F32_EXACT  = filter(nm -> datumsexact(Float32, getfield(SmallFloats, nm)), _NAMES)
+const _BF16_EXACT = filter(nm -> datumsexact(BFloat16, getfield(SmallFloats, nm)), _NAMES)
+
+"""Every datum of `T`, exact in `X`? Measured, not asked of the trait."""
+function all_datums_exact(::Type{X}, ::Type{T}) where {X,T}
+    U = codeunit_type(T)
+    for i in UInt64(0):((UInt64(1) << bitwidth(T)) - 1)
+        v = rawvalue(T, U(i)); d = decode(v)
+        isnan(d) && (isnan(X(v)) || return false); isnan(d) && continue
+        big(X(v)) == big(d) || return false
+    end
+    true
+end
+
 @testset "Float32/BFloat16 surface (M1)" begin
-    @testset "exact decode, every format × every code" begin
-        nf32 = nbf16 = 0
-        for T in values(SmallFloats._NAMED)
-            for c in 0x00:UInt8((1 << bitwidth(T)) - 1)
-                v = rawvalue(T, c); d = decode(v)
-                if isnan(d)
-                    nf32 += isnan(Float32(v)); nbf16 += isnan(BFloat16(v))
-                else
-                    nf32 += Float64(Float32(v)) == d
-                    nbf16 += Float64(BFloat16(v)) == d
-                end
-            end
+    @test length(_K8_FORMATS) == 120
+    @test length(_F32_EXACT) == 376
+    @test length(_BF16_EXACT) == 244
+    # Every K ≤ 8 format is still in the exact set — the extension takes nothing
+    # away from the grid that existed before it.
+    @test _K8_FORMATS ⊆ _F32_EXACT && _K8_FORMATS ⊆ _BF16_EXACT
+
+    @testset "exact decode over the trait's whole domain" begin
+        for nm in _F32_EXACT
+            @test (nm, all_datums_exact(Float32, getfield(SmallFloats, nm))) == (nm, true)
         end
-        total = sum(1 << bitwidth(T) for T in values(SmallFloats._NAMED))
-        @test nf32 == total          # Float32 narrowing exact, all datums
-        @test nbf16 == total         # BFloat16 narrowing exact, all datums
+        for nm in _BF16_EXACT
+            @test (nm, all_datums_exact(BFloat16, getfield(SmallFloats, nm))) == (nm, true)
+        end
+    end
+
+    @testset "the trait's boundary is real, not conservative" begin
+        # For every format the trait REJECTS, some datum must genuinely fail to
+        # round-trip. Without this the trait could refuse everything and the
+        # suite above would still pass.
+        for nm in _NAMES
+            T = getfield(SmallFloats, nm)
+            datumsexact(Float32, T) && continue
+            @test (nm, all_datums_exact(Float32, T)) == (nm, false)
+        end
     end
 
     @testset "decode! gather ≡ scalar surface" begin
@@ -32,7 +65,34 @@ using BFloat16s: BFloat16
             @test isequal(decode!(similar(A, Float32), A), Float32.(A))
             @test isequal(decode!(similar(A, Float64), A), Float64.(A))
         end
+        # The ComputeDecode branch, on a wide format that clears both gates.
+        let T = Binary16p8se
+            @test datumsexact(Float32, T) && datumsexact(Float64, T)
+            A = [rawvalue(T, UInt16(c)) for c in 0:255:65535]
+            @test isequal(decode!(similar(A, Float32), A), Float32.(A))
+            @test isequal(decode!(similar(A, Float64), A), Float64.(A))
+        end
         @test_throws DimensionMismatch decode!(zeros(Float32, 3), fill(zero(Binary8p4se), 4))
+
+        # `decode!` promises exactness and must refuse rather than round. The
+        # scalar conversions are NOT gated — `Float32(x)` rounds, by Julia
+        # convention — so the pair below is the whole contract in two lines.
+        let T = Binary16p2se                       # B = 8192: no external float holds it
+            @test !datumsexact(Float32, T) && !datumsexact(Float64, T)
+            A = [rawvalue(T, UInt16(c)) for c in 0:9]
+            @test_throws ArgumentError decode!(zeros(Float32, 10), A)
+            @test_throws ArgumentError decode!(zeros(Float64, 10), A)
+            @test Float32.(A) isa Vector{Float32}   # rounding route stays open
+        end
+        # The 22-format band where the datums fit Float64 but the arithmetic
+        # carrier is wider: `decode!` must accept these, which is exactly why
+        # its gate is `datumsexact` and not `datumcarrier`.
+        let T = Binary12p1se                       # B = 1024, carrier Float128
+            @test SmallFloats.datumcarrier(T) === Float128
+            @test datumsexact(Float64, T)
+            A = [rawvalue(T, UInt16(c)) for c in 0:4095]
+            @test isequal(decode!(similar(A, Float64), A), Float64.(A))
+        end
     end
 
     @testset "array Convert ≡ scalar Convert" begin
@@ -40,10 +100,10 @@ using BFloat16s: BFloat16
         X = [1.5f0, -0.26f0, 3.4f38, -1.0f-6, 0.0f0, Inf32, NaN32]
         # code-point comparison: `==` on Binary is IEEE-numeric (NaN unordered)
         samecodes(A, B) = codepoint.(A) == codepoint.(B)
-        @test samecodes(Convert(T, RNE_SatNone, X), [Convert(T, RNE_SatNone, x) for x in X])
+        @test samecodes(Convert(T, RNE_SN, X), [Convert(T, RNE_SN, x) for x in X])
         Xb = BFloat16.([1.5, -0.25, 100.0])
-        @test samecodes(Convert(T, RNE_SatNone, Xb), [Convert(T, RNE_SatNone, x) for x in Xb])
-        ρ = RSA_SatNone(8)                     # stochastic: same seeded stream ⇒ same codes
+        @test samecodes(Convert(T, RNE_SN, Xb), [Convert(T, RNE_SN, x) for x in Xb])
+        ρ = RSA_SN(8)                     # stochastic: same seeded stream ⇒ same codes
         @test samecodes(Convert(T, ρ, X; rng=Xoshiro(42)),
                         let rng = Xoshiro(42); [Convert(T, ρ, x; rng) for x in X] end)
     end
@@ -60,7 +120,11 @@ end
     # Multiply 118/120 same-format signatures; Add and Subtract 88/120.
     counts = Dict(op => 0 for op in (:Add, :Subtract, :Multiply))
     mulfail = Symbol[]
-    for (name, T) in SmallFloats._NAMED, op in (:Add, :Subtract, :Multiply)
+    # Scoped to K ≤ 8 on purpose: these counts are a pinned measurement of the
+    # Float32 *kernel* gate over the grid it was measured on. The wide-format
+    # kernel surface is Stage 6's business, not this trait's.
+    for name in _K8_FORMATS, op in (:Add, :Subtract, :Multiply)
+        T = getfield(SmallFloats, name)
         g = f32_exact(op, T, T)
         counts[op] += g
         op === :Multiply && !g && push!(mulfail, name)
@@ -79,25 +143,25 @@ end
         # each registration measures κ exhaustively; κ = 0 is the shipped claim.
         # Multiply⟨8p1ue, SatPropagate⟩ exercises the overflow guard, Divide the
         # zero-divisor guard, Sqrt the negative-argument guard.
-        for (op, T, ρ) in ((:Add, T3, RNE_SatNone),
-                           (:Multiply, T1e, RNE_SatPropagate),
-                           (:Divide, T3, RNE_SatNone))
+        for (op, T, ρ) in ((:Add, T3, RNE_SN),
+                           (:Multiply, T1e, RNE_SP),
+                           (:Divide, T3, RNE_SN))
             impl = register_f32!(op, T, (T, T), ρ)
             push!(names, impl.name)
             @test kappa(impl) == 0.0
             @test impl.exhaustive
         end
-        impl = register_f32!(:Sqrt, T3, (T3,), RNE_SatNone)
+        impl = register_f32!(:Sqrt, T3, (T3,), RNE_SN)
         push!(names, impl.name)
         @test kappa(impl) == 0.0 && impl.exhaustive
         # retrieval by name; the kernel agrees with the defined result
         fn = approx(names[1]).fn
-        @test fn(T3(1.5), T3(0.25)) == Add(T3, RNE_SatNone, T3(1.5), T3(0.25))
+        @test fn(T3(1.5), T3(0.25)) == Add(T3, RNE_SN, T3(1.5), T3(0.25))
         # conformance reflects the registrations
         @test all(n -> any(a -> a.name == n, conformance().approximate), names)
         # policy gates: directed ρ and unaudited ops are rejected at build time
-        @test_throws ArgumentError f32_impl(:Add, T3, RTZ_SatNone)
-        @test_throws ArgumentError f32_impl(:Exp, T3, RNE_SatNone)
+        @test_throws ArgumentError f32_impl(:Add, T3, RTZ_SN)
+        @test_throws ArgumentError f32_impl(:Exp, T3, RNE_SN)
     finally
         foreach(unregister_approx!, names)     # leave the registry as found
     end

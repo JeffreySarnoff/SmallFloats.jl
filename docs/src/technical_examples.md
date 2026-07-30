@@ -45,9 +45,9 @@ Binary8p4se(0.9375 ≡ 0x3f)     # == NextLessThan(1.0): the engine crossed the 
 ```julia
 using SmallFloats: get_table
 empty_tables!()
-tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SatNone)
+tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN)
 (tbl[Int(0x45) + 1],
- codepoint(Exp(Binary8p4se, RNE_SatNone, rawvalue(Binary8p4se, 0x45))),
+ codepoint(Exp(Binary8p4se, RNE_SN, rawvalue(Binary8p4se, 0x45))),
  table_bytes())
 ```
 
@@ -88,7 +88,7 @@ function monotone_conversion(::Type{From}, ::Type{To}) where {From,To}
     prev = nothing
     for v in sort(From.(0x00:UInt8(2^bitwidth(From) - 1)))
         isnan(decode(v)) && continue
-        g = Convert(To, RNE_SatNone, v)
+        g = Convert(To, RNE_SN, v)
         prev !== nothing && order_key(g) < order_key(prev) && return false
         prev = g
     end
@@ -118,15 +118,15 @@ exhaustively for a κ = 2 evaluator:
 ```julia
 using SmallFloats: order_key
 
-fast(x) = (r = Exp(Binary8p4se, RNE_SatNone, x);
+fast(x) = (r = Exp(Binary8p4se, RNE_SN, x);
            isfinite(decode(r)) ? NextGreaterThan(NextGreaterThan(r)) : r)
-κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone)
+κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 
 function margin_audit(fast, κ)
     codes = [rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
     safe = violations = 0
     for a in codes, b in codes
-        da, db = Exp(Binary8p4se, RNE_SatNone, a), Exp(Binary8p4se, RNE_SatNone, b)
+        da, db = Exp(Binary8p4se, RNE_SN, a), Exp(Binary8p4se, RNE_SN, b)
         (isnan(decode(da)) || isnan(decode(db))) && continue
         codedistance(da, db) > 2κ || continue
         safe += 1
@@ -172,7 +172,7 @@ function verify_quantizer()
     for c in 0x00:0xff
         x = decode(rawvalue(Binary8p3se, c))
         (isfinite(x) && abs(x) <= decode(MaxFiniteOf(Binary8p4se))) || continue
-        got = Convert(Binary8p4se, RNE_SatNone, x)
+        got = Convert(Binary8p4se, RNE_SN, x)
         ok &= abs(decode(got) - x) == Float64(ref_nearest_distance(Binary8p4se, x))
     end
     ok
@@ -194,10 +194,10 @@ Register an approximate kernel and the registry measures it; understate the boun
 and it refuses:
 
 ```julia
-step2(x) = (r = Exp(Binary8p4se, RNE_SatNone, x);
+step2(x) = (r = Exp(Binary8p4se, RNE_SN, x);
             isfinite(decode(r)) ? NextGreaterThan(NextGreaterThan(r)) : r)
 
-measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone)
+measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 ```
 
 ```
@@ -205,7 +205,7 @@ measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone)
 ```
 
 ```julia
-register_approx!(:cheater, :Exp, Binary8p4se, (Binary8p4se,), RNE_SatNone, step2; κ=1)
+register_approx!(:cheater, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN, step2; κ=1)
 ```
 
 ```
@@ -246,8 +246,8 @@ function verify_dots(trials)
         (any(!isfinite, lx) || any(!isfinite, ly)) && continue
         truth = setprecision(() -> sum(BigFloat(lx[i]) * BigFloat(ly[i]) for i in 1:32),
                              BigFloat, 512)
-        got = BlockDotProduct(Binary8p4se, RNE_SatNone, bx, by)
-        ref = setprecision(() -> SmallFloats.project(Binary8p4se, RNE_SatNone, truth), BigFloat, 512)
+        got = BlockDotProduct(Binary8p4se, RNE_SN, bx, by)
+        ref = setprecision(() -> SmallFloats.project(Binary8p4se, RNE_SN, truth), BigFloat, 512)
         codepoint(got) == codepoint(ref) || return false
     end
     true
@@ -270,7 +270,7 @@ is ν = 3/16 of an ulp, so `StochasticA{4}` must round up for exactly 3 of the 1
 draws:
 
 ```julia
-σ4 = RSA_SatNone(4)                  # ≡ ProjSpec(StochasticA{4}(), SatNone())
+σ4 = RSA_SN(4)                  # ≡ ProjSpec(StochasticA{4}(), SatNone())
 x = 2.0 + 3/64
 count(decode(SmallFloats.project(Binary8p4se, σ4, x; R)) == 2.25 for R in 0:15)
 ```
@@ -291,9 +291,9 @@ measured bound. Hard-tanh — `clamp(x, −1, 1)` — as a stand-in for `Tanh`:
 
 ```julia
 one4 = Binary8p4se(1.0)
-hardtanh(x) = Clamp(Binary8p4se, RNE_SatNone, x, Negate(one4), one4)
+hardtanh(x) = Clamp(Binary8p4se, RNE_SN, x, Negate(one4), one4)
 
-κ, exhaustive = measure_kappa(hardtanh, :Tanh, Binary8p4se, (Binary8p4se,), RNE_SatNone)
+κ, exhaustive = measure_kappa(hardtanh, :Tanh, Binary8p4se, (Binary8p4se,), RNE_SN)
 (κ, exhaustive)
 ```
 
@@ -307,7 +307,7 @@ round-trip, including the conformance surface:
 
 ```julia
 impl = register_approx!(:hardtanh_act, :Tanh, Binary8p4se, (Binary8p4se,),
-                        RNE_SatNone, hardtanh; κ=4)
+                        RNE_SN, hardtanh; κ=4)
 (kappa(:hardtanh_act), kappa_measured(impl), :hardtanh_act in list_approx())
 ```
 
@@ -335,7 +335,7 @@ using Statistics: median
 
 function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
     pool = [rawvalue(T, rand(UInt8)) for _ in 1:4096]
-    @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SatNone, t[1], t[2]))(_)
+    @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
 end
 
 b = bench_add(Binary8p4se)

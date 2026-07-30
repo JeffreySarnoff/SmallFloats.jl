@@ -16,14 +16,15 @@
 using Test
 using Random
 using SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: apply_op, decode, rawvalue, get_table, _finish, _bigfma, _bigsum3,
-    _faa_wide, _fma_wide, StickyF, TernaryKey, TERNARY_CACHE, TERNARY_USE,
+    _faa_wide, _fma_wide, StickyF, TernaryKey, ternary_count, TERNARY_USE,
     TERNARY_EAGER_BITS, TERNARY_ADAPTIVE_BITS, TERNARY_BUILD_ELEMS, TERNARY_CACHE_BYTES,
     THREAD_MIN_ELEMS, THREADED_KERNELS, empty_tables!
 
 @testset "ternary tables ≡ scalar (exhaustive)" begin
     empty_tables!()
-    ρs = (RNE_SatNone, RNE_SatFinite, ProjSpec(TowardZero(), SatNone()),
+    ρs = (RNE_SN, RNE_SF, ProjSpec(TowardZero(), SatNone()),
           ProjSpec(ToOdd(), SatFinite()))
     for T in (Binary3p1se, Binary4p2se), op in (:FMA, :FAA, :Clamp), ρ in ρs
         K = bitwidth(T)
@@ -38,7 +39,7 @@ using SmallFloats: apply_op, decode, rawvalue, get_table, _finish, _bigfma, _big
         end
     end
     # mixed formats: distinct result and operand formats
-    let fr = Binary5p2ue, f1 = Binary4p2se, f2 = Binary3p1sf, f3 = Binary5p3se, ρ = RNE_SatNone
+    let fr = Binary5p2ue, f1 = Binary4p2se, f2 = Binary3p1sf, f3 = Binary5p3se, ρ = RNE_SN
         tbl = get_table(:FMA, fr, f1, f2, f3, ρ)
         K2, K3 = bitwidth(f2), bitwidth(f3)
         @test length(tbl) == 1 << (bitwidth(f1) + K2 + K3)
@@ -64,13 +65,13 @@ end
         A = [rawvalue(T, UInt8(rand(rng, 0:(1<<K)-1))) for _ in 1:500]
         B = [rawvalue(T, UInt8(rand(rng, 0:(1<<K)-1))) for _ in 1:500]
         C = [rawvalue(T, UInt8(rand(rng, 0:(1<<K)-1))) for _ in 1:500]
-        D = vmap(op, T, RNE_SatNone, A, B, C)
-        @test all(i -> D[i] === apply_op(Val(op), T, RNE_SatNone, 0,
+        D = vmap(op, T, RNE_SN, A, B, C)
+        @test all(i -> D[i] === apply_op(Val(op), T, RNE_SN, 0,
                                          decode(A[i]), decode(B[i]), decode(C[i])),
                   eachindex(D))
     end
     # the eager band actually built tables (3·4 = 12 and 3·6 = 18 bits are both ≤ 18)
-    @test !isempty(TERNARY_CACHE)
+    @test ternary_count() > 0
     # stochastic ternary vmap still runs (scalar path) and reproduces under a fixed rng
     let T = Binary4p2se, ρ = ProjSpec(StochasticC{8}(), SatNone())
         A = fill(T(1.5), 100); B = fill(T(1.25), 100); C = fill(T(0.125), 100)
@@ -89,14 +90,14 @@ end
         V7 = Binary7p3se                                  # 21 bits: adaptive band
         rng = Xoshiro(11)
         A7 = [rawvalue(V7, UInt8(rand(rng, 0:127))) for _ in 1:1000]
-        FAA(V7, RNE_SatNone, A7, A7, A7)
-        @test isempty(TERNARY_CACHE)                      # 1000 elems: below threshold
-        FAA(V7, RNE_SatNone, A7, A7, A7)
-        @test isempty(TERNARY_CACHE)                      # 2000: still below
-        r = FAA(V7, RNE_SatNone, A7, A7, A7)              # 3000 ≥ 2500: builds
-        @test length(TERNARY_CACHE) == 1
+        FAA(V7, RNE_SN, A7, A7, A7)
+        @test ternary_count() == 0                    # 1000 elems: below threshold
+        FAA(V7, RNE_SN, A7, A7, A7)
+        @test ternary_count() == 0                    # 2000: still below
+        r = FAA(V7, RNE_SN, A7, A7, A7)              # 3000 ≥ 2500: builds
+        @test ternary_count() == 1
         @test table_bytes() == 1 << 21
-        @test all(i -> r[i] === FAA(V7, RNE_SatNone, A7[i], A7[i], A7[i]), eachindex(r))
+        @test all(i -> r[i] === FAA(V7, RNE_SN, A7[i], A7[i], A7[i]), eachindex(r))
     finally
         TERNARY_BUILD_ELEMS[] = old_elems
     end
@@ -104,18 +105,18 @@ end
     empty_tables!()
     W = Binary8p3se
     A8 = fill(W(1.5), 64)
-    FMA(W, RNE_SatNone, A8, A8, A8)
-    @test isempty(TERNARY_CACHE) && isempty(TERNARY_USE)
+    FMA(W, RNE_SN, A8, A8, A8)
+    @test ternary_count() == 0 && isempty(TERNARY_USE)
     # LRU: budget for three 4 KiB tables, insert six → three survive, budget holds
     old_bytes = TERNARY_CACHE_BYTES[]
     TERNARY_CACHE_BYTES[] = 3 * (1 << 12)
     try
         T = Binary4p2se
         for op in (Val(:FMA), Val(:FAA), Val(:Clamp)), S in (Binary4p2se, Binary4p3sf)
-            vmap!(similar([T(1.0)], T, 4), op, T, RNE_SatNone,
+            vmap!(similar([T(1.0)], T, 4), op, T, RNE_SN,
                   fill(S(1.0), 4), fill(S(1.0), 4), fill(S(1.0), 4))
         end
-        @test length(TERNARY_CACHE) == 3
+        @test ternary_count() == 3
         @test table_bytes() <= TERNARY_CACHE_BYTES[]
     finally
         TERNARY_CACHE_BYTES[] = old_bytes
@@ -124,7 +125,7 @@ end
 end
 
 @testset "sticky-head escalation ≡ MPFR reference" begin
-    ρall = Any[RNE_SatNone, RNE_SatFinite, ProjSpec(TowardZero(), SatNone()),
+    ρall = Any[RNE_SN, RNE_SF, ProjSpec(TowardZero(), SatNone()),
                ProjSpec(TowardPositive(), SatFinite()), ProjSpec(TowardNegative(), SatNone()),
                ProjSpec(ToOdd(), SatFinite()), ProjSpec(NearestTiesToAway(), SatPropagate()),
                ProjSpec(StochasticA{4}(), SatNone()), ProjSpec(StochasticB{8}(), SatFinite()),
@@ -167,8 +168,8 @@ end
 @testset "wide-spread warm path: zero allocation" begin
     W = Binary8p1se
     a, b, c = W(2.0^60), W(2.0^-100), W(2.0^-100)
-    fmaw(x, y, z) = FMA(W, RNE_SatNone, x, y, z)
-    faaw(x, y, z) = FAA(W, RNE_SatNone, x, y, z)
+    fmaw(x, y, z) = FMA(W, RNE_SN, x, y, z)
+    faaw(x, y, z) = FAA(W, RNE_SN, x, y, z)
     fmaw(a, b, c); faaw(a, b, c)                          # warm
     @test @allocated(fmaw(a, b, c)) == 0
     @test @allocated(faaw(a, b, c)) == 0
@@ -184,9 +185,9 @@ end
     old = THREAD_MIN_ELEMS[]
     try
         THREAD_MIN_ELEMS[] = 1 << 10
-        Dt = FMA(W, RNE_SatNone, A, B, C)
+        Dt = FMA(W, RNE_SN, A, B, C)
         THREAD_MIN_ELEMS[] = typemax(Int)
-        Ds = FMA(W, RNE_SatNone, A, B, C)
+        Ds = FMA(W, RNE_SN, A, B, C)
         @test all(i -> Dt[i] === Ds[i], eachindex(Dt))     # === : NaN codes compare too
     finally
         THREAD_MIN_ELEMS[] = old

@@ -2,19 +2,28 @@
 
 # Computational ωDecode: the ground truth from which the lookup table below is
 # generated. Kept private; `decode` (the exported entry) reads the table.
-@inline function _decode_compute(v::Binary{K,P,SGN,EXT})::Float64 where {K,P,SGN,EXT}
-    F = Binary{K,P,SGN,EXT}
-    c = codepoint(v)
+# The primary form takes the format TYPE and a code point, not a value: the
+# table builders have only a code in hand, and a carrier-generic decode has to
+# name the carrier, which is a property of the type (implementextensions §2 R-F).
+# The value form is kept because it is the one the suite and the docs call.
+@inline _decode_compute(v::Binary) = _decode_compute(typeof(v), codepoint(v))
+
+@inline function _decode_compute(::Type{F}, c) where {K,P,SGN,EXT,F<:Binary{K,P,SGN,EXT}}
+    C = datumcarrier(F)                        # Float64 today; Float128/Dyadic later
     # Special code points come from formats.jl rather than being re-derived here:
     # one definition of the layout, not two. (Unsigned formats put NaN and the
     # −Inf slot at the same code, so NaN must be tested first — it is.)
-    c == nan_code(F) && return NaN
+    #
+    # The specials go through the carrier-generic constants rather than bare
+    # `NaN`/`Inf` literals: those are `Float64`, so on a wider carrier they are a
+    # silent narrow-then-widen, and on `Dyadic` they are simply wrong-typed.
+    c == nan_code(F) && return _cnan(C)
     if EXT
-        c == posinf_code(F) && return Inf
-        SGN && c == neginf_code(F) && return -Inf
+        c == posinf_code(F) && return _cinf(C)
+        SGN && c == neginf_code(F) && return _cninf(C)
     end
     hidden = 1 << (P - 1)                      # implicit-bit weight of the integer significand
-    tmask = UInt8(hidden - 1)                  # trailing-significand mask
+    tmask = _cu(F, hidden - 1)                 # trailing-significand mask
     neg = SGN && (c >= signmask(F))
     m = neg ? c - signmask(F) : c
     tsig = m & tmask
@@ -22,42 +31,105 @@
     B = expbias(F)
     sig = Eb == 0 ? Int(tsig) : Int(tsig) + hidden
     e = (Eb == 0 ? 1 : Eb) - B + (1 - P)
-    # bit assembly (bitops plan K2): every datum exponent is deep inside Float64's
-    # normal range (|e + nb − 1| ≤ ~260), so no subnormal/overflow cases exist and
-    # ldexp's generality is pure overhead.
-    sig == 0 && return 0.0
+    # A single zero: the draft's datum set has no −0, so the sign is dropped here
+    # rather than reaching a carrier that would keep it.
+    sig == 0 && return _czero(C)
+    _finite_datum(reptype(F), C, sig, e, neg)
+end
+
+# The finite datum, `±sig · 2^e`, built on the format's carrier.
+#
+# Dispatched on the REPRESENTATION rather than on the carrier or on a branch,
+# because the split is exactly the representation seam (invariant 9): the bit
+# assembly's licence is `|e + nb − 1| ≤ ~260`, and that bound is the K ≤ KSPLIT
+# premise written arithmetically. `reptype` is the identity on a concrete
+# format and the format→representation map on an abstract one, so the call
+# below is correct for both without a second forwarder.
+#
+# The generic row is `ldexp`, which is where the extension actually bites: a
+# B ≈ 1024 format's smallest datum is `2^(2−P−B)`, as low as `2^-1038`, a
+# **Float64 subnormal**. Bit assembly there does not merely lose precision — it
+# writes a biased exponent that has gone negative into the exponent field and
+# produces an unrelated number. `ldexp` is defined on the whole range for every
+# carrier, and `C(sig)` is exact for every carrier because `sig ≤ 2^16`.
+@inline function _finite_datum(::Type{<:Code8}, ::Type{Float64}, sig::Int, e::Int, neg::Bool)
+    # bit assembly (bitops plan K2): every K ≤ 8 datum exponent is deep inside
+    # Float64's normal range, so no subnormal/overflow case exists and ldexp's
+    # generality is pure overhead. Retained under this signature only.
     nb = 64 - leading_zeros(UInt64(sig))
     mant = (UInt64(sig) << (53 - nb)) & ((UInt64(1) << 52) - 1)
     bits = (UInt64(e + nb - 1 + 1023) << 52) | mant
     neg && (bits |= UInt64(1) << 63)
-    return reinterpret(Float64, bits)
+    reinterpret(Float64, bits)
+end
+@inline function _finite_datum(::Type{<:Code16}, ::Type{C}, sig::Int, e::Int, neg::Bool) where {C}
+    d = ldexp(C(sig), e)
+    neg ? -d : d
 end
 
-@generated function _decode_table(::Type{Binary{K,P,S,E}}) where {K,P,S,E}
-    t = ntuple(i -> _decode_compute(rawvalue(Binary{K,P,S,E}, UInt8(i - 1))), 1 << K)
+# Bounded to `Code8` BY SIGNATURE, not by a check inside: a `Code16` request must
+# be a `MethodError` at the call site rather than a 65 536-element constant tuple
+# the compiler dutifully materializes. That is invariant 10 (§3.5) stated where
+# it can be enforced — the tuple length is `2^K`, and `2^KSPLIT = 256` is the
+# whole justification for the shape. `decodepolicy` selects it; the two agree by
+# construction because both are keyed on the representation.
+@generated function _decode_table(::Type{F}) where {K,P,S,E,F<:Code8{K,P,S,E}}
+    t = ntuple(i -> _decode_compute(F, UInt8(i - 1)), 1 << K)
     :($t)
 end
+# The `Code16` half of the guard is a method that THROWS, not an absent method.
+# Absence was the first spelling and it is wrong for a reason worth recording:
+# the abstract forwarder below infers to `Union{Type{Code8{…}}, Type{Code16{…}}}`
+# when the format parameters are not statically known, so a missing `Code16`
+# method turns a deliberate refusal into a static-analysis defect — JET reports
+# it as an unreachable-method bug against the whole package, and the only way to
+# keep the suite green would be a filter, which the verification doctrine says
+# must be backed by a concrete-call gate proving the path is clean. It is not
+# clean; it is refused. Saying so in a method is both honest and total.
+@noinline _decode_table(::Type{<:Code16}) = throw(ArgumentError(
+    "a 2^K-entry constant decode table exists only for K ≤ $KSPLIT — at K = 16 it " *
+    "would be 65 536 entries, which invariant 10 forbids outright. Wide formats " *
+    "decode by computation; see `decodepolicy`"))
+@noinline _decode_table32(::Type{<:Code16}) = throw(ArgumentError(
+    "the Float32 decode table exists only for K ≤ $KSPLIT; wide formats reach " *
+    "Float32 through `Float32(decode(v))`, gated on `datumsexact(Float32, F)`"))
+
+# The abstract-format forwarder every representation-keyed function needs (§11
+# M14): `_decode_table(Binary{3,1,true,true})` is how the gate suite asks a
+# *format* for its table, and without this it dies with a `MethodError` rather
+# than answering. `reptype` is the one map from format to representation.
+@inline _decode_table(::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
+    _decode_table(reptype(Binary{K,P,S,E}))
 
 # Float32 twin of _decode_table: same ground truth, narrowed once. Narrowing is
 # exact for every K ≤ 8 datum (worst cases 2^126 and the Float32-subnormal
 # 2^-127, both from Binary8p1u; asserted exhaustively in the suite).
-@generated function _decode_table32(::Type{Binary{K,P,S,E}}) where {K,P,S,E}
-    t = ntuple(i -> Float32(_decode_compute(rawvalue(Binary{K,P,S,E}, UInt8(i - 1)))), 1 << K)
+@generated function _decode_table32(::Type{F}) where {K,P,S,E,F<:Code8{K,P,S,E}}
+    t = ntuple(i -> Float32(_decode_compute(F, UInt8(i - 1))), 1 << K)
     :($t)
 end
 
 """
-    decode(v::Binary) -> Float64
+    decode(v::Binary) -> datumcarrier(typeof(v))
 
-ωDecode (draft §4.7.2). Float64 is the universal exact carrier for K ≤ 8 datums
-(≤ 8-bit significands, |exponent| ≲ 2^7); exactness is asserted by exhaustive test.
+ωDecode (draft §4.7.2). **Exact for every datum of every format**, which is why
+the return type is the format's carrier rather than a fixed one: `Float64` where
+the bias allows (432 of the 504 formats), `Float128` to B = 8192, `BigFloat`
+above. `Float64(v)` is the way to ask for a `Float64` and accept the rounding.
 
-Implemented as a constant-tuple lookup (bitops plan K2): the per-format table is
-generated once from `_decode_compute` above, so the two are correct by
-construction and asserted equivalent exhaustively; constant inputs still fold.
+Two implementations, selected by `decodepolicy` — dispatch on the
+representation, not a branch on K (invariant 9, §2 R-F):
+
+  * `TableDecode` (K ≤ `KSPLIT`): a `2^K`-entry constant-tuple lookup (bitops
+    plan K2), generated once from `_decode_compute`, so the two are correct by
+    construction and asserted equivalent exhaustively; constant inputs fold.
+  * `ComputeDecode` (K > `KSPLIT`): `_decode_compute` directly. No table —
+    65 536 entries is what invariant 10 exists to forbid.
 """
-@inline decode(v::Binary{K,P,SGN,EXT}) where {K,P,SGN,EXT} =
-    @inbounds _decode_table(Binary{K,P,SGN,EXT})[Int(codepoint(v)) + 1]
+@inline decode(v::Binary) = _decode(decodepolicy(typeof(v)), v)
+@inline _decode(::TableDecode, v::Binary) =
+    @inbounds _decode_table(typeof(v))[Int(codepoint(v)) + 1]
+@inline _decode(::ComputeDecode, v::Binary) = _decode_compute(v)
 
 """
     encode(T, sign, S, Q) -> UInt8   (private; design §3.3)
@@ -66,19 +138,18 @@ construction and asserted equivalent exhaustively; constant inputs still fold.
 (S == 2^P is the next-binade carry, draft §4.7.4 NOTE 4). Precondition: the value
 is in the datum set of `T` (guaranteed by RoundToPrecision ∘ Saturate).
 """
-@inline function encode(::Type{Binary{K,P,SGN,EXT}}, sign::Int, S::Int64, Q::Int64) where {K,P,SGN,EXT}
-    F = Binary{K,P,SGN,EXT}
-    S == 0 && return 0x00
+@inline function encode(::Type{F}, sign::Int, S::Int64, Q::Int64) where {K,P,SGN,EXT,F<:Binary{K,P,SGN,EXT}}
+    S == 0 && return _cu(F, 0)
     hidden = Int64(1) << (P - 1)               # implicit-bit weight; also the first normal S
     if S == (Int64(1) << P)                    # carry into next binade
         S = hidden; Q += 1
     end
-    local c::UInt8
+    local c::codeunit_type(F)
     if S < hidden                              # subnormal: Q must equal 2-B-P
-        c = UInt8(S)
+        c = _cu(F, S)
     else
         Eb = Int(Q) + P - 1 + expbias(F)       # biased exponent field
-        c = UInt8((S & (hidden - 1)) + (Int64(Eb) << (P - 1)))
+        c = _cu(F, (S & (hidden - 1)) + (Int64(Eb) << (P - 1)))
     end
     (SGN && sign < 0) && (c |= signmask(F))
     c
@@ -88,16 +159,35 @@ end
 # NaN (at the −0 slot for signed formats / top code for unsigned) sorts ABOVE +Inf
 # [interpretation; draft §4.12.1 text unavailable in upload — see checkpoint].
 
-"""The order key reserved for the single NaN — above every finite key and ±Inf."""
-const NAN_ORDER_KEY = typemax(UInt16)
+"""
+    nan_order_key(F)
+
+The order key reserved for the single NaN — above every finite key and ±Inf.
+
+Per format, not a constant, and the key type is `orderkeytype(F)` rather than
+`UInt16`. The reason is arithmetic, not tidiness: a format has `2^K` code points
+mapping to keys `1 … 2^K`, so `UInt16` runs out at exactly K = 16 — `UInt16(c) +
+UInt16(1)` for `c = 0xffff` wraps **silently to 0**, putting the largest datum
+below the smallest. `orderkeytype` returns `UInt32` for `Code16`, which has room
+for the keys and for a sentinel strictly above all of them.
+
+*(§4 Stage 4 item 3, pulled forward into Stage 3 — §11 M16. The rest of Stage 3
+makes wide formats fail loudly; a wraparound in the total order is the one
+K ≥ 9 defect that would have been silent, so it is closed here rather than
+carried for a commit.)*
+"""
+@inline nan_order_key(::Type{F}) where {F<:Binary} = typemax(orderkeytype(F))
+@inline nan_order_key(v::Binary) = nan_order_key(typeof(v))
 
 @inline function order_key(v::Binary{K,P,SGN,EXT}) where {K,P,SGN,EXT}
+    T = typeof(v)
+    O = orderkeytype(T)
     c = codepoint(v)
-    isnan(v) && return NAN_ORDER_KEY
-    SGN || return UInt16(c) + UInt16(1)
-    sm = signmask(Binary{K,P,SGN,EXT})
+    isnan(v) && return typemax(O)
+    SGN || return O(c) + O(1)
+    sm = signmask(T)
     neg = c >= sm
-    neg ? UInt16(sm) - UInt16(c - sm) : UInt16(sm) + UInt16(c) + UInt16(1)
+    neg ? O(sm) - O(c - sm) : O(sm) + O(c) + O(1)
 end
 
 """TotalOrder⟨fx,fy⟩ (draft §4.12.1): x ≤ y in the total order (single NaN largest).
@@ -136,11 +226,22 @@ function Base.sort!(v::AbstractVector{T}, lo::Int, hi::Int, ::CodeCountingSort,
                     o::Union{Base.Order.ForwardOrdering,
                              Base.Order.ReverseOrdering{Base.Order.ForwardOrdering}}) where {T<:Binary}
     K = bitwidth(T)
+    U = codeunit_type(T)
+    # Counting sort pays 2^K of setup before it looks at the data. At K ≤ 8 that
+    # is 257 buckets and never worth a test; at K = 16 it is 65 537 buckets and
+    # ~512 KiB for a vector that may hold three elements. The gate is a
+    # generalization, not a behaviour change — at K ≤ 8 it fires only for inputs
+    # so short that either algorithm is instant, and both algorithms produce the
+    # same permutation because equal keys mean identical code points.
+    # (§4 Stage 4 item 4, pulled forward with the key retyping — §11 M16.)
+    n = hi - lo + 1
+    n < (1 << K) && return sort!(v, lo, hi, Base.Sort.DEFAULT_UNSTABLE, o)
     nk = (1 << K) + 1                              # keys 1..2^K plus NaN sentinel bucket
     counts = zeros(Int, nk + 1)
-    key2code = Vector{UInt8}(undef, nk + 1)
-    bucket(k) = k == NAN_ORDER_KEY ? nk + 1 : Int(k)   # sentinel folds to the top bucket
-    for c in 0x00:UInt8((1 << K) - 1)              # key ↔ code inversion, 2^K iterations
+    key2code = Vector{U}(undef, nk + 1)
+    nan_key = nan_order_key(T)
+    bucket(k) = k == nan_key ? nk + 1 : Int(k)     # sentinel folds to the top bucket
+    for c in zero(U):U((1 << K) - 1)               # key ↔ code inversion, 2^K iterations
         key2code[bucket(order_key(rawvalue(T, c)))] = c
     end
     @inbounds for i in lo:hi
@@ -171,11 +272,16 @@ end
 function Class(v::Binary)
     isnan(v) && return ClassNaN
     d = decode(v)
-    d == Inf && return ClassPosInf
-    d == -Inf && return ClassNegInf
+    # Predicates, not comparisons against `Float64` literals: at rung 3 `d` is a
+    # `Dyadic`, which has no promotion to `Float64` by design (§11 M44). The
+    # rewritten form is also the cheaper one at every rung — a bit test rather
+    # than a compare — and `signbit` is exact on the sign of a nonzero, which is
+    # all this branch ever wanted from `d > 0`.
+    _isposinf(d) && return ClassPosInf
+    _isneginf(d) && return ClassNegInf
     iszero(v) && return ClassZero
     sub = issubnormal_3109(v)
-    if d > 0
+    if !signbit(d)
         return sub ? ClassPosSubnormal : ClassPosNormal
     else
         return sub ? ClassNegSubnormal : ClassNegNormal

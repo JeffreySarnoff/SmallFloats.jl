@@ -2,7 +2,7 @@
 
 SmallFloats.jl is a conforming, performance-oriented Julia implementation of the **IEEE P3109
 draft standard** — *Arithmetic Formats for Machine Learning* — covering every binary
-format the draft defines at bitwidths 3 through 8, every projection (rounding ×
+format the draft defines at bitwidths 3 through 16, every projection (rounding ×
 saturation) mode including the three stochastic families, the full scalar operation
 catalog, block-scaled ("MX-style") operations, and the draft's conformance and
 κ-approximation machinery.
@@ -27,16 +27,22 @@ the position that for value sets this small there is no excuse for approximation
   deviation bound κ is *measured by exhaustive enumeration* at registration time, and
   understated declarations are rejected. Nothing approximate is reachable from the
   default API.
-- **Exhaustively tested.** The value sets are tiny (≤ 256 points per format), so the
-  test suite does not sample — it enumerates: every operation on every input, every
-  ordering of every pair, every stochastic draw at boundary budgets. The shipped suite
-  carries ≈ 8.9 million assertions.
+- **Enumerated where enumeration is affordable, and labelled where it is not.**
+  The code lattice is swept **exhaustively at every bitwidth** — all 504 formats,
+  7 602 160 code points — and the projection engine is checked against an
+  independent `Rational{BigInt}` reference over every realized `(P, B)` cell.
+  Where a space is too large to enumerate (the ordered-pair cross-product above
+  K = 8 is 4.3 × 10⁹ pairs for a single format), the suite says **"sampled"** in
+  those words rather than rounding up. Every run ends with a coverage roll-call
+  naming each gate, what it compared, and which of the two it was: ≈ 35 million
+  verified units across 13 gates and tiers.
 - **Fast where it matters.** Pure-mode elementwise work runs through precomputed
-  lookup tables (sub-nanosecond per element); the scalar path is fully specialized and
-  allocation-free (≈ 18 ns for a complete `Add` including projection); sub-byte packed
-  storage, integer-keyed ordering with an O(n) counting sort, and a mask-based rounding
-  core round out the performance story. A reproducible Chairmarks benchmark suite ships
-  in `benchmarking/`.
+  lookup tables (sub-nanosecond per element); the scalar path is fully specialized
+  and allocation-free (`decode` ≈ 1.2 ns, `project` ≈ 6.6 ns, a complete `Add`
+  ≈ 9 ns including projection); sub-byte packed storage, integer-keyed ordering
+  with an O(n) counting sort, and a mask-based rounding core round out the
+  performance story. A reproducible Chairmarks benchmark suite ships in
+  `benchmarking/`, and every number here comes from it.
 
 ## Thirty-second tour
 
@@ -49,15 +55,15 @@ Binary8p4se(1.625 ≡ 0x45)
 julia> x + Binary8p4se(0.25)         # Base operators use the format's default spec
 Binary8p4se(1.875 ≡ 0x47)
 
-julia> Add(Binary8p4se, RTP_SatNone, x, Binary8p4se(0.25))
+julia> Add(Binary8p4se, RTP_SN, x, Binary8p4se(0.25))
 Binary8p4se(1.875 ≡ 0x47)            # spec-named register: any mode, explicitly
 
-julia> σ = RSA_SatNone();            # stochastic rounding, default N = 8 bits
+julia> σ = RSA_SN();            # stochastic rounding, default N = 8 bits
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); R = 255)
 Binary8p4se(2.25 ≡ 0x49)             # explicit draw R makes it reproducible
 
-julia> Exp(Binary8p4se, RNE_SatNone, Binary8p4se.([-1.0, 0.5, 2.0]))
+julia> Exp(Binary8p4se, RNE_SN, Binary8p4se.([-1.0, 0.5, 2.0]))
 3-element Vector{Binary8p4se}:       # array methods route through 256-byte tables
  Binary8p4se(0.375 ≡ 0x34)
  Binary8p4se(1.625 ≡ 0x45)
@@ -66,13 +72,24 @@ julia> Exp(Binary8p4se, RNE_SatNone, Binary8p4se.([-1.0, 0.5, 2.0]))
 
 ## The formats
 
-A format is the type `Binary{K,P,SGN,EXT}`: bitwidth `K ∈ 3:8`, precision `P ∈ 1:K`
+A format is the type `Binary{K,P,SGN,EXT}`: bitwidth `K ∈ 3:16`, precision `P ∈ 1:K`
 (with the signedness constraint), signed/unsigned `SGN`, and extended (has ±Inf) or
-finite `EXT`. All 120 draft formats carry their draft names as exported aliases —
-`Binary8p4se` is `Binary{8,4,true,true}` ("K = 8, P = 4, signed, extended"); the
-trailing letters are `s`/`u` for signedness and `e`/`f` for extended/finite. Values
-are 1-byte immutable wrappers around their code point; every format has a single NaN,
-no negative zero, and `Float64` serves as the exact interchange carrier for all datums.
+finite `EXT`. All **504** draft formats carry their draft names as aliases. The
+**120 at K ≤ 8 are exported** by `using SmallFloats`; the other 384 are opt-in via
+`using SmallFloats.Formats`, and are always reachable as `SmallFloats.Binary16p6se`
+or programmatically as `format(16, 6, true, true)`.
+
+`Binary8p4se` *represents* `Binary{8,4,true,true}` ("K = 8, P = 4, signed,
+extended"); the trailing letters are `s`/`u` for signedness and `e`/`f` for
+extended/finite. Note that the two are related by `<:`, not `===` — `Binary` is
+abstract (a format is "a datum set and an encoding"), and the alias names its
+concrete *representation*.
+
+Values are immutable wrappers around their code point: one byte at K ≤ 8,
+two above it. Every format has a single NaN and no negative zero. `Float64` is the
+exact interchange carrier for the 432 formats whose exponent range it holds;
+the remaining 72 use `Float128` or an exact dyadic carrier, selected by the
+format and never by the caller.
 
 ## Where to go next
 

@@ -5,18 +5,37 @@ this guide are captured from real sessions against the shipped package.
 
 ## Formats and format queries
 
-The parametric type `Binary{K,P,SGN,EXT}` defines a format: bitwidth `K ∈ 3:8`,
+The parametric type `Binary{K,P,SGN,EXT}` defines a format: bitwidth `K ∈ 3:16`,
 precision `P` (significand bits including the implicit bit), `SGN::Bool` for
 signed/unsigned, `EXT::Bool` for extended (with ±Inf) versus finite. Every legal
-combination — 120 formats — has its draft name exported:
+combination — **504 formats** — has a draft-named alias. `using SmallFloats`
+exports the **120 at K ≤ 8**; the rest are one opt-in away:
 
 ```julia-repl
-julia> Binary8p4se === Binary{8,4,true,true}
+julia> Binary8p4se <: Binary{8,4,true,true}      # `<:`, not `===` — see below
 true
 
 julia> formatname(Binary{6,3,true,false})
 :Binary6p3sf
+
+julia> SmallFloats.Binary16p6se                  # always reachable, unexported
+Binary16p6se
+
+julia> format(16, 6, true, true)                 # programmatic, runtime params
+Binary16p6se
+
+julia> using SmallFloats.Formats                 # …or bring all 504 into scope
+
+julia> Binary16p6se
+Binary16p6se
 ```
+
+`Binary8p4se === Binary{8,4,true,true}` is **`false`**, and the distinction is the
+draft's own: a *format* is a datum set and an encoding, while the width of the
+machine word carrying a code point is a representation choice below the standard's
+level of description. `Binary` is abstract; `Binary8p4se` is its concrete
+representation and is what an array element type or a constructor target needs.
+Use the alias, or `format(K, P, Σ, Δ)` when the parameters are runtime values.
 
 The suffix reads: `p4` precision 4, `s`/`u` signed/unsigned, `e`/`f` extended/finite.
 
@@ -52,9 +71,59 @@ julia> MaxFiniteOf(x)
 Binary8p4se(224.0 ≡ 0x7e)
 ```
 
+## `Binary16p11se` is not `Float16`, and `Binary16p8se` is not `BFloat16`
+
+The K ≤ 16 grid contains two formats that look like the IEEE-754 `binary16` and
+the bfloat16 used in machine learning. **They are not those types**, and the
+differences are the kind that produce correct-looking numbers rather than errors.
+
+| | `Binary16p11se` | `Float16` | `Binary16p8se` | `BFloat16` |
+|---|---|---|---|---|
+| precision `P` | 11 | 11 | 8 | 8 |
+| exponent bias | **16** | **15** | **128** | **127** |
+| largest finite | **65472** | **65504** | **3.3762e38** | **3.3895e38** |
+| NaN encodings | **1** | **2046** | **1** | **2046** |
+| negative zero | **no** | yes | **no** | yes |
+| domain is a parameter | **yes** (`se`/`sf`) | no | **yes** | no |
+
+The bias is the trap. P3109 defines the bias so that the exponent range is
+symmetric about the format's midpoint; IEEE-754 defines it as `2^(E-1) − 1`. The
+two differ by one, so **every datum in the format is a factor of two away from
+its IEEE counterpart** — `Binary16p11se` and `Float16` share a significand layout
+and disagree on the value of every code point.
+
+That is why the largest finites differ: 65472 is `(2^11 − 1) · 2^5`, one ulp
+short of `Float16`'s 65504, because the top code point of an extended format is
+`Inf` rather than a finite value. Converting between them is a conversion, never
+a reinterpretation:
+
+```julia-repl
+julia> using SmallFloats.Formats
+
+julia> Convert(Binary16p11se, RNE_SF, Float16(1.5))    # a conversion
+Binary16p11se(1.5 ≡ 0x4200)
+
+julia> reinterpret(Binary16p11se, Float16(1.5))               # NOT a thing
+ERROR: MethodError: ...
+```
+
+The remaining rows are draft decisions rather than accidents. A single NaN
+encoding means there is no payload to propagate and no quiet/signalling
+distinction; the 2045 code points IEEE spends on NaN payloads are datums here.
+No negative zero means `-0.0` and `0.0` are the same code point, so a sign-symmetric
+format has an odd number of finite values. And the domain parameter — `e` for
+extended (with ±Inf), `f` for finite — has no IEEE analogue at all: `Binary16p11sf`
+spends the two infinity code points on finite values instead.
+
+If you want IEEE semantics, use `Float16` and `BFloat16`; the package converts to
+and from both, exactly where the datum sets permit (`datumsexact`).
+
 ## Values
 
-A value is one byte: an immutable wrapper around its code point. Four ways in, two
+A value is an immutable wrapper around its code point — **one byte at K ≤ 8, two
+above it**. The storage unit is `codeunit_type(T)`, a property of the
+*representation*; the code point occupies the low `K` bits and the high bits are
+maintained zero. Four ways in, two
 ways out:
 
 ```julia-repl
@@ -67,15 +136,21 @@ Binary8p4se(1.625 ≡ 0x45)
 julia> rawvalue(Binary8p4se, 0x45)       # same, unchecked — the kernel-internal route
 Binary8p4se(1.625 ≡ 0x45)
 
-julia> Convert(Binary8p4se, RNE_SatNone, 3)   # explicit conversion, any mode
+julia> Convert(Binary8p4se, RNE_SN, 3)   # explicit conversion, any mode
 Binary8p4se(3.0 ≡ 0x4c)
 
-julia> decode(x)                          # exact datum as Float64 (always exact)
+julia> decode(x)                          # the exact datum, on the format's carrier
 1.625
 
-julia> codepoint(x)                       # the raw byte (extends Base.codepoint)
+julia> codepoint(x)                       # the code point (extends Base.codepoint)
 0x45
 ```
+
+`decode` is **always exact**, but the type it returns is a property of the
+format, not of the package: `Float64` for the 432 formats whose exponent range it
+holds, `Float128` or an exact dyadic carrier for the other 72. `datumcarrier(T)`
+names it; `Float64(x)` always returns a `Float64` and rounds where the datum does
+not fit.
 
 !!! note "UInt8 means code point; every other number means value"
     `UInt8` is the *only* argument type with code-point semantics — mirroring
@@ -193,13 +268,13 @@ Feed array draws straight into the storage layers when that is the goal:
 `projection` keyword to land the draw under any `ProjSpec`:
 
 ```julia-repl
-julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SatNone)    # ceiling
+julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SN)    # ceiling
 Binary8p4se(0.0029296875 ≡ 0x03)
 
-julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SatFinite) # toward zero
+julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SF) # toward zero
 Binary8p4se(-1.875 ≡ 0xc7)
 
-julia> rand(Xoshiro(4), Binary8p4se; projection = RSA_SatNone(8)) # stochastic
+julia> rand(Xoshiro(4), Binary8p4se; projection = RSA_SN(8)) # stochastic
 Binary8p4se(0.8125 ≡ 0x3d)
 ```
 
@@ -226,7 +301,7 @@ Rounding modes: `NearestTiesToEven`, `NearestTiesToAway`, `TowardPositive`,
 julia> ρ = ProjSpec(TowardPositive(), SatFinite())
 (TowardPositive, SatFinite)
 
-julia> RTP_SatFinite === ρ                # every pairing is also predefined
+julia> RTP_SF === ρ                # every pairing is also predefined
 true
 ```
 
@@ -237,12 +312,12 @@ Every deterministic (rounding, saturation) pairing is exported as a constant, na
 
 | | `SatFinite` | `SatPropagate` | `SatNone` |
 |---|---|---|---|
-| `NearestTiesToEven` | `RNE_SatFinite` | `RNE_SatPropagate` | `RNE_SatNone` |
-| `NearestTiesToAway` | `RNA_SatFinite` | `RNA_SatPropagate` | `RNA_SatNone` |
-| `TowardPositive` | `RTP_SatFinite` | `RTP_SatPropagate` | `RTP_SatNone` |
-| `TowardNegative` | `RTN_SatFinite` | `RTN_SatPropagate` | `RTN_SatNone` |
-| `TowardZero` | `RTZ_SatFinite` | `RTZ_SatPropagate` | `RTZ_SatNone` |
-| `ToOdd` | `RTO_SatFinite` | `RTO_SatPropagate` | `RTO_SatNone` |
+| `NearestTiesToEven` | `RNE_SF` | `RNE_SP` | `RNE_SN` |
+| `NearestTiesToAway` | `RNA_SF` | `RNA_SP` | `RNA_SN` |
+| `TowardPositive` | `RTP_SF` | `RTP_SP` | `RTP_SN` |
+| `TowardNegative` | `RTN_SF` | `RTN_SP` | `RTN_SN` |
+| `TowardZero` | `RTZ_SF` | `RTZ_SP` | `RTZ_SN` |
+| `ToOdd` | `RTO_SF` | `RTO_SP` | `RTO_SN` |
 
 The stochastic families are parameterized by the random-bit budget `N`, so their
 predefined forms are *constructors* rather than constants: `RSA_*` for
@@ -251,17 +326,17 @@ with the three saturation modes. Call them with the budget — or without, for t
 default `N = 8` (`SmallFloats.DEFAULT_RBITS`):
 
 ```julia-repl
-julia> RSA_SatNone()                      # StochasticA with the default N = 8
+julia> RSA_SN()                      # StochasticA with the default N = 8
 (StochasticA[8], SatNone)
 
-julia> RSC_SatFinite(16) === ProjSpec(StochasticC{16}(), SatFinite())
+julia> RSC_SF(16) === ProjSpec(StochasticC{16}(), SatFinite())
 true
 ```
 
-`RNE_SatNone` is the package's *initial* default spec. `default_projspec` reads the
+`RNE_SN` is the package's *initial* default spec. `default_projspec` reads the
 session default (see **Session defaults** below), so every Base-register operator,
 the same-format convenience methods, and `T(x::Real)` construction follow
-`DefaultProjection()` — `RNE_SatNone` until you change it.
+`DefaultProjection()` — `RNE_SN` until you change it.
 
 Rounding chooses the neighbor; saturation decides what out-of-range results become.
 Watch all three interact on an overflowing product in `Binary8p4se`
@@ -270,13 +345,13 @@ Watch all three interact on an overflowing product in `Binary8p4se`
 ```julia-repl
 julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);
 
-julia> Multiply(Binary8p4se, RNE_SatNone, w, two)       # overflow → ±Inf
+julia> Multiply(Binary8p4se, RNE_SN, w, two)       # overflow → ±Inf
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> Multiply(Binary8p4se, RNE_SatFinite, w, two)     # overflow → MaxFinite
+julia> Multiply(Binary8p4se, RNE_SF, w, two)     # overflow → MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
 
-julia> Multiply(Binary8p4se, RTZ_SatNone, w, two)
+julia> Multiply(Binary8p4se, RTZ_SN, w, two)
 Binary8p4se(224.0 ≡ 0x7e)   # SatNone + directed-toward-zero clamps finite
 ```
 
@@ -293,7 +368,7 @@ itself, which makes single projections exactly reproducible and is the right too
 tests:
 
 ```julia-repl
-julia> σ = RSA_SatNone();                 # ≡ ProjSpec(StochasticA{8}(), SatNone())
+julia> σ = RSA_SN();                 # ≡ ProjSpec(StochasticA{8}(), SatNone())
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); rng = Xoshiro(1))
 Binary8p4se(2.0 ≡ 0x48)
@@ -317,10 +392,9 @@ Six session-wide defaults are readable as `DefaultX()` and settable as
 |---|---|---|
 | `DefaultType` | `Binary8p2se` | any fully-parameterized `Binary` type |
 | `DefaultReturnType` | `Binary8p2se` | any fully-parameterized `Binary` type |
-| `DefaultAccumulatorType` | `binary32` (`Float32`) | any `AbstractFloat` type |
 | `DefaultRoundingMode` | `NearestTiesToEven()` | mode instance or type |
 | `DefaultSaturationMode` | `SatNone()` | mode instance or type |
-| `DefaultProjection` | `RNE_SatNone` | a `ProjSpec`, or `(mode, sat)` |
+| `DefaultProjection` | `RNE_SN` | a `ProjSpec`, or `(mode, sat)` |
 | `DefaultRNG` | the `Xoshiro` type | RNG type or instance |
 | `DefaultRbits` | `8` | `Int` in `1:60` |
 
@@ -338,7 +412,7 @@ TowardZero()
 julia> DefaultProjection()               # followed the component
 (TowardZero, SatNone)
 
-julia> DefaultProjection!(RNA_SatFinite)
+julia> DefaultProjection!(RNA_SF)
 (NearestTiesToAway, SatFinite)
 
 julia> DefaultRoundingMode(), DefaultSaturationMode()   # followed the projection
@@ -352,15 +426,15 @@ operators, and `T(x::Real)` construction all follow it.
 ```julia-repl
 julia> x, y = Binary8p4se(200.0), Binary8p4se(2.0);
 
-julia> x * y                              # RNE_SatNone: overflow → +Inf
+julia> x * y                              # RNE_SN: overflow → +Inf
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> DefaultProjection!(RTZ_SatFinite);
+julia> DefaultProjection!(RTZ_SF);
 
 julia> x * y                              # now clamps to MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
 
-julia> Multiply(Binary8p4se, RNE_SatNone, x, y)   # explicit ρ is unaffected
+julia> Multiply(Binary8p4se, RNE_SN, x, y)   # explicit ρ is unaffected
 Binary8p4se(Inf ≡ 0x7f)
 ```
 
@@ -379,8 +453,18 @@ dispatch per call, everything inside still specialized. The explicit forms
 
 To *consume* a default in your own code without paying dynamic-dispatch costs,
 go through the `with_default_*` combinators — `with_default_type`,
-`with_default_returntype`, `with_default_accumulatortype`,
-`with_default_projection` — which call `f(default, args...)`:
+`with_default_returntype`, `with_default_projection` — which call
+`f(default, args...)`:
+
+!!! note "There is no accumulator default"
+    `DefaultAccumulatorType` existed through v0.1.0 and was removed. The
+    wide-precision accumulator in a reduction is not a preference: the span
+    filter measures the operands and picks the cheapest carrier that is
+    *provably exact* for them, so both branches return the defined result. A
+    knob overriding that would make `BlockDotProduct` inexact from the default
+    API. To trade speed for nothing else, set
+    `ENV["SmallFloats_Float128"] = "disable"`, which is bit-identical by
+    construction.
 
 ```julia-repl
 julia> with_default_type((T, x) -> T(x), 1.5)
@@ -416,7 +500,7 @@ formats; the result format is the first argument. The catalog:
 - **`Convert`** — the one operation that also accepts non-`Binary` operands.
 
 **The Base register** makes each format an ordinary Julia number under its *default*
-spec (`RNE_SatNone`): `+ - * /`, `fma`, `exp`, `log`, `sqrt`, `min`, `max`, `abs`,
+spec (`RNE_SN`): `+ - * /`, `fma`, `exp`, `log`, `sqrt`, `min`, `max`, `abs`,
 `atan(y, x)`, `sinpi`, `inv`, comparisons, and friends — same-format operands only,
 no silent cross-format promotion (mixing formats promotes to `Float64` explicitly).
 
@@ -424,7 +508,7 @@ no silent cross-format promotion (mixing formats promotes to `Float64` explicitl
 julia> exp(Binary8p4se(0.25))                       # Base register
 Binary8p4se(1.25 ≡ 0x42)
 
-julia> Exp(Binary8p4se, RNE_SatNone, Binary8p4se(0.25))   # identical, explicit
+julia> Exp(Binary8p4se, RNE_SN, Binary8p4se(0.25))   # identical, explicit
 Binary8p4se(1.25 ≡ 0x42)
 ```
 
@@ -446,7 +530,7 @@ julia> A = Binary8p4se.(randn(Xoshiro(7), 4) .* 2)
  Binary8p4se(-3.25 ≡ 0xcd)
  Binary8p4se(2.25 ≡ 0x49)
 
-julia> Exp(Binary8p4se, RNE_SatNone, A)
+julia> Exp(Binary8p4se, RNE_SN, A)
 4-element Vector{Binary8p4se}:
  Binary8p4se(0.40625 ≡ 0x35)
  Binary8p4se(56.0 ≡ 0x6e)
@@ -498,13 +582,13 @@ julia> b = Block(Binary8p1uf(4.0), Binary8p4se(1.5), Binary8p4se(-0.75),
                  Binary8p4se(2.0), Binary8p4se(0.5))
 Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(4.0 ≡ 0x82), (…))
 
-julia> ConvertFromBlock(Binary8p3se, RNE_SatNone, b)   # decode scale×elem, project
+julia> ConvertFromBlock(Binary8p3se, RNE_SN, b)   # decode scale×elem, project
 (Binary8p3se(6.0 ≡ 0x4a), Binary8p3se(-3.0 ≡ 0xc6), Binary8p3se(8.0 ≡ 0x4c), Binary8p3se(2.0 ≡ 0x44))
 
-julia> BlockReduceAdd(Binary8p4se, RNE_SatNone, b)     # exact Σ scale·xᵢ, then project
+julia> BlockReduceAdd(Binary8p4se, RNE_SN, b)     # exact Σ scale·xᵢ, then project
 Binary8p4se(13.0 ≡ 0x5d)
 
-julia> ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SatNone, RNE_SatNone,
+julia> ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SN, RNE_SN,
            (Binary8p4se(100.0), Binary8p4se(-12.0), Binary8p4se(0.5), Binary8p4se(3.0)))
 Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(64.0 ≡ 0x86), (…))
 ```
@@ -547,10 +631,10 @@ The default API is bit-exact, always. If you *want* a faster inexact kernel, reg
 it — and the registry measures your honesty:
 
 ```julia-repl
-julia> ftz = ftz_variant(:Exp, Binary8p4se, Binary8p4se, RNE_SatFinite);  # Annex example
+julia> ftz = ftz_variant(:Exp, Binary8p4se, Binary8p4se, RNE_SF);  # Annex example
 
 julia> impl = register_approx!(:my_fast_exp, :Exp, Binary8p4se, (Binary8p4se,),
-                               RNE_SatFinite, ftz);
+                               RNE_SF, ftz);
 
 julia> kappa(:my_fast_exp)      # measured max code-point deviation, verified exhaustively
 4.0
@@ -562,6 +646,27 @@ implementations must be acknowledged with an explicit `κ = NaN`. Retrieve with
 `measure_kappa` / `codedistance`.
 
 ## Performance guidance
+
+!!! warning "The abstract format as an array element type"
+    `Binary{K,P,Σ,Δ}` is **abstract**, so an array declared with it has a
+    non-`isbits` element type and boxes every element:
+
+    ```julia-repl
+    julia> isbitstype(eltype(Vector{Binary{8,4,true,true}}(undef, 3)))
+    false
+
+    julia> isbitstype(eltype(Vector{Binary8p4se}(undef, 3)))
+    true
+    ```
+
+    Nothing errors — every operation still returns the right answer, because the
+    package normalizes the abstract format at each constructor and entry point.
+    You simply lose the entire performance story, silently. That makes this the
+    sharper edge of the `===` distinction: the type comparison is visibly
+    `false`, while this one costs you and says nothing.
+
+    `similar(a, T)` normalizes the request; `Vector{T}(undef, n)` cannot be
+    intercepted. Use the alias, or `format(K, P, Σ, Δ)` for runtime parameters.
 
 - **Pass format types statically.** Through `const` bindings, type parameters, or
   function arguments, every entry point fully specializes (scalar `Add` ≈ 18–26 ns,

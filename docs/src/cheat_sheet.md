@@ -11,7 +11,7 @@ using SmallFloats
 using Random: Xoshiro
 
 T = Binary8p4se
-ρ = RNE_SatNone
+ρ = RNE_SN
 
 x = T(1.6)
 y = T(0.25)
@@ -40,7 +40,7 @@ Binary K p P (s|u) (e|f)
        │   │  │     └─ extended (Inf) or finite domain
        │   │  └────── signed or unsigned
        │   └───────── significand precision, including the implicit bit
-       └───────────── total bitwidth, 3 through 8
+       └───────────── total bitwidth, 3 through 16
 ```
 
 Examples:
@@ -51,12 +51,20 @@ Examples:
 | `Binary8p4sf` | 8-bit, precision 4, signed, finite |
 | `Binary6p3ue` | 6-bit, precision 3, unsigned, extended |
 | `Binary5p5uf` | 5-bit, precision 5, unsigned, finite |
+| `Binary16p6se` | 16-bit, precision 6, signed, extended (opt-in export) |
+| `Binary16p1uf` | 16-bit, precision 1, unsigned, finite — the MX scale shape |
 
-The parametric spelling is equivalent:
+The alias is the *representation* of the parametric format, related by `<:` and
+**not** by `===`:
 
 ```julia
-Binary8p4se === Binary{8, 4, true, true}
+Binary8p4se <: Binary{8, 4, true, true}    # true
+Binary8p4se === Binary{8, 4, true, true}   # FALSE — `Binary` is abstract
+format(16, 6, true, true)                  # the alias, from runtime parameters
 ```
+
+`using SmallFloats` exports the 120 aliases at K ≤ 8. For the other 384:
+`using SmallFloats.Formats`, or `SmallFloats.Binary16p6se`, or `format(...)`.
 
 Useful format queries:
 
@@ -91,16 +99,28 @@ MaxFiniteOf(x)    # Binary8p4se(224.0 ≡ 0x7e)
 x = T(1.6)                    # numeric value: project into T
 x = Convert(T, ρ, 1.6)       # explicit projection
 
-c = codepoint(x)              # UInt8 code point
-x = T(c)                      # UInt8 means validated CODE POINT
+c = codepoint(x)              # the code point, in the format's storage unit
+x = T(c)                      # an Unsigned means validated CODE POINT
 x = rawvalue(T, c)            # unchecked code-point construction
 
-d = decode(x)                 # exact Float64 datum
+d = decode(x)                 # the exact datum, on the format's own carrier
 ```
 
-!!! warning "`UInt8` means code point"
+!!! warning "`Unsigned` means code point — at every width"
     `T(0x02)` constructs code point `0x02`; `T(2)` projects the numeric value
-    two. Use `Convert` when intent should be unmistakable.
+    two. Signedness of the integer type is what distinguishes them, so the rule
+    holds for `UInt8`, `UInt16` and any other `Unsigned`: `Binary16p6se(0x0002)`
+    is code point 2, not the value 2.0. Use `Convert` when intent should be
+    unmistakable.
+
+    `codepoint` returns the format's *storage unit* — `UInt8` at K ≤ 8,
+    `UInt16` above — and that is `codeunit_type(T)`. A code-point argument is
+    range-checked against `2^K` whatever its width, so passing a wider
+    `Unsigned` than necessary is lossless and safe.
+
+    `convert` is the deliberate exception and is value-preserving:
+    `Binary8p4se(0x02)` is code point 2, while `convert(Binary8p4se, 0x02)` is
+    the value 2.0. Promotion, `similar` and `fill` depend on that.
 
 Random values (uniform [0,1) floor-projected; normal round-to-nearest,
 tails clamped to MaxFinite; `randn` signed formats only):
@@ -110,8 +130,8 @@ rand(T); rand(T, dims); rand!(A)      # uniform on [0, 1)
 randn(T); randn(T, dims); randn!(A)   # standard normal, always finite
 rand(Xoshiro(1), T)                   # explicit rng as usual
 
-rand(rng, T;  projection=RTP_SatNone)   # scalar forms: land under any ProjSpec
-randn(rng, T; projection=RTZ_SatFinite) # (stochastic ρ draws R from same rng)
+rand(rng, T;  projection=RTP_SN)   # scalar forms: land under any ProjSpec
+randn(rng, T; projection=RTZ_SF) # (stochastic ρ draws R from same rng)
 ```
 
 Classification and stepping:
@@ -139,14 +159,14 @@ saturationmode(ρ)
 
 | Rounding | `SatFinite` | `SatPropagate` | `SatNone` |
 |---|---|---|---|
-| nearest, ties even | `RNE_SatFinite` | `RNE_SatPropagate` | `RNE_SatNone` |
-| nearest, ties away | `RNA_SatFinite` | `RNA_SatPropagate` | `RNA_SatNone` |
-| toward +∞ | `RTP_SatFinite` | `RTP_SatPropagate` | `RTP_SatNone` |
-| toward −∞ | `RTN_SatFinite` | `RTN_SatPropagate` | `RTN_SatNone` |
-| toward zero | `RTZ_SatFinite` | `RTZ_SatPropagate` | `RTZ_SatNone` |
-| round to odd | `RTO_SatFinite` | `RTO_SatPropagate` | `RTO_SatNone` |
+| nearest, ties even | `RNE_SF` | `RNE_SP` | `RNE_SN` |
+| nearest, ties away | `RNA_SF` | `RNA_SP` | `RNA_SN` |
+| toward +∞ | `RTP_SF` | `RTP_SP` | `RTP_SN` |
+| toward −∞ | `RTN_SF` | `RTN_SP` | `RTN_SN` |
+| toward zero | `RTZ_SF` | `RTZ_SP` | `RTZ_SN` |
+| round to odd | `RTO_SF` | `RTO_SP` | `RTO_SN` |
 
-`RNE_SatNone` is the package-wide default. Saturation modes mean:
+`RNE_SN` is the package-wide default. Saturation modes mean:
 
 | Mode | Out-of-range behavior |
 |---|---|
@@ -160,14 +180,14 @@ Constructors are grouped by stochastic variant:
 
 | Variant | `SatFinite` | `SatPropagate` | `SatNone` |
 |---|---|---|---|
-| A | `RSA_SatFinite(N)` | `RSA_SatPropagate(N)` | `RSA_SatNone(N)` |
-| B | `RSB_SatFinite(N)` | `RSB_SatPropagate(N)` | `RSB_SatNone(N)` |
-| C | `RSC_SatFinite(N)` | `RSC_SatPropagate(N)` | `RSC_SatNone(N)` |
+| A | `RSA_SF(N)` | `RSA_SP(N)` | `RSA_SN(N)` |
+| B | `RSB_SF(N)` | `RSB_SP(N)` | `RSB_SN(N)` |
+| C | `RSC_SF(N)` | `RSC_SP(N)` | `RSC_SN(N)` |
 
 `N` is the random-bit budget, `1 ≤ N ≤ 60`. Omitting it uses `N = 8`.
 
 ```julia
-σ = RSA_SatNone(8)
+σ = RSA_SN(8)
 
 Add(T, σ, x, y; rng=Xoshiro(1))  # reproducible stream
 Add(T, σ, x, y; R=17)            # exact draw, ideal for tests
@@ -185,10 +205,9 @@ Read with `DefaultX()`, set with `DefaultX!(v)`:
 ```julia
 DefaultType()            # Binary8p2se     DefaultType!(Binary8p4se)
 DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
-DefaultAccumulatorType() # binary32        DefaultAccumulatorType!(binary64)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
-DefaultProjection()      # RNE_SatNone
+DefaultProjection()      # RNE_SN
 DefaultRNG()             # Xoshiro         DefaultRNG!(Xoshiro(42))
 DefaultRbits()           # 8               DefaultRbits!(16)
 ```
@@ -212,7 +231,6 @@ the default (a default-typed result boxes once at escape):
 with_default_type((T, x) -> T(x), 1.5)          # Binary8p2se(1.5 ≡ 0x41)
 with_default_projection((ρ, x, y) -> Add(T, ρ, x, y), x, y)
 with_default_returntype(f, args...)              # f(DefaultReturnType(), args...)
-with_default_accumulatortype(f, args...)
 ```
 
 ## Scalar operation catalog
@@ -235,7 +253,7 @@ FMA(x, y, z)
 | Ternary | `FMA`, `FAA`, `Clamp` |
 | Conversion | `Convert` |
 
-Common Base spellings under `RNE_SatNone`:
+Common Base spellings under `RNE_SN`:
 
 ```julia
 x + y; x - y; x * y; x / y
@@ -351,14 +369,15 @@ Approximate implementations are never substituted into the default API.
 
 | Trap | Correct pattern |
 |---|---|
-| Treating `UInt8` as a number | `T(Int(c))` for a numeric integer; `T(c::UInt8)` for a code point |
-| Silently mixing byte-float formats | Convert explicitly: `Convert(T, ρ, x)` |
+| Treating an `Unsigned` as a number | `T(Int(c))` for a numeric integer; `T(c::Unsigned)` for a code point — at every width |
+| `Vector{Binary{K,P,Σ,Δ}}(undef, n)` | **Silently boxes every element** — the abstract format is not `isbits`. Use `Vector{Binary8p4se}` or `Vector{format(K,P,Σ,Δ)}`. `similar` normalizes; `Vector{…}(undef, n)` cannot be intercepted |
+| Silently mixing formats | Convert explicitly: `Convert(T, ρ, x)` |
 | Assuming `SatNone` always clamps | Choose `SatFinite` when clamping is required |
 | Expecting IEEE division-by-zero | P3109 semantics here define `x / 0 → NaN` |
 | Expecting negative zero | Every format has one zero; `T(-0.0) === zero(T)` |
 | Passing a `Rational` | Convert explicitly to an exact supported carrier or knowingly to `Float64` |
 | Reproducibility with stochastic rounding | Supply a seeded `rng`, or an explicit `R` in tests |
-| Using `rawvalue` on unchecked input | Prefer validated `T(c::UInt8)` outside kernels |
+| Using `rawvalue` on unchecked input | Prefer validated `T(c::Unsigned)` outside kernels |
 
 ## Performance checklist
 

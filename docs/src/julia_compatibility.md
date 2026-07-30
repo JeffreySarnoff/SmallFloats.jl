@@ -33,17 +33,17 @@ Because the veneers follow the session default projection, changing it changes
 them (see the session-defaults section of the [User Guide](@ref)):
 
 ```julia-repl
-julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # RNE_SatNone: overflow → Inf
+julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # RNE_SN: overflow → Inf
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> DefaultProjection!(RTZ_SatFinite);
+julia> DefaultProjection!(RTZ_SF);
 
 julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # now clamps to MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
 ```
 
 Code that must be insensitive to the session default names its projection:
-`Multiply(T, RNE_SatNone, x, y)`.
+`Multiply(T, RNE_SN, x, y)`.
 
 ## The mapping
 
@@ -87,13 +87,19 @@ Binary8p4se(1.625 ≡ 0x45)
 error, never a silent widening. Mixing formats is an explicit `Convert`:
 
 ```julia-repl
-julia> x + Convert(Binary8p4se, RNE_SatNone, Binary5p3sf(1.0))
+julia> x + Convert(Binary8p4se, RNE_SN, Binary5p3sf(1.0))
 Binary8p4se(2.5 ≡ 0x4a)
 ```
 
-**`Binary` with ordinary numbers** — promotes to `Float64` (the exact carrier)
-through the rules in `formats.jl`, so the result is a `Float64`, not a
-re-projected `Binary`:
+**`Binary` with ordinary numbers** — promotes to the format's **promotion
+carrier** through the rules in `formats.jl`, so the result is an ordinary float,
+not a re-projected `Binary`.
+
+For the 432 formats at rung 1 that carrier is `Float64`, which is what the
+example below shows. For the other 72 it is `BigFloat`: `Float64` cannot hold a
+`Binary16p1uf` datum, and promoting into it would return `±Inf` from a perfectly
+finite value with no P3109 operation involved. `promotecarrier(T)` names the
+target.
 
 ```julia-repl
 julia> x + 2.0
@@ -101,7 +107,7 @@ julia> x + 2.0
 ```
 
 Project it back explicitly when that is what you mean:
-`Convert(Binary8p4se, RNE_SatNone, decode(x) + 2.0)`.
+`Convert(Binary8p4se, RNE_SN, decode(x) + 2.0)`.
 
 ## The rest of the Base surface
 

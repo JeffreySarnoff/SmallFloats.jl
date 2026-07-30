@@ -53,10 +53,10 @@ This is a good way to build intuition for a format before committing to it: you 
 ```julia-repl
 julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);   # MaxFinite is 224
 
-julia> Multiply(Binary8p4se, RNE_SatNone, w, two)
+julia> Multiply(Binary8p4se, RNE_SN, w, two)
 Binary8p4se(Inf ≡ 0x7f)
 
-julia> Multiply(Binary8p4se, RNE_SatFinite, w, two)
+julia> Multiply(Binary8p4se, RNE_SF, w, two)
 Binary8p4se(224.0 ≡ 0x7e)
 ```
 
@@ -73,13 +73,13 @@ julia> rand(Xoshiro(2), Float64)                # the underlying uniform draw
 julia> rand(Xoshiro(2), Binary8p4se)            # default: floor (stays in [0,1))
 Binary8p4se(0.001953125 ≡ 0x02)
 
-julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SatNone)   # ceiling
+julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SN)   # ceiling
 Binary8p4se(0.0029296875 ≡ 0x03)
 
-julia> rand(Xoshiro(2), Binary8p4se; projection = RNE_SatNone)   # nearest
+julia> rand(Xoshiro(2), Binary8p4se; projection = RNE_SN)   # nearest
 Binary8p4se(0.001953125 ≡ 0x02)
 
-julia> rand(Xoshiro(2), Binary8p4se; projection = RSA_SatNone(8))  # stochastic
+julia> rand(Xoshiro(2), Binary8p4se; projection = RSA_SN(8))  # stochastic
 Binary8p4se(0.001953125 ≡ 0x02)
 ```
 
@@ -94,7 +94,7 @@ The same keyword on `randn` — here the draw is `-1.9757…`:
 julia> randn(Xoshiro(6), Binary8p4se)           # default: nearest + SatFinite
 Binary8p4se(-2.0 ≡ 0xc8)
 
-julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SatFinite)  # toward zero
+julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SF)  # toward zero
 Binary8p4se(-1.875 ≡ 0xc7)
 ```
 
@@ -106,7 +106,7 @@ Where the saturation half of the default earns its keep: `Binary3p1se` has
 julia> randn(Xoshiro(360), Binary3p1se)         # SatFinite clamps the tail
 Binary3p1se(1.0 ≡ 0x02)
 
-julia> randn(Xoshiro(360), Binary3p1se; projection = RNE_SatNone)
+julia> randn(Xoshiro(360), Binary3p1se; projection = RNE_SN)
 Binary3p1se(Inf ≡ 0x03)                         # opt out, get the overflow
 ```
 
@@ -131,7 +131,7 @@ function logodds_demo(nalarms)
     llr = Binary8p3se(log(0.85 / 0.30))      # quantized evidence weight
     acc = Binary8p3se(0.0)
     for _ in 1:nalarms
-        acc = Add(Binary8p3se, RNE_SatNone, acc, llr)
+        acc = Add(Binary8p3se, RNE_SN, acc, llr)
     end
     post(l) = 1 / (1 + exp(-l))
     exact = nalarms * log(0.85 / 0.30)
@@ -167,9 +167,9 @@ warm = F(trap(26.0, 15, 20, 24, 28))         # membership of 26 °C in "warm"
 hot  = F(trap(26.0, 24, 30, 100, 101))       # … and in "hot"
 
 (decode(warm), decode(hot),
- decode(Minimum(F, RNE_SatNone, warm, hot)),      # warm AND hot
- decode(Maximum(F, RNE_SatNone, warm, hot)),      # warm OR hot
- decode(Multiply(F, RNE_SatFinite, warm, hot)))   # product t-norm
+ decode(Minimum(F, RNE_SN, warm, hot)),      # warm AND hot
+ decode(Maximum(F, RNE_SN, warm, hot)),      # warm OR hot
+ decode(Multiply(F, RNE_SF, warm, hot)))   # product t-norm
 ```
 
 ```
@@ -236,7 +236,7 @@ range. RMSE doubles per lost significand bit; MaxFinite grows explosively:
 ```julia
 rng = Xoshiro(7); x = randn(rng, 50_000)
 for F in (Binary8p5se, Binary8p4se, Binary8p3se, Binary8p2se)
-    back = [decode(Convert(F, RNE_SatFinite, xi)) for xi in x]
+    back = [decode(Convert(F, RNE_SF, xi)) for xi in x]
     println(rpad(formatname(F), 12), " rmse = ", round(sqrt(mean((x .- back).^2)); sigdigits=3),
             "   maxfinite = ", decode(MaxFiniteOf(F)))
 end
@@ -259,7 +259,7 @@ bias. Stochastic rounding is right *on average*:
 
 ```julia
 target = 0.30078125                       # ν = 3/16 of an ulp above 0.296875
-σ = RSA_SatNone(16)                       # StochasticA{16} with SatNone
+σ = RSA_SN(16)                       # StochasticA{16} with SatNone
 rng = Xoshiro(1)
 m = mean(decode(Convert(Binary8p4se, σ, target; rng)) for _ in 1:200_000)
 (decode(Binary8p4se(target)), m)
@@ -290,8 +290,8 @@ function mx_rows(W, ::Type{FST}, ::Type{FS}, ::Type{FE}, ::Val{B}) where {FST,FS
     n, m = size(W)
     [begin
         # stage through a WIDE-RANGE format so nothing clamps before scaling
-        seg = ntuple(k -> Convert(FST, RNE_SatFinite, W[i, (j-1)*B + k]), Val(B))
-        ConvertToBlockMaxAbsFinite(FS, FE, RNE_SatNone, RNE_SatNone, seg)
+        seg = ntuple(k -> Convert(FST, RNE_SF, W[i, (j-1)*B + k]), Val(B))
+        ConvertToBlockMaxAbsFinite(FS, FE, RNE_SN, RNE_SN, seg)
     end for i in 1:n, j in 1:m ÷ B]
 end
 
@@ -299,7 +299,7 @@ blocks = mx_rows(W, Binary8p2se, Binary8p1uf, Binary8p4se, Val(32))
 recon = [let b = blocks[i, (j-1) ÷ 32 + 1]
              decode(b.s) * decode(b.x[(j-1) % 32 + 1])
          end for i in 1:64, j in 1:64]
-plain = [decode(Convert(Binary8p4se, RNE_SatFinite, w)) for w in W]
+plain = [decode(Convert(Binary8p4se, RNE_SF, w)) for w in W]
 
 relerr(A) = sqrt(mean(((W .- A) ./ max.(abs.(W), 1e-9)).^2))
 relerr(plain), relerr(recon)
@@ -327,9 +327,9 @@ projects once:
 ```julia
 rng = Xoshiro(9)
 a64, b64 = randn(rng, 32), randn(rng, 32)
-qb(v) = ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SatNone, RNE_SatNone,
-            ntuple(i -> Convert(Binary8p4se, RNE_SatFinite, v[i]), Val(32)))
-dq = BlockDotProduct(Binary8p4se, RNE_SatNone, qb(a64), qb(b64))
+qb(v) = ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SN, RNE_SN,
+            ntuple(i -> Convert(Binary8p4se, RNE_SF, v[i]), Val(32)))
+dq = BlockDotProduct(Binary8p4se, RNE_SN, qb(a64), qb(b64))
 (a64'b64, decode(dq))
 ```
 
@@ -346,11 +346,11 @@ increments in expectation:
 
 ```julia
 function accumulate_demo(nsteps, g)
-    σ = RSA_SatNone(16)
+    σ = RSA_SN(16)
     rng = Xoshiro(11)
     acc_rne = Binary8p3se(0.0); acc_sto = Binary8p3se(0.0)
     for _ in 1:nsteps
-        acc_rne = Add(Binary8p3se, RNE_SatNone, acc_rne, Convert(Binary8p3se, RNE_SatNone, g))
+        acc_rne = Add(Binary8p3se, RNE_SN, acc_rne, Convert(Binary8p3se, RNE_SN, g))
         acc_sto = Add(Binary8p3se, σ, acc_sto, Convert(Binary8p3se, σ, g; rng); rng)
     end
     (nsteps * g, decode(acc_rne), decode(acc_sto))
@@ -378,7 +378,7 @@ using SmallFloats, Random
 empty_tables!()
 rng = Xoshiro(4)
 pre = Binary8p4se.(randn(rng, 4096) .* 2.5)       # pre-activations, ±2.5σ
-act = Tanh(Binary8p4se, RNE_SatNone, pre)          # table-gather kernel
+act = Tanh(Binary8p4se, RNE_SN, pre)          # table-gather kernel
 
 (table_bytes(),
  round(count(v -> abs(decode(v)) == 1.0, act) / 4096; digits=3),
@@ -401,7 +401,7 @@ design space.) Second, the choice of nonlinearity changes *information retention
 in code points, not just shape:
 
 ```julia
-actS = Softplus(Binary8p4se, RNE_SatNone, pre)
+actS = Softplus(Binary8p4se, RNE_SN, pre)
 (length(unique(codepoint.(actS))), table_bytes())
 ```
 

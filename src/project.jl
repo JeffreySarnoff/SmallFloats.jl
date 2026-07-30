@@ -87,11 +87,18 @@ function _rtp_f64(P::Int, B::Int, μ::RoundingMode3109, X::Float64, R::Int, stic
     e = Int(u >> 52) - 1023                                  # normal input guaranteed
     m = (u & ((UInt64(1) << 52) - 1)) | (UInt64(1) << 52)    # 53-bit significand
     Q = Int64(max(e, 1 - B) - P + 1)
-    d = e - Int(Q)                                           # units-bit position; d ≤ P−1 ≤ 7
+    # units-bit position. `Q = max(e, 1−B) − P + 1`, so `d = e − Q` is exactly
+    # `P−1` on the normal branch and strictly less below it: `d ≤ P−1 ≤ KMAX−1`.
+    # It was `≤ 7` while P ≤ 8; the bound is the only thing the widening moves,
+    # and gate G3 measures the consequence rather than trusting this comment.
+    d = e - Int(Q)
     local Sfl::Int64, νfix::UInt128
     lost = false
     if d >= 0
-        t = 52 - d                                           # t ∈ [45, 52]
+        # t ∈ [52−(P−1), 52] = [37, 52] at P ≤ 16 (was [45, 52] at P ≤ 8). The
+        # shift stays well inside `UInt64`, and `Sfl = m >> t ≤ 2^16` stays well
+        # inside `Int64` — the two facts the bit path needs.
+        t = 52 - d
         Sfl = Int64(m >> t)
         νfix = UInt128(m & ((UInt64(1) << t) - 1)) << (128 - t)
     else
@@ -138,6 +145,95 @@ end
 # aligned — no mode restriction. No precision ceremony needed.
 round_to_precision(P::Int, B::Int, μ::RoundingMode3109, X::Float128, R::Int, sticky::Int) =
     _rtp_core(P, B, μ, X, R, sticky)
+# Dyadic carrier (§4 Stage 7 item 3). `X = S · 2^Q_d` with `S` an exact integer,
+# so scaling to the target grid is a SHIFT and the bits shifted out ARE ν, as an
+# exact fixed-point fraction. That is why `Dyadic` joins `_rtp_f64`'s fixed-point
+# `_rab` family rather than founding a third: the evidence it produces has the
+# same shape as the bit path's, and one predicate family means one place for a
+# semantic edit to land.
+#
+# It cannot go through `_rtp_core`: that path's zero row builds
+# `zero(float(typeof(X)))`, and `float(Dyadic)` does not exist — deliberately, as
+# `Dyadic` is not an `AbstractFloat`. The zero-with-sticky row is therefore
+# written once here and **asserted equal to `_rtp_core`'s** over the whole
+# (P, B, μ, sticky, R) grid, so "the carriers cannot drift" is a checked property
+# rather than a structural hope.
+@inline function _rtp_zero_sticky(P::Int, B::Int, μ::RoundingMode3109, R::Int, sticky::Int)
+    sticky == 0 && return Rounded(KIND_FIN, Int8(1), 0, 0)
+    sign = Int8(sticky > 0 ? 1 : -1)
+    Q = Int64(2 - B - P)
+    away = _rab(μ, UInt128(0), false, 1, Int64(0), Q, B, P, sign, R)  # |true| ∈ (0, ε)
+    S = away ? Int64(1) : Int64(0)
+    S == 0 && return Rounded(KIND_FIN, Int8(1), 0, 0)
+    Rounded(KIND_FIN, sign, S, Q)
+end
+
+function round_to_precision(P::Int, B::Int, μ::RoundingMode3109, X::Dyadic, R::Int, sticky::Int)
+    isnan(X) && return Rounded(KIND_NAN, Int8(1), 0, 0)
+    if isinf(X)
+        if sign(X) > 0
+            sticky < 0 && return Rounded(KIND_FIN, Int8(1), (Int64(1) << P) - 1, HUGEQ)
+            return Rounded(KIND_PINF, Int8(1), 0, 0)
+        else
+            sticky > 0 && return Rounded(KIND_FIN, Int8(-1), (Int64(1) << P) - 1, HUGEQ)
+            return Rounded(KIND_NINF, Int8(-1), 0, 0)
+        end
+    end
+    iszero(X) && return _rtp_zero_sticky(P, B, μ, R, sticky)
+    _rtp_dyadic(P, B, μ, X, R, sticky)
+end
+
+function _rtp_dyadic(P::Int, B::Int, μ::RoundingMode3109, X::Dyadic, R::Int, sticky::Int)
+    sgn = Int8(sign(X))
+    m = abs(X.S)                                             # exact, nonzero
+    nb = DyadicNumbers.nbits_dy(m)
+    e = Int64(X.Q) + nb - 1                                  # ⌊log₂|X|⌋, exact
+    Q = max(e, Int64(1 - B)) - P + 1
+    t = Q - Int64(X.Q)                                       # bits to shift out
+    local Sfl::Int64, νfix::UInt128
+    lost = false
+    if t <= 0
+        # the grid is at or below the operand's own exponent: no fraction at all.
+        # `S̃ ≤ 2^P` holds by construction (Q is chosen from e), so the shift
+        # cannot leave Int64 — the same fact `_rtp_f64` relies on one carrier up.
+        Sfl = Int64(m << (-t))
+        νfix = UInt128(0)
+    else
+        Sfl = Int64(m >> t)
+        frac = m & ((Int128(1) << t) - 1)                     # the shifted-out bits ARE ν
+        if t <= 128
+            νfix = UInt128(frac) << (128 - t)
+        else
+            sh = t - 128
+            if sh >= 128
+                νfix = UInt128(0); lost = !iszero(frac)
+            else
+                νfix = UInt128(frac >> sh)
+                lost = !iszero(frac & ((Int128(1) << sh) - 1))
+            end
+        end
+    end
+    νs = sticky == 0 ? 0 : sticky * Int(sgn)
+    # step-down for "true value just below an exact dyadic" — the identical block
+    # in `_rtp_f64` and `_rtp_core`; all three must agree and G3 pins two of them.
+    if νs < 0 && νfix == UInt128(0) && !lost
+        if Sfl == Int64(1) << (P - 1) && Q > Int64(2 - B - P)
+            Q -= 1
+            Sfl = (Int64(1) << P) - 1
+        else
+            Sfl -= 1
+        end
+        νfix = typemax(UInt128); lost = false; νs = -1        # ν = 1⁻
+    end
+    away = _rab(μ, νfix, lost, νs, Sfl, Q, B, P, sgn, R)
+    S = away ? Sfl + 1 : Sfl
+    if S == Int64(1) << P
+        S = Int64(1) << (P - 1); Q += 1
+    end
+    S == 0 && return Rounded(KIND_FIN, Int8(1), 0, 0)
+    Rounded(KIND_FIN, sgn, S, Q)
+end
+
 # BigFloat carriers may exceed the ambient MPFR default precision; ldexp/floor/ν
 # arithmetic must run at (at least) the operand's precision or bits are silently
 # truncated. Function barrier sets it for the whole finite path.
@@ -231,28 +327,20 @@ end
     _νrnite(ν, νs, N) + R >= Int64(1) << N
 
 # ---- dyadic comparison for saturation (design §5.3)
-@inline _nbits(S::Int64) = 64 - leading_zeros(UInt64(S))
-# compare s·S·2^Q against extremal datum m (as Float64, exact); |result| may exceed Float64 range,
-# so compare in (sign, msb-position, aligned significand) space.
-@inline function _cmp_rounded_datum(sign::Int8, S::Int64, Q::Int64, m::Float64)
-    S == 0 && return m == 0.0 ? 0 : (m > 0 ? -1 : 1)
-    m == 0.0 && return Int(sign)
-    sm = m > 0 ? 1 : -1
-    Int(sign) != sm && return Int(sign) < sm ? -1 : 1
-    am = abs(m)
-    (mS, mE, _) = Base.decompose(am)                      # am = mS · 2^mE exactly
-    mS64 = Int64(mS); mE64 = Int64(mE)
-    p1 = Q + _nbits(S); p2 = mE64 + _nbits(mS64)          # msb positions
-    if p1 != p2
-        c = p1 < p2 ? -1 : 1
-    else
-        Δ = Q - mE64                                       # |Δ| ≤ 64 when positions equal
-        a1 = Δ >= 0 ? (Int128(S) << Δ) : Int128(S)
-        a2 = Δ >= 0 ? Int128(mS64) : (Int128(mS64) << (-Δ))
-        c = a1 < a2 ? -1 : (a1 > a2 ? 1 : 0)
-    end
-    Int(sign) > 0 ? c : -c
-end
+#
+# `_cmp_rounded_datum(sign, S, Q, m::Float64)` and its `_nbits` helper lived
+# here: a comparison of a
+# rounded canonical form against an extremal datum, done in
+# (sign, msb-position, aligned significand) space so that a |result| exceeding
+# Float64's range stayed comparable. It was removed at Stage 1 of the K ≤ 16
+# extension because it had **no call site anywhere** in `src/` or `test/`
+# (implementextensions §1 C8) — `saturate` compares `(S, Q)` against
+# `_extremal_SQ` in pure integer space and never needs it.
+#
+# Recorded rather than silently deleted because wide K may want exactly this
+# shape back: comparing against an extremal datum whose magnitude exceeds the
+# carrier is the Group C saturation question. If Stage 7 needs it, reintroduce
+# it against `Dyadic` — where the (S, Q) form is native — not against Float64.
 
 # Extremal magnitude in canonical (S, Q) integer form — a pure function of the type
 # parameters, so it constant-folds (bitops plan K4). Verified by enumeration against
@@ -260,7 +348,7 @@ end
 @inline function _extremal_SQ(::Type{T}) where {K,P,SGN,EXT,T<:Binary{K,P,SGN,EXT}}
     hidden = Int64(1) << (P - 1)                          # implicit-bit weight, as in ωDecode
     c = codepoint(MaxFiniteOf(T))
-    tsig = c & UInt8(hidden - 1)                          # trailing significand
+    tsig = c & _cu(T, hidden - 1)                         # trailing significand
     Eb = Int(c >> (P - 1))                                # biased exponent field
     B = expbias(T)
     S = Eb == 0 ? Int64(tsig) : Int64(tsig) + hidden
@@ -354,7 +442,39 @@ projection is monotone in the value for every mode at fixed R, so if
 project(d, sticky=+1) == project(u, sticky=-1) that common code is the answer;
 otherwise a projection grid point sits inside the interval and precision escalates.
 """
-function project_interval(::Type{T}, ρ::ProjSpec, f; R::Int=0, maxprec::Int=4096) where {T<:Binary}
+# The ceiling is DERIVED from the format, and `4096` was the last constant in the
+# package that was ample at K ≤ 8 and insufficient across the wide grid — the
+# same shape of defect as `_BIGP = 2200` (§11 M31, M48).
+#
+# What sets the requirement is the distance between the true value and the
+# nearest projection grid point, in bits. For a Group C enclosure that distance
+# is bounded by the format's own spread: a datum's exponent ranges over
+# `±(B + P)`, so two distinct grid points differ by at least `2^-(2B + 2P)` of
+# each other and `bigprec(T)` bits always separate them. At K ≤ 8 that is at most
+# 320 bits and a flat 4096 was 12× ample; at `Binary15p2ue` (B = 8192) it is
+# 16 452, and 4096 is not enough to decide anything.
+#
+# The failure was reachable from the public API and it THREW rather than
+# answering: `ArcCosPi(Binary15p2ue, ρ, x)` for a subnormal `x` has true value
+# `½ − x/π`, which sits `~2^-8194` below the datum `½`. Under `RoundNearest` both
+# endpoints land on `½`'s code and the ladder resolves at once, which is why
+# nothing before Stage 8 saw it; under a directed or stochastic rule the answer
+# depends on WHICH SIDE of `½` the value falls, and that needs ≈ 8 200 bits.
+# Predicted, in those words, by the plan's step 4: "carrier-precision differences
+# manifest on the stochastic sub-grid first".
+#
+# `bigprec(T)` is the package's own derivation of "enough bits for this format"
+# and is itself asserted sufficient by gate G2, so this ceiling inherits that
+# gate rather than introducing a second unproven constant. It is a CEILING, not a
+# starting precision: the ladder still starts at 256 bits and doubles, so the
+# ordinary case pays nothing for the wide case being possible.
+@inline _intervalcap(::Type{T}) where {T<:Binary} = max(4096, bigprec(T) + 64)
+
+project_interval(::Type{T}, ρ::ProjSpec, f; R::Int=0,
+                 maxprec::Int=_intervalcap(T)) where {T<:Binary} =
+    _project_interval(T, ρ, f, R, maxprec)
+
+function _project_interval(::Type{T}, ρ::ProjSpec, f, R::Int, maxprec::Int) where {T<:Binary}
     maxprec >= 2 || throw(ArgumentError("maxprec must be at least 2 bits (got $maxprec)"))
     prec = min(256, maxprec)
     while true

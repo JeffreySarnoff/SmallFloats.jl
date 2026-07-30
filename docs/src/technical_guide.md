@@ -10,7 +10,7 @@ Source files load in dependency order, each layer speaking only downward:
 
 | layer | file | provides |
 |---|---|---|
-| formats | `formats.jl` | `Binary{K,P,SGN,EXT}`, the 120 named aliases, Group M queries |
+| formats | `formats.jl` | `Binary{K,P,SGN,EXT}`, the 504 named aliases, Group M queries |
 | specs | `projspec.jl` | rounding/saturation singletons, `ProjSpec{R,S}`, the predefined spec grid |
 | defaults | `defaults.jl` | settable session defaults (`DefaultType`, `DefaultProjection`, …) behind `Ref`s; consumed via the speculation guard |
 | codec | `decode_encode.jl` | decode (generated tables + bit-composed compute), encode, order keys, counting sort, `Class`, Next ops |
@@ -31,17 +31,40 @@ A value is its code point (`UInt8`). The bit layout is the draft's: sign (signed
 formats), biased exponent, trailing significand; one NaN at the negative-zero slot;
 no −0; ±Inf adjacent to the extremes in extended formats.
 
-`decode` is a **`@generated` constant-tuple lookup**: per format, a `2^K`-tuple of
-`Float64` datums built once from the computational decode (so table and computation
-are correct by construction and asserted equivalent exhaustively). Constant inputs
-still fold — `maxfinite_datum(T)` is a compile-time constant — while runtime decode
-is a single indexed load (≈ 0.7 ns). The computational decode assembles the Float64
-**by bits** (normalize with `leading_zeros`, place exponent and mantissa fields,
-`reinterpret`), valid because every datum's exponent sits deep inside Float64's
-normal range; `Float64` is thereby the *exact* carrier for all datums, an invariant
-the suite checks against an independent big-float transliteration of the draft.
+`decode` has **two shapes, selected by `decodepolicy(T)`** — a representation
+decision, not a semantic one.
 
-Ordering runs on **integer order keys**: a sign-magnitude fold into `UInt16`,
+At `K ≤ 8` it is a **`@generated` constant-tuple lookup**: per format, a
+`2^K`-tuple of datums built once from the computational decode (so table and
+computation are correct by construction and asserted equivalent exhaustively).
+Constant inputs still fold — `maxfinite_datum(T)` is a compile-time constant —
+while runtime decode is a single indexed load (≈ 0.7 ns). Above `K = 8` a
+`2^16`-tuple is not a constant worth materializing, so the computational decode
+runs directly.
+
+The computational decode assembles the datum **by bits** (normalize with
+`leading_zeros`, place exponent and mantissa fields, `reinterpret`) wherever the
+carrier is `Float64`.
+
+**Which carrier that is depends on the format's exponent bias, and is the second
+of the package's two axes.** `Float64`'s normal range holds every datum of the
+432 formats at rung 1 — the property the bit-assembly rests on. It does not hold
+the other 72: `Binary16p1uf` reaches `2^32768`. Those decode to `Float128`
+(rung 2) or to an exact dyadic carrier (rung 3), chosen by `datumcarrier(T)`,
+and every one of them is exact for the datums it accepts. So the invariant is not
+"`Float64` is the exact carrier for all datums" — that was true only while
+`K ≤ 8` — but the stronger and still-checkable one:
+
+> **every format's datum carrier is exact for that format's datums**, and the
+> choice is a dispatch decision derived from the exponent bias, never a caller's.
+
+The suite checks it against an independent big-float transliteration of the
+draft (gate G6, exhaustively over the `(datum, head)` pairs), and gate G4 checks
+the consequence that matters: forcing a *wider* carrier never changes a code
+point, so the choice buys time and never an answer.
+
+Ordering runs on **integer order keys**: a sign-magnitude fold into an unsigned
+type wide enough for the format's `2^K + 1` keys (`UInt16` at K ≤ 8, wider above),
 monotone with the total order, NaN mapped to `typemax`. Same-format `TotalOrder`,
 `isless`, and the numeric comparisons are key comparisons (~1 ns); since a format has
 at most `2^K + 1` distinct keys, vectors sort with an **O(n) counting sort**
@@ -103,9 +126,10 @@ result kinds; `apply_op` fast-splits the common one and finishes the rest:
 | kind | meaning | finished by |
 |---|---|---|
 | `Float64` | exact (specials; representable arithmetic) | direct `project` |
+| `Dyadic` | exact at rung 3: an `Int128` significand and an `Int64` exponent, `isbits` | direct `project` (dyadic carrier) |
 | `Float128` | exact by **width analysis** | direct `project` (Float128 carrier) |
 | `StickyF` | wide-spread `FMA`/`FAA` tail: head value (`Float64` or `Float128`) + tail sign | direct `project` with `sticky` set — no allocation |
-| `BigExactF` | exact at 2200-bit precision (wide-spread tail for `Add`; the near-impossible `FAA` distillation miss) | `project` on `BigFloat` |
+| `BigExactF` | exact at a precision **derived from the operands** — `bigprec`, not a constant (wide-spread tail for `Add`; the near-impossible `FAA` distillation miss) | `project` on `BigFloat` |
 | `Enclose128F` | correctly-rounded Float128 **bracket** | sticky agreement, MPFR fallback |
 | `EncloseF` | MPFR directed enclosure `f(prec)`, optional Float128 pre-filter `fq`, optional eager Float64 estimate `yd` | three-stage: `yd` → `fq` → interval protocol |
 
@@ -118,7 +142,10 @@ assumption:
 - **Width analysis.** Sums of decoded datums are *exactly representable* in
   `Float128` whenever operand bits + exponent spread fit 113 bits — checked in
   advance by integer exponent arithmetic (`Add` at ΔE ≤ 100, `FMA` ≤ 92, `FAA`
-  span ≤ 98). Beyond the threshold, `Add` escalates to the 2200-bit path, while
+  span ≤ 98). Beyond the threshold, `Add` escalates to the exact MPFR path — at a
+  precision **derived from the operands** by `bigprec`, not the retired 2200-bit
+  constant, which was ample at K ≤ 8 and insufficient for 50 of the 504 formats
+  (gate G2 measures this) — while
   `FMA`/`FAA` take a non-allocating **sticky-head** shortcut: past that spread the
   smaller term is provably too small (by construction of the threshold) to affect
   anything but the tail direction of the larger one, so the result is
@@ -158,7 +185,9 @@ operation against the 3072-bit protocol.
 the MPFR enclosure at precision `p`; if `lo == hi` the value is exactly
 representable — project it; otherwise project `lo` with `sticky = +1` and `hi` with
 `sticky = −1`; agreement (projection is monotone at fixed `R`) yields the answer;
-disagreement doubles `p`, clamped to the `maxprec` ceiling (default 4096 bits,
+disagreement doubles `p`, clamped to the `maxprec` ceiling (**derived from the
+format**, `max(4096, bigprec(T) + 64)` — a flat 4096 was ample at K ≤ 8 and could
+not decide `ArcCosPi` at `Binary15p2ue` under a directed or stochastic rule,
 honored exactly even when it is not a power-of-two multiple of the 256-bit start).
 Termination requires that the enclosure not be chasing a value the grid can
 actually hit — which is why the π-scaled operations carry **Niven peels**: for
@@ -178,7 +207,7 @@ element, measured 0.27 ns/elem unary and 0.5 ns/elem binary. Tables are built
 table ≡ scalar over every entry.
 
 Ternary (`FMA`, `FAA`, `Clamp`) is a finite function too — 2^(K1+K2+K3) entries —
-but that count spans four orders of magnitude across the 3–8 bitwidth range (512 B
+but that count spans four orders of magnitude across the 3–16 bitwidth range (512 B
 at K=3, 16 MiB at K=8), so one policy doesn't fit the whole range. A separate
 `TernaryKey → TernaryEntry` cache (`_ternary_table_for`, in `tables.jl`) tiers by
 Σ bitwidth:

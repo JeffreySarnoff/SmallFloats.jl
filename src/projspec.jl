@@ -96,46 +96,46 @@ nrandbits(::ProjSpec{R,S}) where {R,S} = nrandbits(R)
 
 # ---- predefined projections
 """(NearestTiesToEven, SatFinite)."""
-const RNE_SatFinite    = ProjSpec{NearestTiesToEven, SatFinite}()
+const RNE_SF    = ProjSpec{NearestTiesToEven, SatFinite}()
 """(NearestTiesToEven, SatPropagate)."""
-const RNE_SatPropagate = ProjSpec{NearestTiesToEven, SatPropagate}()
+const RNE_SP = ProjSpec{NearestTiesToEven, SatPropagate}()
 """(NearestTiesToEven, SatNone) — the package-wide default ρ."""
-const RNE_SatNone      = ProjSpec{NearestTiesToEven, SatNone}()
+const RNE_SN      = ProjSpec{NearestTiesToEven, SatNone}()
 
 """(NearestTiesToAway, SatFinite)."""
-const RNA_SatFinite    = ProjSpec{NearestTiesToAway, SatFinite}()
+const RNA_SF    = ProjSpec{NearestTiesToAway, SatFinite}()
 """(NearestTiesToAway, SatPropagate)."""
-const RNA_SatPropagate = ProjSpec{NearestTiesToAway, SatPropagate}()
+const RNA_SP = ProjSpec{NearestTiesToAway, SatPropagate}()
 """(NearestTiesToAway, SatNone)."""
-const RNA_SatNone      = ProjSpec{NearestTiesToAway, SatNone}()
+const RNA_SN      = ProjSpec{NearestTiesToAway, SatNone}()
 
 """(TowardPositive, SatFinite)."""
-const RTP_SatFinite    = ProjSpec{TowardPositive, SatFinite}()
+const RTP_SF    = ProjSpec{TowardPositive, SatFinite}()
 """(TowardPositive, SatPropagate)."""
-const RTP_SatPropagate = ProjSpec{TowardPositive, SatPropagate}()
+const RTP_SP = ProjSpec{TowardPositive, SatPropagate}()
 """(TowardPositive, SatNone)."""
-const RTP_SatNone      = ProjSpec{TowardPositive, SatNone}()
+const RTP_SN      = ProjSpec{TowardPositive, SatNone}()
 
 """(TowardNegative, SatFinite)."""
-const RTN_SatFinite    = ProjSpec{TowardNegative, SatFinite}()
+const RTN_SF    = ProjSpec{TowardNegative, SatFinite}()
 """(TowardNegative, SatPropagate)."""
-const RTN_SatPropagate = ProjSpec{TowardNegative, SatPropagate}()
+const RTN_SP = ProjSpec{TowardNegative, SatPropagate}()
 """(TowardNegative, SatNone)."""
-const RTN_SatNone      = ProjSpec{TowardNegative, SatNone}()
+const RTN_SN      = ProjSpec{TowardNegative, SatNone}()
 
 """(TowardZero, SatFinite)."""
-const RTZ_SatFinite    = ProjSpec{TowardZero, SatFinite}()
+const RTZ_SF    = ProjSpec{TowardZero, SatFinite}()
 """(TowardZero, SatPropagate)."""
-const RTZ_SatPropagate = ProjSpec{TowardZero, SatPropagate}()
+const RTZ_SP = ProjSpec{TowardZero, SatPropagate}()
 """(TowardZero, SatNone)."""
-const RTZ_SatNone      = ProjSpec{TowardZero, SatNone}()
+const RTZ_SN      = ProjSpec{TowardZero, SatNone}()
 
 """(ToOdd, SatFinite)."""
-const RTO_SatFinite    = ProjSpec{ToOdd, SatFinite}()
+const RTO_SF    = ProjSpec{ToOdd, SatFinite}()
 """(ToOdd, SatPropagate)."""
-const RTO_SatPropagate = ProjSpec{ToOdd, SatPropagate}()
+const RTO_SP = ProjSpec{ToOdd, SatPropagate}()
 """(ToOdd, SatNone)."""
-const RTO_SatNone      = ProjSpec{ToOdd, SatNone}()
+const RTO_SN      = ProjSpec{ToOdd, SatNone}()
 
 """Default random-bit budget used by no-argument stochastic projection constructors."""
 const DEFAULT_RBITS = 8
@@ -144,11 +144,23 @@ const DEFAULT_RBITS = 8
 # written methods differing only in two names. Generated from the grid instead,
 # so a change to the constructor protocol — validation, the no-argument budget,
 # the Val route — happens once and cannot apply unevenly across the nine.
-# Names are unchanged: `RSA_SatNone`, `RSA_SatNoneType`, …
-for (tag, mode) in ((:RSA, :StochasticA), (:RSB, :StochasticB), (:RSC, :StochasticC)),
-    sat in (:SatFinite, :SatPropagate, :SatNone)
+#
+# The saturation tag is carried as an explicit `mode => suffix` pair rather than
+# derived from the type name, and that is the whole reason this loop is worth a
+# comment. The short-name rename (`RSA_SatNone` → `RSA_SN`) renamed every
+# hand-written `const` above and the export list, and could not see these:
+# `Symbol(tag, :_, sat)` built `RSA_SatNone` from the *type* symbol, so the nine
+# stochastic constructors kept their old names while `export` and every call site
+# used the new ones. Julia exports an undefined name without complaint, so
+# `RSA_SN` was **exported but not defined** and the failure surfaced only at the
+# first call. Naming the suffix explicitly makes the generator visible to the
+# next rename.
+const _SAT_TAGS = ((:SatFinite => :SF), (:SatPropagate => :SP), (:SatNone => :SN))
 
-    ctor  = Symbol(tag, :_, sat)
+for (tag, mode) in ((:RSA, :StochasticA), (:RSB, :StochasticB), (:RSC, :StochasticC)),
+    (sat, suffix) in _SAT_TAGS
+
+    ctor  = Symbol(tag, :_, suffix)
     alias = Symbol(ctor, :Type)
     @eval begin
         const $alias = ProjSpec{$mode{N}, $sat} where {N}

@@ -3,7 +3,7 @@
     SmallFloats
 
 A conforming, performance-oriented Julia implementation of the IEEE P3109 draft
-standard for arithmetic formats for machine learning (bitwidths 3–8).
+standard for arithmetic formats for machine learning (bitwidths 3–16).
 
 Bit-exact defined results on every default path; the projection engine
 (`RoundToPrecision → Saturate → Encode`) is the single write path into a code
@@ -34,20 +34,35 @@ using PrecompileTools: @setup_workload, @compile_workload
 using Quadmath: Float128
 using BFloat16s: BFloat16
 
+# `dyadic.jl` loads FIRST and has zero SmallFloats dependencies (§4 Stage 7): the
+# rung-3 exact carrier must be checkable on its own terms, with no reach into a
+# format, a trait, or a projection.
+include("dyadic.jl")
+using .DyadicNumbers: Dyadic, DyadicNumbers
+
 include("fma128.jl")
 using .Float128FMA          # on Windows this installs Base.fma
 
 include("faa128.jl")
 using .Float128FAA          
 
-# Include order: formats → projspec → defaults → decode_encode → project →
-# ops_scalar → juliacompat → oracle → tables → kernels → blocks → packed →
-# approx → rand.
+# Include order: formats → carriers → projspec → defaults → decode_encode →
+# project → ops_scalar → juliacompat → oracle → tables → kernels → blocks →
+# packed → approx → rand.
 # (One deliberate delta from the architecture §11 listing: the evaluation-protocol
 # structs BigExactF/EncloseF live in ops_scalar.jl per §6, so ops_scalar precedes
 # oracle; oracle's references to them are function-body-late-bound either way, but
 # this is the order the harnesses verified.)
+#
+# `carriers.jl` follows `formats.jl` because its trait signatures are bounded by
+# `Binary`, which a `where` clause resolves at method-definition time. It owns
+# the second of the two axes: `formats.jl` decides how a code point is *stored*
+# (a function of K), `carriers.jl` decides what holds a datum in *flight* (a
+# function of the exponent bias B). Keeping them in separate files is what makes
+# "the carrier is a property of values in flight, not of formats at rest"
+# checkable rather than merely stated.
 include("formats.jl")
+include("carriers.jl")
 include("projspec.jl")
 include("defaults.jl")
 include("decode_encode.jl")
@@ -65,10 +80,61 @@ include("rand.jl")
 # ---------------------------------------------------------------------------
 # Exports
 # ---------------------------------------------------------------------------
-# the type and every draft §3.2 named format
+# ---- the format aliases: 504 defined, 120 exported, all 504 opt-in.
+#
+# **Decision (Stage 9 item 1, open item O3), settled by asymmetric
+# reversibility: exporting more later is non-breaking, un-exporting is not.**
+#
+# Every one of the 504 aliases is DEFINED in `SmallFloats` and reachable as
+# `SmallFloats.Binary16p6se`. What `using SmallFloats` puts in `Main` is the
+# **120 names at K ≤ 8** — exactly what it put there before the extension, so no
+# existing program changes meaning. The other 384 arrive only if asked for:
+#
+#     using SmallFloats.Formats      # all 504 names in Main
+#
+# Three reasons this is the narrow default rather than the wide one.
+#
+# *It is the only direction that stays open.* Exporting the remaining 384 later
+# is a non-breaking minor change. Un-exporting them after a release is breaking,
+# and the window to choose closes at that release rather than at this commit.
+#
+# *384 new names in `Main` is a name-collision surface, not a convenience.*
+# `Binary10p5se` is unlikely to clash; the point is that a user cannot opt out of
+# a package's exports, only avoid the package.
+#
+# *The programmatic route is better anyway for the wide grid.* `format(K,P,Σ,Δ)`
+# is a `Dict` lookup returning the concrete type, and code that walks a grid of
+# 504 formats wants that, not 504 spelled names. It is exported below for the
+# first time — its own docstring already called it "the supported replacement for
+# spelling `Binary{K,P,Σ,Δ}`", which an unexported binding could not be.
 export Binary
 for n in sort!(collect(keys(_NAMED)))
+    bitwidth(_NAMED[n]) <= KSPLIT && @eval export $n
+end
+
+"""
+    SmallFloats.Formats
+
+Opt-in namespace re-exporting **all 504** draft §3.2 format aliases.
+
+`using SmallFloats` exports the 120 names at K ≤ 8, unchanged from before the
+K ≤ 16 extension. `using SmallFloats.Formats` adds the other 384:
+
+```julia
+using SmallFloats            # Binary8p4se — exported
+using SmallFloats.Formats    # Binary16p6se — now exported too
+```
+
+Every alias is defined in `SmallFloats` either way, so
+`SmallFloats.Binary16p6se` works without this module. Prefer
+[`format`](@ref)`(K, P, Σ, Δ)` when the parameters are runtime values.
+"""
+module Formats
+import ..SmallFloats
+for n in sort!(collect(keys(SmallFloats._NAMED)))
+    @eval using ..SmallFloats: $n
     @eval export $n
+end
 end
 
 export binary64, binary32, binary16
@@ -78,7 +144,8 @@ export bitwidth, issigned, isextended, expbias, expbitwidth, trailingsigbits,
        BitwidthOf, PrecisionOf, SignednessOf, DomainOf, ExponentBiasOf,
        ExponentBitwidthOf, TrailingSignificandBitwidthOf,
        MaxFiniteOf, MinFiniteOf, MinPositiveOf, MaxSubnormalOf, MinNormalOf,
-       maxfinite_datum, minfinite_datum, formatname, rawvalue, decode, decode!   # codepoint extends Base
+       maxfinite_datum, minfinite_datum, formatname, rawvalue, decode, decode!,  # codepoint extends Base
+       format, reptype, codeunit_type
 
 # projection specifications
 export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,
@@ -86,28 +153,26 @@ export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,
        SaturationMode, SatFinite, SatPropagate, SatNone,
        ProjSpec, RoundOf, SatOf, roundingmode, saturationmode,
        isstochastic, nrandbits,
-       RNE_SatFinite, RNE_SatPropagate, RNE_SatNone,
-       RNA_SatFinite, RNA_SatPropagate, RNA_SatNone,
-       RTP_SatFinite, RTP_SatPropagate, RTP_SatNone,
-       RTN_SatFinite, RTN_SatPropagate, RTN_SatNone,
-       RTZ_SatFinite, RTZ_SatPropagate, RTZ_SatNone,
-       RTO_SatFinite, RTO_SatPropagate, RTO_SatNone,
-       RSA_SatFinite, RSA_SatPropagate, RSA_SatNone,
-       RSB_SatFinite, RSB_SatPropagate, RSB_SatNone,
-       RSC_SatFinite, RSC_SatPropagate, RSC_SatNone,
+       RNE_SF, RNE_SP, RNE_SN,
+       RNA_SF, RNA_SP, RNA_SN,
+       RTP_SF, RTP_SP, RTP_SN,
+       RTN_SF, RTN_SP, RTN_SN,
+       RTZ_SF, RTZ_SP, RTZ_SN,
+       RTO_SF, RTO_SP, RTO_SN,
+       RSA_SF, RSA_SP, RSA_SN,
+       RSB_SF, RSB_SP, RSB_SN,
+       RSC_SF, RSC_SP, RSC_SN,
        default_projspec, projmode
 
 # session defaults (defaults.jl)
 export DefaultType, DefaultType!,
        DefaultReturnType, DefaultReturnType!,
-       DefaultAccumulatorType, DefaultAccumulatorType!,
        DefaultRoundingMode, DefaultRoundingMode!,
        DefaultSaturationMode, DefaultSaturationMode!,
        DefaultProjection, DefaultProjection!,
        DefaultRNG, DefaultRNG!,
        DefaultRbits, DefaultRbits!,
-       with_default_type, with_default_returntype,
-       with_default_accumulatortype, with_default_projection
+       with_default_type, with_default_returntype, with_default_projection
 
 # comparison, classification, stepping (Groups D/M)
 export TotalOrder, Class, FPClass,
@@ -122,7 +187,7 @@ end
 export vmap, vmap!
 
 # table cache introspection
-export table_bytes, empty_tables!
+export table_bytes, table_count, ternary_count, table_policy, empty_tables!
 
 # Float32 carrier-exactness trait (tables.jl)
 export f32_exact
@@ -152,17 +217,44 @@ export conformance, conformance_dict, conformance_report, draft_revision,
     @compile_workload begin
         T = Binary8p4se; S = Binary8p3se
         a, b = T(1.5), T(0.25)
-        Add(T, RNE_SatNone, a, b); Multiply(T, RNE_SatFinite, a, b)
-        Exp(T, RNE_SatNone, a); Convert(S, RNE_SatNone, a)
+        Add(T, RNE_SN, a, b); Multiply(T, RNE_SF, a, b)
+        Exp(T, RNE_SN, a); Convert(S, RNE_SN, a)
         a + b; exp(b); fma(a, b, a); min(a, b)
-        get_table(:Exp, T, T, RNE_SatNone)
+        get_table(:Exp, T, T, RNE_SN)
         A = [a, b, a, b]; B = [b, a, b, a]; d = similar(A)
-        vmap!(d, Val(:Add), T, RNE_SatNone, A, B)
-        vmap!(d, Val(:Exp), T, RNE_SatNone, A)
-        ScaledAdd(T, RNE_SatNone, one(S), a, one(S), b)
+        vmap!(d, Val(:Add), T, RNE_SN, A, B)
+        vmap!(d, Val(:Exp), T, RNE_SN, A)
+        ScaledAdd(T, RNE_SN, one(S), a, one(S), b)
         bx = Block(one(S), (a, b, a, b)); by = Block(one(S), (b, a, b, a))
-        BlockDotProduct(T, RNE_SatNone, bx, by)
-        BlockAdd(T, RNE_SatNone, bx, by, one(S))
+        BlockDotProduct(T, RNE_SN, bx, by)
+        BlockAdd(T, RNE_SN, bx, by, one(S))
+
+        # ---- exactly one wide format per carrier, and no more.
+        #
+        # The image must not grow with the grid: 504 formats × the operation
+        # register would be an enormous workload for paths most users never take.
+        # But the wide carriers are *new code*, and leaving them entirely
+        # uncompiled means the first wide call in a session pays for the whole
+        # carrier lattice — measured at ≈ 1.8 s per format elsewhere in this
+        # work, essentially all specialization.
+        #
+        # So: one representative at each rung above 1, one Group A operation and
+        # one Group B, which is what forces `decode`'s wide path, `lift`, the
+        # per-head `ωeval` rows, the enclosure ladder, and `project`'s generic
+        # `_rab` family to exist. Adding a second format at the same rung
+        # compiles the same methods again for a different type parameter and buys
+        # nothing.
+        W2 = Binary16p5se        # rung 2 — Float128 carrier
+        W3 = Binary16p1uf        # rung 3 — Dyadic carrier (the MX scale shape)
+        for WF in (W2, W3)
+            w1 = WF(1.5); w2 = WF(0.25)
+            Add(WF, RNE_SN, w1, w2)          # Group A, per-head ωeval
+            Multiply(WF, RNE_SF, w1, w2)
+            Exp(WF, RNE_SN, w1)              # Group B, the enclosure ladder
+            Convert(T, RNE_SN, w1)           # wide → narrow, across the seam
+            decode(w1); codepoint(w1); w1 < w2    # the veneers a user reaches first
+        end
+
         empty_tables!()          # tables are cheap to rebuild; don't bloat the image
     end
 end

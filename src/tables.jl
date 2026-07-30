@@ -1,14 +1,49 @@
 # ===== tables.jl — table lifecycle for pure-ρ specializations (design §7.3/§8.3, architecture §7)
 #
 # Any *pure* (non-stochastic) specialization of a unary or binary operation is a
-# total function on ≤ 2^K / 2^(K1+K2) code points: a ≤256-byte / ≤64 KiB table.
-# The builder walks every input through the scalar path (oracle-backed), so a
-# table entry IS the defined result — no residual correctness reasoning at use
-# sites. Stochastic ρ is never tabulable (the result is a distribution over R);
-# builders reject it loudly.
+# total function on 2^K / 2^(K1+K2) code points. The builder walks every input
+# through the scalar path (oracle-backed), so a table entry IS the defined
+# result — no residual correctness reasoning at use sites. Stochastic ρ is never
+# tabulable (the result is a distribution over R); builders reject it loudly.
 #
 # Cache: value-keyed Dict under a ReentrantLock; kernels fetch via a @noinline
-# getter once per array call (hoisted), then index a local Memory{UInt8}.
+# getter once per array call (hoisted), then index a local `Memory`.
+#
+# ---- what K ≤ 16 changes here (implementextensions §4 Stage 5) ---------------
+#
+# **Two caches, not one.** A table entry is a *result code point*, so its width
+# is `codeunit_type(fr)`. One `Dict` holding both widths would have to be typed
+# `Dict{TableKey,Union{Memory{UInt8},Memory{UInt16}}}`, and then `get_table`
+# returns a `Union` — which puts a type check inside every hot loop and costs
+# the zero-allocation property the whole array design rests on. The cache is
+# therefore selected by DISPATCH on the result representation (invariant 9),
+# never by a branch on K.
+#
+# **Two budgets, answering different questions.** They are separate because
+# their units are different and so are their failure modes:
+#
+#   · `TABLE_MAX_BITS` is *memory* — invariant 10. `2^ΣK` entries at K = 16 is
+#     8 GiB for a binary table and 512 TiB for a ternary one. The budget's job
+#     is to return `nothing` rather than attempt an impossible allocation, and
+#     it is expressed in **bits** and compared as bits: computing `1 << ΣK` to
+#     find out whether `1 << ΣK` is too large overflows silently at ΣK ≥ 64.
+#   · `TABLE_EAGER_BITS` is *time*. Building a table costs one scalar trip per
+#     entry, so entry count — not bytes — is what bounds it. **Measured**, not
+#     assumed: ~1 µs/entry across the operation catalogue (a 65 536-entry K = 16
+#     `Exp` table builds in 0.085 s), which makes a 2^24-entry table tens of
+#     seconds of first-call latency rather than the fraction of a second the
+#     largest table today costs. An earlier draft of this comment said ~200 µs
+#     and concluded "an hour"; that figure is the *rigorous MPFR ladder* cost
+#     from the golden capture, and the ordinary path almost never reaches the
+#     ladder because the Float64 and Float128 filters resolve first. The
+#     conclusion survives, three orders of magnitude smaller.
+#
+# **Conditional Shape A.** Where a budget declines, the kernels run the scalar
+# path per element instead of refusing. That is safe for a stated reason, not by
+# inspection: invariant 6 says a table entry is one trip through `_scalar_code`,
+# and the fallback calls exactly that function per element. Declining to build a
+# table changes speed and nothing else — never the answer. The suite asserts it
+# (`test/gates_shape.jl`) rather than leaving it as a reading of this comment.
 
 """Value key for the table cache: op + format parameters + ρ parameters (all values,
 so the cache itself is type-stable and non-allocating to query)."""
@@ -21,12 +56,23 @@ struct TableKey
     sm::Symbol                 # saturation-mode type name
 end
 
-_fkey(::Type{Binary{K,P,S,E}}) where {K,P,S,E} = (K, P, Int(S), Int(E))
+_fkey(::Type{<:Binary{K,P,S,E}}) where {K,P,S,E} = (K, P, Int(S), Int(E))
 _rmname(ρ::ProjSpec) = nameof(typeof(roundingmode(ρ)))
 _smname(ρ::ProjSpec) = nameof(typeof(saturationmode(ρ)))
 
-const TABLE_CACHE = Dict{TableKey,Memory{UInt8}}()
+# One cache per result code unit. Both are concrete in their value type, which
+# is the entire point (see the header): `tablecache` is reached by dispatch on
+# the result representation, so the type of what comes back is decided at
+# compile time and the hot loop indexes a concrete `Memory`.
+const TABLE_CACHE8  = Dict{TableKey,Memory{UInt8}}()
+const TABLE_CACHE16 = Dict{TableKey,Memory{UInt16}}()
 const TABLE_LOCK = ReentrantLock()
+
+"""The unary/binary table cache holding results of format `fr`."""
+@inline tablecache(::Type{<:Code8})  = TABLE_CACHE8
+@inline tablecache(::Type{<:Code16}) = TABLE_CACHE16
+@inline tablecache(::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
+    tablecache(reptype(Binary{K,P,S,E}))
 
 # ---- ternary tables (bitwidth-specific FMA/FAA/Clamp optimization) -----------
 # A pure-ρ ternary specialization is a total function on 2^(K1+K2+K3) code
@@ -45,14 +91,21 @@ struct TernaryKey
     rm::Symbol
     sm::Symbol
 end
-mutable struct TernaryEntry
-    const tbl::Memory{UInt8}
+mutable struct TernaryEntry{U<:Unsigned}
+    const tbl::Memory{U}
     tick::Int                  # LRU stamp (monotone; larger = more recent)
 end
 
-const TERNARY_CACHE = Dict{TernaryKey,TernaryEntry}()
+const TERNARY_CACHE8  = Dict{TernaryKey,TernaryEntry{UInt8}}()
+const TERNARY_CACHE16 = Dict{TernaryKey,TernaryEntry{UInt16}}()
 const TERNARY_USE   = Dict{TernaryKey,Int}()   # cumulative elements seen (adaptive band)
 const TERNARY_TICK  = Ref(0)
+
+"""The ternary table cache holding results of format `fr`."""
+@inline ternarycache(::Type{<:Code8})  = TERNARY_CACHE8
+@inline ternarycache(::Type{<:Code16}) = TERNARY_CACHE16
+@inline ternarycache(::Type{Binary{K,P,S,E}}) where {K,P,S,E} =
+    ternarycache(reptype(Binary{K,P,S,E}))
 
 """K1+K2+K3 up to which a ternary table is built eagerly on first array call
 (default 18 bits = 256 KiB — covers every all-K≤6 signature)."""
@@ -66,42 +119,160 @@ const TERNARY_BUILD_ELEMS = Ref(2_000_000)
 """Byte budget for the ternary cache; least-recently-used tables evict first."""
 const TERNARY_CACHE_BYTES = Ref(32 * 1024 * 1024)
 
-_ternary_bytes_locked() = sum(e -> length(e.tbl), values(TERNARY_CACHE); init=0)
+# ---- the two budgets ---------------------------------------------------------
 
-"""Total bytes currently held by the table caches (unary/binary + ternary)."""
-table_bytes() = lock(() -> sum(length, values(TABLE_CACHE); init=0) + _ternary_bytes_locked(),
-                     TABLE_LOCK)
+"""
+Hard ceiling on a single table, as `log2(bytes)` — the byte budget invariant 10
+requires. 25 = 32 MiB.
+
+Compared **as bits**. Computing `1 << ΣK` in order to decide whether `1 << ΣK`
+is too large is exactly the bug the budget exists to prevent: at ΣK = 64 the
+shift wraps to zero and the impossible allocation looks free.
+"""
+const TABLE_MAX_BITS = Ref(25)
+
+"""
+Largest table the package will *build*, as `log2(entries)`. 16 = 65 536 entries.
+
+A bound on **time**, not memory: a table costs one scalar trip per entry, at a
+measured ~1 µs/entry, so this band caps first-call latency at ~0.1 s while
+2^24 entries would be tens of seconds — regardless of how comfortably 32 MiB
+fits in RAM.
+
+16 is not a guess — it is exactly the largest table the K ≤ 8 grid already
+builds (a binary 8×8 table, 65 536 entries), so **no K ≤ 8 decision changes**
+and G5 stays byte-identical by construction. It also admits the case that
+matters most at wide K: a unary table for a K = 16 format is 2^16 entries,
+the same count, now 128 KiB instead of 64 KiB because the entries are `UInt16`.
+"""
+const TABLE_EAGER_BITS = Ref(16)
+
+@inline _sumK() = 0
+@inline _sumK(F::Type{<:Binary}, rest::Vararg{Type{<:Binary}}) = bitwidth(F) + _sumK(rest...)
+"""`log2` of the bytes a table over `Fs` with results in `fr` would occupy."""
+@inline tablebits(::Type{fr}, Fs::Vararg{Type{<:Binary},N}) where {fr<:Binary,N} =
+    _sumK(Fs...) + trailing_zeros(sizeof(codeunit_type(fr)))
+"""Would this table fit the byte budget? (Memory, not build time.)"""
+@inline within_byte_budget(::Type{fr}, Fs::Vararg{Type{<:Binary},N}) where {fr<:Binary,N} =
+    tablebits(fr, Fs...) <= TABLE_MAX_BITS[]
+
+@noinline function _refuse_over_budget(op::Symbol, ::Type{fr},
+                                       Fs::Vararg{Type{<:Binary},N}) where {fr<:Binary,N}
+    throw(ArgumentError(
+        "a table for $op⟨$(formatname(fr)); $(join(map(formatname, Fs), ", "))⟩ would be " *
+        "2^$(_sumK(Fs...)) entries of $(sizeof(codeunit_type(fr))) byte(s) = " *
+        "2^$(tablebits(fr, Fs...)) bytes, over the 2^$(TABLE_MAX_BITS[])-byte budget. " *
+        "Array kernels fall back to the scalar path automatically; `get_table` does " *
+        "not, because its contract is to return a table"))
+end
+
+# ---- cache accounting --------------------------------------------------------
+#
+# Every consumer of the caches goes through these. That is not tidiness: with
+# the caches split, a consumer that names one of them directly under-reports by
+# exactly the half it forgot, silently — and one of the consumers is
+# `conformance()`, whose whole job is to state truthfully what this package has
+# specialized. Same failure class as §11 M9.
+
+_bytes_of(d::Dict{TableKey,<:Memory}) =
+    sum(t -> length(t) * sizeof(eltype(t)), values(d); init=0)
+_bytes_of(d::Dict{TernaryKey,<:TernaryEntry}) =
+    sum(e -> length(e.tbl) * sizeof(eltype(e.tbl)), values(d); init=0)
+
+"""Total bytes currently held by every table cache."""
+table_bytes() = lock(TABLE_LOCK) do
+    _bytes_of(TABLE_CACHE8) + _bytes_of(TABLE_CACHE16) +
+    _bytes_of(TERNARY_CACHE8) + _bytes_of(TERNARY_CACHE16)
+end
+"""Number of cached unary/binary specializations, both code units."""
+table_count() = lock(() -> length(TABLE_CACHE8) + length(TABLE_CACHE16), TABLE_LOCK)
+"""Number of cached ternary specializations, both code units."""
+ternary_count() = lock(() -> length(TERNARY_CACHE8) + length(TERNARY_CACHE16), TABLE_LOCK)
+"""Keys of every cached unary/binary specialization, in a deterministic order."""
+table_keys() = lock(() -> vcat(collect(keys(TABLE_CACHE8)), collect(keys(TABLE_CACHE16))),
+                    TABLE_LOCK)
+
+"""
+    table_policy(op, fr, f1[, f2[, f3]], ρ) -> (; shape, entries, bytes, reason)
+
+Which shape an array call on this signature will take, and why — `:A` for the
+table gather, `:B` for the per-element scalar path.
+
+§4 Stage 5 item 6: "this signature is running the compute kernel" should be
+*discoverable*, not inferred from a benchmark that came out slower than expected.
+Reads the same predicates the kernels do, so it cannot drift from them.
+"""
+function table_policy(op::Symbol, ::Type{fr}, Fs::Vararg{Any}) where {fr<:Binary}
+    ρ = last(Fs)
+    fs = Base.front(Fs)
+    bits = _sumK(fs...)
+    entries = bits >= 63 ? typemax(Int) : 1 << bits
+    bytes = tablebits(fr, fs...) >= 63 ? typemax(Int) : 1 << tablebits(fr, fs...)
+    reason =
+        isstochastic(ρ) ? "stochastic ρ is a distribution over R, never a table (design §5.4)" :
+        !within_byte_budget(fr, fs...) ? "over the 2^$(TABLE_MAX_BITS[])-byte budget" :
+        length(fs) == 3 ?
+            (bits <= TERNARY_EAGER_BITS[] ? "ternary eager band" :
+             bits <= TERNARY_ADAPTIVE_BITS[] ? "ternary adaptive band: needs $(TERNARY_BUILD_ELEMS[]) elements first" :
+             "beyond the ternary adaptive band") :
+        bits <= TABLE_EAGER_BITS[] ? "within the 2^$(TABLE_EAGER_BITS[])-entry build band" :
+                                     "over the 2^$(TABLE_EAGER_BITS[])-entry build band"
+    granted = !isstochastic(ρ) && within_byte_budget(fr, fs...) &&
+              (length(fs) == 3 ? bits <= TERNARY_ADAPTIVE_BITS[] : bits <= TABLE_EAGER_BITS[])
+    (; shape = granted ? :A : :B, entries, bytes, reason)
+end
+
 """Drop every cached table and adaptive counter (they rebuild lazily on next use)."""
 empty_tables!() = lock(TABLE_LOCK) do
-    empty!(TABLE_CACHE); empty!(TERNARY_CACHE); empty!(TERNARY_USE)
+    empty!(TABLE_CACHE8); empty!(TABLE_CACHE16)
+    empty!(TERNARY_CACHE8); empty!(TERNARY_CACHE16); empty!(TERNARY_USE)
     nothing
 end
 
 # One table entry = one trip through the scalar path. Convert is the sole op with
 # no ω-semantics (registry group :conv): it is a bare projection of the decoded
 # operand, so it bypasses apply_op. R = 0 is safe: stochastic ρ never reaches here.
-@inline function _scalar_code(op::Val{name}, fr::Type{<:Binary}, ρ::ProjSpec, xs::Float64...) where {name}
+#
+# Not restricted to `Float64` operands: `project` is carrier-generic (§1 C10), so
+# a `Convert` table is buildable for a rung-2 or rung-3 format today, and it
+# would be arbitrary to refuse one. Every other operation reaches `apply_op`,
+# which refuses a wide carrier by method until Stage 6 — so the restriction
+# lands where it is true instead of one layer above it.
+@inline function _scalar_code(op::Val{name}, fr::Type{<:Binary}, ρ::ProjSpec, xs...) where {name}
     name === :Convert ? codepoint(project(fr, ρ, xs[1])) :
                         codepoint(apply_op(op, fr, ρ, 0, xs...))
 end
 
-function _build_unary(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary}, ρ::ProjSpec)
+# Every datum of an operand format, indexable by `code + 1`. The `TableDecode`
+# row is the constant tuple the K ≤ 8 builders already used; the `ComputeDecode`
+# row materializes the same values for a wide operand, which has no such tuple
+# (invariant 10) but can still appear inside an affordable table — a 7×9 binary
+# signature is 2^16 entries and perfectly buildable.
+@inline _operand_datums(::Type{F}) where {F<:Binary} = _opdat(decodepolicy(F), F)
+@inline _opdat(::TableDecode, ::Type{F}) where {F<:Binary} = _decode_table(F)
+@inline _opdat(::ComputeDecode, ::Type{F}) where {F<:Binary} =
+    [decode(rawvalue(F, codeunit_type(F)(c))) for c in 0:(1 << bitwidth(F)) - 1]
+
+function _build_unary(op::Symbol, ::Type{fr}, ::Type{f1}, ρ::ProjSpec) where {fr<:Binary,f1<:Binary}
     K1 = bitwidth(f1)
-    tbl = Memory{UInt8}(undef, 1 << K1)
+    U1 = codeunit_type(f1)
+    tbl = Memory{codeunit_type(fr)}(undef, 1 << K1)
     V = Val(op)
     for c in 0:(1 << K1) - 1
-        tbl[c + 1] = _scalar_code(V, fr, ρ, decode(rawvalue(f1, UInt8(c))))
+        tbl[c + 1] = _scalar_code(V, fr, ρ, decode(rawvalue(f1, U1(c))))
     end
     tbl
 end
 
-function _build_binary(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary}, f2::Type{<:Binary}, ρ::ProjSpec)
+function _build_binary(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2},
+                       ρ::ProjSpec) where {fr<:Binary,f1<:Binary,f2<:Binary}
     K1, K2 = bitwidth(f1), bitwidth(f2)
-    tbl = Memory{UInt8}(undef, 1 << (K1 + K2))
+    U1 = codeunit_type(f1)
+    tbl = Memory{codeunit_type(fr)}(undef, 1 << (K1 + K2))
     V = Val(op)
-    X2 = _decode_table(f2)
+    X2 = _operand_datums(f2)
     for c1 in 0:(1 << K1) - 1
-        x1 = decode(rawvalue(f1, UInt8(c1)))
+        x1 = decode(rawvalue(f1, U1(c1)))
         base = c1 << K2
         for c2 in 0:(1 << K2) - 1
             tbl[base + c2 + 1] = _scalar_code(V, fr, ρ, x1, X2[c2 + 1])
@@ -111,13 +282,17 @@ function _build_binary(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary}, f2::T
 end
 
 """
-    get_table(op, fr, f1, [f2,] ρ) -> Memory{UInt8}
+    get_table(op, fr, f1, [f2,] ρ) -> Memory{codeunit_type(fr)}
 
 Fetch (building and caching on first use) the complete result table for the pure-ρ
 specialization `op⟨fr; f1[, f2]⟩ under ρ`: entry `c + 1` (unary) or
 `(c1 << K2) + c2 + 1` (binary) holds the result code point for those operand
-code points. Throws for stochastic ρ. `@noinline` by design: kernels call this
-once per array operation and index the returned table in their hot loop.
+code points. Throws for stochastic ρ, and throws when the table would exceed the
+byte budget — its contract is to return a table, so it says so rather than
+returning `nothing`. Callers that can fall back want `table_for`.
+
+`@noinline` by design: kernels call this once per array operation and index the
+returned table in their hot loop.
 """
 function get_table end
 
@@ -125,38 +300,72 @@ function get_table end
 @inline _check_tabulable(ρ::ProjSpec) =
     isstochastic(ρ) && throw(ArgumentError("stochastic ρ $ρ is not tabulable (design §5.4)"))
 
+
 # Double-checked pattern: probe under lock, build OUTSIDE the lock (builds may run
 # MPFR escalations), insert under lock; a racing duplicate build is benign and rare.
 # Written once here so the unary and binary fetches cannot acquire the lock, probe,
 # or insert differently from one another.
-function _cached_table(key::TableKey, build::F)::Memory{UInt8} where {F}
-    t = lock(() -> get(TABLE_CACHE, key, nothing), TABLE_LOCK)
+function _cached_table(::Type{fr}, key::TableKey,
+                       build::F)::Memory{codeunit_type(fr)} where {fr<:Binary,F}
+    cache = tablecache(fr)
+    t = lock(() -> get(cache, key, nothing), TABLE_LOCK)
     t !== nothing && return t
     built = build()
-    lock(() -> get!(TABLE_CACHE, key, built), TABLE_LOCK)
+    lock(() -> get!(cache, key, built), TABLE_LOCK)
 end
 
-@noinline function get_table(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary}, ρ::ProjSpec)::Memory{UInt8}
+@noinline function get_table(op::Symbol, ::Type{fr}, ::Type{f1},
+                             ρ::ProjSpec)::Memory{codeunit_type(fr)} where {fr<:Binary,f1<:Binary}
     _check_tabulable(ρ)
+    within_byte_budget(fr, f1) || _refuse_over_budget(op, fr, f1)
     key = TableKey(op, _fkey(fr), _fkey(f1), (0, 0, 0, 0), _rmname(ρ), _smname(ρ))
-    _cached_table(key, () -> _build_unary(op, fr, f1, ρ))
+    _cached_table(fr, key, () -> _build_unary(op, fr, f1, ρ))
 end
-@noinline function get_table(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary}, f2::Type{<:Binary}, ρ::ProjSpec)::Memory{UInt8}
+@noinline function get_table(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2},
+                             ρ::ProjSpec)::Memory{codeunit_type(fr)} where {fr<:Binary,f1<:Binary,f2<:Binary}
     _check_tabulable(ρ)
+    within_byte_budget(fr, f1, f2) || _refuse_over_budget(op, fr, f1, f2)
     key = TableKey(op, _fkey(fr), _fkey(f1), _fkey(f2), _rmname(ρ), _smname(ρ))
-    _cached_table(key, () -> _build_binary(op, fr, f1, f2, ρ))
+    _cached_table(fr, key, () -> _build_binary(op, fr, f1, f2, ρ))
+end
+
+"""
+    table_for(op, fr, f1[, f2], ρ) -> Union{Nothing,Memory{codeunit_type(fr)}}
+
+The kernel-facing gate for unary and binary specializations: the table if policy
+grants one, `nothing` if the caller should run the scalar path per element.
+
+Separate from `get_table` on purpose — **one name per question.** `get_table`'s
+contract is "return the table", so it throws when it cannot honour that, and
+that is what the suite, `conformance` and the precompile workload want.
+`table_for` asks the different question "should there be a table at all", and
+answers `nothing` without prejudice. Its `Union` return costs nothing because
+kernels call it once per array operation and branch outside the loop.
+"""
+@noinline function table_for(op::Symbol, ::Type{fr}, ::Type{f1},
+                             ρ::ProjSpec)::Union{Nothing,Memory{codeunit_type(fr)}} where {fr<:Binary,f1<:Binary}
+    isstochastic(ρ) && return nothing
+    (_sumK(f1) <= TABLE_EAGER_BITS[] && within_byte_budget(fr, f1)) || return nothing
+    get_table(op, fr, f1, ρ)
+end
+@noinline function table_for(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2},
+                             ρ::ProjSpec)::Union{Nothing,Memory{codeunit_type(fr)}} where {fr<:Binary,f1<:Binary,f2<:Binary}
+    isstochastic(ρ) && return nothing
+    (_sumK(f1, f2) <= TABLE_EAGER_BITS[] && within_byte_budget(fr, f1, f2)) || return nothing
+    get_table(op, fr, f1, f2, ρ)
 end
 
 # ---- ternary build / fetch / policy ------------------------------------------
 
-function _build_ternary(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary},
-                        f2::Type{<:Binary}, f3::Type{<:Binary}, ρ::ProjSpec)
+function _build_ternary(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2}, ::Type{f3},
+                        ρ::ProjSpec) where {fr<:Binary,f1<:Binary,f2<:Binary,f3<:Binary}
     K1, K2, K3 = bitwidth(f1), bitwidth(f2), bitwidth(f3)
-    tbl = Memory{UInt8}(undef, 1 << (K1 + K2 + K3))
+    U1 = codeunit_type(f1)
+    tbl = Memory{codeunit_type(fr)}(undef, 1 << (K1 + K2 + K3))
     V = Val(op)
-    X2, X3 = _decode_table(f2), _decode_table(f3)
+    X2, X3 = _operand_datums(f2), _operand_datums(f3)
     for c1 in 0:(1 << K1) - 1
-        x1 = decode(rawvalue(f1, UInt8(c1)))
+        x1 = decode(rawvalue(f1, U1(c1)))
         for c2 in 0:(1 << K2) - 1
             x2 = X2[c2 + 1]
             base = ((c1 << K2) | c2) << K3
@@ -173,9 +382,9 @@ _tkey(op::Symbol, fr, f1, f2, f3, ρ::ProjSpec) =
 
 # Cache probe that also refreshes the LRU stamp — a hit must always count as a
 # use, so both the direct fetch and the adaptive gate go through this one path.
-function _ternary_probe(key::TernaryKey)
+function _ternary_probe(::Type{fr}, key::TernaryKey) where {fr<:Binary}
     lock(TABLE_LOCK) do
-        e = get(TERNARY_CACHE, key, nothing)
+        e = get(ternarycache(fr), key, nothing)
         e === nothing ? nothing : (e.tick = (TERNARY_TICK[] += 1); e.tbl)
     end
 end
@@ -183,16 +392,22 @@ end
 # Insert under the byte budget, evicting least-recently-used ternary tables first.
 # The new table is always inserted (even if alone it exceeds the budget: the caller
 # earned it; the budget then simply holds this one table).
-function _ternary_insert!(key::TernaryKey, tbl::Memory{UInt8})
+function _ternary_insert!(::Type{fr}, key::TernaryKey,
+                          tbl::Memory{U}) where {fr<:Binary,U<:Unsigned}
     lock(TABLE_LOCK) do
-        e = get(TERNARY_CACHE, key, nothing)
+        cache = ternarycache(fr)
+        e = get(cache, key, nothing)
         e !== nothing && return e.tbl                        # racing duplicate build
         budget = TERNARY_CACHE_BYTES[]
-        while !isempty(TERNARY_CACHE) && _ternary_bytes_locked() + length(tbl) > budget
-            victim = argmin(k -> TERNARY_CACHE[k].tick, keys(TERNARY_CACHE))
-            delete!(TERNARY_CACHE, victim)
+        newbytes = length(tbl) * sizeof(U)
+        # Eviction spans BOTH ternary caches — the byte budget is a statement
+        # about memory held, and memory does not care which code unit holds it.
+        while !isempty(cache) &&
+              _bytes_of(TERNARY_CACHE8) + _bytes_of(TERNARY_CACHE16) + newbytes > budget
+            victim = argmin(k -> cache[k].tick, keys(cache))
+            delete!(cache, victim)
         end
-        TERNARY_CACHE[key] = TernaryEntry(tbl, TERNARY_TICK[] += 1)
+        cache[key] = TernaryEntry{U}(tbl, TERNARY_TICK[] += 1)
         tbl
     end
 end
@@ -203,13 +418,14 @@ end
 Ternary form: entry `((c1 << K2 | c2) << K3) + c3 + 1` holds the result code
 point. Builds unconditionally (policy lives in `_ternary_table_for`); pure ρ only.
 """
-@noinline function get_table(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary},
-                             f2::Type{<:Binary}, f3::Type{<:Binary}, ρ::ProjSpec)::Memory{UInt8}
+@noinline function get_table(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2}, ::Type{f3},
+                             ρ::ProjSpec)::Memory{codeunit_type(fr)} where {fr<:Binary,f1<:Binary,f2<:Binary,f3<:Binary}
     _check_tabulable(ρ)
+    within_byte_budget(fr, f1, f2, f3) || _refuse_over_budget(op, fr, f1, f2, f3)
     key = _tkey(op, fr, f1, f2, f3, ρ)
-    t = _ternary_probe(key)
+    t = _ternary_probe(fr, key)
     t !== nothing && return t
-    _ternary_insert!(key, _build_ternary(op, fr, f1, f2, f3, ρ))   # build outside the lock
+    _ternary_insert!(fr, key, _build_ternary(op, fr, f1, f2, f3, ρ))   # build outside the lock
 end
 
 # ---- Float32 carrier-exactness trait (enumeration-backed, memoized) ----------
@@ -260,17 +476,24 @@ otherwise accumulate `nelems` against the signature and build only once it has
 earned `TERNARY_BUILD_ELEMS[]`. Beyond the adaptive band (the K=8 territory):
 always `nothing` — the compute kernel is the right tradeoff there.
 """
-@noinline function _ternary_table_for(op::Symbol, fr::Type{<:Binary}, f1::Type{<:Binary},
-                                      f2::Type{<:Binary}, f3::Type{<:Binary}, ρ::ProjSpec,
-                                      nelems::Int)::Union{Nothing,Memory{UInt8}}
+@noinline function _ternary_table_for(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2},
+                                      ::Type{f3}, ρ::ProjSpec,
+                                      nelems::Int)::Union{Nothing,Memory{codeunit_type(fr)}} where {fr<:Binary,f1<:Binary,f2<:Binary,f3<:Binary}
     isstochastic(ρ) && return nothing
-    SB = bitwidth(f1) + bitwidth(f2) + bitwidth(f3)
+    # The byte budget is the outer bound (invariant 10); the eager/adaptive
+    # bands below are the *build-cost* policy inside it. Both must pass, and
+    # they are not redundant: 3 × K = 7 is 2^21 entries — inside the adaptive
+    # band, and at a UInt16 result 4 MiB, comfortably inside the byte budget —
+    # while 3 × K = 16 is 2^48 entries and fails the byte budget long before
+    # any band is consulted.
+    within_byte_budget(fr, f1, f2, f3) || return nothing
+    SB = _sumK(f1, f2, f3)
     SB <= TERNARY_EAGER_BITS[] && return get_table(op, fr, f1, f2, f3, ρ)
     SB <= TERNARY_ADAPTIVE_BITS[] || return nothing
     key = _tkey(op, fr, f1, f2, f3, ρ)
-    hit = _ternary_probe(key)
+    hit = _ternary_probe(fr, key)
     hit !== nothing && return hit
     n = lock(() -> (TERNARY_USE[key] = get(TERNARY_USE, key, 0) + nelems), TABLE_LOCK)
     n >= TERNARY_BUILD_ELEMS[] || return nothing
-    _ternary_insert!(key, _build_ternary(op, fr, f1, f2, f3, ρ))
+    _ternary_insert!(fr, key, _build_ternary(op, fr, f1, f2, f3, ρ))
 end
