@@ -20,8 +20,13 @@
 # consolidation time per instruction — run with `Pkg.test("SmallFloats")`.
 
 using Test
+
+# The coverage register: every gate and tier records what it covered, and
+# `rollcall.jl` (last) asserts the register is complete (Stage 8 steps 5 and 6).
+include("gatelog.jl")
 using Random
 using SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
 using SmallFloats: project, project_interval, round_to_precision, encode, order_key,
     KIND_FIN, nan_code, posinf_code, neginf_code, signmask,
@@ -331,25 +336,26 @@ for K in 3:8, P in 1:K, S in (true,false), E in (true,false)
     (S && P >= K) || push!(allfmts, Binary{K,P,S,E})
 end
 npair = Ref(0)
-@testset "decode_encode.jl §3" begin
+# ---- what stayed here, and what moved to T1 (`test/tier_t1.jl`), Stage 8 step 1.
+#
+# Every SINGLE-POINT property this block used to check — encode round-trip,
+# project identity, `Class`, `Next*` — is now checked by T1 over all **504**
+# formats and all **7 602 160** code points, rather than over the 120 formats at
+# K ≤ 8. Repeating them here would be five million redundant `@test`
+# invocations for a strict subset of T1's coverage.
+#
+# What CANNOT move is the full ordered-pair cross-product, and that is the whole
+# reason this block survives. `TotalOrder` over `2^2K` pairs is 4.3 × 10^9 for one
+# K = 16 format against 7.6 M for T1's entire single-point sweep, so it is
+# affordable exactly here, at K ≤ 8, and nowhere else. T1 replaces it above K = 8
+# with consecutive pairs plus the specials × lattice slice, which imply it by
+# transitivity — a weaker statement, and T1's `@info` says so in those words.
+@testset "decode_encode.jl §3 — the full ordered-pair cross-product (K ≤ 8)" begin
 for T in allfmts
-    K = bitwidth(T); P = precision(T); B = expbias(T)
-    codes = UInt8.(0:(1<<K)-1)
-    vals  = [rawvalue(T, c) for c in codes]
-    ds    = decode.(vals)
+    K = bitwidth(T)
+    vals = [rawvalue(T, c) for c in UInt8.(0:(1<<K)-1)]
 
-    # --- encode: round-trip every code through the canonical-form pipeline
-    for (c, v, d) in zip(codes, vals, ds)
-        if isfinite(d)
-            r = round_to_precision(P, B, NearestTiesToEven(), d, 0, 0)   # exact datum ⇒ pure extraction
-            @test r.kind == KIND_FIN
-            @test encode(T, Int(r.sign), r.S, r.Q) == c
-        end
-        # ωProject of an exact datum is the identity on the code point (incl. NaN/±Inf)
-        @test codepoint(project(T, RNE_SatNone, d)) == c
-    end
-
-    # --- order_key ⟺ TotalOrder ⟺ numeric-with-NaN-top, over all pairs
+    # --- order_key ⟺ TotalOrder ⟺ numeric-with-NaN-top, over ALL pairs
     for x in vals, y in vals
         npair[] += 1
         to = TotalOrder(x, y)
@@ -364,34 +370,11 @@ for T in allfmts
             @test (x == y) == (dx == dy) && (x < y) == (dx < dy)
         end
     end
-
-    # --- Class vs decode-derived reference
-    for (v, d) in zip(vals, ds)
-        want = isnan(d) ? ClassNaN : d == Inf ? ClassPosInf : d == -Inf ? ClassNegInf :
-               d == 0 ? ClassZero :
-               (abs(d) < 2.0^(1 - B) ? (d > 0 ? ClassPosSubnormal : ClassNegSubnormal) :
-                                        (d > 0 ? ClassPosNormal   : ClassNegNormal))
-        @test Class(v) == want
-    end
-
-    # --- Next ops vs sorted-enumeration reference:
-    # NGT(x) = least datum > x, else NaN;  NLT(x) = greatest datum < x, else NaN;  NaN→NaN.
-    finite_and_inf = sort([d for d in ds if !isnan(d)])
-    for (v, d) in zip(vals, ds)
-        g, l = NextGreaterThan(v), NextLessThan(v)
-        if isnan(d)
-            @test isnan(g) && isnan(l)
-        else
-            ups = filter(>(d), finite_and_inf)
-            dns = filter(<(d), finite_and_inf)
-            isempty(ups) ? (@test isnan(g)) : (@test decode(g) == first(ups))
-            isempty(dns) ? (@test isnan(l)) : (@test decode(l) == last(dns))
-        end
-        @test nextfloat(v) === g && prevfloat(v) === l
-    end
 end
 end
-println("§3 verified over $(length(allfmts)) formats, $(npair[]) ordered pairs")
+println("§3 verified over $(length(allfmts)) formats, $(npair[]) ordered pairs " *
+        "(the full cross-product, exhaustive at K ≤ 8; single-point properties " *
+        "are T1's, over all 504 formats)")
 
 # ==========================================================================
 # ops_scalar.jl
@@ -1682,11 +1665,32 @@ include("gates_g9.jl")
 # nothing calls; this one is the converse, and six Stage 7 defects are what it
 # was written from. Tier from SMALLFLOATS_G10 ∈ {rep, full}; defaults to rep.
 include("gates_g10.jl")
+
+# ==========================================================================
+# The verification tiers (§6.2 of the plan), Stage 8
+# ==========================================================================
+# T2 — the projection engine against `Rational{BigInt}`, the one oracle in this
+#      repository whose validity does not depend on a carrier being wide enough.
+#      Split into T2a (rounding, 135 (P,B) cells, format-free, exhaustive) and
+#      T2b (saturation, the (P,B,Σ,Δ) tuples, tiered by SmallFloats_EXHAUSTIVE).
+# T1 — the code lattice, EXHAUSTIVE at every K: 7 602 160 code points over all
+#      504 formats, every property in one pass per format because the cost is
+#      specialization (98% of its runtime) and six passes would pay it six times.
+include("tier_t1.jl")
+include("tier_t2.jl")
+# Every ρ family at every rung, by construction rather than by draw — the
+# stochastic sub-grid is the sensitive instrument for a carrier defect, and this
+# is the only place Group C is held to account at rungs 2 and 3.
+include("tier_rho.jl")
 include("golden.jl")
 
 # ==========================================================================
 # Package hygiene (Aqua) and static error analysis (JET)
 # ==========================================================================
 include("quality.jl")
+
+# LAST: assert every gate stood, print what each covered, and print — in one
+# place — what this suite knowingly does not cover (plan §6.4).
+include("rollcall.jl")
 
 # end # @testset "SmallFloats.jl"

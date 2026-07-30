@@ -52,8 +52,11 @@
 # The recorded red is in [§11 M31](../docs/other/implementextensions.md).
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: _NAMED, bigprec, expbias, precision, bitwidth, rawvalue,
                    codeunit_type, rung, HeadExact, roundingmode, saturationmode
+
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
 include("refimpl.jl")     # Rational{BigInt} oracle; shares no code with the engine.
 # NOTE: `refimpl`'s `refproject` still encodes by an O(2^K) scan typed `UInt8`,
@@ -256,4 +259,7 @@ end
             @test codepoint(Add(T, ρ, x, y)) == refproject(T, ρ, r)
         end
     end
+    record_gate!("G2"; assertions=4088, units=4088, exhaustive=false,
+                 note="tier A sweeps all 504 formats' spreads; tier B's engine " *
+                      "comparison is over the wide witnesses, not the whole grid")
 end

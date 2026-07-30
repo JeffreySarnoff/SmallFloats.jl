@@ -16,6 +16,7 @@
 using Test
 using Random
 using SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: project
 using Aqua
 using JET

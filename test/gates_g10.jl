@@ -65,15 +65,18 @@
 # can select. Adding formats within a pair re-runs the same code.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
 using SmallFloats: _NAMED, OP_REGISTRY, opinfo, rung, joinhead, carriertype,
                    _rungindex, rungindex, codeunit_type, bitwidth, rawvalue,
                    codepoint, expbias, blockdecode, HeadF64, HeadF128, HeadExact,
                    Binary, CarrierValue, datumcarrier
 
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
+
 # ---- the format partition, taken from the package rather than restated.
 const _ALLFMT = sort!(collect(keys(_NAMED)))
-_fmt(nm) = getfield(SmallFloats, nm)::Type{<:Binary}
+_fmt(nm) = _NAMED[nm]::Type{<:Binary}   # the registry, not the export surface
 const _BY_RUNG = Dict(r => [nm for nm in _ALLFMT if _rungindex(_fmt(nm)) == r] for r in 1:3)
 
 # Rung 1 is 432 formats and is covered exhaustively elsewhere (G5 at K ≤ 8,
@@ -280,6 +283,13 @@ end
                                         (3, false), (3, true)]
 
     nr = Dict(r => count(nm -> _rungindex(_fmt(nm)) == r, _PROBED) for r in 1:3)
+    record_gate!("G10"; assertions=length(_PROBED) * 3 + length(SHAPES) + 8,
+                 units=length(_PROBED) * length(OP_REGISTRY) +
+                       length(SHAPES) * length(OP_REGISTRY) * 2,
+                 exhaustive=(_G10_TIER == "full"),
+                 note=_G10_TIER == "full" ? "" :
+                      "format axis sampled: one per (rung, P==1?, code unit) " *
+                      "class at rung 2, exhaustive at rung 3; SMALLFLOATS_G10=full for all 72")
     @info "G10 [tier=$(_G10_TIER)]: $(length(_PROBED)) formats " *
           "($(nr[1]) rung-1, $(nr[2]) rung-2, $(nr[3]) rung-3) × " *
           "$(length(OP_REGISTRY)) registry operations, plus the Base veneers and " *

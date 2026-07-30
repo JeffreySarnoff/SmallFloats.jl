@@ -24,8 +24,11 @@
 # not a rounding.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
 const _G6 = SmallFloats
+
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
 """Normalized exact dyadic value of a float: `(significand, exponent)` with the
 significand odd and carrying the sign, or `(±1 or 0, :nonfinite)`.
@@ -103,4 +106,5 @@ let npoints = 0
         @test _G6.lift(_G6.HeadExact(), 1.5) isa _G6.carriertype(_G6.HeadExact)
     end
     println("G6: carrier lifts verified over $npoints (datum, head) pairs, all exhaustive")
+    record_gate!("G6"; assertions=1440, units=npoints, exhaustive=true)
 end

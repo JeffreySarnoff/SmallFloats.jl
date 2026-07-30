@@ -25,6 +25,7 @@
 # kernels take, including the `tbl === nothing` branch itself.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: OP_REGISTRY, codeunit_type, table_for, _ternary_table_for,
                    TABLE_EAGER_BITS, TABLE_MAX_BITS, TERNARY_EAGER_BITS,
                    TERNARY_ADAPTIVE_BITS, empty_tables!, apply_op, _NAMED, KSPLIT,

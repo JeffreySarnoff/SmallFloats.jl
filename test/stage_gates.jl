@@ -18,6 +18,7 @@
 # user-facing contract of a staged release.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
 using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExact,
                    decodepolicy, TableDecode, ComputeDecode, expbias, bitwidth

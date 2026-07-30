@@ -8,6 +8,7 @@
 # warning and requires SMALLFLOATS_GOLDEN_OVERWRITE=1 if the file exists.
 
 using SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 include(joinpath(@__DIR__, "harness.jl"))
 
 function main()

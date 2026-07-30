@@ -18,7 +18,10 @@
 # 504-format grid realizes. (§11 M22.)
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: _rtp_f64, _rtp_core, KMIN, KMAX
+
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
 """Every `(P, B)` pair realized by the format grid, sorted."""
 function pb_pairs()
@@ -111,4 +114,5 @@ let ncmp = 0, ncells = 0
         end
     end
     println("G3: $ncells (P,B) cells, $ncmp bit-vs-generic comparisons, all exhaustive over the structured input set")
+    record_gate!("G3"; assertions=ncells, units=ncmp, exhaustive=true)
 end

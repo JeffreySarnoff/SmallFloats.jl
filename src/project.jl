@@ -442,7 +442,39 @@ projection is monotone in the value for every mode at fixed R, so if
 project(d, sticky=+1) == project(u, sticky=-1) that common code is the answer;
 otherwise a projection grid point sits inside the interval and precision escalates.
 """
-function project_interval(::Type{T}, ρ::ProjSpec, f; R::Int=0, maxprec::Int=4096) where {T<:Binary}
+# The ceiling is DERIVED from the format, and `4096` was the last constant in the
+# package that was ample at K ≤ 8 and insufficient across the wide grid — the
+# same shape of defect as `_BIGP = 2200` (§11 M31, M48).
+#
+# What sets the requirement is the distance between the true value and the
+# nearest projection grid point, in bits. For a Group C enclosure that distance
+# is bounded by the format's own spread: a datum's exponent ranges over
+# `±(B + P)`, so two distinct grid points differ by at least `2^-(2B + 2P)` of
+# each other and `bigprec(T)` bits always separate them. At K ≤ 8 that is at most
+# 320 bits and a flat 4096 was 12× ample; at `Binary15p2ue` (B = 8192) it is
+# 16 452, and 4096 is not enough to decide anything.
+#
+# The failure was reachable from the public API and it THREW rather than
+# answering: `ArcCosPi(Binary15p2ue, ρ, x)` for a subnormal `x` has true value
+# `½ − x/π`, which sits `~2^-8194` below the datum `½`. Under `RoundNearest` both
+# endpoints land on `½`'s code and the ladder resolves at once, which is why
+# nothing before Stage 8 saw it; under a directed or stochastic rule the answer
+# depends on WHICH SIDE of `½` the value falls, and that needs ≈ 8 200 bits.
+# Predicted, in those words, by the plan's step 4: "carrier-precision differences
+# manifest on the stochastic sub-grid first".
+#
+# `bigprec(T)` is the package's own derivation of "enough bits for this format"
+# and is itself asserted sufficient by gate G2, so this ceiling inherits that
+# gate rather than introducing a second unproven constant. It is a CEILING, not a
+# starting precision: the ladder still starts at 256 bits and doubles, so the
+# ordinary case pays nothing for the wide case being possible.
+@inline _intervalcap(::Type{T}) where {T<:Binary} = max(4096, bigprec(T) + 64)
+
+project_interval(::Type{T}, ρ::ProjSpec, f; R::Int=0,
+                 maxprec::Int=_intervalcap(T)) where {T<:Binary} =
+    _project_interval(T, ρ, f, R, maxprec)
+
+function _project_interval(::Type{T}, ρ::ProjSpec, f, R::Int, maxprec::Int) where {T<:Binary}
     maxprec >= 2 || throw(ArgumentError("maxprec must be at least 2 bits (got $maxprec)"))
     prec = min(256, maxprec)
     while true

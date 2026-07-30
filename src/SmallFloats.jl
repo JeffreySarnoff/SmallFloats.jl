@@ -80,10 +80,61 @@ include("rand.jl")
 # ---------------------------------------------------------------------------
 # Exports
 # ---------------------------------------------------------------------------
-# the type and every draft §3.2 named format
+# ---- the format aliases: 504 defined, 120 exported, all 504 opt-in.
+#
+# **Decision (Stage 9 item 1, open item O3), settled by asymmetric
+# reversibility: exporting more later is non-breaking, un-exporting is not.**
+#
+# Every one of the 504 aliases is DEFINED in `SmallFloats` and reachable as
+# `SmallFloats.Binary16p6se`. What `using SmallFloats` puts in `Main` is the
+# **120 names at K ≤ 8** — exactly what it put there before the extension, so no
+# existing program changes meaning. The other 384 arrive only if asked for:
+#
+#     using SmallFloats.Formats      # all 504 names in Main
+#
+# Three reasons this is the narrow default rather than the wide one.
+#
+# *It is the only direction that stays open.* Exporting the remaining 384 later
+# is a non-breaking minor change. Un-exporting them after a release is breaking,
+# and the window to choose closes at that release rather than at this commit.
+#
+# *384 new names in `Main` is a name-collision surface, not a convenience.*
+# `Binary10p5se` is unlikely to clash; the point is that a user cannot opt out of
+# a package's exports, only avoid the package.
+#
+# *The programmatic route is better anyway for the wide grid.* `format(K,P,Σ,Δ)`
+# is a `Dict` lookup returning the concrete type, and code that walks a grid of
+# 504 formats wants that, not 504 spelled names. It is exported below for the
+# first time — its own docstring already called it "the supported replacement for
+# spelling `Binary{K,P,Σ,Δ}`", which an unexported binding could not be.
 export Binary
 for n in sort!(collect(keys(_NAMED)))
+    bitwidth(_NAMED[n]) <= KSPLIT && @eval export $n
+end
+
+"""
+    SmallFloats.Formats
+
+Opt-in namespace re-exporting **all 504** draft §3.2 format aliases.
+
+`using SmallFloats` exports the 120 names at K ≤ 8, unchanged from before the
+K ≤ 16 extension. `using SmallFloats.Formats` adds the other 384:
+
+```julia
+using SmallFloats            # Binary8p4se — exported
+using SmallFloats.Formats    # Binary16p6se — now exported too
+```
+
+Every alias is defined in `SmallFloats` either way, so
+`SmallFloats.Binary16p6se` works without this module. Prefer
+[`format`](@ref)`(K, P, Σ, Δ)` when the parameters are runtime values.
+"""
+module Formats
+import ..SmallFloats
+for n in sort!(collect(keys(SmallFloats._NAMED)))
+    @eval using ..SmallFloats: $n
     @eval export $n
+end
 end
 
 export binary64, binary32, binary16
@@ -93,7 +144,8 @@ export bitwidth, issigned, isextended, expbias, expbitwidth, trailingsigbits,
        BitwidthOf, PrecisionOf, SignednessOf, DomainOf, ExponentBiasOf,
        ExponentBitwidthOf, TrailingSignificandBitwidthOf,
        MaxFiniteOf, MinFiniteOf, MinPositiveOf, MaxSubnormalOf, MinNormalOf,
-       maxfinite_datum, minfinite_datum, formatname, rawvalue, decode, decode!   # codepoint extends Base
+       maxfinite_datum, minfinite_datum, formatname, rawvalue, decode, decode!,  # codepoint extends Base
+       format, reptype, codeunit_type
 
 # projection specifications
 export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,

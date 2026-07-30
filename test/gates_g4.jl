@@ -32,12 +32,15 @@
 # selects, rather than merely returning an object of the right type.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
 using SmallFloats: _NAMED, rung, joinhead, rungindex, lift, carriertype,
                    HeadF64, HeadF128, HeadExact, ωeval, _finish, _EXACT_SELECTION,
                    _EXACT_ARITH, _LADDER_OPS, OP_REGISTRY, opinfo, opfactors,
                    codepoint, expbias, bitwidth, codeunit_type, rawvalue,
                    _rungindex_span, CarrierValue, _cnan, Dyadic
+
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
 # Evaluate `op` on `xs` with the carrier FORCED to `h`, then project. This is the
 # whole apparatus of the gate: `lift` is total upward, so any head at or above
@@ -273,6 +276,9 @@ _wider(::HeadExact) = nothing
               (nameof(S), nameof(E), wantp)
         quads += 1
     end
+    record_gate!("G4"; assertions=369, units=compared + quads, exhaustive=false,
+                 note="9 formats chosen either side of every rung boundary, " *
+                      "8 ρ, 3 R values; the format axis is boundary-targeted, not swept")
     @info "G4: $quads four-factor monomials over $(length(QUADS)) (scale, element) " *
           "shapes agree with the MPFR definition, at every rung the join selects"
 end

@@ -30,11 +30,14 @@
 # mutates the code under test to observe it is a gate that can lie.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
 using SmallFloats: Dyadic, DyadicNumbers, round_to_precision, Rounded,
                    _NAMED, precision, expbias, bitwidth, codeunit_type, rawvalue,
                    KIND_FIN, KIND_NAN, KIND_PINF, KIND_NINF, _rtp_zero_sticky
 using .SmallFloats.DyadicNumbers: DY_FINITE, nbits_dy
+
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
 const MODES = (NearestTiesToEven(), NearestTiesToAway(), TowardPositive(),
                TowardNegative(), TowardZero(), ToOdd(),
@@ -270,4 +273,8 @@ exact_rq_any(x::Real)      = Rational{BigInt}(x)
     end
     @info "G7: P = 1 block-scale fast path ≡ general path over $pow2_cmp block " *
           "signatures ($(length(P1_SCALES)) scale formats × $(length(ELEMS)) element formats)"
+    record_gate!("G7"; assertions=288, units=compared + engine_cmp + pow2_cmp,
+                 exhaustive=false,
+                 note="tier A exhaustive over 135 (P,B) cells; tier B over all 8 " *
+                      "rung-3 formats; the P=1 block path over 120 signatures")
 end

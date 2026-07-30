@@ -28,6 +28,7 @@
 #     assertable.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, codemask, codeunit_type, reptype,
                    rawvalue, Binary, Code8, Code16
 

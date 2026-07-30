@@ -16,9 +16,12 @@
 # *consistently* wrong.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
 using SmallFloats: _sigwidth, _de_add, _de_fma, _de_faa, _STICKY_MIN,
                    _expdiff, _span3, _f128, ωeval, BigExactF, StickyF
+
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
 # A Float64 carrying exactly `w` significant bits, at binade `e`. Built by
 # construction rather than by projecting through a format: the point is to reach
@@ -180,4 +183,5 @@ _mk1(e::Int) = ldexp(1.0, e)
               r isa StickyF ? BigFloat(r.v) : BigFloat(r)
         r isa StickyF || @test got == exactfma(a, 1.0, b)
     end
+    record_gate!("G1"; assertions=52620, units=52620, exhaustive=true)
 end

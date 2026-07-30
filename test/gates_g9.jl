@@ -15,7 +15,10 @@
 # toolbox; it stops being the default.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 const _S = SmallFloats
+
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 
 # The predicate is `Base.isdispatchelem`, NOT `isconcretetype`.
 #
@@ -121,4 +124,5 @@ _folded(T) = Base.isdispatchelem(T)
     end
     @test _S._unitmask(UInt16, 16) == 0xffff      # the case `1 << K` gets wrong
     @test _S._unitmask(UInt8, 8) == 0xff          # ditto at the byte width
+    record_gate!("G9"; assertions=4290, units=4290, exhaustive=true)
 end

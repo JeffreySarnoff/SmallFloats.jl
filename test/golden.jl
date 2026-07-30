@@ -19,12 +19,14 @@
 
 using Test, SmallFloats
 
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 # The routine tier is `lazy` — the stage-exit gate. `fast`, `full` and `off` are
 # opt-in and are HONOURED: a tier the caller asked for is never silently
 # downgraded, because a gate that quietly runs less than it was told to is worse
 # than no gate. (§11 M15.)
 get!(ENV, "SMALLFLOATS_G5", "lazy")
 
+isdefined(@__MODULE__, :GATE_LOG) || include("gatelog.jl")
 include(joinpath(@__DIR__, "golden", "harness.jl"))
 
 @testset "G5 — K ≤ 8 golden non-regression" begin
@@ -59,4 +61,13 @@ include(joinpath(@__DIR__, "golden", "harness.jl"))
             @test (name, name in known) == (name, true)
         end
     end
+    # The roll-call needs G5 present even when it is OFF or its oracle is
+    # missing — a gate that quietly did nothing must show as having done nothing,
+    # not be absent. `units = 0` is what `rollcall.jl` fails on, which is the
+    # correct outcome for a skipped G5 in a run that claims to be complete.
+    record_gate!("G5"; assertions=33, units=(tier == "off" ? 0 : 33),
+                 exhaustive=(tier == "full"),
+                 note=tier == "full" ? "" :
+                      "tier=$tier over the 120 K ≤ 8 formats; `full` is the " *
+                      "release tier (SMALLFLOATS_G5=full)")
 end

@@ -1270,10 +1270,22 @@ green; every knowingly-uncovered area (§6.4) stated in one place.
 
 ### Stage 9 — Docs, exports, benchmarks, release
 
-1. **Exports**: the opt-in `SmallFloats.Formats` submodule re-exporting all 504
-   aliases; the 120 K ≤ 8 names exported as today (no breakage);
-   `format(K,P,Σ,Δ)` for programmatic use. Asymmetric reversibility settles
-   this: exporting more later is non-breaking, un-exporting is not.
+1. **Exports** — **DECIDED and implemented at Stage 8, not Stage 9** (open item
+   O3 closed). All 504 aliases are *defined* in `SmallFloats`; `using
+   SmallFloats` exports the **120 at K ≤ 8**, exactly as before the extension;
+   `using SmallFloats.Formats` adds the other 384. `format(K,P,Σ,Δ)`,
+   `reptype` and `codeunit_type` are now exported — `format`'s own docstring
+   already called it "the supported replacement for spelling `Binary{K,P,Σ,Δ}`",
+   which an unexported binding could not be.
+
+   *Why it moved earlier.* The branch had been exporting **all 504** since
+   Stage 3. Narrowing is free before release and breaking after it, so the
+   window to apply asymmetric reversibility closes at the release, not at
+   Stage 9 — and Stage 8's derived format selection was being written against
+   the export surface at the same moment. Both now use `_NAMED[nm]`, the
+   registry, rather than `getfield(SmallFloats, nm)`, the binding: a test
+   harness should not be the thing that constrains a naming decision, and with
+   the dictionary lookup the suite survives the aliases moving either way.
 2. **Documentation.** The `3–8` range is stated in
    [`index.md`](../src/index.md), [`introduction.md`](../src/introduction.md)
    (twice), [`user_guide.md`](../src/user_guide.md),
@@ -1287,7 +1299,31 @@ green; every knowingly-uncovered area (§6.4) stated in one place.
    `docs/src/*.md`, so a stale range propagates into a released PDF. Purge the
    stale `ByteFloats` artifacts in `docs/build_latex/` and `docs/pdf/` (C9).
 4. **`benchmarking/`** has its own environment: `Pkg.develop` refresh, per-rung
-   report sections, and the preflight abort condition made **per-head** (T8).
+   report sections, and the preflight abort condition made
+   **per-operation-class** — *revised at Stage 8 from the original "per-head",
+   which measurement showed to be the wrong axis (§11 M46).*
+
+   The original wording asked for `HeadF64` and `HeadF128` to be
+   zero-allocation abort conditions and for `HeadExact`'s MPFR fallback to be a
+   recorded property. That is false as stated and was never a statement about
+   the head: a `Binary16p6se` add can span 1 024 binades, exceed `Float64`'s
+   exact range, escalate to MPFR and allocate — **at rung 1**. Allocation on the
+   arithmetic path is a function of the *operand spread against the carrier's
+   exact range*, and the head only sets the range.
+
+   What the preflight must therefore do:
+
+   * **Abort** if any *exact selection* allocates, at any rung. `Maximum`,
+     `Minimum`, `MaximumMagnitude`, `MinimumFinite`, `CopySign` return an
+     operand; there is nothing for them to escalate into, so zero is
+     unconditional and a regression there is always a defect. (Pinned as a
+     deterministic regression in `test/runtests.jl` over six formats spanning
+     all three heads.)
+   * **Record, not gate,** arithmetic and enclosure-ladder allocation, with the
+     operand spread reported alongside it — the number is meaningful only
+     against the spread that produced it.
+   * Report per *rung* in the sections, because that is what a reader wants to
+     compare; just do not turn the rung into the abort condition.
 5. **Precompile workload**: stays K ≤ 8 for tier-1 entries plus exactly one
    Group A wide format and one Group B format, so the wide paths compile but
    the image does not grow with the grid. Compare against the Stage 0
@@ -2656,6 +2692,82 @@ every rung, pinned in `test/runtests.jl` over six formats spanning all three
 heads. Pinning arithmetic to zero would be pinning a falsehood, and a gate that
 asserts something false is worse than no gate — so the profile is *recorded*
 here and only the invariant part is *asserted* there.
+
+**M47 — `refimpl` was out of normal form, and only a triple comparison could see
+it.** Promoting the `Rational{BigInt}` reference to the shipped suite (Stage 8
+step 2) meant widening two things: the encode step, which was an O(2^K) scan
+typed `UInt8` and therefore K ≤ 8 twice over, and `datum_rq`, which now meets a
+`Dyadic`. Both were expected.
+
+What was not expected: the first run of T2a reported a disagreement in **all 135
+`(P, B)` cells**. Engine `(sign, S, Q) = (1, 32768, −14)`, reference
+`(1, 65536, −15)` — the same value, `2.0`, written two ways. Rounding away can
+carry out of the significand, and `⌊S̃⌋ + 1` reaches `2^P` exactly when `S̃` was
+in the top ulp of its binade; the engine renormalizes, the reference did not.
+
+It had been wrong since the file was written and no test could see it, because
+`refround`'s only consumer was G2, which compares `sgn·S·2^Q` as a **value** —
+and `2^P · 2^Q == 2^(P−1) · 2^(Q+1)`. Comparing the triple is the stronger check
+and it found the reference, not the engine. Worth stating as a rule: *when an
+oracle and an implementation agree on the value, comparing the value proves less
+than comparing the representation, and an oracle out of normal form will pass a
+value comparison forever.*
+
+`refimpl` also reproduced §11 M44's own defect three days after it was recorded:
+`code_value` classified `±Inf` with `d > 0`, which needs a promotion `Dyadic`
+does not have. The engine-side lesson generalizes to the reference — a
+comparison against a literal is a conversion in disguise.
+
+**M48 — `project_interval`'s 4 096-bit ceiling was the last `_BIGP`, and the
+stochastic sub-grid found it exactly where the plan predicted.** Stage 8 step 4
+asks for every ρ family at every rung "because carrier-precision differences
+manifest on the stochastic sub-grid first". They do:
+
+```
+ArcCosPi(Binary15p2ue, ProjSpec(StochasticA{4}(), SatNone()), x)
+  → ERROR: project_interval: unresolved at 4096 bits
+```
+
+for any subnormal `x`. `Binary15p2ue` has `B = 8192`; `acos(x)/π = ½ − x/π + …`,
+so the true value sits about `2^-8194` **below the datum ½**. Deciding which side
+of ½ it falls on takes ≈ 8 200 bits, and the ladder gave up at 4 096.
+
+Three things about this are worth keeping.
+
+*It is the `_BIGP` shape exactly* (§11 M31): a fixed precision that was ample at
+K ≤ 8 — where `bigprec` never exceeds 320 — and insufficient across the wide
+grid. The ceiling is now `max(4096, bigprec(T) + 64)`, derived from the format,
+so it inherits gate G2's sufficiency proof rather than introducing a second
+unproven constant. It remains a *ceiling*: the ladder still starts at 256 bits
+and doubles, so the ordinary case pays nothing.
+
+*It is reachable from the public API and it THREW.* Better than `_BIGP`, which
+returned a plausible wrong number — but a legal operation on a legal operand of
+a legal format raising an error is a defect, not a refusal.
+
+*Nothing else in the suite could have found it.* Under `RoundNearest` both
+enclosure endpoints land on ½'s code point and the ladder resolves on the first
+iteration, so every gate that projects under a nearest mode — which is most of
+them — sees nothing. The answer depends on *which side* of ½ the value falls only
+under a directed or stochastic rule. G10 sweeps every operation at rung 2, and
+missed it because it sweeps them under `RNE_SatFinite`.
+
+That last point is the general one, and it is the same shape as M45's: **a gate
+that fixes one axis to its common value cannot see a defect that lives on that
+axis.** G10 fixed ρ and varied the surface; `tier_rho.jl` fixes the surface and
+varies ρ. Neither substitutes for the other.
+
+The tier needs **no oracle**, which is what lets it cover Group C at rungs 2 and
+3 where `refimpl` cannot follow (a transcendental is not a rational) and where an
+MPFR reference would assume what is in question. It asserts only structure the
+draft's §4.7.4 gives the stochastic modes as functions of `R`: that StochasticA
+at `R = 0` is *exactly* `TowardZero`, that the projected magnitude is monotone in
+`R`, and that `R` at maximum moves by at most one datum. Three restrictions on
+those claims are the draft's rather than convenience, and are spelled at the
+assertions: StochasticB and StochasticC are **not** truncation at `R = 0` (B's
+`+1` makes it nearest-like; C's `RNITE` can carry), and `SatNone` is the one
+saturation mode whose rows *consult the rounding mode*, so the `R = 0` identity
+cannot hold under it and is asserted under `SatFinite`.
 
 ---
 

@@ -16,6 +16,7 @@
 using Test
 using Random
 using SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: apply_op, decode, rawvalue, get_table, _finish, _bigfma, _bigsum3,
     _faa_wide, _fma_wide, StickyF, TernaryKey, ternary_count, TERNARY_USE,
     TERNARY_EAGER_BITS, TERNARY_ADAPTIVE_BITS, TERNARY_BUILD_ELEMS, TERNARY_CACHE_BYTES,

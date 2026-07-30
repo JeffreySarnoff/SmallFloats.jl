@@ -19,6 +19,7 @@
 # them — and Group B/C on wide formats waits for the carrier lattice in Stage 6.
 
 using Test, SmallFloats
+using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: _NAMED, KSPLIT, rung, HeadF64, datumcarrier, project
 
 """The wide formats Group A is expected to work on today: K > KSPLIT and rung 1,
