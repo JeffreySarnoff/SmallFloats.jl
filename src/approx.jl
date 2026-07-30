@@ -278,7 +278,11 @@ function conformance()
     end
     append!(blocknames, (:BlockReduceAdd, :BlockReduceMultiply, :BlockDotProduct,
                          :ConvertFromBlock, :ConvertToBlock, :ConvertToBlockMaxAbsFinite))
-    cached = lock(() -> collect(keys(TABLE_CACHE)), TABLE_LOCK)
+    # `table_keys()`, not one cache by name: the cache is split by result code
+    # unit, and naming one half under-reports by exactly the other half —
+    # silently, in the declaration whose job is to state truthfully what this
+    # package has specialized.
+    cached = table_keys()
     apx = lock(() -> [(name=a.name, op=a.op, kappa=a.kappa_declared, exhaustive=a.exhaustive)
                       for a in values(APPROX_REGISTRY)], APPROX_LOCK)
     ConformanceDeclaration(

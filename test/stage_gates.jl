@@ -50,6 +50,27 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         @test occursin("rung-3", e.msg)
     end
 
+    # Same-format wide arithmetic reaches the refusal by a DIFFERENT route, and
+    # the two must both be covered. Above, the operands are narrow and the
+    # *result* is wide, so `apply_op` is entered with `Float64`s and Stage 3's
+    # `ωeval(rung(fr), …)` gate fires. Here the operands decode to `Float128`
+    # and never match `apply_op`'s `Float64` signature at all — which was a
+    # `MethodError` until Stage 5 added the generic refusal. The gap was open
+    # for one whole stage because this row did not exist.
+    let W2 = Binary16p5se, v = W2(0x0100)     # B = 1024, rung 2
+        @test rung(W2) === HeadF128()
+        for f in (() -> Exp(W2, RNE_SatNone, v), () -> Add(W2, RNE_SatNone, v, v),
+                  () -> Sqrt(W2, RNE_SatNone, v))
+            e = try (f(); nothing) catch e; e end
+            @test e isa ArgumentError
+            @test occursin("Stage 6", e.msg)
+        end
+        # `Convert` is the exception, and legitimately so: it has no ω-semantics
+        # to evaluate — it is a bare projection, and the projection engine is
+        # carrier-generic already (§1 C10). Refusing it would be arbitrary.
+        @test decode(Convert(W2, RNE_SatNone, Binary8p4se(1.5))) == 1.5
+    end
+
     # ---- Wide decode LANDED in Stage 4; what remains asserted is that the two
     # policies are still selected by the representation and that the `2^K`
     # constant table is still refused for `Code16` (invariant 10) even though
@@ -64,21 +85,21 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
         @test e isa ArgumentError
     end
 
-    # ---- Array/table routes at wide K: Stage 5. The scalar path works at every
-    # K from Stage 4 (see `wide_ops.jl`); the *tabulated* path still indexes
-    # operands as `UInt8` into a `Memory{UInt8}` sized `2^ΣK` with no byte
-    # budget. The refusal is asserted here so the boundary is a decision rather
-    # than an `InexactError` from three frames inside a table builder.
-    let W = Binary12p5se, a = W(1.5)
-        for f in (() -> SmallFloats.get_table(:Exp, W, W, RNE_SatNone),
-                  () -> SmallFloats.get_table(:Add, W, W, W, RNE_SatNone),
-                  () -> vmap!(similar([a, a]), Val(:Add), W, RNE_SatNone, [a, a], [a, a]))
-            e = try (f(); nothing) catch e; e end
-            @test e isa ArgumentError
-            @test occursin("Stage 5", e.msg)
-        end
-        # ...and the scalar route it points at genuinely works.
-        @test decode(Add(W, RNE_SatNone, a, W(0.25))) == 1.75
+    # ---- Array/table routes at wide K LANDED in Stage 5. This block used to
+    # assert that they refused; those rows went red by being implemented, which
+    # is exactly how a row in this file is meant to die. What replaces them is
+    # the boundary that remains: an over-budget signature falls back to Shape B
+    # rather than throwing, while `get_table` — whose contract is to *return a
+    # table* — still throws, and now names the budget rather than a stage.
+    let W = Binary12p5se, a = W(1.5), b = W(0.25)
+        @test vmap!(similar([a, b]), Val(:Add), W, RNE_SatNone, [a, b], [b, a]) ==
+              [Add(W, RNE_SatNone, a, b), Add(W, RNE_SatNone, b, a)]
+        @test SmallFloats.table_for(:Add, W, W, W, RNE_SatNone) === nothing   # 24 bits > 16
+        @test SmallFloats.table_for(:Exp, W, W, RNE_SatNone) isa Memory{UInt16}
+        e = try (SmallFloats.get_table(:Add, Binary16p8se, Binary16p8se,
+                                       Binary16p8se, RNE_SatNone); nothing) catch e; e end
+        @test e isa ArgumentError
+        @test occursin("budget", e.msg) && !occursin("Stage", e.msg)
     end
 
     # ---- `show` must never be the thing that throws: a failing testset has to

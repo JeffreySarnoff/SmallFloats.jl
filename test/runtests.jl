@@ -1602,6 +1602,9 @@ include("ternary_opt.jl")
 # ==========================================================================
 include("gates_g3.jl")
 include("gates_g6.jl")
+# Stage 5's central claim: which shape an array kernel takes is a policy
+# decision, and policy must never decide an answer.
+include("gates_shape.jl")
 # The Stage 4 exit criterion itself: Group A produces defined results at every K,
 # checked against an MPFR reference rather than against the package's oracle.
 include("wide_ops.jl")

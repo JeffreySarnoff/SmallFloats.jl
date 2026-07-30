@@ -1084,6 +1084,32 @@ narrow array path holds 0.26 ns/elem.
 the compute kernel; no signature attempts an impossible allocation; first-call
 latency for the largest eager table is recorded.
 
+**Achieved, and items 4–5 withdrawn on measurement.** All four exit conditions
+hold: a K = 16 unary array op runs Shape A on a `Memory{UInt16}` at
+**0.16 ns/elem**; a K = 16 binary op runs Shape B; no signature attempts an
+impossible allocation (the budget is compared as bits and never shifts); and
+first-call latency for the largest eager table is **0.085 s** (65 536 entries,
+~1 µs/entry).
+
+That last measurement retires two of this stage's own items. §4 items 4
+(parallel build) and 5 (cost-aware eager band) both exist to solve a first-call
+latency I had estimated at ~200 µs/entry — "a K = 16 unary `Exp` table … 65 536
+oracle trips, plausibly seconds". Measured, it is 0.085 s, because ~200 µs is
+the *rigorous MPFR ladder* cost from the golden capture and the ordinary path
+almost never reaches the ladder: the Float64 and Float128 filters resolve first.
+Threading the builder — the one function invariant 6 makes every result depend
+on — to save 0.08 s is not a trade worth making. **Both items are withdrawn as
+solving a problem that measurement says does not exist**, which is the benchmark
+doctrine applied to my own plan rather than to the code.
+
+Item 6 landed as `table_policy(op, fr, fs…, ρ)`, returning
+`(; shape, entries, bytes, reason)`.
+
+**G5 33/33 byte-identical.** New gate: **Shape A ≡ Shape B**
+([test/gates_shape.jl](../../test/gates_shape.jl)) — 920 signatures,
+**2 503 312 element comparisons**, exhaustive over each signature's input space,
+every arity, both sides of the code-unit seam.
+
 ---
 
 ### Stage 6 — The carrier lattice
@@ -1935,6 +1961,80 @@ classifies every negative datum as non-finite, which is why the first run
 reported 444 failures that were all correct code. Zero's exponent is also
 carrier-specific (`(0, -1074, 1)` for Float64, `(0, 0, 1)` for BigFloat). Both
 are absorbed in `gates_g6.jl`'s normalizer.
+
+---
+
+### Stage 5
+
+**M25 — one budget was the wrong shape; there are two questions, not one.**
+§4 Stage 5 item 1 specified a single arity-agnostic gate keyed on **bytes**,
+with eager/adaptive bands measured in bytes too. Bytes are the right unit for
+one of the two questions and the wrong unit for the other:
+
+* *May we allocate this at all?* — memory, invariant 10, and correctly bytes.
+  `TABLE_MAX_BITS` (2^25 = 32 MiB).
+* *Is it worth building?* — **time**, which scales with **entries**, not bytes.
+  A `UInt16` table is twice the bytes of a `UInt8` table with the same number of
+  entries and costs exactly the same to build, because the cost is one scalar
+  trip per entry. `TABLE_EAGER_BITS` (2^16 entries).
+
+Collapsing them would make the build band depend on the result format's code
+unit, which has nothing to do with build cost. Two constants, each in its own
+unit, each with its own comment saying which question it answers.
+
+The byte budget is compared **as bits and never computed**: deciding whether
+`1 << ΣK` is too large by evaluating `1 << ΣK` is the exact bug the budget
+exists to prevent — at ΣK ≥ 64 the shift wraps and the impossible allocation
+looks free. `tablebits` adds exponents; nothing shifts.
+
+`TABLE_EAGER_BITS = 16` is not a chosen number: it is *exactly* the largest
+table the K ≤ 8 grid already builds (a binary 8×8 table), so no K ≤ 8 decision
+changes and G5 stays byte-identical by construction rather than by luck. It also
+admits the wide case that matters most — a K = 16 unary table is the same 65 536
+entries. `test/gates_shape.jl` asserts the non-regression on the *policy*, so
+lowering the band later reports that it also changed which shape 120 formats
+take.
+
+**M26 — `get_table` and `table_for` are two functions because they answer two
+questions.** `get_table`'s contract is "return the table", so when it cannot it
+**throws** — that is what `conformance`, the precompile workload and the suite
+want. `table_for` asks "should there be a table", and answers `nothing` without
+prejudice; kernels call it once per array operation and branch outside the loop,
+so its `Union` return costs nothing. Measured: the narrow array path is
+unchanged at 0.22 ns/elem and still allocates zero.
+
+**M27 — splitting a cache splits every consumer of it, silently.**
+`TABLE_CACHE` became `TABLE_CACHE8`/`TABLE_CACHE16` (and `TERNARY_CACHE`
+likewise), and three consumers read the old name: `table_bytes`,
+`empty_tables!`, and — the dangerous one — `conformance()`, whose entire job is
+to state truthfully what this package has specialized. A consumer that names one
+half under-reports by exactly the other half, with no error. Every consumer now
+goes through `table_bytes` / `table_count` / `ternary_count` / `table_keys`.
+Same failure class as M9: *the enumeration site is the hazard, not the split.*
+
+`table_bytes` also stopped conflating length with bytes — correct while every
+entry was one byte, wrong the moment some are two.
+
+**M28 — Stage 3's rung gate could not fire for same-format wide arithmetic, and
+the gap was open for a whole stage.** Stage 3 refused rung-2/3 evaluation with
+`ωeval(rung(fr), op, xs...)`, reached *inside* `apply_op` — which requires
+entering `apply_op`, which requires `Float64` operands. While `decode` refused
+K ≥ 9 that was every reachable call, so the gate looked complete and
+`test/stage_gates.jl` passed. Stage 4 gave `decode` the wide carriers, and from
+that moment `Exp(Binary16p5se, ρ, v)` decoded to `Float128` and missed
+`apply_op`'s `xs::Float64...` signature entirely: a `MethodError` naming an
+internal function, not the stage-naming `ArgumentError` the discipline promises.
+
+Found by a **table build**, not by a test — Stage 5 granted a table for a wide
+unary signature and the builder hit the same hole the scalar path had. Closed
+with a generic `apply_op` refusal (M17's rule: refuse by method, and let the
+method *throw* rather than be absent), and `test/stage_gates.jl` now covers both
+routes to the refusal, which is why it stayed hidden: the existing row used
+narrow operands with a wide *result*.
+
+`_scalar_code` widened past `Float64` in the same edit, deliberately: `project`
+is carrier-generic (§1 C10), so a `Convert` table is buildable at every rung and
+refusing one would be arbitrary. The restriction now lands where it is true.
 
 ---
 

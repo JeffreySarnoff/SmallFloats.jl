@@ -17,7 +17,7 @@ using Test
 using Random
 using SmallFloats
 using SmallFloats: apply_op, decode, rawvalue, get_table, _finish, _bigfma, _bigsum3,
-    _faa_wide, _fma_wide, StickyF, TernaryKey, TERNARY_CACHE, TERNARY_USE,
+    _faa_wide, _fma_wide, StickyF, TernaryKey, ternary_count, TERNARY_USE,
     TERNARY_EAGER_BITS, TERNARY_ADAPTIVE_BITS, TERNARY_BUILD_ELEMS, TERNARY_CACHE_BYTES,
     THREAD_MIN_ELEMS, THREADED_KERNELS, empty_tables!
 
@@ -70,7 +70,7 @@ end
                   eachindex(D))
     end
     # the eager band actually built tables (3·4 = 12 and 3·6 = 18 bits are both ≤ 18)
-    @test !isempty(TERNARY_CACHE)
+    @test ternary_count() > 0
     # stochastic ternary vmap still runs (scalar path) and reproduces under a fixed rng
     let T = Binary4p2se, ρ = ProjSpec(StochasticC{8}(), SatNone())
         A = fill(T(1.5), 100); B = fill(T(1.25), 100); C = fill(T(0.125), 100)
@@ -90,11 +90,11 @@ end
         rng = Xoshiro(11)
         A7 = [rawvalue(V7, UInt8(rand(rng, 0:127))) for _ in 1:1000]
         FAA(V7, RNE_SatNone, A7, A7, A7)
-        @test isempty(TERNARY_CACHE)                      # 1000 elems: below threshold
+        @test ternary_count() == 0                    # 1000 elems: below threshold
         FAA(V7, RNE_SatNone, A7, A7, A7)
-        @test isempty(TERNARY_CACHE)                      # 2000: still below
+        @test ternary_count() == 0                    # 2000: still below
         r = FAA(V7, RNE_SatNone, A7, A7, A7)              # 3000 ≥ 2500: builds
-        @test length(TERNARY_CACHE) == 1
+        @test ternary_count() == 1
         @test table_bytes() == 1 << 21
         @test all(i -> r[i] === FAA(V7, RNE_SatNone, A7[i], A7[i], A7[i]), eachindex(r))
     finally
@@ -105,7 +105,7 @@ end
     W = Binary8p3se
     A8 = fill(W(1.5), 64)
     FMA(W, RNE_SatNone, A8, A8, A8)
-    @test isempty(TERNARY_CACHE) && isempty(TERNARY_USE)
+    @test ternary_count() == 0 && isempty(TERNARY_USE)
     # LRU: budget for three 4 KiB tables, insert six → three survive, budget holds
     old_bytes = TERNARY_CACHE_BYTES[]
     TERNARY_CACHE_BYTES[] = 3 * (1 << 12)
@@ -115,7 +115,7 @@ end
             vmap!(similar([T(1.0)], T, 4), op, T, RNE_SatNone,
                   fill(S(1.0), 4), fill(S(1.0), 4), fill(S(1.0), 4))
         end
-        @test length(TERNARY_CACHE) == 3
+        @test ternary_count() == 3
         @test table_bytes() <= TERNARY_CACHE_BYTES[]
     finally
         TERNARY_CACHE_BYTES[] = old_bytes

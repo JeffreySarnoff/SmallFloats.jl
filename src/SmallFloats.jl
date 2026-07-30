@@ -131,7 +131,7 @@ end
 export vmap, vmap!
 
 # table cache introspection
-export table_bytes, empty_tables!
+export table_bytes, table_count, ternary_count, table_policy, empty_tables!
 
 # Float32 carrier-exactness trait (tables.jl)
 export f32_exact

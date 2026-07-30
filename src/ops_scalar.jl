@@ -140,6 +140,31 @@ end
 @noinline _finish_slow(::Type{fr}, ρ::ProjSpec, R::Int, res) where {fr<:Binary} =
     _finish(fr, ρ, R, res)
 
+# Operands on a carrier wider than Float64 — the rung-2/3 case, refused by method
+# until Stage 6 builds the carrier lattice.
+#
+# This method is NOT redundant with the `ωeval(::HeadF128, …)` refusal Stage 3
+# added, and the gap between them is worth stating because it stayed open for a
+# whole stage. Stage 3's gate is reached through `ωeval(rung(fr), op, xs...)`
+# *inside* this function, so it only ever fires once `apply_op` has been entered
+# — which requires the operands to be `Float64`. While `decode` refused K ≥ 9 that
+# was every reachable call. Stage 4 gave `decode` the wide carriers, and from that
+# moment `Exp(Binary16p5se, ρ, v)` decoded to `Float128` and missed the
+# `xs::Float64...` signature entirely: a `MethodError` naming `apply_op`, not the
+# stage-naming `ArgumentError` the discipline promises. Found by a table build,
+# not by a test — the scalar path had the same hole.
+#
+# The `Float64` method above is strictly more specific, so this costs the working
+# path nothing.
+@noinline function apply_op(op::Val{OP}, ::Type{fr}, ρ::ProjSpec, R::Int,
+                            xs...) where {OP,fr<:Binary}
+    cs = join(unique(map(x -> string(typeof(x)), xs)), ", ")
+    throw(ArgumentError(
+        "$OP⟨$(formatname(fr))⟩ received operands on $cs. Evaluating on a carrier " *
+        "wider than Float64 needs the rung-$(_rungindex(fr)) carrier, which arrives " *
+        "in Stage 6 of the K ≤ 16 extension"))
+end
+
 # ---- stochastic draw plumbing (design §5.5)
 # bitops plan Phase 0(b): the rng default is `nothing`, resolved to the task-local
 # default only when a stochastic draw is actually taken.

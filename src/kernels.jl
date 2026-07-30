@@ -1,13 +1,20 @@
 # ===== kernels.jl — array kernels (design §8, architecture §7)
 #
 # Two hot-loop shapes, written once and instantiated by the registry:
-#   Shape A (gather):  out[i] = tbl[key(a[i]…)]   — pure ρ, arity ≤ 2
-#   Shape B (compute): per-element scalar path    — untabled ternary + stochastic ρ
+#   Shape A (gather):  out[i] = tbl[key(a[i]…)]   — pure ρ, table affordable
+#   Shape B (compute): per-element scalar path    — everything else
 # The table getter is @noinline and called ONCE per array call, hoisted out of
-# the loop; loop bodies index a local Memory{UInt8} with no dict lookups, locks,
-# or global loads per element. Ternary ops ride Shape A when the bitwidth policy
-# grants a table (eager ≤ 2^18 entries, adaptive ≤ 2^21 — tables.jl) and an
-# optionally threaded Shape B above that (the K=8 band).
+# the loop; loop bodies index a local `Memory` with no dict lookups, locks, or
+# global loads per element.
+#
+# **Every arity chooses between the shapes; none assumes Shape A.** Ternary has
+# worked this way since the bitwidth policy landed; unary and binary joined it
+# under K ≤ 16, where a 16×16 binary table would be 2^32 entries. The choice is
+# made by `table_for` / `_ternary_table_for` and is a *policy* decision, never a
+# correctness one: invariant 6 says a table entry is one trip through
+# `_scalar_code`, and Shape B calls that same scalar path per element. The two
+# shapes cannot disagree; `test/gates_shape.jl` measures that rather than
+# assuming it.
 
 """
     vmap!(dest, Val(op), fr, ρ, A[, B[, C]]; rng) -> dest
@@ -27,7 +34,12 @@ function vmap!(dest::AbstractArray{FR}, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
     if isstochastic(ρ)
         return _vmap_scalar!(dest, Val(op), FR, ρ, A)
     end
-    tbl = get_table(op, FR, F1, ρ)                       # hoisted; @noinline
+    tbl = table_for(op, FR, F1, ρ)                       # hoisted; @noinline
+    # Shape B when policy declines a table. Same answer by invariant 6 — a table
+    # entry is one trip through `_scalar_code`, which is what this loop calls per
+    # element — so the branch trades speed only. `_vmap_scalar!` is reused rather
+    # than duplicated: under pure ρ its `_drawR` returns 0 without touching the rng.
+    tbl === nothing && return _vmap_scalar!(dest, Val(op), FR, ρ, A)
     @inbounds for i in eachindex(dest, A)
         dest[i] = rawvalue(FR, tbl[Int(codepoint(A[i])) + 1])
     end
@@ -41,7 +53,8 @@ function vmap!(dest::AbstractArray{FR}, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
     if isstochastic(ρ)
         return _vmap_scalar!(dest, Val(op), FR, ρ, A, B)
     end
-    tbl = get_table(op, FR, F1, F2, ρ)
+    tbl = table_for(op, FR, F1, F2, ρ)
+    tbl === nothing && return _vmap_scalar!(dest, Val(op), FR, ρ, A, B)
     K2 = bitwidth(F2)
     @inbounds for i in eachindex(dest, A, B)
         dest[i] = rawvalue(FR, tbl[(Int(codepoint(A[i])) << K2) + Int(codepoint(B[i])) + 1])

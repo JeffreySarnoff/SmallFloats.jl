@@ -1,7 +1,7 @@
 # Checkpoint — SmallFloats.jl
 
 *Working record of the K ≤ 16 extension. Opened 2026-07-29 against `main`
-(`e1ea2aa`); current through **Stage 4** on branch `k16-extension`. Companion
+(`e1ea2aa`); current through **Stage 5** on branch `k16-extension`. Companion
 to [CLAUDE.md](CLAUDE.md) (the doctrine — what
 must stay true) and [docs/other/implementextensions.md](docs/other/implementextensions.md)
 (the plan — what to do and in what order). This file is the third thing: **what
@@ -26,7 +26,45 @@ has actually happened, what is verified, and what is not.***
 | **2 — representation lattice (abstract `Binary` + `Code8`)** | **done, verified** |
 | **3 — `Code16` and the 504-format grid** | **done, verified** |
 | **4 — decode/encode/keys/sort/packed widened** | **done, verified** |
-| 5–9 | not started |
+| **5 — table and kernel policy** | **done, verified** |
+| 6–9 | not started |
+
+**Stage 5 evidence.** Array operations work at every K. A K = 16 unary op runs
+the table gather on a `Memory{UInt16}` at **0.16 ns/elem**; a K = 16 binary op
+(2^32 entries) runs the scalar path per element; nothing attempts an impossible
+allocation. The narrow path is unchanged at **0.22 ns/elem**, zero allocation.
+
+Two caches, split by result code unit and reached by dispatch, because a single
+`Dict` holding both widths returns a `Union` from `get_table` and puts a type
+check inside every hot loop. Two budgets, because "may we allocate this" is a
+question about **bytes** and "is it worth building" is a question about
+**entries** — a `UInt16` table is twice the bytes of a `UInt8` table with the
+same entry count and costs exactly the same to build (§11 M25). The byte budget
+is compared as bits and never computes `1 << ΣK`, which is the bug it exists to
+prevent.
+
+New gate **Shape A ≡ Shape B** ([test/gates_shape.jl](test/gates_shape.jl)):
+920 signatures, **2 503 312 element comparisons**, exhaustive over each
+signature's input space, every arity, both sides of the code-unit seam. This is
+the stage's central claim — from here on, which shape a kernel takes is a
+*policy* decision that may differ between machines or after a cache eviction, so
+"policy never decides an answer" has to be measured, not argued from invariant 6.
+
+**Two of this stage's own plan items were withdrawn on measurement.** Parallel
+build and a cost-aware eager band both target a first-call latency I had
+estimated at ~200 µs/entry; measured, a 65 536-entry K = 16 table builds in
+**0.085 s** (~1 µs/entry). The 200 µs figure is the rigorous MPFR ladder cost
+from the golden capture, and the ordinary path rarely reaches the ladder.
+Threading the one function invariant 6 makes every result depend on, to save
+0.08 s, is not a trade worth making.
+
+**One real defect found, by a table build rather than by a test** (§11 M28):
+Stage 3's rung-2/3 refusal fires *inside* `apply_op`, so it required `Float64`
+operands to be reached. Stage 4 made `decode` return wide carriers, and from
+that moment same-format wide arithmetic missed `apply_op`'s signature entirely
+and raised a `MethodError`. Open for a full stage because the existing gate row
+used narrow operands with a wide result — a different route to the same
+refusal. Now closed by method, with both routes covered.
 
 **Stage 4 evidence.** `decode` is exact at every K: the carrier-generic `ldexp`
 path lands under `ComputeDecode`, and the Float64 bit assembly is kept — by
@@ -127,6 +165,7 @@ Every file below is `include`d from `runtests.jl` and runs on every `Pkg.test()`
 | `test/gates_g9.jl` | **G9** — trait folding over all 504 formats, plus the narrow/wide zero-behaviour-change pin | 4 290 |
 | `test/gates_g3.jl` | **G3** — `_rtp_f64` bit ≡ generic over every realized `(P, B)` | 135 cells, 4 839 210 comparisons |
 | `test/gates_g6.jl` | **G6** — carrier-lift exactness, and the *absence* of every narrowing `lift` | 19 976 144 (datum, head) pairs |
+| `test/gates_shape.jl` | **Shape A ≡ Shape B** — the table gather and the scalar path agree, at every arity | 920 signatures, 2 503 312 comparisons |
 | `test/sweep_lattice.jl` | the front-loaded construction sweep: every code point of every format, both construction routes, every `Unsigned` width | 7 602 160 points |
 | `test/wide_ops.jl` | Group A at every K against an MPFR reference; ordering and counting sort at wide K | 321 984 results |
 | `test/stage_gates.jl` | what is **not** implemented yet, asserted to fail loudly and to name its stage. Designed to shrink | 1 146 |
@@ -140,7 +179,8 @@ Every file below is `include`d from `runtests.jl` and runs on every `Pkg.test()`
 | `src/decode_encode.jl` | `decode` by `decodepolicy`; `_decode_compute` with the carrier-generic `ldexp` tail and the `Code8`-only bit assembly; `_decode_table` bounded to `Code8` by signature with a throwing `Code16` method; `order_key`/`nan_order_key` on `orderkeytype`; counting sort with the `n < 2^K` gate |
 | `src/oracle.jl` | per-head `ωeval` dispatch (rung 1 forwards, rungs 2–3 refuse); `ωeval(::Val{:Convert}, ::Float64) = x` |
 | `src/kernels.jl` | `decode!` gated on `datumsexact`, split by `decodepolicy` |
-| `src/tables.jl` | `_check_tabulable_width` — the tabulated path refuses wide formats, naming Stage 5 |
+| `src/tables.jl` | two caches by result code unit; the byte budget (`TABLE_MAX_BITS`) and the build band (`TABLE_EAGER_BITS`); `table_for` (policy) beside `get_table` (total-or-throw); `table_policy` introspection; builders widened |
+| `src/kernels.jl` (2) | conditional Shape A at every arity — `tbl === nothing` falls back to the scalar path |
 | `src/packed.jl` | code unit via `_cu`; `packing_saves` predicate |
 | `src/project.jl` | `_extremal_SQ` width-safe; `_rtp_f64` shift-bound comments corrected (`d ≤ P−1 ≤ 15`, `t ∈ [37, 52]`) — the claim itself is licensed by G3, not by the comment |
 
@@ -162,6 +202,10 @@ Every file below is `include`d from `runtests.jl` and runs on every `Pkg.test()`
 | G3 | 4 839 210 comparisons, **1.1 s** | 135 `(P, B)` cells × structured inputs × 15 (μ, R) |
 | G6 | 19 976 144 (datum, head) pairs, **27 s** | exhaustive; `Base.decompose` witness |
 | `wide_ops` (Group A at every K) | 321 984 results, **50 s** | 312 wide rung-1 formats, MPFR reference |
+| Shape A ≡ Shape B | 2 503 312 comparisons, **64 s** | 920 signatures, exhaustive per signature |
+| table build | **~1 µs/entry**; 65 536-entry K = 16 table in **0.085 s** | the figure that withdrew two plan items |
+| `vmap!` Exp, K = 16 (Shape A, `UInt16`) | **0.16 ns/elem** | 0 allocations |
+| `vmap!` Add, K = 12 (Shape B) | **18.9 ns/elem** | 0 allocations; 2^24 entries, over the build band |
 | G5 `:lazy` | 33 sections, **4 m 21 s** | the routine stage-exit tier |
 | G5 `:full` | 33 sections, **11 m 20 s** | Stage 2 exit and release only |
 | warm scalar path, narrow **and** wide | **0 allocations** | `Add`/`Exp`/`decode` behind a function barrier |
@@ -239,6 +283,21 @@ Summary:
 - **M24** `decode!`'s gate is `datumsexact`, not `datumcarrier` — 454 formats
   have Float64-exact datums but only 432 are rung 1, and conflating
   representation with arithmetic would refuse 22 formats wrongly.
+- **M25** two budgets, not one: "may we allocate this" is about **bytes**, "is
+  it worth building" is about **entries**. And the byte budget is compared as
+  bits — deciding whether `1 << ΣK` is too large by computing `1 << ΣK` is the
+  bug it exists to prevent.
+- **M26** `get_table` throws, `table_for` returns `nothing`. One name per
+  question; the `Union` costs nothing because kernels branch outside the loop.
+- **M27** splitting a cache splits every consumer of it, silently — including
+  `conformance()`, whose job is to report truthfully what is specialized.
+- **M28** a refusal reached only *inside* `apply_op` is not reached by operands
+  that never match `apply_op`'s signature. Stage 3's rung gate looked complete
+  and was untestable-as-written until Stage 4 produced wide operands. Found by a
+  table build, not a test.
+- **Withdrawn on measurement:** Stage 5's own plan items 4 (parallel build) and
+  5 (cost-aware eager band). The ~200 µs/entry figure behind both is the
+  rigorous-ladder cost, not the ordinary path's ~1 µs.
 
 ---
 
@@ -309,29 +368,24 @@ states no format count or bitwidth range. Stage 9.
 
 ## 6. Next actions, in order
 
-*Stages 0–4 are done and committed; §1 carries the evidence. What follows is
+*Stages 0–5 are done and committed; §1 carries the evidence. What follows is
 the remaining work, in the order the plan puts it.*
 
-1. **Stage 5 — table and kernel policy.** The one route Stage 4 leaves refused
-   for reasons of implementation rather than semantics: `get_table` still
-   indexes operands as `UInt8` into a `Memory{UInt8}` sized `2^ΣK` with no byte
-   budget, so every array/tabulated call on a wide format throws (naming
-   Stage 5, and pointing at the scalar path, which works). Needs: the single
-   byte-budget allocator invariant 10 requires, the two typed caches (R-D — one
-   `Memory{UInt8}`, one `Memory{UInt16}`, because a shared cache returns a
-   `Union`), conditional Shape A, and index arithmetic in `Int` asserting
-   `ΣK ≤ 48`.
-2. **Stage 6 — the carrier lattice.** `factors` as an `OpInfo` column, the
-   `rung(op, Fs...)` join, per-head `ωeval`/`apply_op`, the corrected `_DE_*`
-   thresholds (§1 C1, C2), and `bigprec` wired in. **Write G2 red first**
-   against the `Binary16p1uf` witness. `lift` already exists and G6 already
-   passes over all 504 formats, so the join has a verified foundation.
-   Watch M9/M18: every registry consumer filters by `(arity, group)`.
-3. **Stage 7 — `Dyadic`.** Swap the rung-3 carrier; G7 is the differential
+1. **Stage 6 — the carrier lattice.** The only thing still refused for
+   *semantic* reasons: rung-2 and rung-3 evaluation. `factors` as an `OpInfo`
+   column, the `rung(op, Fs...)` join, per-head `ωeval`/`apply_op`, the
+   corrected `_DE_*` thresholds (§1 C1, C2), and `bigprec` wired in. **Write G2
+   red first** against the `Binary16p1uf` witness. `lift` already exists and G6
+   passes over all 504 formats, so the join has a verified foundation. Watch
+   M9/M18 (filter the registry by `(arity, group)`) and M28 (a refusal reached
+   only through `apply_op` is not reached by operands that never match its
+   signature).
+
+2. **Stage 7 — `Dyadic`.** Swap the rung-3 carrier; G7 is the differential
    against the `BigFloat` implementation, which is free while both exist. This
    also retires the `show` precision workaround recorded in §11 M20.
-4. **Stage 8 — test doctrine and tiers**, with G1–G9 standing.
-5. **Stage 9 — docs, exports, benchmarks, release.** The `SmallFloats.Formats`
+3. **Stage 8 — test doctrine and tiers**, with G1–G9 standing.
+4. **Stage 9 — docs, exports, benchmarks, release.** The `SmallFloats.Formats`
    submodule matters more now than when it was written: the package currently
    exports **504** format aliases into `Main`.
 
