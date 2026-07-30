@@ -24,6 +24,7 @@
 # not a rounding.
 
 using Test, SmallFloats
+using Quadmath: Float128
 const _G6 = SmallFloats
 
 """Normalized exact dyadic value of a float: `(significand, exponent)` with the

@@ -137,7 +137,19 @@ mandatory, and where it is not, the output says "sampled" in so many words.**
 Standing gates: G1 `_DE_*` thresholds · G2 `bigprec` sufficiency ·
 G3 `_rtp_f64` bit ≡ generic · G4 rung-selection equivalence · G5 K ≤ 8 golden
 non-regression · G6 carrier-lift exactness · G7 `HeadExact` carrier swap ·
-G8 representation invariant at every K · G9 trait folding.
+G8 representation invariant at every K · G9 trait folding ·
+G10 surface totality at every rung.
+
+**G10 is the one gate that is broad rather than deep, and it exists because the
+other nine are deep rather than broad.** Every one of them compares two answers,
+so each is silent about a path that throws instead of answering and about a path
+no test calls at all. Six Stage 7 defects lived in exactly that blind spot — a
+`Class` that compared a `Dyadic` datum against a `Float64` literal, a
+`_bp_element` annotated `::Float64`, a `Float16` conversion that was simply never
+written — and all six survived a green suite. G10 asserts only that the call
+returns and that a declared result type holds, over every registry operation on
+every surface. A shallow gate earns its place by being total; do not deepen it,
+and do not narrow it.
 
 G5 runs in three tiers, selected by `ENV["SMALLFLOATS_G5"]`: **`fast`** (~1 min;
 exhaustive over all 120 formats for everything a type refactor can move),
@@ -145,6 +157,16 @@ exhaustive over all 120 formats for everything a type refactor can move),
 (~11 min, required at the Stage 2 exit and at release — Stage 2 changes the type
 of every value in the package, which is the one place a defect could be
 format-specific rather than systematic).
+
+G10 runs in two tiers, selected by `ENV["SMALLFLOATS_G10"]`: **`rep`** (~1 m 45 s,
+**the default**) probes one representative of each realized
+`(rung, P == 1?, code unit)` class plus all eight rung-3 formats; **`full`**
+(~6 min, the stage-exit and release tier) probes all 72 formats above rung 1.
+The block surface is enumerated by `(FS, FE)` *shape* at both tiers, and that is
+exhaustive rather than sampled — `blockdecode`'s carrier is
+`rung(Val(:Multiply), FS, FE)` and depends on the formats through nothing else.
+G10's cost is ~99% specialization, not evaluation, so the format count is the
+only lever there is.
 
 A tier the caller asks for is **honoured, never downgraded**: a gate that
 quietly runs less than it was told to is worse than no gate. G5's format list
@@ -176,9 +198,16 @@ test — and it distorts *ratios*, not just absolutes.
 - Reflectively retrieved functions pass through argument barriers to
   specialize.
 - A preflight **aborts the run** if warm scalar paths allocate. Under the
-  extension this becomes per-head: `HeadF64` and `HeadF128` are zero-allocation
-  unconditionally; `HeadExact`'s MPFR transcendental fallback allocating is a
-  recorded property of that tier, not a suite failure.
+  extension this is per-*operation class*, not per-head — the K ≤ 8 phrasing
+  ("`HeadF64` and `HeadF128` are zero-allocation unconditionally") was measured
+  false and was never a statement about the head. The **exact selections** are
+  zero at every rung, unconditionally, and that is what the regression pins:
+  they return an operand, so there is nothing for them to escalate into.
+  **Arithmetic** allocates exactly when the operand spread exceeds the carrier's
+  exact range and the evaluation escalates to MPFR — which happens at rung 1 too
+  (a `Binary16p6se` add can span 1024 binades). The **enclosure ladder** allocates
+  at rungs 2 and 3 by construction. See §11 M46 for the measured table; pinning
+  arithmetic to zero would be pinning a falsehood.
 
 Vary one binding per variant; verify specialization before believing a number.
 

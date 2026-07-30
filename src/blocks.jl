@@ -57,16 +57,59 @@ The assertion stays because it is load-bearing for more than documentation: it
 is what keeps the returned `NTuple` concretely typed, and with it the reductions
 downstream allocation-free. It now names a carrier computed from both formats
 instead of a constant."""
-@inline function blockdecode(b::Block{B,FS,FE}) where {B,FS,FE}
+@inline blockdecode(b::Block{B,FS,FE}) where {B,FS,FE} =
+    _blockdecode(Val(precision(FS) == 1), b)
+
+@inline function _blockdecode(::Val{false}, b::Block{B,FS,FE}) where {B,FS,FE}
     h = rung(Val(:Multiply), FS, FE)
     C = carriertype(h)
     S = lift(h, decode(b.s))
     ntuple(i -> ωeval(h, Val(:Multiply), S, lift(h, decode(b.x[i])))::C, Val(B))
 end
 
+# ---- the P = 1 scale fast path (§4 Stage 7 item 5).
+#
+# A P = 1 datum is exactly `±2^e`, i.e. `Dyadic(±1, e)`. So scaling an element by
+# it is `Dyadic(S_elem, Q_elem + e_scale)` — a change to the exponent FIELD, with
+# no multiply, no significand growth, and no overflow question to answer. On
+# `Float64` or `Float128` the same operation is an `ldexp` that can leave the
+# carrier's range entirely.
+#
+# The hardest corner of the grid is therefore the cheapest one, and Annex F makes
+# it the COMMON one rather than a curiosity: `Binary8p1uf` is OCP's **E8M0**, the
+# scale format of MX-style block arithmetic, and `Binary16p1uf` is its 16-bit
+# analogue. This is the block hot path, not an edge case.
+#
+# Guarded by `precision(FS) == 1` at the type level, so the branch is resolved at
+# compile time and the general path above is untouched for every other format.
+# Written against `ldexp` rather than against `Dyadic` directly, so it is one
+# implementation across all three carriers: on `Dyadic` it is the exponent-field
+# add above, on `Float64`/`Float128` the hardware scaling instruction. Neither can
+# overflow here, because the carrier was chosen by `rung(Val(:Multiply), FS, FE)`
+# — the ΣB rule already reserved room for the product this replaces.
+#
+# The scale's SIGN is applied separately: a P = 1 datum is `±2^e`, and `exponent`
+# discards the sign, so `signbit` carries it. For the unsigned P = 1 formats —
+# E8M0 and its 16-bit analogue, the ones this path exists for — that branch is
+# statically false.
+@inline function _blockdecode(::Val{true}, b::Block{B,FS,FE}) where {B,FS,FE}
+    h = rung(Val(:Multiply), FS, FE)
+    C = carriertype(h)
+    s = decode(b.s)
+    # ±0, ±Inf and NaN scales carry the draft's fold algebra, not an exponent;
+    # they are rare and go through the general path rather than duplicating it.
+    (isfinite(s) & !iszero(s)) || return _blockdecode(Val(false), b)
+    e = Int(exponent(s))
+    neg = signbit(s)
+    ntuple(Val(B)) do i
+        d = lift(h, decode(b.x[i]))
+        r = isfinite(d) ? ldexp(d, e) : d
+        (neg ? -r : r)::C
+    end
+end
+
 # ---- ωBlockProject element pipeline (draft §5.1.2)
-_res_sign(v::Float64) = sign(v)
-_res_sign(v::Float128) = Float64(sign(v))
+_res_sign(v::CarrierValue) = Float64(sign(v))
 _res_sign(b::BigExactF) = Float64(sign(b.f()))
 function _res_sign(e::EncloseF)
     d, u = e.f(256)
@@ -77,54 +120,64 @@ function _res_sign(z::Enclose128F)
     s = Float64(sign(z.lo))
     iszero(s) ? Float64(sign(z.hi)) : s
 end
-_res_isnan(v::Float64) = isnan(v)
-_res_isnan(v::Float128) = isnan(v)
+_res_isnan(v::CarrierValue) = isnan(v)
 _res_isnan(::BigExactF) = false      # exact-arithmetic escalations are finite by construction
 _res_isnan(::EncloseF) = false
 _res_isnan(::Enclose128F) = false
 
-# enclosure of (value of res)/S for finite nonzero exact S
-function _encl_div_scale(res::Float64, S::Float64)
-    EncloseF(prec -> setprecision(BigFloat, prec) do
-        (setrounding(() -> BigFloat(res) / S, BigFloat, RoundDown),
-         setrounding(() -> BigFloat(res) / S, BigFloat, RoundUp))
-    end)
-end
-function _encl_div_scale(res::BigExactF, S::Float64)
+# ---- enclosure of (value of res)/S for finite nonzero exact S.
+#
+# Both arguments range over the carriers now, not just `Float64`. The scale is
+# `decode(sr)`, so a rung-2 block already hands this a `Float128` and a rung-3
+# block a `Dyadic`; the `S::Float64` signatures these carried through Stage 6
+# were a `MethodError` waiting for the first wide block, not a narrowing (§11 M44).
+#
+# The divisor enters as an EXACT `BigFloat` formed at its own width — never by
+# letting `BigFloat(res) / S` promote `S` at the ambient precision, which rounds
+# the divisor and encloses the wrong quotient. That is §11 M35's `_ladderprec`
+# defect in a second place, so it is written the same way here: `_sigbits` names
+# the width, and the working precision is floored above it.
+@inline _exactbig(S::CarrierValue) = setprecision(() -> BigFloat(S), BigFloat, _sigbits(S) + 1)
+@inline _divprec(prec::Int, S::CarrierValue, extra::Int=0) = max(prec, _sigbits(S) + extra + 8)
+
+function _encl_div_scale(res::CarrierValue, S::CarrierValue)
     EncloseF(prec -> begin
-        v = res.f()
-        p = max(prec, Base.precision(v) + 8)                 # exact conversion ⇒ one rounded op
+        p = _divprec(prec, S, _sigbits(res))
         setprecision(BigFloat, p) do
-            (setrounding(() -> BigFloat(v) / S, BigFloat, RoundDown),
-             setrounding(() -> BigFloat(v) / S, BigFloat, RoundUp))
+            b = BigFloat(res); s = _exactbig(S)               # both exact ⇒ one rounded op
+            (setrounding(() -> b / s, BigFloat, RoundDown),
+             setrounding(() -> b / s, BigFloat, RoundUp))
         end
     end)
 end
-function _encl_div_scale(res::EncloseF, S::Float64)
+function _encl_div_scale(res::BigExactF, S::CarrierValue)
     EncloseF(prec -> begin
-        d, u = res.f(prec)
-        setprecision(BigFloat, prec) do
-            if S > 0
-                (setrounding(() -> d / S, BigFloat, RoundDown),
-                 setrounding(() -> u / S, BigFloat, RoundUp))
+        v = res.f()
+        p = _divprec(prec, S, Base.precision(v))              # exact conversion ⇒ one rounded op
+        setprecision(BigFloat, p) do
+            s = _exactbig(S)
+            (setrounding(() -> BigFloat(v) / s, BigFloat, RoundDown),
+             setrounding(() -> BigFloat(v) / s, BigFloat, RoundUp))
+        end
+    end)
+end
+function _encl_div_scale(res::EncloseF, S::CarrierValue)
+    EncloseF(prec -> begin
+        p = _divprec(prec, S)
+        d, u = res.f(p)
+        setprecision(BigFloat, p) do
+            s = _exactbig(S)
+            if s > 0
+                (setrounding(() -> d / s, BigFloat, RoundDown),
+                 setrounding(() -> u / s, BigFloat, RoundUp))
             else
-                (setrounding(() -> u / S, BigFloat, RoundDown),
-                 setrounding(() -> d / S, BigFloat, RoundUp))
+                (setrounding(() -> u / s, BigFloat, RoundDown),
+                 setrounding(() -> d / s, BigFloat, RoundUp))
             end
         end
     end)
 end
-function _encl_div_scale(res::Float128, S::Float64)
-    EncloseF(prec -> begin
-        p = max(prec, 128)                                    # exact conversion ⇒ one rounded op
-        setprecision(BigFloat, p) do
-            b = BigFloat(res)
-            (setrounding(() -> b / S, BigFloat, RoundDown),
-             setrounding(() -> b / S, BigFloat, RoundUp))
-        end
-    end)
-end
-_encl_div_scale(res::Enclose128F, S::Float64) = _encl_div_scale(EncloseF(res.f), S)
+_encl_div_scale(res::Enclose128F, S::CarrierValue) = _encl_div_scale(EncloseF(res.f), S)
 
 """One element of ωBlockProject: the draft's S-special rows, then ωDivide + ωProject.
 
@@ -178,6 +231,30 @@ function _bp_element(fr::Type{<:Binary}, ρ::ProjSpec, R::Int, res, Sdat::Float6
     project_interval(fr, ρ, _encl_div_scale(res, Sdat).f; R)
 end
 
+# The same element pipeline for a scale that is NOT a `Float64` — i.e. any block
+# whose scale format sits at rung 2 or 3, which is 72 of the 504 formats.
+#
+# The draft's S-special rows are carrier-generic and are repeated here verbatim;
+# what is not repeated is the fast-path cascade, and that is the whole content of
+# this method. Every rung of that cascade divides in `Float64` or `Float128` and
+# certifies the quotient with an `fma` at the same width. For a rung-2 or rung-3
+# scale the divisor does not fit either — `Float128(Binary16p1uf(1.0))` is `Inf`
+# before a single operation — so there is nothing to certify and no cheaper
+# answer than the rigorous one. It goes straight to the bottom of the same
+# cascade, which is where the narrow path lands whenever its filters miss.
+#
+# Written as dispatch rather than as an `if` at the top of the narrow method
+# (invariant 9): the carrier is a function of the scale's format, so the choice
+# belongs to method selection, and the hot rung-1 path keeps a body with no test
+# for a condition that is constant within it.
+function _bp_element(fr::Type{<:Binary}, ρ::ProjSpec, R::Int, res,
+                     Sdat::Union{Float128,BigFloat,Dyadic})
+    (isnan(Sdat) || _res_isnan(res)) && return rawvalue(fr, nan_code(fr))
+    iszero(Sdat) && return project(fr, ρ, 0.0; R)
+    isinf(Sdat) && return project(fr, ρ, _res_sign(res) * Float64(sign(Sdat)); R)
+    project_interval(fr, ρ, _encl_div_scale(res, Sdat).f; R)
+end
+
 """ωBlockProject (draft §5.1.2) over a tuple of result kinds, scale supplied as a value."""
 function blockproject(fr::Type{<:Binary}, ρ::ProjSpec, sr::Binary, Z::NTuple{B,Any};
                       rng::MaybeRNG=nothing) where {B}
@@ -206,20 +283,46 @@ for op in OP_REGISTRY
     scaled_params = collect(Iterators.flatten((:($(ss[i])::Binary), :($(xs[i])::Binary))
                                               for i in 1:op.arity))
     Xa = [Symbol(:Xa, i) for i in 1:op.arity]
-    scale_products = [:($(Xa[i]) = ωeval(Val(:Multiply), decode($(ss[i])), decode($(xs[i])))::Float64)
-                      for i in 1:op.arity]
+    # Each (scale, element) pair is a two-factor monomial and gets its OWN head
+    # from the two formats — `rung(Val(:Multiply), …)`, the same rule
+    # `blockdecode` applies to a block. The old form asserted `::Float64` on the
+    # product, which is `blockdecode`'s Stage 6 defect in its second location:
+    # true for the 432 rung-1 formats and an outright `TypeError` for the other
+    # 72 (§11 M44).
+    #
+    # The assertion is KEPT, at the right type: `carriertype(h)`. `Multiply` is
+    # closed on the carrier at every rung — G4 asserts exactly that — so the row
+    # cannot escalate to a lazy `BigExactF` here, and saying so is what lets the
+    # `_joinheads` below see carrier values only. JET found the missing statement
+    # before any test could: `_headof` has no row for a deferred thunk, and the
+    # unasserted form left one inferable.
+    scale_products = [:($(Xa[i]) = let h = rung(Val(:Multiply), typeof($(ss[i])), typeof($(xs[i])))
+                            ωeval(h, Val(:Multiply),
+                                  lift(h, decode($(ss[i]))),
+                                  lift(h, decode($(xs[i]))))::carriertype(h)
+                        end) for i in 1:op.arity]
 
     @eval begin
         function $bname(fr::Type{<:Binary}, ρ::ProjSpec, $(block_params...), sr::Binary;
                         rng::MaybeRNG=nothing) where {B}
             $(decode_lanes...)
-            Z = ntuple(i -> ωeval($V(), $(lane_i...)), Val(B))
+            # Operand blocks may decode at DIFFERENT heads — one rung-1 block and
+            # one rung-3 block is a legal call — so the operation runs at their
+            # join, with each lane lifted into it. This is `apply_op`'s slow-path
+            # shape, and for the rung-1 case it is the identity: `_joinheads` of
+            # `Float64` lanes is `HeadF64` and `lift` is a no-op.
+            Z = ntuple(Val(B)) do i
+                h = _joinheads($(lane_i...))
+                ωeval(h, $V(), $((:(lift(h, $l)) for l in lane_i)...))
+            end
             blockproject(fr, ρ, sr, Z; rng)
         end
         function $sname(fr::Type{<:Binary}, ρ::ProjSpec, $(scaled_params...);
                         rng::MaybeRNG=nothing)
             $(scale_products...)
-            _bp_element(fr, ρ, _drawR(ρ, rng, nothing), ωeval($V(), $(Xa...)), 1.0)
+            h = _joinheads($(Xa...))
+            res = ωeval(h, $V(), $((:(lift(h, $a)) for a in Xa)...))
+            _bp_element(fr, ρ, _drawR(ρ, rng, nothing), res, 1.0)
         end
     end
 end
@@ -262,15 +365,29 @@ end
 end
 @inline _log2ceil(B::Int) = 8 * sizeof(Int) - leading_zeros(B - 1 > 0 ? B - 1 : 1)
 
-function _reduce_add_datum(X, prec::Int)
+# Whether a `Float128` accumulator is a legal narrowing for lanes decoded at this
+# head. At rungs 1 and 2 it is the carrier or wider, so the filters below decide
+# only whether the sum *fits*; at rung 3 it is strictly narrower than the lanes
+# themselves and no width filter can rescue it — a `Binary16p1uf` scale reaches
+# 2^32768, which is `Inf` in `Float128` before any accumulation begins.
+#
+# The width filters are about the SIGNIFICAND (span plus lane bits plus carries);
+# the rung is about the EXPONENT. Both must hold, and only one of them was
+# checked. Selecting the accumulator by head makes the second condition part of
+# the dispatch rather than a premise nobody stated (§11 M44).
+@inline _f128acc(::HeadF64)   = _f128()
+@inline _f128acc(::HeadF128)  = _f128()
+@inline _f128acc(::HeadExact) = false
+
+function _reduce_add_datum(h, X, prec::Int)
     any(isnan, X) && return NaN
-    hasp = any(==(Inf), X); hasn = any(==(-Inf), X)
+    hasp = any(_isposinf, X); hasn = any(_isneginf, X)
     (hasp & hasn) && return NaN
     hasp && return Inf
     hasn && return -Inf
     all(iszero, X) && return 0.0
     B = length(X)
-    if _f128() && _expspan(X) + _log2ceil(B) <= 92
+    if _f128acc(h) && _expspan(X) + _log2ceil(B) <= 92
         acc = Float128(0)
         for v in X
             acc += Float128(v)                               # every partial exact by width
@@ -284,7 +401,8 @@ end
 function BlockReduceAdd(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B,FS,FE};
                         rng::MaybeRNG=nothing, R::MaybeR=nothing) where {B,FS,FE}
     _finish(fr, ρ, _drawR(ρ, rng, R),
-            _reduce_add_datum(blockdecode(b), _lane_sum_prec(FS, FE, B)))
+            _reduce_add_datum(rung(Val(:Multiply), FS, FE), blockdecode(b),
+                              _lane_sum_prec(FS, FE, B)))
 end
 
 """BlockReduceMultiply (draft §5.3.1): project(reduce(ωMultiply, [1, X…]))."""
@@ -296,7 +414,7 @@ function BlockReduceMultiply(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B,FS,FE}
         NaN                                                     # 0·∞ arises in the fold → NaN
     elseif any(isinf, X)
         s = prod(sign, X)
-        s * Inf
+        s > 0 ? Inf : -Inf
     elseif any(iszero, X)
         0.0
     # `B` is `Block{B}` — the BLOCKSIZE, not the exponent bias. A product's
@@ -305,7 +423,7 @@ function BlockReduceMultiply(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B,FS,FE}
     # per-lane width: the previous `16B` read `16 = 8 + 8`, i.e. `P_S + P_E` with
     # `P = 8` baked in, so it agreed exactly at K ≤ 8 and understated by up to 2×
     # above it. Written from the formats now (§11 M30, corrected).
-    elseif _f128() && lanebits * B + 8 <= 112                   # exact product by width
+    elseif _f128acc(rung(Val(:Multiply), FS, FE)) && lanebits * B + 8 <= 112  # exact by width AND in range
         acc = Float128(1)
         for v in X
             acc *= Float128(v)
@@ -334,7 +452,7 @@ function BlockDotProduct(fr::Type{<:Binary}, ρ::ProjSpec,
         x, y = X[i], Y[i]
         (isnan(x) | isnan(y)) && return NaN
         ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN
-        (isinf(x) || isinf(y)) && return sign(x) * sign(y) * Inf
+        (isinf(x) || isinf(y)) && return (sign(x) * sign(y) > 0 ? Inf : -Inf)
         1.0                                                     # finite lane marker
     end
     res = if any(isnan, pcls)
@@ -352,7 +470,8 @@ function BlockDotProduct(fr::Type{<:Binary}, ρ::ProjSpec,
             spanlo = min(spanlo, e); spanhi = max(spanhi, e)
         end
         span = spanlo > spanhi ? 0 : (spanhi - spanlo) + 1
-        if _f128() && span + _log2ceil(B) <= 76
+        hdot = joinhead(rung(Val(:Multiply), FS1, FE1), rung(Val(:Multiply), FS2, FE2))
+        if _f128acc(hdot) && span + _log2ceil(B) <= 76
             acc = Float128(0)
             for i in 1:B
                 acc += Float128(X[i]) * Float128(Y[i])          # exact products, exact sum
@@ -393,8 +512,17 @@ function ConvertToBlockMaxAbsFinite(fs::Type{<:Binary}, fr::Type{<:Binary},
                                     ρs::ProjSpec, ρ::ProjSpec, xs::NTuple{B,<:Binary};
                                     rng::MaybeRNG=nothing) where {B}
     X = map(decode, xs)
-    M = map(x -> ωeval(Val(:Abs), x)::Float64, X)
-    S = foldl((a, m) -> ωeval(Val(:MaximumFinite), a, m)::Float64, M; init=NaN)
+    # The reduction runs at the join of the elements' own heads, and its seed is
+    # that head's NaN rather than a `Float64` literal. The `::Float64` asserts
+    # this carried were the same defect as `blockdecode`'s and the `Scaled*`
+    # surface's, in a third place (§11 M44); the seed was the same defect in the
+    # data. `MaximumFinite`'s whole contract is that a NaN seed loses to any
+    # finite operand, which requires the seed to BE a NaN at the head it is
+    # compared at, not merely at rung 1.
+    h = _joinheads(X...)
+    C = carriertype(h)
+    M = map(x -> ωeval(h, Val(:Abs), lift(h, x))::C, X)
+    S = foldl((a, m) -> ωeval(h, Val(:MaximumFinite), a, m)::C, M; init=_cnan(C))
     s = project(fs, ρs, S; R=_drawR(ρs, rng, nothing))
     blockproject(fr, ρ, s, X; rng)
 end

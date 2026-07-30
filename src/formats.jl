@@ -577,6 +577,16 @@ Base.Float32(v::Binary) = _tofloat32(decodepolicy(typeof(v)), v)
     @inbounds _decode_table32(typeof(v))[Int(codepoint(v)) + 1]
 @inline _tofloat32(::ComputeDecode, v::Binary) = Float32(decode(v))
 (::Type{BFloat16})(v::Binary) = BFloat16(Float64(v))
+# `Float16` was the one external width with no outbound row, which is an omission
+# and not a decision: `Convert` accepts it as an *input*, `ExactExternalFloat`
+# names it, `promote_rule` targets `promotecarrier(F)` for it, and `binary16` is
+# an alias for it at the top of the package. Gate G10 found it at every one of
+# the 504 formats — it was never a wide-format defect, just an untested verb.
+#
+# Routed through `Float64` like `BFloat16` above rather than through `decode`:
+# `Float64(v)` is exact for every format (P ≤ 16 significand bits), so the
+# narrowing to `Float16` is a single rounding.
+(::Type{Float16})(v::Binary) = Float16(Float64(v))
 # The two wide carriers. `promote_rule` names them as targets, so promotion needs
 # the conversions to exist — `x + 1.0` on a rung-2 or rung-3 format resolves to
 # `+(::Float128, ::Float128)` or `+(::BigFloat, ::BigFloat)` and gets here.

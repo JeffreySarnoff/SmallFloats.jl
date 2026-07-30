@@ -34,6 +34,12 @@ using PrecompileTools: @setup_workload, @compile_workload
 using Quadmath: Float128
 using BFloat16s: BFloat16
 
+# `dyadic.jl` loads FIRST and has zero SmallFloats dependencies (§4 Stage 7): the
+# rung-3 exact carrier must be checkable on its own terms, with no reach into a
+# format, a trait, or a projection.
+include("dyadic.jl")
+using .DyadicNumbers: Dyadic, DyadicNumbers
+
 include("fma128.jl")
 using .Float128FMA          # on Windows this installs Base.fma
 

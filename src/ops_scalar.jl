@@ -37,7 +37,7 @@ strictly farther from the nearest threshold than the tail magnitude; the emittin
 sites in oracle.jl discharge that bound (operand significands ≤ 17 bits, target
 grids ≤ P−1+N ≤ 67 fractional bits, spreads > the _DE_* thresholds). Non-allocating:
 replaces the BigFloat escalation for FMA/FAA."""
-struct StickyF{T<:Union{Float64,Float128}}
+struct StickyF{T<:Union{Float64,Float128,Dyadic}}
     v::T
     sgn::Int
 end
@@ -93,6 +93,8 @@ const _F64_MINNORMISH = 6.7e-290   # ≈ 2^-960: comfortably clear of subnormals
     project(fr, ρ, v; R)
 @inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, v::BigFloat) where {fr<:Binary} =
     project(fr, ρ, v; R)
+@inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, v::Dyadic) where {fr<:Binary} =
+    project(fr, ρ, v; R)
 @inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, b::BigExactF) where {fr<:Binary} =
     project(fr, ρ, b.f(); R)
 @inline _finish(::Type{fr}, ρ::ProjSpec, R::Int, s::StickyF) where {fr<:Binary} =
@@ -146,8 +148,9 @@ datum on carrier `C` guarantees its square is also on `C`. Beyond two factors �
 types and `rung(op, Fs...)` must be used with the formats in hand. That is why
 `blocks.jl` calls the join and this does not.
 """
-@inline function apply_op(op::Val, ::Type{fr}, ρ::ProjSpec, R::Int, xs::Float64...) where {fr<:Binary}
-    res = ωeval(HeadF64(), op, xs...)
+@inline function apply_op(op::Val, ::Type{fr}, ρ::ProjSpec, R::Int,
+                          x::Float64, xs::Vararg{Float64,N}) where {fr<:Binary,N}
+    res = ωeval(HeadF64(), op, x, xs...)
     # bitops plan Phase 0(a): explicit fast split — Class-1/selection results are
     # Float64 for every ordinary input; keep the widened union off the hot path.
     # Justification: like-for-like measurement (both variants under identical
@@ -157,11 +160,20 @@ types and `rung(op, Fs...)` must be used with the formats in hand. That is why
     _finish_slow(fr, ρ, R, res)
 end
 
-# The head of a value in flight. `decode` produced these, so the map is total
-# over the carriers the ladder defines and needs no fallback.
+# The head of a value in flight, total over `CarrierValue` — all four members,
+# which is the point of having named that union. Both rung-3 carriers appear:
+# `Dyadic` is what `decode` produces there now, and `BigFloat` is what the
+# enclosure ladder hands back for the transcendentals, so a single evaluation can
+# see both.
+#
+# The comment here previously said "total over the carriers the ladder defines"
+# while listing three of them. Adding `Dyadic` made that false, and a `MethodError`
+# in G2 said so — a reminder that a totality claim in a comment is worth exactly
+# as much as the dispatch under it.
 @inline _headof(::Float64)  = HeadF64()
 @inline _headof(::Float128) = HeadF128()
 @inline _headof(::BigFloat) = HeadExact()
+@inline _headof(::Dyadic)   = HeadExact()
 @inline _joinheads(x) = _headof(x)
 @inline _joinheads(x, ys...) = joinhead(_headof(x), _joinheads(ys...))
 @noinline _finish_slow(::Type{fr}, ρ::ProjSpec, R::Int, res) where {fr<:Binary} =
@@ -196,10 +208,23 @@ end
 # for a mixed pair. `lift` has no narrowing method by design, and the join is
 # what makes that absence unreachable rather than a hazard — the head dominates
 # every operand's own carrier, so every lift widens or is the identity.
+# The vararg carries a LENGTH parameter, and that is a performance property, not
+# a style choice. Written `xs...`, the two splat calls in the body compile to
+# `Core._apply_iterate` — a dynamic apply — and every carrier value crossing them
+# is boxed: measured at 304 bytes per warm binary call on `Float128` and 592 on
+# `Dyadic`, against zero for the arity-1 case, which Julia's splat optimizer
+# handles. Every *component* measured zero (`_joinheads`, `ωeval`, `lift`,
+# `_finish_slow`); only the composition allocated, which is why the profile had
+# to be taken at the entry point rather than assembled from the parts.
+#
+# `Vararg{Any,N}` specializes the method per arity, the splats become static
+# calls, and the warm path returns to zero allocation at every rung — the
+# property the performance rules require and that Stage 6 quietly lost when this
+# method stopped being a refusal and started being a route.
 @noinline function apply_op(op::Val, ::Type{fr}, ρ::ProjSpec, R::Int,
-                            xs...) where {fr<:Binary}
-    h = _joinheads(xs...)
-    res = ωeval(h, op, map(x -> lift(h, x), xs)...)
+                            x, xs::Vararg{Any,N}) where {fr<:Binary,N}
+    h = _joinheads(x, xs...)
+    res = ωeval(h, op, lift(h, x), map(v -> lift(h, v), xs)...)
     _finish_slow(fr, ρ, R, res)
 end
 

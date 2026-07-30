@@ -2478,6 +2478,185 @@ so in the signature (`yd::Float64` on the narrow methods) makes the wide method
 catch everything the narrow one cannot construct. A filter would have hidden the
 report; the honest precondition removes it.
 
+**M41 — swapping a carrier surfaces every implicit `AbstractFloat` assumption in
+the package, one Base verb at a time.** Stage 7 flipped
+`carriertype(::HeadExact)` and `datumcarrier` rung 3 from `BigFloat` to `Dyadic`.
+Ten defects followed, and the shape of them is the finding:
+
+| what | where | why it hid |
+|---|---|---|
+| `cmp_dy` via `add_dy` | `dyadic.jl` | comparison inherited the add's alignment band and **threw** on well-defined comparisons |
+| `decompose` full-precision numerator | `dyadic_from` | a 16-bit datum at ambient 256 bits returns a 256-bit integer; the zeros are exponent, not significand |
+| double rounding | `Float64(::Dyadic)` | `ldexp(Float64(S), Q)` rounds twice once `\|S\| > 2^53`, reachable after `mul_dy` |
+| `ldexp`, `Float32`, `big`, `Rational{BigInt}`, `decompose` | Base verbs | each is somewhere a helper reached for a float verb `Dyadic` had not been given |
+| zero-arity vararg ambiguity | `ωeval` head rows | two `Vararg` methods differing only in element type collide at N = 0 |
+| stale totality claim | `_headof` | its comment said "total over the carriers the ladder defines" while listing three |
+| **silent carrier narrowing** | `_ωf128` / `_ωexact` specials | returned bare `NaN`/`Inf` — **Float64 literals** — from wide evaluations |
+
+Nine are consequences of the swap. **The last one predated it by a full stage**
+and is the one worth dwelling on: the per-head special rows I added in Stage 6
+returned Float64 `NaN` from a `Float128` evaluation, in the rows `oracle.jl`'s
+own header calls "the spec, not an optimization". The `_c*` family exists in
+`carriers.jl` precisely for this and I did not use it.
+
+It survived Stage 6's entire suite because **nothing asserted the result's
+type**, and `NaN === NaN` regardless of width, so every value comparison passed.
+`blockdecode`'s `::C` annotation is the only construct in the package that checks
+a carrier type at a use site, and only the P = 1 block test routed a NaN through
+a rung-2 block to reach it. That annotation was written as a type-stability
+guard; it earned its keep as a correctness one.
+
+Two rules follow. **A `::C` assertion at a carrier boundary is a correctness
+check, not decoration** — it is cheap and it is the only thing that can see a
+narrowing that is numerically invisible. And **a defect can hide for a whole
+stage behind a value being numerically right**: the special rows were *correct
+numbers on the wrong carrier*, which no value-comparing gate can detect.
+
+**M42 — the P = 1 block-scale path is one implementation across three carriers,
+because `ldexp` is the right primitive.** A P = 1 datum is `±2^e`, so scaling an
+element by it is an exponent add: on `Dyadic` a change to one field, on
+`Float64`/`Float128` the hardware scaling instruction. Writing it against `ldexp`
+rather than against `Dyadic` gives one method for all three, and neither can
+overflow because `rung(Val(:Multiply), FS, FE)` already reserved room for the
+product it replaces. The scale's sign travels separately (`exponent` discards
+it), and for the unsigned P = 1 formats this path exists for — E8M0 and its
+16-bit analogue — that branch is statically false.
+
+Selected by `Val(precision(FS) == 1)`, so it is dispatch rather than a branch
+(invariant 9), and G7 asserts the two paths agree over 120 block signatures.
+
+**M43 — `float(::Dyadic)` is deliberately undefined, and the absence is
+load-bearing.** `_rtp_core`'s zero row builds `zero(float(typeof(X)))`. Defining
+`float` for this carrier would silently re-open the path `Dyadic` must not take —
+the one whose replacement is `_rtp_zero_sticky`. The omission now says so at the
+definition site rather than only in the plan, next to the `big` method that does
+exist, so the asymmetry reads as a decision rather than an oversight.
+
+**M44 — the same defect M41 records was in three more places, and the reason it
+kept being missed is that every gate in the suite compares two answers.** After
+M41's seven rows the carrier swap looked closed: the suite was green, G7 agreed
+`Dyadic ≡ BigFloat` over 36 256 engine comparisons, and G5 reproduced all 33
+golden digests byte-for-byte. Reading `oracle.jl` for an unrelated reason turned
+up the *generic* exact-selection rows — the ones `_ωf128`, `_ωexact` and
+`_ωdyadic` all forward to — still returning bare `NaN` and `0.0`. M41's fix had
+corrected the three per-head wrappers and left the single implementation
+underneath them untouched, which is the more embarrassing half of the same
+mistake: the rows that exist *once* so they cannot diverge were the ones still
+wrong at three carriers.
+
+Pulling that thread found five more, all of one shape and none of them subtle:
+
+| what | where | how it failed |
+|---|---|---|
+| bare `NaN` / `0.0` literals | the generic `ωeval` exact-selection rows | `Float64` NaN returned from a `Dyadic` evaluation; return type a `Union` |
+| `any(==(Inf), X)` | `_reduce_add_datum` | compares a lane against a `Float64` literal ⇒ **threw** at rung 3 |
+| `d == Inf`, `d > 0` | `Class` | same, on a decoded datum ⇒ **threw** at rung 3 |
+| `Sdat::Float64` | `_bp_element`, `_encl_div_scale` | `MethodError` for all 72 formats above rung 1 |
+| `::Float64` on the scale product | the generated `Scaled*` surface | `blockdecode`'s Stage 6 defect, in a second location |
+| `::Float64` on the max-abs fold | `ConvertToBlockMaxAbsFinite` | a third location, plus a `Float64` NaN *seed* |
+| `_f128()` and a width filter | `BlockReduceMultiply`, `BlockDotProduct` | **did not throw** — narrowed rung-3 lanes to `Float128` and returned `Inf` |
+| `add_dy` as `Base.:+` | `dyadic.jl` | the engine's deliberately *partial* kernel exposed as the total verb |
+| no method at all | `Float16(::Binary)` | never written, at any K; not a wide-format defect |
+
+The last two are worth separating from the rest. `Base.:+` was not a narrowing
+but a **contract mismatch**: `add_dy` throws outside the C7 alignment band
+because inside the engine the caller is required to have taken the sticky path,
+and that is right for a kernel and wrong for the operator a user reaches through
+`decode`. `Binary16p1uf` spans 65 533 binades against a 94-binade band, so
+`sum(decode.(A))` threw on the *common* case there. The kernel keeps its
+obligation to check; `Base.:+` now widens to `BigFloat` — the format's own
+`promotecarrier`, so the value lands exactly where mixed arithmetic already sends
+it — at a precision computed from the operands.
+
+And `BlockReduceMultiply` is the one that returned a plausible wrong number
+rather than throwing, which makes it the most dangerous of the nine. Its filter
+bounds the *significand* (`lanebits · B + 8 ≤ 112`) while the rung is a statement
+about the *exponent*; both conditions are needed and only one was checked. The
+fix is `_f128acc(h)`, so the second condition is part of method selection rather
+than a premise nobody wrote down.
+
+**M45 — G10, and what the other nine gates cannot see.** M44's nine defects
+survived a suite of ≈ 8.9 M assertions. That is not a gap in any individual gate;
+it is a property of all of them. G1–G4, G6, G7 and G9 each compare two answers,
+and a comparison is silent about a call that throws instead of answering, and
+silent about a call no test makes. Four of the nine were `MethodError`s and two
+were outright throws — the class of failure a differential gate is structurally
+unable to report.
+
+So `test/gates_g10.jl` is the converse gate, and deliberately the shallowest one
+in the suite: it asserts only that the call *returns* and that a declared result
+type holds. It earns its place by being total instead — every operation in
+`OP_REGISTRY` on all three surfaces (scalar, `Block*`, `Scaled*`), plus the Base
+veneers, the array verbs, and the reduction and conversion families, over the
+formats above rung 1. It reproduced all nine defects on its first run.
+
+Two things about its shape are decisions rather than defaults:
+
+*The block surface is enumerated by `(FS, FE)` **shape**, and that is exhaustive
+rather than sampled.* `blockdecode`'s carrier is `rung(Val(:Multiply), FS, FE)`
+and depends on the two formats through nothing else, so covering every realized
+(rung FS, rung FE) pair in both orders, plus the `P == 1` path that has its own
+method, covers everything dispatch can select. Both orders were separately
+broken — a wide scale against narrow lanes killed `_bp_element`, a narrow scale
+against wide lanes killed the `Scaled*` assertion.
+
+*The format axis is tiered, and the reason is specialization, not evaluation.*
+Measured: 99.8 % of G10's runtime is compilation, because `Binary{K,P,S,E}` is a
+distinct type per format and 52 operations recompile for each one — ≈ 1.8 s per
+format, which puts all 504 at about two hours. `rep` (the default) takes one
+representative of each realized `(rung, P == 1?, code unit)` class plus all eight
+rung-3 formats; `full` takes all 72 above rung 1. The `@info` line names the tier
+and says "SAMPLED" in those words when it is, per the verification doctrine.
+
+**M46 — the per-head allocation profile, and one line of `apply_op` that cost
+every wide operation 304 bytes.** Stage 7's exit asks for the profile, and the
+first honest measurement of it was red:
+
+| head | carrier | exact selections | exact arithmetic | enclosure ladder |
+|---|---|---|---|---|
+| `HeadF64` | `Float64` | 0 | 0 · escalates on wide spread | 0 |
+| `HeadF128` | `Float128` | **400** | 3080 | 4336 |
+| `HeadExact` | `Dyadic` | **816** | 832 | 5904 |
+
+The selections were the tell. A selection cannot escalate — it returns one of its
+operands — so a nonzero number there is not arithmetic, it is plumbing. And every
+*component* measured zero: `decode`, `_joinheads`, `lift`, `ωeval`, `project`,
+`_finish_slow`, each individually allocation-free at all three heads. Only the
+composition allocated, and only for arity ≥ 2.
+
+The cause is `apply_op`'s wide route, written `xs...`. Without a length parameter
+on the vararg, the body's two splat calls — `_joinheads(xs...)` and
+`ωeval(h, op, map(…)...)` — compile to `Core._apply_iterate`, a dynamic apply,
+and every carrier value crossing one is boxed. The 304-vs-592 ratio is
+`sizeof(Float128)` against `sizeof(Dyadic)`, which is what identified it: the
+cost was proportional to the carrier, not to the operation. `Vararg{Any,N}`
+specializes the method per arity, the splats become static calls, and the
+profile becomes:
+
+| head | carrier | exact selections | exact arithmetic | enclosure ladder |
+|---|---|---|---|---|
+| `HeadF64` | `Float64` | 0 | 0 · escalates on wide spread | 0 |
+| `HeadF128` | `Float128` | **0** | escalates (FMA 2072–2648) | MPFR (~4.7 kB) |
+| `HeadExact` | `Dyadic` | **0** | **0** · escalates on FAA | MPFR (~5.4 kB) |
+
+Two things this measurement corrects in the plan.
+
+*The plan said "`HeadF64` and `HeadF128` are zero-allocation unconditionally".
+That is false at K ≤ 16, and it was never a statement about the head.* A
+`Binary16p6se` add over `B = 512` can span 1024 binades, which no carrier holds
+exactly, so it escalates to MPFR and allocates — **at rung 1**. Allocation on the
+arithmetic path is a function of the **operand spread** against the carrier's
+exact range, and the head only sets the range. The K ≤ 8 grid never produced a
+spread that forced it, which is why the unconditional phrasing survived.
+
+*What IS unconditional, and therefore what the regression pins, is the
+selections.* `Maximum`, `Minimum`, `MaximumMagnitude`, `MinimumFinite` and
+`CopySign` return an operand; there is nothing for them to escalate into. Zero at
+every rung, pinned in `test/runtests.jl` over six formats spanning all three
+heads. Pinning arithmetic to zero would be pinning a falsehood, and a gate that
+asserts something false is worse than no gate — so the profile is *recorded*
+here and only the invariant part is *asserted* there.
+
 ---
 
 ## Appendix A — the exact-signature sweep

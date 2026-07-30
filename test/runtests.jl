@@ -1386,6 +1386,39 @@ end
     @test @allocated(addR(a, b)) == 0
     @test addR(a, b) === addR(a, b)
 
+    # ---- the per-head allocation profile (Stage 7; §11 M46).
+    #
+    # `apply_op`'s wide route takes `xs::Vararg{Any,N}` rather than `xs...`, and
+    # that is load-bearing: without the length parameter its two splat calls
+    # compile to `Core._apply_iterate` and every carrier value crossing them is
+    # boxed — measured at 304 bytes per warm binary call on `Float128` and 592 on
+    # `Dyadic`, while every component of the same call measured zero. It is
+    # exactly the kind of regression that reads as "the wide carriers are just
+    # slow" rather than as a defect, so it is pinned here.
+    #
+    # The exact selections are the right thing to pin: they are the operations
+    # that cannot escalate, at any rung, so zero is unconditional for them.
+    # Arithmetic is NOT pinned to zero, because at K ≤ 16 it legitimately
+    # escalates to MPFR whenever the operand spread exceeds the carrier's exact
+    # range — which happens at rung 1 too (a `Binary16p6se` add across 1024
+    # binades allocates). Allocation there is a function of the operand spread,
+    # not of the head, and pinning it to zero would be pinning a falsehood.
+    @testset "per-head warm-path allocation" begin
+        function selalloc(::Type{F}, f::G) where {F<:SmallFloats.Binary,G}
+            x = F(1.5); y = F(0.25)
+            f(F, RNE_SatNone, x, y); f(F, RNE_SatNone, x, y)
+            @allocated f(F, RNE_SatNone, x, y)
+        end
+        for F in (Binary8p4se,                       # rung 1, K ≤ 8
+                  Binary16p6se,                      # rung 1, K = 16
+                  Binary16p5se, Binary16p4se,        # rung 2 — Float128
+                  Binary16p1uf, Binary16p1sf)        # rung 3 — Dyadic
+            for f in (Maximum, Minimum, MaximumMagnitude, MinimumFinite, CopySign)
+                @test (nameof(F), nameof(f), selalloc(F, f)) == (nameof(F), nameof(f), 0)
+            end
+        end
+    end
+
     # The convenience forms read the *mutable* session default, so they are only
     # allocation-free because they consume it through the speculation guard
     # (ops_scalar.jl). Pin that: these previously boxed on every call for the ops
@@ -1615,6 +1648,8 @@ include("ternary_opt.jl")
 #   G1 — the Float128 exactness-by-width thresholds and the sticky-head
 #        soundness bound: fixed point at the shipped constants, positivity,
 #        band contiguity, and soundness against MPFR (§1 C1/C2).
+#   G7 — Dyadic ≡ BigFloat: the rung-3 carrier swap verified against the carrier
+#        it replaces, needing no reference implementation and no captured data.
 #   G2 — `bigprec` sufficiency: the exact-arithmetic precision is derived and
 #        adequate, checked against `Rational{BigInt}` at the maximal-spread
 #        witness. Written RED first and the failure recorded (§11 M31).
@@ -1630,6 +1665,8 @@ include("gates_g2.jl")
 # G4 — rung-selection equivalence: forcing a wider carrier must never change a
 # code point, because every rung is exact for the operands it accepts.
 include("gates_g4.jl")
+# G7 — Dyadic vs BigFloat: the retired carrier is the oracle for its replacement.
+include("gates_g7.jl")
 include("gates_g3.jl")
 include("gates_g6.jl")
 # Stage 5's central claim: which shape an array kernel takes is a policy
@@ -1639,6 +1676,12 @@ include("gates_shape.jl")
 # checked against an MPFR reference rather than against the package's oracle.
 include("wide_ops.jl")
 include("gates_g9.jl")
+# G10 — surface totality at every rung. The broad, shallow gate: every registry
+# operation on every surface, over the formats above rung 1. Every other gate
+# compares two answers and is therefore silent about a path that throws or that
+# nothing calls; this one is the converse, and six Stage 7 defects are what it
+# was written from. Tier from SMALLFLOATS_G10 ∈ {rep, full}; defaults to rep.
+include("gates_g10.jl")
 include("golden.jl")
 
 # ==========================================================================

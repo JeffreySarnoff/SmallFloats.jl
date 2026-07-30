@@ -272,11 +272,16 @@ end
 function Class(v::Binary)
     isnan(v) && return ClassNaN
     d = decode(v)
-    d == Inf && return ClassPosInf
-    d == -Inf && return ClassNegInf
+    # Predicates, not comparisons against `Float64` literals: at rung 3 `d` is a
+    # `Dyadic`, which has no promotion to `Float64` by design (§11 M44). The
+    # rewritten form is also the cheaper one at every rung — a bit test rather
+    # than a compare — and `signbit` is exact on the sign of a nonzero, which is
+    # all this branch ever wanted from `d > 0`.
+    _isposinf(d) && return ClassPosInf
+    _isneginf(d) && return ClassNegInf
     iszero(v) && return ClassZero
     sub = issubnormal_3109(v)
-    if d > 0
+    if !signbit(d)
         return sub ? ClassPosSubnormal : ClassPosNormal
     else
         return sub ? ClassNegSubnormal : ClassNegNormal

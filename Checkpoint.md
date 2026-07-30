@@ -28,7 +28,74 @@ has actually happened, what is verified, and what is not.***
 | **4 — decode/encode/keys/sort/packed widened** | **done, verified** |
 | **5 — table and kernel policy** | **done, verified** |
 | **6 — the carrier lattice** | **done, verified** |
-| 7–9 | not started |
+| **7 — `Dyadic`** | **done, verified** — the carrier swap, the P = 1 block-scale path, **G7**, the block surface under the carrier lattice, **G10**, the extended **G4**, and the per-head allocation profile |
+| 8–9 | not started |
+
+**Stage 7 closed.** Beyond the carrier swap it took three more pieces, none of
+them in the plan:
+
+**The block surface had never been given the carrier lattice.** Nine defects
+(§11 M44) across `blocks.jl`, `decode_encode.jl`, `dyadic.jl`, `formats.jl` and
+the generic `ωeval` rows: `::Float64` assertions in three more locations,
+`== Inf` comparisons against `Float64` literals on decoded datums, a `Float128`
+accumulator chosen by a *significand* filter at a rung set by *exponent* range,
+`Base.:+` on `Dyadic` exposing the engine's deliberately partial kernel as the
+total verb, and `Float16(::Binary)` simply never written at any K. Four were
+`MethodError`s; two threw; one returned `Inf` and did not.
+
+**G10 exists because the other nine gates cannot see any of that** (§11 M45).
+Each of them compares two answers, so each is silent about a path that throws
+instead of answering and about a path no test calls. G10 is the converse: the
+shallowest gate in the suite — the call returns, and a declared result type
+holds — over the broadest surface, every registry operation on every surface at
+every rung. It reproduced all nine on its first run. Tiers `rep` (default,
+≈ 1 m 45 s) and `full`; its cost is 99.8 % specialization, so the format count is
+the only lever.
+
+**The allocation profile was red, and the cause was one line** (§11 M46). The
+exact selections allocated 400 bytes at rung 2 and 816 at rung 3 — and a
+selection cannot escalate, so that was plumbing, not arithmetic. Every component
+measured zero; only the composition allocated, proportionally to `sizeof` the
+carrier. `apply_op`'s wide route took `xs...` without a length parameter, so its
+two splat calls compiled to `Core._apply_iterate` and boxed every carrier value
+crossing them. `Vararg{Any,N}` restores zero. The profile also **corrects the
+plan**: "`HeadF64` and `HeadF128` are zero-allocation unconditionally" is false
+at K ≤ 16 and was never about the head — arithmetic allocates when the operand
+spread exceeds the carrier's exact range, which happens at rung 1 too.
+
+**Stage 7's carrier swap.** `HeadExact` now computes on `Dyadic`. **G7** is green in
+both tiers plus the block path: 2 332 800 `round_to_precision` comparisons
+against `BigFloat` over 135 (P, B) cells, 32 384 engine comparisons over all 8
+rung-3 formats as code points, and the P = 1 fast path equivalent to the general
+path over 120 block signatures.
+
+The gate needed **no reference implementation and no captured data** — the
+retired carrier is the oracle for its replacement, and the cost of that was
+keeping `BigFloat` alive one stage longer than strictly necessary. It also needs
+no world-age swap: both carriers' methods coexist, so the differential is two
+calls rather than a redefinition. A gate that mutates the code under test to
+observe it is a gate that can lie.
+
+**Ten defects from the swap itself (§11 M41).** Nine were consequences of it — Base verbs
+`Dyadic` lacked (`ldexp`, `Float32`, `big`, `Rational{BigInt}`, `decompose`), a
+zero-arity vararg ambiguity, a comparison that inherited the add's alignment
+band and threw, a double rounding in `Float64(::Dyadic)`, and a stale totality
+claim in `_headof`.
+
+**The tenth predated the swap by a full stage.** `_ωf128`'s special rows returned
+bare `NaN` — a Float64 literal — from Float128 evaluations, a silent carrier
+narrowing in the rows `oracle.jl` calls "the spec, not an optimization". It
+survived Stage 6 entirely because nothing asserted the result's *type* and
+`NaN === NaN` at every width. `blockdecode`'s `::C` annotation is the only
+construct in the package that checks a carrier at a use site; it was written as a
+type-stability guard and earned its keep as a correctness one.
+
+*And the fix was half of one.* M41 corrected the three per-head wrappers and left
+the single implementation they all forward to — the generic `ωeval` rows —
+returning bare `NaN` and `0.0` at every carrier. The rows that exist **once** so
+they cannot diverge were the ones still wrong at four of them. Found by reading
+`oracle.jl` for an unrelated reason, three days after the suite went green
+(§11 M44).
 
 **Stage 6 complete.** Every operation in `OP_REGISTRY` now evaluates at every
 rung: exact arithmetic and exact selections by per-head and shared rows, the

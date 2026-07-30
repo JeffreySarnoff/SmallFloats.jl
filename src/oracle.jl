@@ -393,7 +393,8 @@ end
 # doing its job. The significands are ≤ 16 bits each, so 32 ≤ 113 covers the
 # product exactly. The `isfinite` guard is defence on a cold path, not a
 # correctness dependency.
-@inline ωeval(h::HeadF128, op::Val, xs::Float128...) = _ωf128(h, op, xs...)
+@inline ωeval(h::HeadF128, op::Val, x::Float128, xs::Float128...) =
+    _ωf128(h, op, x, xs...)
 
 @noinline _ωf128(::HeadF128, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
     "$OP has no rung-2 (Float128) ω-semantics yet: Group A is implemented on " *
@@ -401,9 +402,9 @@ end
     "later in Stage 6 of the K ≤ 16 extension"))
 
 function _ωf128(::HeadF128, ::Val{:Add}, x::Float128, y::Float128)
-    (isnan(x) | isnan(y)) && return NaN
+    (isnan(x) | isnan(y)) && return _cnan(Float128)
     if isinf(x) || isinf(y)
-        (isinf(x) && isinf(y) && x != y) && return NaN      # ∞ + (−∞) → NaN
+        (isinf(x) && isinf(y) && x != y) && return _cnan(Float128)      # ∞ + (−∞) → NaN
         return isinf(x) ? x : y
     end
     s, e = _twosum128(x, y)
@@ -413,18 +414,18 @@ end
 _ωf128(h::HeadF128, ::Val{:Subtract}, x::Float128, y::Float128) =
     _ωf128(h, Val(:Add), x, isnan(y) ? y : (iszero(y) ? zero(y) : -y))
 function _ωf128(::HeadF128, ::Val{:Multiply}, x::Float128, y::Float128)
-    (isnan(x) | isnan(y)) && return NaN
-    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN   # 0·∞ → NaN
+    (isnan(x) | isnan(y)) && return _cnan(Float128)
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return _cnan(Float128)   # 0·∞ → NaN
     p = x * y
     isfinite(p) && return iszero(p) ? zero(Float128) : p
     isinf(x) || isinf(y) ? p : _bigmul2(x, y)              # true ∞ vs Float128 overflow
 end
 function _ωf128(::HeadF128, ::Val{:FMA}, x::Float128, y::Float128, z::Float128)
-    (isnan(x) | isnan(y) | isnan(z)) && return NaN
-    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN
+    (isnan(x) | isnan(y) | isnan(z)) && return _cnan(Float128)
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return _cnan(Float128)
     p = x * y
     if isinf(p) || isinf(z)
-        (isinf(p) && isinf(z) && p != z) && return NaN
+        (isinf(p) && isinf(z) && p != z) && return _cnan(Float128)
         return isinf(p) ? p : z
     end
     s, e = _twosum128(p, z)
@@ -432,12 +433,12 @@ function _ωf128(::HeadF128, ::Val{:FMA}, x::Float128, y::Float128, z::Float128)
     _bigfma(x, y, z)                                        # p may itself be inexact
 end
 function _ωf128(::HeadF128, ::Val{:FAA}, x::Float128, y::Float128, z::Float128)
-    (isnan(x) | isnan(y) | isnan(z)) && return NaN
+    (isnan(x) | isnan(y) | isnan(z)) && return _cnan(Float128)
     if isinf(x) || isinf(y) || isinf(z)
         hasp = (x == Inf) | (y == Inf) | (z == Inf)
         hasn = (x == -Inf) | (y == -Inf) | (z == -Inf)
-        (hasp & hasn) && return NaN
-        return hasp ? Inf : -Inf
+        (hasp & hasn) && return _cnan(Float128)
+        return hasp ? _cinf(Float128) : _cninf(Float128)
     end
     s1, e1 = _twosum128(x, y)
     s2, e2 = _twosum128(s1, z)
@@ -459,7 +460,12 @@ _bigmul2(x::AbstractFloat, y::AbstractFloat) =
 # uses: `_finish` dispatches on the result's type and `project` has the special
 # rows on Float64 already. The finite tail is one MPFR operation at a precision
 # that must exceed the operand spread — which is the whole subject of gate G2.
-@inline ωeval(h::HeadExact, op::Val, xs::BigFloat...) = _ωexact(h, op, xs...)
+# Both wide rows spell out a first operand. With bare `Vararg`s they are
+# ambiguous at N = 0 — `ωeval(HeadExact(), op)` matches both — which
+# `detect_ambiguities` catches. Requiring one operand also states the obvious:
+# there is no ω-semantics to evaluate on no arguments.
+@inline ωeval(h::HeadExact, op::Val, x::BigFloat, xs::BigFloat...) =
+    _ωexact(h, op, x, xs...)
 
 # Group A is implemented; Group B/C on the exact carrier is item 9 of this stage
 # (the enclosure ladder retargeted at BigFloat). The row above accepts EVERY
@@ -473,42 +479,97 @@ _bigmul2(x::AbstractFloat, y::AbstractFloat) =
     "Stage 6 of the K ≤ 16 extension"))
 
 function _ωexact(::HeadExact, ::Val{:Add}, x::BigFloat, y::BigFloat)
-    (isnan(x) | isnan(y)) && return NaN
+    (isnan(x) | isnan(y)) && return _cnan(BigFloat)
     if isinf(x) || isinf(y)
-        (isinf(x) && isinf(y) && x != y) && return NaN
-        return Float64(isinf(x) ? sign(x) : sign(y)) * Inf
+        (isinf(x) && isinf(y) && x != y) && return _cnan(BigFloat)
+        return (isinf(x) ? (sign(x) > 0 ? _cinf(BigFloat) : _cninf(BigFloat)) : (sign(y) > 0 ? _cinf(BigFloat) : _cninf(BigFloat)))
     end
     setprecision(() -> x + y, BigFloat, bigprec(x, y))
 end
 _ωexact(h::HeadExact, ::Val{:Subtract}, x::BigFloat, y::BigFloat) =
     _ωexact(h, Val(:Add), x, isnan(y) ? y : (iszero(y) ? zero(y) : -y))
 function _ωexact(::HeadExact, ::Val{:Multiply}, x::BigFloat, y::BigFloat)
-    (isnan(x) | isnan(y)) && return NaN
-    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN
-    (isinf(x) || isinf(y)) && return Float64(sign(x)) * Float64(sign(y)) * Inf
+    (isnan(x) | isnan(y)) && return _cnan(BigFloat)
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return _cnan(BigFloat)
+    (isinf(x) || isinf(y)) && return sign(x) * sign(y) > 0 ? _cinf(BigFloat) : _cninf(BigFloat)
     setprecision(() -> x * y, BigFloat, bigprec_prod(x, y))
 end
 function _ωexact(::HeadExact, ::Val{:FMA}, x::BigFloat, y::BigFloat, z::BigFloat)
-    (isnan(x) | isnan(y) | isnan(z)) && return NaN
-    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return NaN
+    (isnan(x) | isnan(y) | isnan(z)) && return _cnan(BigFloat)
+    ((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) && return _cnan(BigFloat)
     if isinf(x) || isinf(y) || isinf(z)
         ps = Float64(sign(x)) * Float64(sign(y))
-        (isinf(x) || isinf(y)) && isinf(z) && (ps * Inf != Float64(sign(z)) * Inf) && return NaN
+        (isinf(x) || isinf(y)) && isinf(z) && (ps * Inf != Float64(sign(z)) * Inf) && return _cnan(BigFloat)
         return (isinf(x) || isinf(y)) ? ps * Inf : Float64(sign(z)) * Inf
     end
     setprecision(() -> x * y + z, BigFloat, bigprec_prod(x, y, z))
 end
 function _ωexact(::HeadExact, ::Val{:FAA}, x::BigFloat, y::BigFloat, z::BigFloat)
-    (isnan(x) | isnan(y) | isnan(z)) && return NaN
+    (isnan(x) | isnan(y) | isnan(z)) && return _cnan(BigFloat)
     if isinf(x) || isinf(y) || isinf(z)
         hasp = (x == Inf) | (y == Inf) | (z == Inf)
         hasn = (x == -Inf) | (y == -Inf) | (z == -Inf)
-        (hasp & hasn) && return NaN
-        return hasp ? Inf : -Inf
+        (hasp & hasn) && return _cnan(BigFloat)
+        return hasp ? _cinf(BigFloat) : _cninf(BigFloat)
     end
     setprecision(() -> (x + y) + z, BigFloat, bigprec(x, y, z))
 end
 _ωexact(::HeadExact, ::Val{:Convert}, x::BigFloat) = x
+
+# ---- rung 3 on the Dyadic carrier (§4 Stage 7).
+#
+# Exact arithmetic is native: `Dyadic` closes under add and multiply, so these
+# rows are the operations themselves rather than an escalation. The add uses the
+# STICKY form, which is what makes the C7 bands load-bearing rather than
+# decorative — past the alignment band the small operand contributes only a sign,
+# and `StickyF` is the protocol that carries it to the projection.
+@inline ωeval(h::HeadExact, op::Val, x::Dyadic, xs::Dyadic...) =
+    _ωdyadic(h, op, x, xs...)
+
+@inline function _ωdyadic(::HeadExact, ::Val{:Add}, x::Dyadic, y::Dyadic)
+    v, sg = DyadicNumbers.add_sticky_dy(x, y)
+    sg == 0 ? v : StickyF(v, sg)
+end
+@inline _ωdyadic(h::HeadExact, ::Val{:Subtract}, x::Dyadic, y::Dyadic) =
+    _ωdyadic(h, Val(:Add), x, -y)
+@inline _ωdyadic(::HeadExact, ::Val{:Multiply}, x::Dyadic, y::Dyadic) =
+    DyadicNumbers.mul_dy(x, y)
+@inline function _ωdyadic(h::HeadExact, ::Val{:FMA}, x::Dyadic, y::Dyadic, z::Dyadic)
+    p = DyadicNumbers.mul_dy(x, y)
+    _ωdyadic(h, Val(:Add), p, z)
+end
+# FAA is the one row where the sticky protocol does NOT compose.
+#
+# Written as two chained `Add`s, a sticky from the first add is dropped when the
+# second one runs: the tail `ε·s₁` below `x + y` is real, and re-entering `Add`
+# with only `v₁` discards it. Worse, two stickies can arrive from both adds and
+# **cancel**, which no single sign can represent. `StickyF` carries one direction
+# for one neglected tail; it is not an accumulator.
+#
+# So when either alignment falls outside the exact band, this drops to the exact
+# MPFR sum rather than inventing a composition rule. That is slower on a path
+# already at rung 3, and it is right. The pairwise `Add` and `FMA` rows above do
+# compose, because each has exactly one add and therefore at most one tail.
+@inline function _ωdyadic(::HeadExact, ::Val{:FAA}, x::Dyadic, y::Dyadic, z::Dyadic)
+    (isnan(x) | isnan(y) | isnan(z)) && return _cnan(Dyadic)
+    if isinf(x) || isinf(y) || isinf(z)
+        hasp = (isinf(x) && sign(x) > 0) | (isinf(y) && sign(y) > 0) | (isinf(z) && sign(z) > 0)
+        hasn = (isinf(x) && sign(x) < 0) | (isinf(y) && sign(y) < 0) | (isinf(z) && sign(z) < 0)
+        (hasp & hasn) && return _cnan(Dyadic)
+        return hasp ? _cinf(Dyadic) : _cninf(Dyadic)
+    end
+    v1, s1 = DyadicNumbers.add_sticky_dy(x, y)
+    if s1 == 0
+        v2, s2 = DyadicNumbers.add_sticky_dy(v1, z)
+        s2 == 0 && return v2                    # both adds exact: the sum is exact
+    end
+    _bigsum3(BigFloat(x), BigFloat(y), BigFloat(z))
+end
+_ωdyadic(::HeadExact, ::Val{:Convert}, x::Dyadic) = x
+
+@noinline _ωdyadic(::HeadExact, ::Val{OP}, xs...) where {OP} = throw(ArgumentError(
+    "$OP has no rung-3 Dyadic ω-semantics: it is neither exact arithmetic, an " *
+    "exact selection, nor an enclosure, so it is not in OP_REGISTRY"))
 
 # ---- exact selections, at every rung, from ONE implementation.
 #
@@ -568,6 +629,24 @@ for nm in _LADDER_OPS
     end
 end
 
+# Exact selections need no Dyadic-specific code: the rows below are typed
+# `::CarrierValue`, which names `Dyadic` explicitly. One implementation of the
+# draft's special-value tables, four carriers.
+for nm in _EXACT_SELECTION
+    @eval @inline _ωdyadic(::HeadExact, op::Val{$(QuoteNode(nm))}, xs::Dyadic...) =
+        ωeval(op, xs...)
+end
+
+# Everything else is an enclosure, and `Dyadic` has no transcendentals — nor
+# should it. The ladder is MPFR's job; `Dyadic` converts exactly into it and the
+# result is projected the same way. Exactness of that conversion is what makes
+# this a routing decision rather than a precision one.
+for nm in _LADDER_OPS
+    @eval @inline _ωdyadic(::HeadExact, op::Val{$(QuoteNode(nm))}, xs::Dyadic...) =
+        ωeval(op, map(BigFloat, xs)...)
+end
+
+
 # `Convert` is registry arity 1 but registry group `:conv`, and it is the one
 # operation with no ω-semantics of its own: the conversion IS the projection into
 # the target format, so on the datum it is the identity. Spelling that identity
@@ -585,60 +664,78 @@ end
 # ============================================================================
 # Group "exact selection": Abs, Negate, CopySign, extremum family, Clamp
 # ============================================================================
-ωeval(::Val{:Abs}, x::AbstractFloat) = isnan(x) ? NaN : abs(x)
-ωeval(::Val{:Negate}, x::AbstractFloat) = isnan(x) ? NaN : (iszero(x) ? 0.0 : -x)
-function ωeval(::Val{:CopySign}, x::AbstractFloat, y::AbstractFloat)
-    (isnan(x) | isnan(y)) && return NaN                     # [interp]: NaN sign source → NaN
+# These rows are parametric in the carrier `C` and homogeneous in it, which is
+# two statements, both load-bearing.
+#
+# *Parametric* because the special values they return must be the carrier's own.
+# Written with bare `NaN` and `0.0` literals — as they were through Stage 6 —
+# every one of these rows returns a `Float64` NaN from a `Dyadic` evaluation, so
+# the declared return `carriertype(h)` is a lie and the method infers a `Union`.
+# Nothing caught it: `project` accepts a `Float64` on every path, and a
+# differential gate comparing two wide carriers sees the same wrong type on both
+# sides. §11 M41 fixed the same defect in `_ωf128`/`_ωexact`'s special rows; this
+# is where it had also been sitting, one dispatch layer below (§11 M44).
+#
+# *Homogeneous* because every caller lifts to a single head before evaluating, so
+# a mixed-carrier call is a bug in the caller. Spelling the constraint makes that
+# bug a `MethodError` at the mistake rather than a silent promotion far from it.
+ωeval(::Val{:Abs}, x::C) where {C<:CarrierValue} = isnan(x) ? _cnan(C) : abs(x)
+ωeval(::Val{:Negate}, x::C) where {C<:CarrierValue} =
+    isnan(x) ? _cnan(C) : (iszero(x) ? _czero(C) : -x)
+function ωeval(::Val{:CopySign}, x::C, y::C) where {C<:CarrierValue}
+    (isnan(x) | isnan(y)) && return _cnan(C)                # [interp]: NaN sign source → NaN
     v = copysign(x, y)
-    iszero(v) ? 0.0 : v                                     # single zero
+    iszero(v) ? _czero(C) : v                               # single zero
 end
 
-ωeval(::Val{:Maximum}, x::AbstractFloat, y::AbstractFloat) = (isnan(x) | isnan(y)) ? NaN : max(x, y)
-ωeval(::Val{:Minimum}, x::AbstractFloat, y::AbstractFloat) = (isnan(x) | isnan(y)) ? NaN : min(x, y)
-ωeval(::Val{:MaximumNumber}, x::AbstractFloat, y::AbstractFloat) =
-    isnan(x) ? (isnan(y) ? NaN : y) : (isnan(y) ? x : max(x, y))
-ωeval(::Val{:MinimumNumber}, x::AbstractFloat, y::AbstractFloat) =
-    isnan(x) ? (isnan(y) ? NaN : y) : (isnan(y) ? x : min(x, y))
-function ωeval(::Val{:MaximumMagnitude}, x::AbstractFloat, y::AbstractFloat)
-    (isnan(x) | isnan(y)) && return NaN
+ωeval(::Val{:Maximum}, x::C, y::C) where {C<:CarrierValue} =
+    (isnan(x) | isnan(y)) ? _cnan(C) : max(x, y)
+ωeval(::Val{:Minimum}, x::C, y::C) where {C<:CarrierValue} =
+    (isnan(x) | isnan(y)) ? _cnan(C) : min(x, y)
+ωeval(::Val{:MaximumNumber}, x::C, y::C) where {C<:CarrierValue} =
+    isnan(x) ? (isnan(y) ? _cnan(C) : y) : (isnan(y) ? x : max(x, y))
+ωeval(::Val{:MinimumNumber}, x::C, y::C) where {C<:CarrierValue} =
+    isnan(x) ? (isnan(y) ? _cnan(C) : y) : (isnan(y) ? x : min(x, y))
+function ωeval(::Val{:MaximumMagnitude}, x::C, y::C) where {C<:CarrierValue}
+    (isnan(x) | isnan(y)) && return _cnan(C)
     abs(x) > abs(y) ? x : abs(y) > abs(x) ? y : max(x, y)
 end
-function ωeval(::Val{:MinimumMagnitude}, x::AbstractFloat, y::AbstractFloat)
-    (isnan(x) | isnan(y)) && return NaN
+function ωeval(::Val{:MinimumMagnitude}, x::C, y::C) where {C<:CarrierValue}
+    (isnan(x) | isnan(y)) && return _cnan(C)
     abs(x) < abs(y) ? x : abs(y) < abs(x) ? y : min(x, y)
 end
-function ωeval(::Val{:MaximumMagnitudeNumber}, x::AbstractFloat, y::AbstractFloat)
-    isnan(x) && return isnan(y) ? NaN : y
+function ωeval(::Val{:MaximumMagnitudeNumber}, x::C, y::C) where {C<:CarrierValue}
+    isnan(x) && return isnan(y) ? _cnan(C) : y
     isnan(y) && return x
     abs(x) > abs(y) ? x : abs(y) > abs(x) ? y : max(x, y)
 end
-function ωeval(::Val{:MinimumMagnitudeNumber}, x::AbstractFloat, y::AbstractFloat)
-    isnan(x) && return isnan(y) ? NaN : y
+function ωeval(::Val{:MinimumMagnitudeNumber}, x::C, y::C) where {C<:CarrierValue}
+    isnan(x) && return isnan(y) ? _cnan(C) : y
     isnan(y) && return x
     abs(x) < abs(y) ? x : abs(y) < abs(x) ? y : min(x, y)
 end
 # Finite variants (§4.11.3): prefer finite operands; then infinities beat NaN.
 # These are the reduction semantics ConvertToBlockMaxAbsFinite's NaN seed relies on.
-function ωeval(::Val{:MaximumFinite}, x::AbstractFloat, y::AbstractFloat)
+function ωeval(::Val{:MaximumFinite}, x::C, y::C) where {C<:CarrierValue}
     fx, fy = isfinite(x), isfinite(y)
     fx & fy && return max(x, y)
     fx && return x
     fy && return y
-    isnan(x) && return isnan(y) ? NaN : y
+    isnan(x) && return isnan(y) ? _cnan(C) : y
     isnan(y) && return x
     max(x, y)
 end
-function ωeval(::Val{:MinimumFinite}, x::AbstractFloat, y::AbstractFloat)
+function ωeval(::Val{:MinimumFinite}, x::C, y::C) where {C<:CarrierValue}
     fx, fy = isfinite(x), isfinite(y)
     fx & fy && return min(x, y)
     fx && return x
     fy && return y
-    isnan(x) && return isnan(y) ? NaN : y
+    isnan(x) && return isnan(y) ? _cnan(C) : y
     isnan(y) && return x
     min(x, y)
 end
-function ωeval(::Val{:Clamp}, x::AbstractFloat, lo::AbstractFloat, hi::AbstractFloat)
-    (isnan(x) | isnan(lo) | isnan(hi)) && return NaN
+function ωeval(::Val{:Clamp}, x::C, lo::C, hi::C) where {C<:CarrierValue}
+    (isnan(x) | isnan(lo) | isnan(hi)) && return _cnan(C)
     min(max(x, lo), hi)
 end
 

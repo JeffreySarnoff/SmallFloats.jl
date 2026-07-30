@@ -50,7 +50,7 @@ struct HeadExact <: Head end
 # a literal type in each specialization.
 @inline carriertype(::HeadF64)   = Float64
 @inline carriertype(::HeadF128)  = Float128
-@inline carriertype(::HeadExact) = BigFloat        # → Dyadic at Stage 7
+@inline carriertype(::HeadExact) = Dyadic          # was BigFloat through Stage 6
 @inline carriertype(::Type{H}) where {H<:Head} = carriertype(H())
 
 """Rung index 1/2/3 of a head — for ordering and for the carrier join."""
@@ -158,7 +158,7 @@ end
 @inline datumcarrier(::Type{F}) where {F<:Binary} = _datumcarrier(Val(_rungindex(F)), F)
 @inline _datumcarrier(::Val{1}, ::Type{<:Binary}) = Float64
 @inline _datumcarrier(::Val{2}, ::Type{<:Binary}) = Float128
-@inline _datumcarrier(::Val{3}, ::Type{<:Binary}) = BigFloat     # → Dyadic at Stage 7
+@inline _datumcarrier(::Val{3}, ::Type{<:Binary}) = Dyadic       # was BigFloat through Stage 6
 @inline datumcarrier(v::Binary) = datumcarrier(typeof(v))
 
 """The public promotion target for `F` against external numeric types. Always a
@@ -175,10 +175,40 @@ Julia `AbstractFloat`, never the internal exact carrier."""
 # and under `Dyadic` they are simply wrong-typed. The four constants below are
 # the carrier-generic replacement; `Dyadic` adds its own methods at Stage 7.
 
+# The four types a datum can be in flight. Rows written against this rather than
+# `AbstractFloat` are the ones that must also accept `Dyadic`, which is a `Real`
+# and deliberately not an `AbstractFloat` (see dyadic.jl). Naming the union makes
+# "carrier-generic" a checkable claim instead of a convention: a row typed
+# `::CarrierValue` says which four it means.
+const CarrierValue = Union{Float64,Float128,BigFloat,Dyadic}
+
+# `Float128` and `BFloat16` live outside `dyadic.jl` (which has no dependencies
+# at all, by design), so their conversions from `Dyadic` are defined here — the
+# first file that has seen both types. Each is a single rounding through the
+# exact `BigFloat` form, matching the widths `dyadic.jl` defines for itself.
+(::Type{Float128})(x::Dyadic) = Float128(BigFloat(x))
+(::Type{BFloat16})(x::Dyadic) = BFloat16(BigFloat(x))
+
 @inline _cnan(::Type{C})  where {C<:AbstractFloat} = C(NaN)
 @inline _cinf(::Type{C})  where {C<:AbstractFloat} = C(Inf)
 @inline _cninf(::Type{C}) where {C<:AbstractFloat} = C(-Inf)
 @inline _czero(::Type{C}) where {C<:AbstractFloat} = zero(C)
+# `Dyadic` is a `Real` and not an `AbstractFloat`, so it needs its own four rows
+# rather than inheriting the generic ones — which is the point of the split: the
+# generic rows go through `C(NaN)`, and a dyadic rational has no NaN to convert.
+@inline _cnan(::Type{Dyadic})  = DyadicNumbers.DYADIC_NAN
+@inline _cinf(::Type{Dyadic})  = DyadicNumbers.DYADIC_POSINF
+@inline _cninf(::Type{Dyadic}) = DyadicNumbers.DYADIC_NEGINF
+@inline _czero(::Type{Dyadic}) = DyadicNumbers.DYADIC_ZERO
+
+# Signed-infinity predicates, total over the carriers. `x == Inf` is the natural
+# spelling and it is wrong here: it compares a carrier value against a `Float64`
+# literal, which needs a promotion `Dyadic` deliberately does not have — so the
+# reductions in `blocks.jl` that used it threw at rung 3 rather than answering
+# (§11 M44). Written from `isinf`/`signbit`, both of which every carrier defines
+# natively, it is one comparison and no conversion at any rung.
+@inline _isposinf(x::CarrierValue) = isinf(x) & !signbit(x)
+@inline _isneginf(x::CarrierValue) = isinf(x) & signbit(x)
 
 # ---- the carrier join, one direction only -----------------------------------
 #
@@ -204,9 +234,14 @@ Julia `AbstractFloat`, never the internal exact carrier."""
 @inline lift(::HeadF64,   x::Float64)  = x
 @inline lift(::HeadF128,  x::Float64)  = Float128(x)
 @inline lift(::HeadF128,  x::Float128) = x
-@inline lift(::HeadExact, x::Float64)  = BigFloat(x; precision = 53)
-@inline lift(::HeadExact, x::Float128) = BigFloat(x; precision = 113)
-@inline lift(::HeadExact, x::BigFloat) = x
+# Rung 3 lifts into `Dyadic`, exactly: every binary float IS a dyadic rational,
+# so the conversion loses nothing and cannot fail for a value the engine forms.
+# The `BigFloat` row remains because the enclosure ladder still hands BigFloats
+# back for the transcendentals, and G7 compares the two carriers directly.
+@inline lift(::HeadExact, x::Float64)  = Dyadic(x)
+@inline lift(::HeadExact, x::Float128) = Dyadic(x)
+@inline lift(::HeadExact, x::BigFloat) = Dyadic(x)
+@inline lift(::HeadExact, x::Dyadic)   = x
 
 # ---- external-carrier datum exactness ----------------------------------------
 #
@@ -328,6 +363,11 @@ end
 @inline _sigbits(::Float128)     = 113
 @inline _sigbits(v::BigFloat)    = Base.precision(v)
 @inline _sigbits(v::AbstractFloat) = Base.precision(typeof(v))   # Float32/16, BFloat16
+# `Dyadic` carries its width in the value, not the type: `mul_dy` permits 96
+# significand bits and `add_dy` up to 127, so a per-type constant would be a
+# 2.4× overstatement on every conversion. The non-finite rows have no
+# significand at all and take the two-bit floor `BigFloat` requires.
+@inline _sigbits(v::Dyadic) = max(DyadicNumbers.nbits_dy(v.S), 2)
 
 """
     bigprec_prod(xs...) -> Int

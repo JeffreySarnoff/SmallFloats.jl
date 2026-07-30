@@ -145,6 +145,95 @@ end
 # aligned — no mode restriction. No precision ceremony needed.
 round_to_precision(P::Int, B::Int, μ::RoundingMode3109, X::Float128, R::Int, sticky::Int) =
     _rtp_core(P, B, μ, X, R, sticky)
+# Dyadic carrier (§4 Stage 7 item 3). `X = S · 2^Q_d` with `S` an exact integer,
+# so scaling to the target grid is a SHIFT and the bits shifted out ARE ν, as an
+# exact fixed-point fraction. That is why `Dyadic` joins `_rtp_f64`'s fixed-point
+# `_rab` family rather than founding a third: the evidence it produces has the
+# same shape as the bit path's, and one predicate family means one place for a
+# semantic edit to land.
+#
+# It cannot go through `_rtp_core`: that path's zero row builds
+# `zero(float(typeof(X)))`, and `float(Dyadic)` does not exist — deliberately, as
+# `Dyadic` is not an `AbstractFloat`. The zero-with-sticky row is therefore
+# written once here and **asserted equal to `_rtp_core`'s** over the whole
+# (P, B, μ, sticky, R) grid, so "the carriers cannot drift" is a checked property
+# rather than a structural hope.
+@inline function _rtp_zero_sticky(P::Int, B::Int, μ::RoundingMode3109, R::Int, sticky::Int)
+    sticky == 0 && return Rounded(KIND_FIN, Int8(1), 0, 0)
+    sign = Int8(sticky > 0 ? 1 : -1)
+    Q = Int64(2 - B - P)
+    away = _rab(μ, UInt128(0), false, 1, Int64(0), Q, B, P, sign, R)  # |true| ∈ (0, ε)
+    S = away ? Int64(1) : Int64(0)
+    S == 0 && return Rounded(KIND_FIN, Int8(1), 0, 0)
+    Rounded(KIND_FIN, sign, S, Q)
+end
+
+function round_to_precision(P::Int, B::Int, μ::RoundingMode3109, X::Dyadic, R::Int, sticky::Int)
+    isnan(X) && return Rounded(KIND_NAN, Int8(1), 0, 0)
+    if isinf(X)
+        if sign(X) > 0
+            sticky < 0 && return Rounded(KIND_FIN, Int8(1), (Int64(1) << P) - 1, HUGEQ)
+            return Rounded(KIND_PINF, Int8(1), 0, 0)
+        else
+            sticky > 0 && return Rounded(KIND_FIN, Int8(-1), (Int64(1) << P) - 1, HUGEQ)
+            return Rounded(KIND_NINF, Int8(-1), 0, 0)
+        end
+    end
+    iszero(X) && return _rtp_zero_sticky(P, B, μ, R, sticky)
+    _rtp_dyadic(P, B, μ, X, R, sticky)
+end
+
+function _rtp_dyadic(P::Int, B::Int, μ::RoundingMode3109, X::Dyadic, R::Int, sticky::Int)
+    sgn = Int8(sign(X))
+    m = abs(X.S)                                             # exact, nonzero
+    nb = DyadicNumbers.nbits_dy(m)
+    e = Int64(X.Q) + nb - 1                                  # ⌊log₂|X|⌋, exact
+    Q = max(e, Int64(1 - B)) - P + 1
+    t = Q - Int64(X.Q)                                       # bits to shift out
+    local Sfl::Int64, νfix::UInt128
+    lost = false
+    if t <= 0
+        # the grid is at or below the operand's own exponent: no fraction at all.
+        # `S̃ ≤ 2^P` holds by construction (Q is chosen from e), so the shift
+        # cannot leave Int64 — the same fact `_rtp_f64` relies on one carrier up.
+        Sfl = Int64(m << (-t))
+        νfix = UInt128(0)
+    else
+        Sfl = Int64(m >> t)
+        frac = m & ((Int128(1) << t) - 1)                     # the shifted-out bits ARE ν
+        if t <= 128
+            νfix = UInt128(frac) << (128 - t)
+        else
+            sh = t - 128
+            if sh >= 128
+                νfix = UInt128(0); lost = !iszero(frac)
+            else
+                νfix = UInt128(frac >> sh)
+                lost = !iszero(frac & ((Int128(1) << sh) - 1))
+            end
+        end
+    end
+    νs = sticky == 0 ? 0 : sticky * Int(sgn)
+    # step-down for "true value just below an exact dyadic" — the identical block
+    # in `_rtp_f64` and `_rtp_core`; all three must agree and G3 pins two of them.
+    if νs < 0 && νfix == UInt128(0) && !lost
+        if Sfl == Int64(1) << (P - 1) && Q > Int64(2 - B - P)
+            Q -= 1
+            Sfl = (Int64(1) << P) - 1
+        else
+            Sfl -= 1
+        end
+        νfix = typemax(UInt128); lost = false; νs = -1        # ν = 1⁻
+    end
+    away = _rab(μ, νfix, lost, νs, Sfl, Q, B, P, sgn, R)
+    S = away ? Sfl + 1 : Sfl
+    if S == Int64(1) << P
+        S = Int64(1) << (P - 1); Q += 1
+    end
+    S == 0 && return Rounded(KIND_FIN, Int8(1), 0, 0)
+    Rounded(KIND_FIN, sgn, S, Q)
+end
+
 # BigFloat carriers may exceed the ambient MPFR default precision; ldexp/floor/ν
 # arithmetic must run at (at least) the operand's precision or bits are silently
 # truncated. Function barrier sets it for the whole finite path.
