@@ -100,12 +100,39 @@ end
 # was not it: a release run asked for every format and got six, reporting
 # `SAMPLED` in a way that read as intentional rather than omitted (§11 M49).
 # `sweep_formats` is now the single question, so the three tiers reach here.
-const _RHO_FMTS, _RHO_COVERAGE = let (fs, cov) = sweep_formats("Tρ")
+# ---- the format axis is CAPPED at the representative set, at every tier.
+#
+# `SmallFloats_EXHAUSTIVE=1` means "all 504 formats" for the gates whose claim is
+# per-format. This file's claim is not: it enumerates
+# **(rung × op-class × stochastic variant) = 36 cells**, and one format per
+# `(rung, P == 1)` reaches every one of them. The other 498 formats re-run cells
+# already covered.
+#
+# Sending it to 504 anyway was a real regression, introduced by the very fix that
+# made the tier switch reach here: 504 formats × 52 operations × 6 ρ × 2^N draws
+# did not finish in 90 minutes and the release run had to be killed inside this
+# loop. Widening an axis that adds no coverage is not a stronger gate, it is a
+# slower one.
+#
+# So `release` widens to the derived representative set — a genuine 6 → 50
+# widening across the (rung, boundary, code unit, P-class, Σ, Δ) cells — and no
+# further. `rollcall.jl` lists this file alongside G2/G4/G7 as cell-complete
+# rather than format-exhaustive, so the exception is named rather than silent.
+const _RHO_FMTS, _RHO_COVERAGE = let (fs, cov) = (exhaustive_requested() ?
+        (REPRESENTATIVE,
+         "Tρ: format axis CAPPED at the $(length(REPRESENTATIVE))-format " *
+         "representative set — this file's claim is the 36 (rung, op-class, " *
+         "variant) cells, and 504 formats reach no cell the representative set " *
+         "does not") :
+        sweep_formats("Tρ"))
     # At `default` the derived representative set is 50 formats, which at this
     # file's per-format cost would be ~12 minutes. The default here is therefore
     # the QUICK set — one per (rung, P == 1) cell — and the coverage string says
     # so rather than inheriting a phrase describing 50.
     exhaustive_requested() ? (fs, cov) :
+        quick_requested() ? (_rho_formats(),
+         "Tρ: SAMPLED (tier=quick) — $(length(_rho_formats())) formats, one per " *
+         "(rung, P == 1) cell; every carrier reached") :
         (_rho_formats(),
          "Tρ: SAMPLED — $(length(_rho_formats())) formats, one per (rung, P == 1) " *
          "cell from the derived representative set. Every carrier and both " *
@@ -250,9 +277,14 @@ const _R_COVERAGE = quick_requested() ?
 
     record_gate!("Tρ"; assertions=length(_RHO_FMTS) + 4,
                  units=n_trunc[] + n_mono[] + n_away[],
-                 exhaustive=exhaustive_requested(),
-                 note=exhaustive_requested() ? _R_COVERAGE :
-                      _RHO_COVERAGE * " " * _R_COVERAGE)
+                 # NEVER `exhaustive`: this file's format axis is capped at the
+                 # representative set at every tier (see the header), so claiming
+                 # exhaustiveness at `release` because the R axis is complete
+                 # would overstate exactly one axis while another is capped —
+                 # the failure mode the whole roll-call exists to prevent.
+                 # `rollcall.jl` lists Tρ among the by-design exceptions.
+                 exhaustive=false,
+                 note=_RHO_COVERAGE * " " * _R_COVERAGE)
     @info "ρ×rung: $(length(cells)) (rung, op-class, stochastic variant) cells, " *
           "all reached; $(n_trunc[]) R=0≡TowardZero identities, $(n_mono[]) " *
           "monotone-in-R steps, $(n_away[]) away-bound checks, over " *

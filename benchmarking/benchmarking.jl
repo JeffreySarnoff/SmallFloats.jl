@@ -10,7 +10,7 @@
 #     (no constant folding) without paying generation cost in the timing;
 #   • specialization is asserted before anything is measured (preflight): if the
 #     warm scalar paths allocate, the numbers would measure dispatch, so we abort;
-#   • medians are reported with minima alongside; times are per single call unless
+#   • minima are reported first, medians alongside; times are per single call unless
 #     a table says per-element.
 
 using Chairmarks
@@ -57,7 +57,10 @@ function write_table(io, title, note, rows; extra_header="", level=2,
     fresh_if_multipage && _table_est(note, rows) > _PAGE_EST && newpage_latex(io)
     println(io, "\n", "#"^level, " ", title, "\n")
     isempty(note) || println(io, note, "\n")
-    hdr = "| operation | median | min | allocs |"
+    # `min` sits LEFT of `median`: the minimum is the cleanest estimate of the
+    # work itself (fewest interruptions), and the median is the one carrying
+    # scheduler and cache noise. Reading left-to-right then goes signal-first.
+    hdr = "| operation | min | median | allocs |"
     sep = "|---|---|---|---|"
     if !isempty(extra_header)
         hdr *= " $extra_header |"
@@ -65,7 +68,7 @@ function write_table(io, title, note, rows; extra_header="", level=2,
     end
     println(io, hdr); println(io, sep)
     for r in rows
-        line = "| `$(r.name)` | $(fmt_time(r.med)) | $(fmt_time(r.min)) | $(fmt_alloc(r.allocs)) |"
+        line = "| `$(r.name)` | $(fmt_time(r.min)) | $(fmt_time(r.med)) | $(fmt_alloc(r.allocs)) |"
         isempty(extra_header) || (line *= " $(r.extra) |")
         println(io, line)
     end
@@ -409,7 +412,7 @@ function bench_table_builds()
         f()                                           # repopulate so the warm row measures a cache hit
         w = @be f() seconds=1
         push!(rows, Row(nm, b;
-              extra=string(fmt_time(median(w).time), " / ", fmt_time(minimum(w).time))))
+              extra=string(fmt_time(minimum(w).time), " / ", fmt_time(median(w).time))))
     end
     empty_tables!()
     rows
@@ -479,7 +482,7 @@ function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
                 "(NaN and ±Inf sampled), NaN excluded, finite-only, and per-operation ",
                 "in-domain — and every other ",
                 "sampled table uses the all-code-points pool, identified in its note. ",
-                "Times are per call; medians with minima alongside. Methodology per the ",
+                "Times are per call; minima first, medians alongside. Methodology per the ",
                 "recorded benchmark doctrine: type-parameterized barriers, untimed setup, ",
                 "specialization preflight.")
 
@@ -559,7 +562,7 @@ function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
         write_table(io, "Table builds (oracle + projection, Float128-first)",
             "Cold cache per sample (`empty_tables!` in untimed setup); JIT pre-warmed. " *
             "The warm-hit column is the steady-state cost of `get_table` when the " *
-            "specialization is already cached (median / min). Table entries enumerate " *
+            "specialization is already cached (min / median). Table entries enumerate " *
             "every code point by construction (NaN and ±Inf included).",
             bench_table_builds(); extra_header="warm hit", level=3, fresh_if_multipage=true)
         write_table(io, "Block and scaled operations",

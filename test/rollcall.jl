@@ -98,7 +98,12 @@ KNOWINGLY NOT COVERED (plan §6.4) — stated here so it is not rediscovered:
         # Conversely, at `release` every tier that CAN be exhaustive must be.
         # G2, G4 and G7 are boundary-targeted by design and are named here so
         # the exception is a list rather than a shrug.
-        by_design = Set(["G2", "G4", "G7"])
+        # Cell-complete rather than format-exhaustive, each for a stated reason:
+        # G2, G4 and G7 are boundary-targeted (their format lists sit either side
+        # of a rung boundary, and sweeping the grid dilutes that); Tρ enumerates
+        # 36 (rung, op-class, variant) cells that one format per (rung, P == 1)
+        # already reaches, so its axis is capped at the representative set.
+        by_design = Set(["G2", "G4", "G7", "Tρ"])
         not_exhaustive = sort!([k for (k, e) in GATE_LOG
                                 if !e.exhaustive && !(k in by_design)])
         @test not_exhaustive == String[]
