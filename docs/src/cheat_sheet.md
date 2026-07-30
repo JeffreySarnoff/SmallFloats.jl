@@ -51,12 +51,20 @@ Examples:
 | `Binary8p4sf` | 8-bit, precision 4, signed, finite |
 | `Binary6p3ue` | 6-bit, precision 3, unsigned, extended |
 | `Binary5p5uf` | 5-bit, precision 5, unsigned, finite |
+| `Binary16p6se` | 16-bit, precision 6, signed, extended (opt-in export) |
+| `Binary16p1uf` | 16-bit, precision 1, unsigned, finite — the MX scale shape |
 
-The parametric spelling is equivalent:
+The alias is the *representation* of the parametric format, related by `<:` and
+**not** by `===`:
 
 ```julia
-Binary8p4se === Binary{8, 4, true, true}
+Binary8p4se <: Binary{8, 4, true, true}    # true
+Binary8p4se === Binary{8, 4, true, true}   # FALSE — `Binary` is abstract
+format(16, 6, true, true)                  # the alias, from runtime parameters
 ```
+
+`using SmallFloats` exports the 120 aliases at K ≤ 8. For the other 384:
+`using SmallFloats.Formats`, or `SmallFloats.Binary16p6se`, or `format(...)`.
 
 Useful format queries:
 
@@ -91,16 +99,28 @@ MaxFiniteOf(x)    # Binary8p4se(224.0 ≡ 0x7e)
 x = T(1.6)                    # numeric value: project into T
 x = Convert(T, ρ, 1.6)       # explicit projection
 
-c = codepoint(x)              # UInt8 code point
-x = T(c)                      # UInt8 means validated CODE POINT
+c = codepoint(x)              # the code point, in the format's storage unit
+x = T(c)                      # an Unsigned means validated CODE POINT
 x = rawvalue(T, c)            # unchecked code-point construction
 
-d = decode(x)                 # exact Float64 datum
+d = decode(x)                 # the exact datum, on the format's own carrier
 ```
 
-!!! warning "`UInt8` means code point"
+!!! warning "`Unsigned` means code point — at every width"
     `T(0x02)` constructs code point `0x02`; `T(2)` projects the numeric value
-    two. Use `Convert` when intent should be unmistakable.
+    two. Signedness of the integer type is what distinguishes them, so the rule
+    holds for `UInt8`, `UInt16` and any other `Unsigned`: `Binary16p6se(0x0002)`
+    is code point 2, not the value 2.0. Use `Convert` when intent should be
+    unmistakable.
+
+    `codepoint` returns the format's *storage unit* — `UInt8` at K ≤ 8,
+    `UInt16` above — and that is `codeunit_type(T)`. A code-point argument is
+    range-checked against `2^K` whatever its width, so passing a wider
+    `Unsigned` than necessary is lossless and safe.
+
+    `convert` is the deliberate exception and is value-preserving:
+    `Binary8p4se(0x02)` is code point 2, while `convert(Binary8p4se, 0x02)` is
+    the value 2.0. Promotion, `similar` and `fill` depend on that.
 
 Random values (uniform [0,1) floor-projected; normal round-to-nearest,
 tails clamped to MaxFinite; `randn` signed formats only):
@@ -349,14 +369,14 @@ Approximate implementations are never substituted into the default API.
 
 | Trap | Correct pattern |
 |---|---|
-| Treating `UInt8` as a number | `T(Int(c))` for a numeric integer; `T(c::UInt8)` for a code point |
-| Silently mixing byte-float formats | Convert explicitly: `Convert(T, ρ, x)` |
+| Treating an `Unsigned` as a number | `T(Int(c))` for a numeric integer; `T(c::Unsigned)` for a code point — at every width |
+| Silently mixing formats | Convert explicitly: `Convert(T, ρ, x)` |
 | Assuming `SatNone` always clamps | Choose `SatFinite` when clamping is required |
 | Expecting IEEE division-by-zero | P3109 semantics here define `x / 0 → NaN` |
 | Expecting negative zero | Every format has one zero; `T(-0.0) === zero(T)` |
 | Passing a `Rational` | Convert explicitly to an exact supported carrier or knowingly to `Float64` |
 | Reproducibility with stochastic rounding | Supply a seeded `rng`, or an explicit `R` in tests |
-| Using `rawvalue` on unchecked input | Prefer validated `T(c::UInt8)` outside kernels |
+| Using `rawvalue` on unchecked input | Prefer validated `T(c::Unsigned)` outside kernels |
 
 ## Performance checklist
 

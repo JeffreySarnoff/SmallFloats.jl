@@ -65,13 +65,25 @@ const _DOC_FILES = isdir(_DOCS_SRC) ?
         (r"\b120\s+draft\s+formats\b",          "format count stated as 120"),
         (r"\b120\s+named\s+aliases\b",          "alias count stated as 120"),
         (r"all\s+120\b",                        "\"all 120\" — 120 is now the EXPORTED count, not the total"),
+        # `Binary` became abstract at Stage 2, so an alias is `<:` its parametric
+        # format and never `===` it. This appeared in TWO documentation files as
+        # a REPL example printing `true`, which is worse than a stale number: a
+        # reader who copies it gets `false` and concludes the package is broken.
+        (r"Binary\d+p\d+[su][ef]\s*===\s*Binary\{", "alias `===` parametric format — it is `<:`, not `==="),
     ]
+    # Exemptions: a line that states the stale claim in order to CORRECT it is
+    # the documentation doing its job, not failing. Both of these were tripped by
+    # the first run of this gate, which is the right shape of feedback — the
+    # pattern is deliberately blunt and the exemption is where the nuance lives.
+    _corrected(line) =
+        occursin(r"120\s+(exported|at K)", line) ||          # "120 exported" is true
+        occursin(r"FALSE|`false`|\bis false\b|not\s+`?===", line)   # "…is false" is true
+
     findings = String[]
     for f in _DOC_FILES, (i, line) in enumerate(eachline(f))
         for (re, what) in stale
             occursin(re, line) || continue
-            # "120 exported" is the true statement and must not trip the gate.
-            occursin(r"120\s+(exported|at K)", line) && continue
+            _corrected(line) && continue
             push!(findings, "$(basename(f)):$i — $what\n      $(strip(line))")
         end
     end
