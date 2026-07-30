@@ -1266,6 +1266,18 @@ failure).
 **Exit:** `Pkg.test()` in the same wall-clock class as today; the nightly sweep
 green; every knowingly-uncovered area (§6.4) stated in one place.
 
+**Exit met, with one number reported rather than met.** The nightly sweep is
+green (38 min, 0 failures, 35 580 747 units, 9 of 13 gates exhaustive), and
+§6.4's list is printed by `test/rollcall.jl` at the end of every green run
+rather than living only in this document.
+
+The wall clock moved: **17.1 min against ≈ 10 before Stage 7.** Whether that is
+"the same class" is a judgement, so here is the ratio instead of the adjective —
+**1.7× the time for 4.0× the compared units** (8.9 M → 35.3 M), and the growth
+is almost entirely specialization rather than arithmetic. The lever, if a
+faster inner loop is wanted, is `SMALLFLOATS_G5=fast` (~1 min instead of 4m20),
+which is what that tier exists for.
+
 ---
 
 ### Stage 9 — Docs, exports, benchmarks, release

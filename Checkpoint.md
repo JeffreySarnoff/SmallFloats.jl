@@ -30,7 +30,25 @@ has actually happened, what is verified, and what is not.***
 | **6 — the carrier lattice** | **done, verified** |
 | **7 — `Dyadic`** | **done, verified** — the carrier swap, the P = 1 block-scale path, **G7**, the block surface under the carrier lattice, **G10**, the extended **G4**, and the per-head allocation profile |
 | **8 — test doctrine and tiers** | **done, verified** — T1/T2a/T2b/Tρ, the derived format selection, the coverage roll-call, and the export surface (O3 closed early) |
-| **9 — docs, exports, benchmarks, release** | **in progress** — exports, the stale-artifact purge, the docs range/count fix + consistency gate, the `Float16`/`BFloat16` trap section, `README.md`, `CHANGELOG.md`, the per-operation-class preflight, the wide precompile workload and the version bump are done; the release-tier gate run is in flight |
+| **9 — docs, exports, benchmarks, release** | **done, verified** — exports, the stale-artifact purge, the docs range/count fix + consistency gate, the `Float16`/`BFloat16` trap section, `README.md`, `CHANGELOG.md`, the per-operation-class preflight, the wide precompile workload, version 0.2.0, **and the release-tier gate run** |
+
+**The release tier is green.** `SMALLFLOATS_G5=full`,
+`SMALLFLOATS_G10=full`, `SmallFloats_EXHAUSTIVE=1`: **38 minutes, 0 failures,
+35 580 747 compared units, 9 of 13 gates exhaustive.** G5 reproduced all 33
+golden digests byte-identically — the K ≤ 8 answers did not move at any point
+across nine stages. G10 covered all 72 formats above rung 1. T2b swept all 504.
+
+Four gates remain SAMPLED even at the release tier, and the roll-call says so
+rather than rounding up:
+
+* **G4** and **G7** are *boundary-targeted by design* — their format lists sit
+  either side of a rung boundary, which is where a wrong rung shows first, and
+  sweeping the grid would dilute that rather than strengthen it.
+* **G2**'s tier A does sweep all 504 formats' spreads; its engine comparison is
+  over the wide witnesses.
+* **Tρ**'s format axis is 6 formats, one per `(rung, P == 1)` cell. This is the
+  one that could be widened cheaply and has not been — recorded here rather
+  than left for a reader to discover.
 
 **Stage 8 closed.** Its two defect-finding steps were run first, deliberately,
 and both found something (§11 M47, M48):
