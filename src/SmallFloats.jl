@@ -184,7 +184,7 @@ export TotalOrder, Class, FPClass,
 for op in OP_REGISTRY
     @eval export $(op.name)
 end
-export vmap, vmap!
+export vmap, vmap!, Op          # `Op` makes the register callable: map(Op(:Add,T,ρ), A, B)
 
 # table cache introspection
 export table_bytes, table_count, ternary_count, table_policy, empty_tables!

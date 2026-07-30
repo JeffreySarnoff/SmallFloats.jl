@@ -303,6 +303,60 @@ non-finite rows, which is why it asserts rather than returning a sentinel."""
 end
 Base.exponent(x::Dyadic) = exponent_dy(x)
 
+# ---- integer rounding, exactly and without allocating.
+#
+# `trunc`/`floor`/`ceil`/`round` on a `Dyadic` are pure integer arithmetic: the
+# value is `S · 2^Q`, so `Q ≥ 0` is already an integer and `Q < 0` means the low
+# `-Q` bits of `S` are the fraction. Routing through `BigFloat` would be exact
+# too — and would allocate on every call, at the one rung where the carrier was
+# chosen specifically to avoid MPFR on the ordinary path.
+#
+# `-Q ≥ 128` cannot be a shift: the whole significand is below the binary point,
+# so the value is strictly inside `(-1, 1)` and the answer is decided by sign
+# alone. Julia's `>>` on `Int128` saturates rather than wrapping, but relying on
+# that would be relying on a detail; the branch says what it means.
+@inline function _split_dy(x::Dyadic)
+    x.Q >= 0 && return (x.S << x.Q, zero(Int128), 0)      # already an integer
+    sh = -Int(x.Q)
+    sh >= 128 && return (zero(Int128), x.S, sh)           # |x| < 1
+    q = x.S >> sh                                          # arithmetic shift: floors
+    (q, x.S - (q << sh), sh)                               # (floor, remainder ≥ 0, shift)
+end
+
+@inline _int_dy(q::Int128) = Dyadic(DY_FINITE, q, 0)
+
+function Base.floor(x::Dyadic)
+    isfinite_dy(x) || return x
+    q, _, _ = _split_dy(x)
+    _int_dy(q)                       # `>>` already floors toward −∞
+end
+
+function Base.ceil(x::Dyadic)
+    isfinite_dy(x) || return x
+    q, r, _ = _split_dy(x)
+    _int_dy(iszero(r) ? q : q + one(Int128))
+end
+
+Base.trunc(x::Dyadic) = isfinite_dy(x) ? (sign_dy(x) < 0 ? ceil(x) : floor(x)) : x
+
+"""Round half to even, matching `Base.round(::AbstractFloat)`."""
+function Base.round(x::Dyadic)
+    isfinite_dy(x) || return x
+    q, r, sh = _split_dy(x)
+    iszero(r) && return _int_dy(q)
+    # compare the fraction against ½ without forming it: 2r vs 2^sh
+    twice = r << 1
+    half = sh >= 128 ? nothing : (one(Int128) << sh)
+    up = half === nothing ? false :
+         twice > half ? true : twice < half ? false : !iseven(q)   # tie → even
+    _int_dy(up ? q + one(Int128) : q)
+end
+
+Base.round(x::Dyadic, ::RoundingMode{:Down})    = floor(x)
+Base.round(x::Dyadic, ::RoundingMode{:Up})      = ceil(x)
+Base.round(x::Dyadic, ::RoundingMode{:ToZero})  = trunc(x)
+Base.round(x::Dyadic, ::RoundingMode{:Nearest}) = round(x)
+
 # ---- conversions. Exact in both directions for every value the engine forms.
 #
 # `BigFloat(::Dyadic)` is what gate G7 compares against, so it must be exact

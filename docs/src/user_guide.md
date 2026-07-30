@@ -549,7 +549,11 @@ trig of ±Inf is NaN; the π-scaled family reduces exactly mod 2 first.
 ## Arrays, kernels, and sorting
 
 Every operation has array methods — `Op(fr, ρ, A)`, `Op(fr, ρ, A, B)`,
-`Op(fr, ρ, A, B, C)` — plus the generic `vmap` / `vmap!`:
+`Op(fr, ρ, A, B, C)` — plus the generic `vmap` / `vmap!`.
+
+(In that line `Op` stands for any operation name — `Add`, `Exp`, and so on. There
+is also a *type* called [`Op`](@ref), introduced below, which turns an operation
+into a callable so `map` and broadcast work directly.)
 
 ```julia-repl
 julia> A = Binary8p4se.(randn(Xoshiro(7), 4) .* 2)
@@ -598,6 +602,30 @@ Sorting is special-cased: values compare through integer order keys, and vectors
 about 8× the stock comparison sort at 64 K elements, `rev=true` included. `sort(A)`
 just works; NaN sorts last (first under `rev=true`), matching Base's conventions.
 `TotalOrder(x, y)` exposes the draft's total order directly (single NaN largest).
+
+### `map`, broadcast, and the `Op` callable
+
+`vmap!` is the in-place, table-aware kernel and is what you want when you have a
+destination to fill. When you want Julia's own array verbs, bind the operation,
+result format and projection into an [`Op`](@ref) and use it as a function:
+
+```julia-repl
+julia> A = Binary8p4se.([1.5, 0.25]); B = Binary8p4se.([0.25, 1.5]);
+
+julia> map(Op(:Add, Binary8p4se, RNE_SN), A, B)
+2-element Vector{Binary8p4se}:
+ Binary8p4se(1.75 ≡ 0x46)
+ Binary8p4se(1.75 ≡ 0x46)
+
+julia> Op(:Exp, Binary8p4se, RNE_SN).(A)
+2-element Vector{Binary8p4se}:
+ Binary8p4se(4.5 ≡ 0x51)
+ Binary8p4se(1.25 ≡ 0x42)
+```
+
+`Op` is a singleton type — the operation, format and projection all live in its
+type parameters — so a call specializes exactly as `Add(Binary8p4se, RNE_SN, x, y)`
+does and allocates nothing beyond the array `map` itself builds.
 
 ## Blocks and scaled operations
 

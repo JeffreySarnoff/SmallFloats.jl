@@ -1,13 +1,18 @@
 # More Julian
 
 *Where this API departs from idiomatic Julia, which departures are defects,
-which are deliberate and right, and what I would change.*
+which are deliberate and right, and what changed.*
 
 Everything below was **probed against the running package**, not read off the
 source. Where a claim is a measurement, the number is here. Where it is taste, it
 says so and gives the counter-argument.
 
 The findings are ranked by what a user loses, not by how much code they touch.
+
+> **Status.** Tiers 1 and 2 are **implemented**; §5 records what each fix taught,
+> including two places where the first attempt was worse than the second and one
+> measurement that was simply wrong. Tier 3 is unchanged by decision. Tier 4 is
+> measurement, and one of its entries exists to *stop* a refactor.
 
 ---
 
@@ -100,30 +105,41 @@ projection — with `RoundingMode` arguments mapping through the existing
 are the standard decomposition trio, and the package computes all three
 internally.
 
-`exponent` refuses deliberately (a hand-thrown `MethodError`), and that is a
-reasonable call — for a `P = 1` unsigned format "the exponent" is the whole
-value, and the draft's own accessor is `expbias`/`expbitwidth`. But then
-`significand` and `frexp` should refuse *the same way*, and for the same stated
-reason.
+*A correction, since the first draft of this document got it wrong.* `exponent`
+looked like a deliberate refusal — Julia prints "This error has been manually
+thrown, explicitly" — but that hint is about `Base.exponent`'s own internals, not
+about this package: `methods(Base.exponent)` showed a `SmallFloats` entry only for
+the internal `Dyadic` carrier. **There was no package refusal here at all**, which
+matters because it changes the fix from "make the other two refuse alike" to
+"implement all three".
+
+All three are now implemented. `exponent` is exact for every finite nonzero
+datum. `significand` and `frexp` are exact too, with one honest exception in
+§5.2.
 
 ### 1.4 Refusals are inconsistent, and one style is clearly better
 
-```
-rem(x, y)         →  ErrorException: "rem not defined for Binary8p4se"    ← good
-significand(x)    →  MethodError                                          ← bare
-frexp(x)          →  MethodError                                          ← bare
-x:y  (a range)    →  ErrorException                                       ← good
-```
+The first draft of this section read `rem`'s error as a well-made package
+refusal and held it up as the model. **It is not — it comes from Base's promotion
+machinery**, which happens to name the type on its way to failing. Tracing the
+backtrace put the throw at `Base.promotion:641`, not anywhere in `src/`.
 
-`rem` and `mod` refuse with a sentence naming the type. `significand` and `frexp`
-give a bare `MethodError` that reads as an oversight — because it is
-indistinguishable from one.
+The corrected finding is stronger. **The package had no deliberate-refusal
+mechanism anywhere in its Base-verb surface**: every absence, intended or not,
+produced an identical bare `MethodError`, so nothing in the API could distinguish
+"we thought about this and declined" from "we forgot".
 
 **This matters more than it looks.** §11 M44's whole lesson was that the suite
-cannot tell a deliberate absence from a defect, and neither can a user. A
-package this careful about stating what it does not cover should state it in the
-error too. Recommendation: one `_unsupported(f, T)` helper, used by every
-deliberate refusal, so "absent" and "refused" are visibly different.
+cannot tell a deliberate absence from a defect, and neither can a user. A package
+this careful about stating what it does not cover should state it in the error
+too.
+
+Now one `_unsupported(f, T, why)` helper carries every deliberate refusal, and
+three things use it: `rem`/`mod` (the draft defines no remainder, and the exact
+one is generally not a datum), `round(x, RoundFromZero)` and
+`round(x, RoundNearestTiesUp)` (no draft μ), and `significand` on the one format
+whose binade `[1, 2)` is truncated by its `Inf` encoding. Each says which and
+why, and each names an alternative.
 
 ---
 
@@ -144,18 +160,26 @@ something Julia already has two words for.
 A callable struct closes the gap without giving anything up:
 
 ```julia
-struct Op{name,FR,RHO} end
-Op(name::Symbol, ::Type{FR}, ρ) = Op{name,FR,typeof(ρ)}()
-(::Op{name,FR,RHO})(xs...) where {name,FR,RHO} = <the existing scalar path>
-
-# then, idiomatically:
 map(Op(:Add, T, ρ), A, B)
 Op(:Exp, T, ρ).(A)
 ```
 
 `Op{name,FR,RHO}` is a singleton, so it specializes exactly as the `Val(:Add)`
-route does — no dispatch cost, and `vmap!` stays as the in-place, table-aware
-kernel underneath. This is additive: nothing existing changes meaning.
+route does, and `vmap!` stays the in-place table-aware kernel underneath. This is
+additive: nothing existing changes meaning.
+
+**The call methods are generated from `OP_REGISTRY`, one per operation, and that
+is a performance decision.** The obvious single body —
+`getfield(SmallFloats, name)(FR, RHO(), xs...)` — is a module lookup Julia will
+not reliably fold, so the operation would resolve at *run* time, turning a
+specialized call dynamic on exactly the array path this type exists to serve.
+Generating per operation also means a new registry entry gains a callable with no
+edit (invariant 7).
+
+Measured, with the format entering as a type parameter: **`Op` allocates zero**,
+and where the direct call allocates — a rung-2 or rung-3 `Exp` escalating into
+the MPFR ladder — `Op` allocates exactly the same. It adds nothing. §5.3 records
+how the first attempt at that measurement was wrong.
 
 ### 2.2 `similar` should normalize the abstract format everywhere
 
@@ -169,10 +193,15 @@ isbitstype(eltype(Vector{Binary8p4se}(undef, 3)))            →  true
 Nothing errors — every operation still returns the right answer, because the
 package normalizes the abstract format at each entry point. You lose the entire
 performance story and are told nothing. `similar(a, T)` already normalizes;
-`similar(a)` on an already-abstract array propagates the abstraction. Making the
-no-type form normalize too recovers one of the two ways in. `Vector{T}(undef, n)`
-genuinely cannot be intercepted, which is why this is documented in the user
-guide's performance section as well.
+`similar(a)` on an already-abstract array propagated the abstraction, so an
+abstractly-typed array stayed abstract through every `similar` in the package.
+
+It now normalizes — through **three** methods rather than one, for a reason that
+is a fact about Julia dispatch rather than about this package. See §5.1.
+
+This stops the abstraction *propagating*; it cannot stop it *arising*, because
+`Vector{Binary{8,4,true,true}}(undef, n)` is a constructor call with no hook.
+That entry is documented in the user guide's performance section instead.
 
 ### 2.3 `reinterpret` already works — sanction it
 
@@ -293,17 +322,86 @@ carrying `Float64` intuitions. Document it; do not change it.
 
 ---
 
+## 5. What implementing it taught
+
+Three of the fixes were wrong the first time in ways worth keeping, because each
+is a general trap rather than a local slip.
+
+### 5.1 A more specific element type loses to a fixed dimension
+
+`similar` was first written as one method:
+
+```julia
+Base.similar(a::Array{T,N}) where {T<:Binary,N} = ...   # never fires
+```
+
+It never ran. Base defines `similar(a::Vector{T})` and `similar(a::Matrix{T})`
+with the **dimension fixed**, and in Julia's specificity ordering a fixed
+dimension outranks a bounded element type. `which(similar, Tuple{Vector{...}})`
+pointed straight at `Base.array.jl:372`.
+
+So there are three methods now — `AbstractArray`, `Vector`, `Matrix` — and the
+comment says why, because the failure mode is silent. **A method that does not
+fire is worse than a method that is absent**: the absent one shows up as a
+`MethodError`, and the shadowed one shows up as nothing at all.
+
+### 5.2 Ask the format, not the value
+
+`significand` must return the same type (Base's contract), and the significand of
+a datum is not always a datum of its own format — `Binary3p2se` spends the code
+that would carry `1.5` on `Inf`.
+
+The first implementation checked *per value*, by projecting and decoding back to
+see whether the round trip was exact. That is two engine calls on every call, on
+a path where the answer never depends on the value.
+
+Whether a format can hold every significand is a property of `(P, B, δ)`:
+`significand(x) ∈ [1, 2)` needs the binade `e = 0` fully populated, which an
+extended format truncates only when that binade is also its top one.
+`_binade0_complete(T)` is a pure function of the type parameters, constant-folds
+to a literal `true` for all but the degenerate formats, and costs nothing on the
+path that succeeds. **Static where the question is static.**
+
+### 5.3 The benchmark harness was the thing being measured
+
+A first probe put `Op`'s scalar call at 48 bytes per call and looked like §11
+M46's vararg-boxing defect returning. It was the harness: the format entered
+through a **non-`const` global**, which is the ~1 µs dynamic-dispatch trap
+CLAUDE.md's performance rules name in so many words. Rebuilt with the format as a
+type parameter, `Op` allocates zero.
+
+This is the third time in this work that a measurement post-mortem has been the
+finding rather than the code. The benchmark doctrine exists because of the first
+two; this one says it applies to *ad-hoc probes* as much as to
+`benchmarking/`, and that a number which merely confirms a suspicion deserves the
+same scrutiny as one that contradicts it.
+
+### 5.4 And one the compiler caught
+
+`round(v::T, r::RoundingMode) where {T<:Binary}` — generic in the mode, specific
+in the type — is **ambiguous** with three of Base's per-mode `AbstractFloat`
+methods. `Test.detect_ambiguities` said so on the first suite run.
+
+Enumerating the modes fixes it and buys something better: the list of methods
+*is* the statement of which Julia rounding modes have a P3109 counterpart,
+checked by the compiler rather than asserted in a comment. The two that do not —
+`RoundFromZero` and `RoundNearestTiesUp` — refuse by name through `_unsupported`
+rather than inheriting Base's fallback, which would have computed on the carrier
+and projected a result the draft never defined.
+
+---
+
 ## Summary
 
 | # | item | verdict |
 |---|---|---|
-| 1.1 | `Base.decompose` missing ⇒ `hash` throws ⇒ no `Dict`/`Set` | **fix — highest value** |
-| 1.2 | `round`/`floor`/`ceil`/`trunc` absent | **fix** |
-| 1.3 | `widen`, `frexp`, `significand` absent | **fix or refuse explicitly** |
-| 1.4 | refusal style inconsistent (bare `MethodError` vs named `ErrorException`) | **fix — one helper** |
-| 2.1 | callable `Op` so `map`/broadcast work | add (additive) |
-| 2.2 | `similar(a)` propagates abstract eltype | add |
-| 2.3 | `reinterpret` works, undocumented, ungated | document + gate |
+| 1.1 | `Base.decompose` missing ⇒ `hash` throws ⇒ no `Dict`/`Set` | **done** — `Base.decompose`, §5 |
+| 1.2 | `round`/`floor`/`ceil`/`trunc` absent | **done** — `round`/`floor`/`ceil`/`trunc`, per-mode |
+| 1.3 | `widen`, `frexp`, `significand` absent | **done** — all three implemented; `exponent` was never refused (§1.3) |
+| 1.4 | refusal style inconsistent (bare `MethodError` vs named `ErrorException`) | **done** — `_unsupported`, used by four refusals |
+| 2.1 | callable `Op` so `map`/broadcast work | **done** — registry-generated, zero allocation |
+| 2.2 | `similar(a)` propagates abstract eltype | **done** — three methods; §5.1 |
+| 2.3 | `reinterpret` works, undocumented, ungated | **done** — checked against invariant 3 |
 | 3.1 | CamelCase operation register | keep — draft names |
 | 3.2 | `Unsigned` = code point | keep — invariant 2 |
 | 3.3 | `Base.codepoint` on floats | keep — document |

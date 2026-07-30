@@ -192,6 +192,17 @@ end
     for nm in _PROBED
         T = _fmt(nm); vs = _probes(T)
         bad = String[]
+        # The veneer list is the full `AbstractFloat`/`Real` INTERFACE, not the
+        # subset the package happens to implement — and that distinction is the
+        # whole finding of docs/other/morejulian.md. Every Tier 1 item there was
+        # a method generic Julia code reaches for and the package had not
+        # supplied, so each failed at a USER's call site and none at this gate's.
+        # Sweeping what the subtype promises, rather than what it provides, is
+        # what closes that gap and keeps it closed.
+        #
+        # `exponent`/`significand`/`frexp` are `DomainError`s on zero and the
+        # non-finites by Base's own contract, so they are probed through a guard
+        # rather than excluded — any OTHER exception still fails the gate.
         for (lbl, f) in ((:Class, Class), (:NextGreaterThan, NextGreaterThan),
                          (:NextLessThan, NextLessThan),
                          (:isnan, isnan), (:isinf, isinf), (:isfinite, isfinite),
@@ -199,7 +210,29 @@ end
                          (:sign, sign), (:float, float), (:Float64, Float64),
                          (:Float32, Float32), (:Float16, Float16),
                          (:BigFloat, BigFloat), (:show, v -> sprint(show, v)),
-                         (:decode, decode), (:codepoint, codepoint))
+                         (:decode, decode), (:codepoint, codepoint),
+                         # ---- the AbstractFloat/Real contract
+                         (:hash, hash), (:decompose, Base.decompose),
+                         (:round, round), (:floor, floor),
+                         (:ceil, ceil), (:trunc, trunc),
+                         (:round_RoundUp, v -> round(v, RoundUp)),
+                         (:round_RoundDown, v -> round(v, RoundDown)),
+                         (:round_RoundToZero, v -> round(v, RoundToZero)),
+                         (:one, one), (:zero, zero), (:abs2, abs2),
+                         (:isequal_self, v -> isequal(v, v)),
+                         (:reinterpret_out, v -> reinterpret(codeunit_type(typeof(v)), v)),
+                         (:reinterpret_in,
+                          v -> reinterpret(typeof(v), codepoint(v)) === v ||
+                               error("reinterpret round trip changed the value")),
+                         (:exponent, v -> (isfinite(v) && !iszero(v)) ? exponent(v) : 0),
+                         (:significand,
+                          v -> !(isfinite(v) && !iszero(v)) ? v :
+                               (SmallFloats._binade0_complete(typeof(v)) ?
+                                significand(v) : v)),
+                         (:frexp,
+                          v -> !(isfinite(v) && !iszero(v)) ? (v, 0) :
+                               (SmallFloats._binade0_complete(typeof(v)) ?
+                                frexp(v) : (v, 0))))
             r = _try(lbl, () -> for x in vs; f(x); end)
             r === nothing || push!(bad, r)
         end
@@ -223,7 +256,19 @@ end
         for (lbl, f) in ((:sort, sort), (:maximum, maximum), (:minimum, minimum),
                          (:extrema, extrema), (:sum_decoded, a -> sum(decode.(a))),
                          (:broadcast_add, a -> a .+ a),
-                         (:vmap, a -> Add.(T, Ref(RNE_SF), a, a)))
+                         (:vmap, a -> Add.(T, Ref(RNE_SF), a, a)),
+                         # `Dict`/`Set` are what a missing `hash` actually costs
+                         # a user, so they are probed as themselves rather than
+                         # inferred from `hash` merely returning.
+                         (:Dict_key, a -> length(Dict(v => i for (i, v) in enumerate(a)))),
+                         (:Set_elem, a -> length(Set(a))),
+                         (:widen, a -> widen(eltype(a))),
+                         (:similar_stays_concrete,
+                          a -> isbitstype(eltype(similar(a))) ||
+                               error("similar produced a non-isbits element type")),
+                         (:map_Op, a -> map(Op(:Abs, T, RNE_SF), a)),
+                         (:broadcast_Op, a -> Op(:Negate, T, RNE_SF).(a)),
+                         (:round_broadcast, a -> round.(a)))
             r = _try(lbl, () -> f(A))
             r === nothing || push!(bad, r)
         end

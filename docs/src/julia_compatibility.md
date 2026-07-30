@@ -40,10 +40,22 @@ julia> DefaultProjection!(RTZ_SF);
 
 julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # now clamps to MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
+
+julia> DefaultProjection!(RNE_SN)                # restore: this setter is PROCESS-wide
+(NearestTiesToEven, SatNone)
 ```
 
 Code that must be insensitive to the session default names its projection:
 `Multiply(T, RNE_SN, x, y)`.
+
+!!! warning "Restore what you set"
+    `DefaultProjection!` mutates state shared by every module in the process, and
+    nothing scopes it for you — it changes `T(x::Real)` construction too, so a
+    later `Binary8p4se(1.1)` would truncate rather than round to nearest. Prefer
+    [`with_default_projection`](@ref), which restores on exit even if the body
+    throws. Every example after this point assumes the pristine
+    `(NearestTiesToEven, SatNone)`, which is why the demonstration above puts it
+    back.
 
 ## The mapping
 
@@ -118,3 +130,44 @@ on integer order keys, `sort` via an O(n) counting sort,
 `nextfloat`/`prevfloat` as the draft Next operations, `codepoint`, and
 `rand`/`randn` (see the [User Guide](@ref)). All of it goes through the same
 projection engine and decode tables as the draft-named API.
+
+### The `AbstractFloat` contract
+
+`Binary <: AbstractFloat`, and generic Julia code reaches for that interface
+without asking. The whole of it is supplied:
+
+| verb | behaviour |
+|---|---|
+| `hash`, `Base.decompose` | exact — a datum is `S · 2^Q`, so `Dict` keys and `Set` elements work |
+| `round`, `floor`, `ceil`, `trunc` | **one** rounding: the integer value is formed exactly on the carrier and projected once, under the session default's saturation |
+| `round(x, r::RoundingMode)` | `RoundNearest`, `RoundNearestTiesAway`, `RoundUp`, `RoundDown`, `RoundToZero` |
+| `exponent`, `significand`, `frexp` | exact; `DomainError` on zero and the non-finites, as in Base |
+| `widen` | the format's promotion carrier — see [the promotion study](../other/promoterules.md) for why it is not another format |
+| `reinterpret` | both directions, and the incoming one is **checked** against the representation invariant |
+
+```julia-repl
+julia> hash(Binary8p4se(1.5)) == hash(Binary8p4se(1.5))
+true
+
+julia> Base.decompose(Binary8p4se(1.5))          # 12 · 2^-3 = 1.5, exactly
+(12, -3, 1)
+
+julia> floor(Binary8p4se(1.6)), ceil(Binary8p4se(1.1))
+(Binary8p4se(1.0 ≡ 0x40), Binary8p4se(2.0 ≡ 0x48))
+
+julia> reinterpret(Binary8p4se, 0x44)            # checked, unlike `rawvalue`
+Binary8p4se(1.5 ≡ 0x44)
+```
+
+**Refusals name themselves.** Where a Base verb has no draft counterpart, the
+error says which and why rather than surfacing as a bare `MethodError` that
+cannot be told apart from an oversight:
+
+```julia-repl
+julia> rem(Binary8p4se(1.5), Binary8p4se(2.0))
+ERROR: ArgumentError: rem is not defined for Binary8p4se: the draft defines no remainder; …
+```
+
+That covers `rem`/`mod`, `round` under `RoundFromZero` and `RoundNearestTiesUp`
+(no draft μ), and `significand` on the one format whose binade `[1, 2)` is
+truncated by its `Inf` encoding.
