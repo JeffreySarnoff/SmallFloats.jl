@@ -234,7 +234,8 @@ two-term dot product.
    operand:
 
    ```julia
-   else # arity 4
+   # …continuing the existing `if op.arity == …` cascade:
+   if op.arity == 4
        @eval begin
            @inline function $name(fr::Type{<:Binary}, ρ::ProjSpec,
                                   x::Binary, y::Binary, z::Binary, w::Binary;

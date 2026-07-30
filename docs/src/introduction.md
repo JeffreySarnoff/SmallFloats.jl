@@ -63,8 +63,8 @@ julia> σ = RSA_SN();            # stochastic rounding, default N = 8 bits
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); R = 255)
 Binary8p4se(2.25 ≡ 0x49)             # explicit draw R makes it reproducible
 
-julia> Exp(Binary8p4se, RNE_SN, Binary8p4se.([-1.0, 0.5, 2.0]))
-3-element Vector{Binary8p4se}:       # array methods route through 256-byte tables
+julia> Exp(Binary8p4se, RNE_SN, Binary8p4se.([-1.0, 0.5, 2.0]))   # via a 256-byte table
+3-element Vector{Binary8p4se}:
  Binary8p4se(0.375 ≡ 0x34)
  Binary8p4se(1.625 ≡ 0x45)
  Binary8p4se(7.5 ≡ 0x57)
@@ -110,7 +110,7 @@ format and never by the caller.
 
 The package is not yet registered, so install it by URL:
 
-```julia
+```
 pkg> add https://github.com/JeffreySarnoff/SmallFloats.jl
 ```
 

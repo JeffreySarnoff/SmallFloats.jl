@@ -100,12 +100,17 @@ a reinterpretation:
 ```julia-repl
 julia> using SmallFloats.Formats
 
-julia> Convert(Binary16p11se, RNE_SF, Float16(1.5))    # a conversion
+julia> Convert(Binary16p11se, RNE_SF, Float16(1.5))    # a conversion: 1.5 ↦ 1.5
 Binary16p11se(1.5 ≡ 0x4200)
 
-julia> reinterpret(Binary16p11se, Float16(1.5))               # NOT a thing
-ERROR: MethodError: ...
+julia> reinterpret(Binary16p11se, Float16(1.5))        # the SAME BITS: 1.5 ↦ 0.75
+Binary16p11se(0.75 ≡ 0x3e00)
 ```
+
+The second line is the trap in one expression. `Float16(1.5)` has the bit pattern
+`0x3e00`; read as a `Binary16p11se` those same bits denote **0.75**, because the
+exponent bias differs by one. Nothing errors, nothing warns, and the answer is
+off by a factor of two. Always convert.
 
 The remaining rows are draft decisions rather than accidents. A single NaN
 encoding means there is no payload to propagate and no quiet/signalling
@@ -240,22 +245,22 @@ Binary8p4se(0.0703125 ≡ 0x21)
 
 julia> rand(Xoshiro(8), Binary8p4se, 4)
 4-element Vector{Binary8p4se}:
-   Binary8p4se(0.40625 ≡ 0x35)
+ Binary8p4se(0.40625 ≡ 0x35)
  Binary8p4se(0.021484375 ≡ 0x13)
-      Binary8p4se(0.75 ≡ 0x3c)
-   Binary8p4se(0.28125 ≡ 0x31)
+ Binary8p4se(0.75 ≡ 0x3c)
+ Binary8p4se(0.28125 ≡ 0x31)
 ```
 
 **Setup 3 — arrays and in-place.** `rand(T, dims...)` / `randn(T, dims...)`
 build `Array{T}`; `rand!(A)` / `randn!(A)` fill an existing array (one byte per
-element — cheap to preallocate and reuse):
+element at K ≤ 8, two above — cheap to preallocate and reuse):
 
 ```julia-repl
 julia> A = Vector{Binary8p4se}(undef, 3); randn!(Xoshiro(2), A)
 3-element Vector{Binary8p4se}:
  Binary8p4se(-0.005859375 ≡ 0x86)
-        Binary8p4se(1.75 ≡ 0x46)
-        Binary8p4se(-1.0 ≡ 0xc0)
+ Binary8p4se(1.75 ≡ 0x46)
+ Binary8p4se(-1.0 ≡ 0xc0)
 
 julia> randn(Xoshiro(3), Binary8p4se, 2, 3) |> typeof
 Matrix{Binary8p4se}
@@ -417,7 +422,28 @@ julia> DefaultProjection!(RNA_SF)
 
 julia> DefaultRoundingMode(), DefaultSaturationMode()   # followed the projection
 (NearestTiesToAway(), SatFinite())
+
+julia> DefaultProjection!(RNE_SN)        # restore: these setters are PROCESS-wide
+(NearestTiesToEven, SatNone)
 ```
+
+!!! warning "The session defaults are process-global and they stay set"
+    `DefaultProjection!` and its siblings mutate state shared by every module in
+    the process. Nothing scopes them for you: set one in a script, a notebook
+    cell, or a REPL session and *every* later `T(x::Real)`, `a + b` and `Exp(x)`
+    follows it until something sets it back.
+
+    Prefer [`with_default_projection`](@ref) (and `with_default_type`,
+    `with_default_returntype`), which restore on exit even if the body throws:
+
+    ```julia
+    with_default_projection(RTZ_SF) do
+        Binary8p4se(1e9)          # clamps, inside this block only
+    end
+    ```
+
+    Every example below assumes the pristine `(NearestTiesToEven, SatNone)`,
+    which is why each demonstration above restores it explicitly.
 
 `DefaultProjection` is not merely advisory: `default_projspec` reads it, so the
 same-format convenience methods (`a + b`, `Exp(x)`, …), the Base-register
@@ -433,6 +459,9 @@ julia> DefaultProjection!(RTZ_SF);
 
 julia> x * y                              # now clamps to MaxFinite
 Binary8p4se(224.0 ≡ 0x7e)
+
+julia> DefaultProjection!(RNE_SN)         # restore before moving on — see below
+(NearestTiesToEven, SatNone)
 
 julia> Multiply(Binary8p4se, RNE_SN, x, y)   # explicit ρ is unaffected
 Binary8p4se(Inf ≡ 0x7f)
