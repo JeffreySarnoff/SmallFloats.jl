@@ -1676,6 +1676,9 @@ include("gates_g10.jl")
 # T1 — the code lattice, EXHAUSTIVE at every K: 7 602 160 code points over all
 #      504 formats, every property in one pass per format because the cost is
 #      specialization (98% of its runtime) and six passes would pay it six times.
+# The Dyadic ↔ Rational bridge: the enumerable edge tables of
+# docs/other/dyadic_rational.md. The lattice-wide identity is T1's.
+include("dyadic_rational.jl")
 include("tier_t1.jl")
 include("tier_t2.jl")
 # Every ρ family at every rung, by construction rather than by draw — the

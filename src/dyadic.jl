@@ -26,7 +26,8 @@
 
 module DyadicNumbers
 
-export Dyadic, DY_FINITE, DY_POSINF, DY_NEGINF, DY_NAN
+export Dyadic, DY_FINITE, DY_POSINF, DY_NEGINF, DY_NAN,
+       dyadic_to_rational, rational_to_dyadic, isdyadic
 
 # The kind tag exists because a dyadic rational cannot represent ±Inf or NaN, and
 # the ω-semantics catalog produces all three. Encoding them in `S`/`Q` sentinels
@@ -421,22 +422,115 @@ function Base.decompose(x::Dyadic)
     (x.S, Int(x.Q), Int128(1))
 end
 
+# ---- Dyadic ↔ Rational (docs/other/dyadic_rational.md)
+#
+# The exact bridge in both directions. A `Dyadic` already IS `S · 2^Q`, so the
+# rational conversion is the definition rather than a decomposition — which is
+# what makes it the right comparison against `test/refimpl.jl`'s
+# `Rational{BigInt}` oracle: the value never routes through a carrier whose
+# exactness is part of what is being tested.
+
+"""Fit a `BigInt` into `T`, or say which side overflowed and by how much.
+
+Two-sided bounds, not `abs(n) <= typemax(T)`: `abs(typemin(Int128))` wraps to
+itself, so the `abs` form is wrong on exactly one input — and that input is a
+legitimate significand."""
+_fit_rat(::Type{BigInt}, n::BigInt, _) = n
+_fit_rat(::Type{T}, n::BigInt, what) where {T<:Integer} =
+    typemin(T) <= n <= typemax(T) ? T(n) :
+        throw(OverflowError("dyadic_to_rational: the $what needs " *
+                            "$(ndigits(n; base=2)) bits, which Rational{$T} " *
+                            "cannot hold; use Rational{BigInt}"))
+
 """
-    Rational{BigInt}(x::Dyadic)
+    dyadic_to_rational([T=BigInt,] x::Dyadic) -> Rational{T}
 
-The **exact** value as a rational — `S · 2^Q` written directly, with no float in
-the path at all. Every other carrier reaches `Rational{BigInt}` by decomposing a
-float; this one already is `S · 2^Q`, so the conversion is the definition.
+The **exact** value as a rational.
 
-That makes it the natural bridge to the `Rational{BigInt}` reference oracle: a
-comparison against `refimpl` no longer routes the value through a carrier whose
-exactness is part of what is being tested."""
-function Base.Rational{BigInt}(x::Dyadic)
-    isfinite_dy(x) || throw(InexactError(:Rational, Rational{BigInt},
-        "a non-finite Dyadic has no rational value"))
-    n = BigInt(x.S)
-    x.Q >= 0 ? (n << x.Q) // BigInt(1) : n // (BigInt(1) << (-x.Q))
+`BigInt` is the default because it is the only target that cannot fail: `Q`
+reaches ±32 768 at `Binary16p1uf`, so `2^-Q` needs ~32 768 bits. A narrow `T` is
+accepted and **checked** — it throws `OverflowError` naming the side that did not
+fit, rather than wrapping.
+
+Non-finite rows follow **Base**, which is the correction this function carries:
+`Rational` does represent infinities, so `+Inf` is `1//0` and `-Inf` is `-1//0`,
+exactly as `Rational{BigInt}(Inf)` gives. Only NaN has no rational slot (`0//0`
+is rejected by Base too) and throws. The predecessor threw on all three, from the
+untested premise that "a rational cannot represent infinity".
+
+The reduction is a **shift, not a gcd**. `Rational`'s invariant wants
+`gcd(num, den) == 1`; here `den` is a power of two, so the common factor is
+`2^min(trailing_zeros(S), -Q)` and one instruction establishes the invariant that
+Euclid's algorithm would have found. `unsafe_rational` is then safe in the strict
+sense — the invariant is established, not skipped.
+
+See also [`rational_to_dyadic`](@ref), [`isdyadic`](@ref)."""
+function dyadic_to_rational(::Type{T}, x::Dyadic) where {T<:Integer}
+    x.kind == DY_NAN && throw(InexactError(:dyadic_to_rational, Rational{T}, x))
+    x.kind == DY_POSINF && return Base.unsafe_rational(one(T), zero(T))
+    x.kind == DY_NEGINF && return Base.unsafe_rational(-one(T), zero(T))
+    iszero(x.S) && return Base.unsafe_rational(zero(T), one(T))
+    n, q = BigInt(x.S), Int(x.Q)
+    if q >= 0
+        Base.unsafe_rational(_fit_rat(T, n << q, "numerator"), one(T))
+    else
+        k = min(trailing_zeros(n), -q)                 # cancel, do not gcd
+        Base.unsafe_rational(_fit_rat(T, n >> k, "numerator"),
+                             _fit_rat(T, BigInt(1) << (-q - k), "denominator"))
+    end
 end
+dyadic_to_rational(x::Dyadic) = dyadic_to_rational(BigInt, x)
+
+"""
+    isdyadic(q::Rational) -> Bool
+
+Whether `q` is exactly representable as a [`Dyadic`](@ref) — that is, whether its
+denominator is a power of two (`±1//0` counts: the infinities are representable).
+
+The honest counterpart to a partial conversion. `1//3` is not a dyadic rational
+and no wider type fixes that, so `rational_to_dyadic` must refuse it; this is what
+lets a caller branch without exception handling. Julia has no `tryconvert`, and a
+predicate beside the throwing conversion is the idiomatic substitute."""
+isdyadic(q::Rational) = iszero(denominator(q)) || ispow2(denominator(q))
+
+"""
+    rational_to_dyadic(q::Rational) -> Dyadic
+
+The exact `Dyadic` for a dyadic rational.
+
+**Refuses rather than rounds.** A `Rational` whose denominator is not a power of
+two has no `Dyadic`, and rounding one here would be a rounding performed outside
+`project` — which invariant 1 forbids. Test with [`isdyadic`](@ref) first if the
+input may not qualify.
+
+`±1//0` map to the infinities. `0//0` cannot arise: Base rejects it at
+construction.
+
+The algorithm never assumes `q` is reduced — the power-of-two test and the
+trailing-zero strip are correct on a hand-built `unsafe_rational(2, 4)` — which
+removes a premise rather than relying on one."""
+function rational_to_dyadic(q::Rational)
+    n, d = numerator(q), denominator(q)
+    iszero(d) && return n > 0 ? DYADIC_POSINF : DYADIC_NEGINF
+    iszero(n) && return DYADIC_ZERO
+    ispow2(d) || throw(InexactError(:rational_to_dyadic, Dyadic, q))
+    k = trailing_zeros(d)                              # d == 2^k
+    nb = BigInt(n)
+    tz = trailing_zeros(nb)
+    s = nb >> tz
+    typemin(Int128) <= s <= typemax(Int128) || throw(InexactError(
+        :rational_to_dyadic, Dyadic, q))
+    Q = tz - k
+    # Unreachable for any rational a machine can hold — it would need an integer
+    # with ~9.2e18 bits — and checked anyway, so an impossible silent wrap is a
+    # stated refusal instead (the trade §11 M48 made for `project_interval`).
+    typemin(Int64) <= Q <= typemax(Int64) ||
+        throw(OverflowError("rational_to_dyadic: exponent $Q exceeds Int64"))
+    Dyadic(Int128(s), Int64(Q))
+end
+
+Base.Rational{T}(x::Dyadic) where {T<:Integer} = dyadic_to_rational(T, x)
+Dyadic(q::Rational) = rational_to_dyadic(q)
 Base.Float32(x::Dyadic) = _dyadic_to(Float32, x)
 Base.Float16(x::Dyadic) = _dyadic_to(Float16, x)
 
@@ -446,6 +540,12 @@ finite values decompose exactly because every binary float IS a dyadic rational.
 `Base.decompose` returns `(num, pow, den)` with **the sign in the denominator**
 and a carrier-specific exponent for zero — the trap gate G6 recorded (§11). Both
 are handled here rather than at the call sites."""
+# Idempotent: a `Dyadic` is already what `dyadic_from` produces. Without this row
+# the function is total over the *float* carriers but not over `CarrierValue`,
+# and rung 3 hands callers a `Dyadic` — so any generic "put this datum in the
+# exact form" call has a hole at exactly the rung the carrier was built for.
+dyadic_from(x::Dyadic) = x
+
 function dyadic_from(x::AbstractFloat)
     isnan(x) && return DYADIC_NAN
     isinf(x) && return x > 0 ? DYADIC_POSINF : DYADIC_NEGINF

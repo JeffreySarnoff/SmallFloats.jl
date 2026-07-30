@@ -54,7 +54,7 @@ end
 than derived, because the point is to notice one going missing — a list derived
 from what ran cannot detect what did not run."""
 const REQUIRED_GATES = ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G9", "G10",
-                        "T1", "T2a", "T2b", "Tρ"]
+                        "T1", "T2a", "T2b", "Tρ", "D↔Q"]
 
 # `G8` is deliberately absent from the required list: the representation
 # invariant is asserted inside the constructors and swept by T1's encode

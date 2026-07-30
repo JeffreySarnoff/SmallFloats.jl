@@ -127,6 +127,27 @@ result kinds; `apply_op` fast-splits the common one and finishes the rest:
 |---|---|---|
 | `Float64` | exact (specials; representable arithmetic) | direct `project` |
 | `Dyadic` | exact at rung 3: an `Int128` significand and an `Int64` exponent, `isbits` | direct `project` (dyadic carrier) |
+
+The dyadic carrier converts to and from `Rational` **exactly**, and that bridge
+is the cleanest way to reason about a rung-3 value:
+
+```julia
+using SmallFloats.DyadicNumbers: dyadic_to_rational, rational_to_dyadic, isdyadic
+
+dyadic_to_rational(x)          # Rational{BigInt}, exact — a Dyadic IS S·2^Q
+rational_to_dyadic(3 // 4)     # exact, or throws
+isdyadic(1 // 3)               # false — no Dyadic represents it
+```
+
+Three properties are worth knowing. The infinities convert (`±1//0`, matching
+`Rational{BigInt}(Inf)`) and NaN does not, because `Rational` has no NaN slot.
+A non-dyadic rational is **refused rather than rounded** — rounding it here would
+be a rounding outside `project`. And the round trip is a law about *values*, not
+fields: `Dyadic`'s significand is deliberately unnormalized, so `6·2⁻²` and
+`3·2⁻¹` are the same value and round-trip to the canonical one.
+
+The full design, with every edge case and the three laws, is in
+[`docs/other/dyadic_rational.md`](../other/dyadic_rational.md).
 | `Float128` | exact by **width analysis** | direct `project` (Float128 carrier) |
 | `StickyF` | wide-spread `FMA`/`FAA` tail: head value (`Float64` or `Float128`) + tail sign | direct `project` with `sticky` set — no allocation |
 | `BigExactF` | exact at a precision **derived from the operands** — `bigprec`, not a constant (wide-spread tail for `Add`; the near-impossible `FAA` distillation miss) | `project` on `BigFloat` |

@@ -55,6 +55,7 @@
 using Test, SmallFloats
 using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using Quadmath: Float128
+using SmallFloats.DyadicNumbers: Dyadic
 using SmallFloats: _NAMED, bitwidth, precision, expbias, codeunit_type, rawvalue,
                    codepoint, order_key, round_to_precision, encode, project,
                    nan_code, KIND_FIN, Binary, issigned, isextended
@@ -101,6 +102,31 @@ function t1_sweep(::Type{T}) where {T<:Binary}
                  (signbit(d) ? ClassNegSubnormal : ClassPosSubnormal) :
                  (signbit(d) ? ClassNegNormal : ClassPosNormal)))
         Class(v) == want || push_bad!(:class, c, (Class(v), want))
+
+        # (3b) the Rational bridge is exact and canonical, over the whole
+        # lattice. `Rational` is canonical, so this pins the VALUE and the
+        # reduction in one comparison — law 2 of docs/other/dyadic_rational.md.
+        # It rides in T1's existing loop for T1's existing reason: the cost here
+        # is specialization, not iteration, so a separate pass would pay the
+        # 504-format compilation again for the same 7 602 160 points.
+        #
+        # `==` and not `===`: `Rational{BigInt}` is BigInt-backed and `===` is
+        # object identity, so structurally equal values compare false.
+        if isfinite(d)
+            # The bridge is exercised on the DYADIC, not on the datum's own
+            # carrier. `Rational{BigInt}(::Float128)` routes through
+            # `precision(::Float128)`, which Quadmath does not define (§11 M35,
+            # and `refimpl.jl` carries the same note) — so going through the
+            # carrier would test Base's gap rather than this bridge, and errored
+            # on all 64 rung-2 formats when it was first written that way.
+            #
+            # `dyadic_from` is exact at every carrier, so this is law 1 of
+            # docs/other/dyadic_rational.md over the whole lattice.
+            dy = SmallFloats.DyadicNumbers.dyadic_from(d)
+            q = SmallFloats.DyadicNumbers.dyadic_to_rational(dy)
+            SmallFloats.DyadicNumbers.rational_to_dyadic(q) == dy ||
+                push_bad!(:rational_roundtrip, c, (d, q))
+        end
 
         keys[c + 1] = UInt(order_key(v))
     end
