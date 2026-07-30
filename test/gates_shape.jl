@@ -31,6 +31,8 @@ using SmallFloats: OP_REGISTRY, codeunit_type, table_for, _ternary_table_for,
                    TERNARY_ADAPTIVE_BITS, empty_tables!, apply_op, _NAMED, KSPLIT,
                    tablebits, within_byte_budget
 
+isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
+
 """Run `f` with the table policy forced to decline, so kernels take Shape B."""
 function force_shape_b(f)
     a, b, c = TABLE_EAGER_BITS[], TERNARY_EAGER_BITS[], TERNARY_ADAPTIVE_BITS[]
@@ -64,19 +66,26 @@ _ops(arity::Int) = [o.name for o in OP_REGISTRY if o.arity == arity]
 # seam, and to include a mixed-width one — a wide operand inside an affordable
 # table is the case the widened builders exist for and the one a `UInt8`
 # assumption would still break.
-const UNARY_SIGS = (
+# At `quick` the LARGEST signature in each list is dropped — a 2^12-entry unary
+# table and a 14-bit binary one are most of this file's 66 s, and the property
+# under test (which SHAPE a signature takes) is decided by the byte budget, not
+# by table size beyond it. The seam-spanning signatures are kept at every tier,
+# because spanning the seam is what the list is FOR.
+_drop_largest(t) = quick_requested() ? t[1:end-1] : t
+
+const UNARY_SIGS = _drop_largest((
     (Binary5p2se, Binary5p2se),      # narrow → narrow, UInt8 table
     (Binary8p4se, Binary8p4se),      # the largest narrow unary table
     (Binary9p4se, Binary9p4se),      # wide → wide, UInt16 table, 512 entries
     (Binary5p2se, Binary9p4se),      # wide operand, NARROW result: mixed units
     (Binary12p5se, Binary12p5se),    # 2^12 entries, UInt16
-)
-const BINARY_SIGS = (
+))
+const BINARY_SIGS = _drop_largest((
     (Binary4p2se, Binary4p2se, Binary4p2se),
     (Binary5p2se, Binary5p2se, Binary3p1se),      # asymmetric: catches index-order bugs
     (Binary9p4se, Binary9p4se, Binary5p2se),      # 14 bits, wide operand + wide result
     (Binary4p2se, Binary9p4se, Binary4p2se),      # wide operand, narrow result
-)
+))
 const TERNARY_SIGS = (
     (Binary4p2se, Binary4p2se, Binary4p2se, Binary4p2se),
     (Binary4p2se, Binary9p4se, Binary3p1se, Binary3p1se),   # 15 bits, wide operand

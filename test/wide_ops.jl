@@ -22,11 +22,37 @@ using Test, SmallFloats
 using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
 using SmallFloats: _NAMED, KSPLIT, rung, HeadF64, datumcarrier, project
 
+isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
+
 """The wide formats Group A is expected to work on today: K > KSPLIT and rung 1,
 so every operand decodes to `Float64` and the Float64 catalogue applies."""
-const _WIDE_A = sort!([nm for nm in keys(_NAMED)
-                       if bitwidth(getfield(SmallFloats, nm)) > KSPLIT &&
-                          rung(getfield(SmallFloats, nm)) === HeadF64()])
+const _WIDE_A_ALL = sort!([nm for nm in keys(_NAMED)
+                           if bitwidth(_NAMED[nm]) > KSPLIT &&
+                              rung(_NAMED[nm]) === HeadF64()])
+
+# 312 formats, and each pays its own specialization — this file was 50 s of the
+# quick tier. At `quick` it keeps one format per (K, P-class) cell, which is what
+# distinguishes the code paths here (K picks the code unit and the decode policy;
+# P == 1 and P == K are the degenerate significand shapes). Everything else runs
+# all 312, because "Group A produces defined results at every K" is this file's
+# whole claim and sampling it at the default tier would hollow that out.
+const _WIDE_A = if quick_requested()
+    seen = Set(); out = Symbol[]
+    for nm in _WIDE_A_ALL
+        F = _NAMED[nm]
+        c = (bitwidth(F), precision(F) == 1, precision(F) == bitwidth(F))
+        c in seen && continue
+        push!(seen, c); push!(out, nm)
+    end
+    sort!(out)
+else
+    _WIDE_A_ALL
+end
+
+const _WIDE_A_COVERAGE = quick_requested() ?
+    "SAMPLED (tier=quick): $(length(_WIDE_A)) of $(length(_WIDE_A_ALL)) rung-1 " *
+    "wide formats, one per (K, P-class) cell" :
+    "exhaustive: all $(length(_WIDE_A_ALL)) rung-1 formats above K = $KSPLIT"
 
 """Exact reference for a binary Group A op: evaluate on `BigFloat` operands at a
 precision that cannot round, then project. `bigprec` is the package's own
@@ -61,7 +87,7 @@ end
 let nchecked = 0
     @testset "Group A operational at every K" begin
         @test !isempty(_WIDE_A)
-        @test length(_WIDE_A) == 312          # 432 rung-1 formats less the 120 narrow
+        @test length(_WIDE_A_ALL) == 312      # 432 rung-1 formats less the 120 narrow
 
         ρ = RNE_SN
         for nm in _WIDE_A
@@ -144,5 +170,6 @@ let nchecked = 0
             end
         end
     end
-    println("Group A at every K: $nchecked wide-format results verified against an MPFR reference")
+    println("Group A at every K: $nchecked wide-format results verified against " *
+            "an MPFR reference — format axis $_WIDE_A_COVERAGE")
 end

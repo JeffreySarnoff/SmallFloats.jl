@@ -117,6 +117,17 @@ end
 const _STOCH = (StochasticA{4}(), StochasticB{4}(), StochasticC{4}())
 const _RHO_SATS = (SatNone(), SatFinite())
 
+# The R axis, tiered. `quick` keeps the endpoints — R = 0 and R = 2^N − 1 are the
+# two the OTHER two checks pin independently — plus one interior step, so a
+# reversal between adjacent draws is still visible. Everything else runs the full
+# chain, which is the honest form of a monotonicity claim.
+_rvalues(N::Int) = quick_requested() ?
+    unique((0, 1, (1 << N) ÷ 2, (1 << N) - 1)) : (0:(1 << N - 1))
+const _R_COVERAGE = quick_requested() ?
+    "R axis SAMPLED (tier=quick): 4 of 2^N draws per case — endpoints plus two " *
+    "interior steps; the full chain runs at tier=default and =release" :
+    "R axis exhaustive: every draw in 0:2^N-1"
+
 @testset "ρ × group × rung — every cell by construction" begin
 
     # ---- the grid, and the assertion that it is fully realized.
@@ -191,8 +202,20 @@ const _RHO_SATS = (SatNone(), SatFinite())
                     # (2) monotone in R: |result| never decreases as R grows.
                     # Both sides carry the SAME ρ, so SatNone's μ-branch cannot
                     # split them and this holds at every saturation mode.
+                    #
+                    # The FULL chain is the strong form and is what the default
+                    # and release tiers run: monotonicity is a property of the
+                    # whole sequence, and a single mis-decided R breaks it
+                    # wherever it sits. At `quick` the chain is sampled at its
+                    # endpoints and one interior step — enough to catch a
+                    # reversal or a collapse, not enough to locate one — because
+                    # this loop was 90 s of a 12.5-minute tier and the R axis,
+                    # not the format axis, is where its time goes.
+                    #
+                    # Stated rather than silent: `_R_COVERAGE` below names which
+                    # form ran, and the roll-call prints it.
                     prev = nothing
-                    for R in 0:(1 << N - 1)
+                    for R in _rvalues(N)
                         m = mag(f(T, ρs, args...; R))
                         if prev !== nothing && m !== nothing
                             n_mono[] += 1
@@ -228,7 +251,8 @@ const _RHO_SATS = (SatNone(), SatFinite())
     record_gate!("Tρ"; assertions=length(_RHO_FMTS) + 4,
                  units=n_trunc[] + n_mono[] + n_away[],
                  exhaustive=exhaustive_requested(),
-                 note=exhaustive_requested() ? "" : _RHO_COVERAGE)
+                 note=exhaustive_requested() ? _R_COVERAGE :
+                      _RHO_COVERAGE * " " * _R_COVERAGE)
     @info "ρ×rung: $(length(cells)) (rung, op-class, stochastic variant) cells, " *
           "all reached; $(n_trunc[]) R=0≡TowardZero identities, $(n_mono[]) " *
           "monotone-in-R steps, $(n_away[]) away-bound checks, over " *
