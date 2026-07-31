@@ -147,6 +147,8 @@ end
 # another format — docs/other/promoterules.md shows the grid is not a join
 # semilattice, and 40.3% of format pairs have no common format at all — but the
 # carrier promotion already targets.
+"""The public promotion target for `T` against external numeric types. Always a
+Julia `AbstractFloat`, never the internal exact carrier."""
 Base.widen(::Type{T}) where {T<:Binary} = promotecarrier(T)
 
 # ---- exponent, significand, frexp

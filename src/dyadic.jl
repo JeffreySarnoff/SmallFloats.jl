@@ -89,6 +89,9 @@ a missing test show up as a wrong answer rather than as a plausible one."""
     x.kind == DY_NAN    && return 0
     x.S > 0 ? 1 : (x.S < 0 ? -1 : 0)
 end
+"""Sign as an `Int` in `{-1, 0, 1}`; `NaN` answers 0, matching no float and
+deliberately so — callers must test `isnan` first, and a sign of 0 for NaN makes
+a missing test show up as a wrong answer rather than as a plausible one."""
 Base.sign(x::Dyadic) = sign_dy(x)
 Base.signbit(x::Dyadic) = sign_dy(x) < 0
 
@@ -302,6 +305,8 @@ non-finite rows, which is why it asserts rather than returning a sentinel."""
         throw(DomainError(x, "Dyadic exponent is defined only for finite nonzero values"))
     x.Q + nbits_dy(x.S) - 1
 end
+"""Binary exponent of `|x|`, i.e. `⌊log₂|x|⌋`. Undefined for zero and the
+non-finite rows, which is why it asserts rather than returning a sentinel."""
 Base.exponent(x::Dyadic) = exponent_dy(x)
 
 # ---- integer rounding, exactly and without allocating.
@@ -529,6 +534,29 @@ function rational_to_dyadic(q::Rational)
     Dyadic(Int128(s), Int64(Q))
 end
 
+"""
+    Rational{T}(x::Dyadic) -> Rational{T}
+
+The **exact** value as a rational.
+
+`BigInt` is the default because it is the only target that cannot fail: `Q`
+reaches ±32 768 at `Binary16p1uf`, so `2^-Q` needs ~32 768 bits. A narrow `T` is
+accepted and **checked** — it throws `OverflowError` naming the side that did not
+fit, rather than wrapping.
+
+Non-finite rows follow **Base**, which is the correction this function carries:
+`Rational` does represent infinities, so `+Inf` is `1//0` and `-Inf` is `-1//0`,
+exactly as `Rational{BigInt}(Inf)` gives. Only NaN has no rational slot (`0//0`
+is rejected by Base too) and throws. The predecessor threw on all three, from the
+untested premise that "a rational cannot represent infinity".
+
+The reduction is a **shift, not a gcd**. `Rational`'s invariant wants
+`gcd(num, den) == 1`; here `den` is a power of two, so the common factor is
+`2^min(trailing_zeros(S), -Q)` and one instruction establishes the invariant that
+Euclid's algorithm would have found. `unsafe_rational` is then safe in the strict
+sense — the invariant is established, not skipped.
+
+See also [`rational_to_dyadic`](@ref), [`isdyadic`](@ref)."""
 Base.Rational{T}(x::Dyadic) where {T<:Integer} = dyadic_to_rational(T, x)
 Dyadic(q::Rational) = rational_to_dyadic(q)
 Base.Float32(x::Dyadic) = _dyadic_to(Float32, x)

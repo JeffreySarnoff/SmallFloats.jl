@@ -336,5 +336,12 @@ function NextLessThan(v::T) where {K,P,SGN,EXT,T<:Binary{K,P,SGN,EXT}}
     c == 0x00 && return rawvalue(T, signmask(T) | 0x01)                 # 0 → SmallestNegative
     signbit(v) ? rawvalue(T, c + 0x01) : rawvalue(T, c - 0x01)
 end
+"""NextGreaterThan(v) (draft §4.16): the least datum greater than `v` in the total
+order — one step up the code lattice, with NaN → NaN and MaxFinite/+Inf → NaN at
+the top. `Base.nextfloat` on `Binary` is this operation."""
 Base.nextfloat(v::Binary) = NextGreaterThan(v)
+
+"""NextLessThan(v) (draft §4.16): the greatest datum less than `v` in the total
+order — one step down the code lattice, with NaN → NaN and MinFinite/−Inf → NaN at
+the bottom. `Base.prevfloat` on `Binary` is this operation."""
 Base.prevfloat(v::Binary) = NextLessThan(v)
