@@ -152,24 +152,25 @@ julia> codepoint(x)                       # the code point (extends Base.codepoi
 ```
 
 `decode` is **always exact**, but the type it returns is a property of the
-format, not of the package: `Float64` for the 432 formats whose exponent range it
-holds, `Float128` or an exact dyadic carrier for the other 72. `datumcarrier(T)`
-names it; `Float64(x)` always returns a `Float64` and rounds where the datum does
-not fit.
+format: `Float64` for 432 formats, `Float128` for 64, and an exact dyadic carrier
+for the 8 widest-range formats. `datumcarrier(T)` names it; `Float64(x)` always
+returns a `Float64` and rounds where the datum does not fit.
 
-!!! note "UInt8 means code point; every other number means value"
-    `UInt8` is the *only* argument type with code-point semantics — mirroring
-    `Char(0x41)`. Every other `Real` (including other `Integer`s) constructs by
-    projecting the numeric value, and `Convert` is numeric for **all** integers:
+!!! note "Unsigned means code point; signed integers mean value"
+    Every `Unsigned` argument has code-point semantics — mirroring `Char(0x41)`
+    and working at both storage widths. Other `Real`s, including signed
+    integers, construct by projecting the numeric value; `Convert` is numeric
+    for **all** integers:
 
     ```julia-repl
     julia> Binary8p4se(0x02), Binary8p4se(2)
     (Binary8p4se(0.001953125 ≡ 0x02), Binary8p4se(2.0 ≡ 0x48))
     ```
 
-    Out-of-range codes throw for K < 8 (`Binary5p3sf(0x20)` is an error); the range
-    check costs nothing measurable — 2.1 ns, identical to unchecked `rawvalue`.
-    Round-tripping is `T(codepoint(x)) === x`.
+    Out-of-range codes throw (`Binary5p3sf(0x20)` is an error). A wider unsigned
+    argument is accepted when its numeric code point fits, so
+    `Binary16p6se(UInt32(2))` is valid and checked. Round-tripping is
+    `T(codepoint(x)) === x`.
 
 `Convert` accepts `Binary` values (any format), `Float16/32/64`, `Float128`,
 `Integer`, and `BigFloat` — types whose values it can project *exactly*.
@@ -390,7 +391,7 @@ The exact fraction here is 1/8 of an ulp, so over all 256 draws exactly 32 round
 
 ### Session defaults
 
-Six session-wide defaults are readable as `DefaultX()` and settable as
+Seven session-wide defaults are readable as `DefaultX()` and settable as
 `DefaultX!(v)`:
 
 | default | initial value | setter accepts |
@@ -530,8 +531,9 @@ formats; the result format is the first argument. The catalog:
 
 **The Base register** makes each format an ordinary Julia number under its *default*
 spec (`RNE_SN`): `+ - * /`, `fma`, `exp`, `log`, `sqrt`, `min`, `max`, `abs`,
-`atan(y, x)`, `sinpi`, `inv`, comparisons, and friends — same-format operands only,
-no silent cross-format promotion (mixing formats promotes to `Float64` explicitly).
+`atan(y, x)`, `sinpi`, `inv`, comparisons, and friends — same-format operands
+only. Mixed `Binary` formats deliberately fail promotion; convert operands to a
+chosen format explicitly.
 
 ```julia-repl
 julia> exp(Binary8p4se(0.25))                       # Base register
@@ -571,11 +573,12 @@ julia> Exp(Binary8p4se, RNE_SN, A)
  Binary8p4se(9.0 ≡ 0x59)
 ```
 
-For pure (non-stochastic) specs, unary and binary array calls run as **table
-gathers**: the first call builds and caches a 256-byte (unary) or 64 KiB (binary)
-result table for that exact `(op, formats, ρ)` specialization, and every later
-element costs a single lookup — measured at 0.27 ns/element unary, 0.5 ns/element
-binary.
+For pure (non-stochastic) specs on K ≤ 8 formats, unary and binary array calls
+run as **table gathers**: the first call builds and caches a 256-byte (unary) or
+64 KiB (binary) result table for that exact `(op, formats, ρ)` specialization.
+On the recorded host, warm gathers take 0.13 ns/element unary and 0.26
+ns/element binary. Wider formats compute directly because their complete tables
+are not affordable.
 
 Ternary operations (`FMA`, `FAA`, `Clamp`) ride the same gather whenever the three
 operand bitwidths keep the table affordable, tiered by `K1 + K2 + K3`:
@@ -587,6 +590,9 @@ operand bitwidths keep the table affordable, tiered by `K1 + K2 + K3`:
   cache.
 - **Compute** (`K = 8`; a 16 MiB table stops being a cache win): the scalar
   pipeline runs per element, optionally threaded for long arrays.
+
+Any ternary signature containing a format above K = 8 also computes directly;
+the three tiers above describe the table-eligible K ≤ 8 region.
 
 Every table entry — eager or adaptive — is built through the scalar path, so it is
 bit-identical by construction. Stochastic calls always run the scalar pipeline per
@@ -726,8 +732,8 @@ implementations must be acknowledged with an explicit `κ = NaN`. Retrieve with
     intercepted. Use the alias, or `format(K, P, Σ, Δ)` for runtime parameters.
 
 - **Pass format types statically.** Through `const` bindings, type parameters, or
-  function arguments, every entry point fully specializes (scalar `Add` ≈ 18–26 ns,
-  `project` ≈ 13 ns, zero allocations). A format type read from a **non-`const`
+  function arguments, every entry point fully specializes and warm scalar paths
+  allocate nothing. A format type read from a **non-`const`
   global** forces Julia's dynamic dispatch on every call (~1 µs for keyword calls);
   one function barrier `f(::Type{T}, …) where {T}` restores full speed.
 - **The convenience forms are free at the initial default.** `x + y`, `Exp(x)`,
@@ -736,9 +742,10 @@ implementations must be acknowledged with an explicit `κ = NaN`. Retrieve with
   you change the default they cost one dynamic dispatch per call; name ρ
   explicitly (`Add(T, ρ, x, y)` with a `const` ρ) in hot code that must be
   insensitive to the session default.
-- **Bulk work belongs in array calls.** The table-gather kernels are ~50× the scalar
-  path; the first call per specialization pays a one-time build (≈ 0.4 ms unary,
-  tens of ms for 8×8 binary tables, up to a few ms for a 2 MiB ternary table).
+- **Bulk work belongs in array calls.** Table-eligible warm gathers are much
+  faster than scalar calls; the first call per specialization pays a one-time
+  build. The cost depends strongly on operation and table size, so use the dated
+  [benchmark report](benchmarks.md) rather than a frozen rule of thumb.
 - **Ternary array calls scale with bitwidth.** `K ≤ 6` operand formats table
   eagerly (~35× the scalar loop); `K = 7` tables adaptively once a signature is
   hot; `K = 8` runs the compute kernel, optionally threaded for long arrays

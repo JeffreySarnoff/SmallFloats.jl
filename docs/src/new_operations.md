@@ -19,12 +19,12 @@ not optional.
 1. **Special rows are spec, not optimization.** Write out the NaN/±Inf/zero
    rows explicitly in `ωeval`, in draft style, before any general evaluation.
    Mark any behavior the draft text under-determines with `[interp]`.
-2. **Result-kind protocol.** `ωeval` must return one of
-   `Float64 | Float128 | StickyF | BigExactF | EncloseF | Enclose128F`, with
-   `Float64`/`Float128` reserved for *provably exact* results and `StickyF`
-   for exact-head-plus-tail-direction results whose soundness bound is
-   discharged at the emitting site (see the `FMA`/`FAA` wide-spread
-   escalations). Keep the return union narrow (ideally `{Float64, EncloseF}`)
+2. **Result-kind protocol.** `ωeval` returns an exact `CarrierValue`
+   (`Float64 | Float128 | BigFloat | Dyadic`) or one of
+   `StickyF | BigExactF | EncloseF | Enclose128F`. A bare carrier is reserved
+   for a *provably exact* result; `StickyF` is an exact head plus a proven tail
+   direction (see the `FMA`/`FAA` wide-spread escalations). Keep each method's
+   inferred return union narrow (ideally `{Float64, EncloseF}` on rung 1)
    — a wide union defeats inference and costs allocations (measured: a 4-type
    union turned a 50 ns op into 240 ns with 2 allocations).
 3. **Termination (the Niven duty).** `project_interval` terminates only if the
@@ -196,21 +196,31 @@ Worked example: **`FMS`** — fused multiply-subtract, `x·y − z` — chosen b
 the cheapest correct implementation is *delegation*, and delegation is a
 first-class technique here.
 
-**Step 1 — registry**: append `:FMS` to `_TERNARY_OPS` (group `:A` by the
-loop). The generated array method routes through the same ternary bitwidth
+**Step 1 — registry and classification**: append `:FMS` to `_TERNARY_OPS`
+(group `:A` by the loop) and to `oracle.jl`'s `_EXACT_ARITH` partition. The
+generated array method routes through the same ternary bitwidth
 policy every other ternary op uses (`tables.jl`'s `_ternary_table_for`): small
 operand formats table (eagerly or adaptively), `K = 8` runs the — optionally
 threaded — Shape-B scalar loop, and stochastic ρ always draws per element. No
 op-specific work needed; the policy keys on formats and ρ, not on which op it is.
 
 **Step 2 — ω-semantics** by delegation to `FMA`'s already-verified analysis
-(width thresholds, `_twosum` exactness, wide-spread fallback):
+(width thresholds, `_twosum` exactness, wide-spread fallback). Exact arithmetic
+has one entry point per head, so the delegation must cover all of them:
 
 ```julia
 # x·y − z ≡ FMA(x, y, −z). Negation of z follows the Subtract convention:
 # preserve NaN, and map −0 to +0 so the single-zero datum model is respected.
+_fms_neg(z) = isnan(z) ? z : (iszero(z) ? zero(z) : -z)
+
 ωeval(::Val{:FMS}, x::Float64, y::Float64, z::Float64) =
-    ωeval(Val(:FMA), x, y, isnan(z) ? z : (iszero(z) ? 0.0 : -z))
+    ωeval(Val(:FMA), x, y, _fms_neg(z))
+_ωf128(h::HeadF128, ::Val{:FMS}, x::Float128, y::Float128, z::Float128) =
+    _ωf128(h, Val(:FMA), x, y, _fms_neg(z))
+_ωexact(h::HeadExact, ::Val{:FMS}, x::BigFloat, y::BigFloat, z::BigFloat) =
+    _ωexact(h, Val(:FMA), x, y, _fms_neg(z))
+_ωdyadic(h::HeadExact, ::Val{:FMS}, x::Dyadic, y::Dyadic, z::Dyadic) =
+    _ωdyadic(h, Val(:FMA), x, y, _fms_neg(z))
 ```
 
 Delegation inherits FMA's result kinds, its exactness thresholds, *and* its
@@ -226,7 +236,7 @@ handle arities 1–3. Adding a quaternary op is therefore two tasks: extend the
 plumbing (once), then add the op. Worked example: **`FMMA`** — `x·y + z·w`, a
 two-term dot product.
 
-**Plumbing (one-time), four sites:**
+**Plumbing (one-time), five sites:**
 
 1. `src/ops_scalar.jl` — register manually after the arity loops
    (`register_op!(:FMMA, 4, :A)`), and add an `op.arity == 4` branch to the
@@ -264,6 +274,10 @@ two-term dot product.
    (`op.arity > 3 && continue`) if a block form is not wanted; be deliberate.
 4. `src/approx.jl` — `conformance_report` prints arities with `for a in 1:3`;
    widen to `1:4`.
+5. `src/oracle.jl` — classify `FMMA` in `_EXACT_ARITH` and implement its
+   Float64, Float128, BigFloat, and Dyadic head methods. The rung-1 sketch below
+   is only the first of those methods; copying it alone would fail G10 on the
+   two wider rungs.
 
 **The op itself** follows the `FAA`/`FMA` width-analysis playbook exactly:
 
@@ -306,8 +320,9 @@ end
 so the suite entry must be *sampled* (seeded, ladder-referenced, ≥ 10⁵ tuples
 across several modes) plus hand-picked exhaustion of the special-row algebra
 and the width-threshold boundary (`ΔE ∈ {91, 92, 93}` constructions). Document
-the sampling in the test, since it breaks the suite's "enumerate, never
-sample" norm — that exception must be visible, not silent.
+the sampling in the test and in the coverage roll-call. The suite's rule is
+"enumerate where tractable; otherwise label the sampling," so that exception
+must be visible, not silent.
 
 ## Block operations
 
@@ -396,7 +411,7 @@ the pattern) — element format × scale format × B, exhaustively where feasibl
 
 Reductions do **not** fit the elementwise schema; they follow the second
 pattern, visible in `BlockReduceAdd`/`BlockDotProduct`: (1) resolve the ∞/NaN
-**fold algebra** on Float64 classifications first; (2) an integer **span
+**fold algebra** on carrier-generic classifications first; (2) an integer **span
 filter** decides whether the whole reduction is exactly representable in
 `Float128` — if so, plain `Float128` accumulation *is* the exact answer;
 (3) otherwise a `BigExactF` exact accumulator at provably sufficient
@@ -409,9 +424,11 @@ Worked example — **`BlockSumOfSquares`**, `Σ xᵢ²`:
 """BlockSumOfSquares(fr, ρ, b): project(Σ decode-laneᵢ²) — one rounding total.
 Fold algebra: any NaN lane ⇒ NaN; else any ±Inf lane ⇒ +Inf (squares cannot
 cancel — no opposite-infinity NaN case exists, unlike ReduceAdd); else exact."""
-function BlockSumOfSquares(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B};
-                           rng::MaybeRNG=nothing, R::Union{Nothing,Int}=nothing) where {B}
+function BlockSumOfSquares(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B,FS,FE};
+                           rng::MaybeRNG=nothing,
+                           R::Union{Nothing,Int}=nothing) where {B,FS,FE}
     X = blockdecode(b)
+    h = rung(Val(:Multiply), FS, FE)
     res = if any(isnan, X)
         NaN
     elseif any(isinf, X)
@@ -419,10 +436,13 @@ function BlockSumOfSquares(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B};
     elseif all(iszero, X)
         0.0
     else
-        # span filter: lanes carry ≤17-bit significands ⇒ squares ≤34 bits and
-        # a square's exponent is 2·(lane exponent); the sum is exact in Float128
-        # when 34 + 2·span + ⌈log₂B⌉ + 1 ≤ 113  ⇒  2·span + ⌈log₂B⌉ ≤ 78.
-        if _f128() && 2 * _expspan(X) + _log2ceil(B) <= 78
+        # A lane carries at most P_FS + P_FE significand bits. Squaring doubles
+        # both that width and the exponent span; B terms add ceil(log2(B)) carry
+        # bits. Use Float128 only when the joined head fits its exponent range
+        # and the complete width bound fits 113 bits.
+        lane_bits = precision(FS) + precision(FE)
+        if _f128acc(h) &&
+           2 * lane_bits + 2 * _expspan(X) + _log2ceil(B) + 1 <= 113
             acc = Float128(0)
             for v in X
                 q = Float128(v)
@@ -430,10 +450,12 @@ function BlockSumOfSquares(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B};
             end
             acc
         else
-            BigExactF(() -> setprecision(BigFloat, _REDPREC) do
+            # Conservative and derived from (FS, FE, B), never a flat constant.
+            prec = 2 * _lane_sum_prec(FS, FE, B) + _log2ceil(B)
+            BigExactF(() -> setprecision(BigFloat, prec) do
                 acc = BigFloat(0)
                 for v in X
-                    acc += BigFloat(v)^2          # exact at _REDPREC
+                    acc += BigFloat(v)^2          # exact at derived precision
                 end
                 acc
             end)

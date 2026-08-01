@@ -5,9 +5,10 @@ standard — arithmetic formats for machine learning at bitwidths 3–16.*
 
 Bit-exact defined results on every default path; one projection engine as the single
 write path into a code point; approximation only behind an explicitly named,
-exhaustively measured κ registry; **≈ 35 million verified units across 13 gates and
+exhaustively measured κ registry; **≈ 35.3 million compared units across 14 gates and
 tiers**, each labelled exhaustive or sampled in a roll-call printed at the end of
-every run; table-gather kernels at fractions of a nanosecond per element.
+every run; table-gather kernels at fractions of a nanosecond per element on the
+recorded benchmark host.
 
 ```julia-repl
 julia> using SmallFloats
@@ -34,13 +35,13 @@ Converting between them is a conversion, never a reinterpretation — the
 
 - **[Introduction](@ref)** — what the package is, the design pillars, a
   thirty-second tour, installation.
-- **[Cheat Sheet](@ref)** — one-page lookup for format names, conversion,
+- **[Cheat Sheet](@ref)** — compact lookup for format names, conversion,
   projections, operations, arrays, blocks, packed storage, and common traps.
 - **[User Guide](@ref)** — the complete public API in usage order: formats, values,
   projection specifications, the two operation registers, arrays and sorting,
   blocks, packed storage, conformance and κ, performance guidance.
-- **[User Examples](@ref)** — runnable examples in three tiers: basic, machine
-  learning, deep learning.
+- **[User Examples](@ref)** — runnable examples spanning basic use, general AI,
+  machine learning, and deep learning.
 - **[Julia Compatibility](@ref)** — the Base register: which Base functions work
   on `Binary` values, what they map to, and what deliberately isn't mapped.
 - **[Technical Guide](@ref)** — internals: the encoding and projection engine, the
@@ -52,6 +53,8 @@ Converting between them is a conversion, never a reinterpretation — the
 - **[Adding Operations](@ref)** — how to add new scalar (unary through
   quaternary) and block (scaled, elementwise, reductive) operations with every
   guarantee intact: registry mechanics, ω-semantics duties, worked examples.
+- **[Benchmarks](benchmarks.md)** — dated performance measurements, methodology,
+  host details, and reproduction instructions.
 - **[External Reference](@ref)** — docstrings for the documented public surface.
 - **[Internal Reference](@ref)** — docstrings for the documented unexported
   machinery.

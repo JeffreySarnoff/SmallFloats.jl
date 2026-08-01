@@ -1,10 +1,9 @@
 # External Reference
 
-Docstrings for the documented **public** surface — the exported names. The full
-export list is far larger (400+ names, including the 120 exported format aliases
-— the other 384 are opt-in via `using SmallFloats.Formats` — the
-predefined projection-spec grid, and the generated operation and block
-registers); names without docstrings are covered descriptively in the
+Docstrings for the documented **public** surface. The export list also includes
+the 120 K ≤ 8 format aliases, the predefined projection-spec grid, and generated
+operation and block registers; the other 384 format aliases are opt-in via
+`using SmallFloats.Formats`. Names without individual docstrings are covered in the
 [User Guide](@ref); unexported machinery is in the
 [Internal Reference](@ref).
 

@@ -10,7 +10,9 @@ Source files load in dependency order, each layer speaking only downward:
 
 | layer | file | provides |
 |---|---|---|
-| formats | `formats.jl` | `Binary{K,P,SGN,EXT}`, the 504 named aliases, Group M queries |
+| exact carrier | `dyadic.jl` | dependency-free rung-3 `Dyadic` arithmetic and exact `Rational` bridge |
+| formats | `formats.jl` | abstract `Binary{K,P,SGN,EXT}`, `Code8`/`Code16`, the 504 aliases, Group M queries |
+| carriers | `carriers.jl` | evaluation heads, `datumcarrier`/`promotecarrier`, exact lifting and carrier joins |
 | specs | `projspec.jl` | rounding/saturation singletons, `ProjSpec{R,S}`, the predefined spec grid |
 | defaults | `defaults.jl` | settable session defaults (`DefaultType`, `DefaultProjection`, …) behind `Ref`s; consumed via the speculation guard |
 | codec | `decode_encode.jl` | decode (generated tables + bit-composed compute), encode, order keys, counting sort, `Class`, Next ops |
@@ -27,9 +29,10 @@ Source files load in dependency order, each layer speaking only downward:
 
 ## Encoding and decoding
 
-A value is its code point (`UInt8`). The bit layout is the draft's: sign (signed
-formats), biased exponent, trailing significand; one NaN at the negative-zero slot;
-no −0; ±Inf adjacent to the extremes in extended formats.
+A value wraps its code point: `UInt8` through K = 8 and `UInt16` above it. The
+code occupies the low K bits of that storage unit. The bit layout is the draft's:
+sign (signed formats), biased exponent, trailing significand; one NaN at the
+negative-zero slot; no −0; ±Inf adjacent to the extremes in extended formats.
 
 `decode` has **two shapes, selected by `decodepolicy(T)`** — a representation
 decision, not a semantic one.
@@ -38,7 +41,7 @@ At `K ≤ 8` it is a **`@generated` constant-tuple lookup**: per format, a
 `2^K`-tuple of datums built once from the computational decode (so table and
 computation are correct by construction and asserted equivalent exhaustively).
 Constant inputs still fold — `maxfinite_datum(T)` is a compile-time constant —
-while runtime decode is a single indexed load (≈ 0.7 ns). Above `K = 8` a
+while runtime decode is a single indexed load. Above `K = 8` a
 `2^16`-tuple is not a constant worth materializing, so the computational decode
 runs directly.
 
@@ -83,9 +86,10 @@ RoundToPrecision  →  Saturate  →  Encode
 significand `S` and exponent `Q` per the draft's `Q = max(⌊log₂|X|⌋, 1−B) − P + 1`.
 Two implementations, proven equivalent exhaustively:
 
-- the **generic core** (`_rtp_core`) works on any carrier (`Float64`, `Float128`,
-  `BigFloat`) via exact power-of-two scaling and a fraction ν compared against the
-  mode's decision points;
+- the **generic floating-point core** (`_rtp_core`) handles `Float128` and
+  `BigFloat` via exact power-of-two scaling and a fraction ν compared against the
+  mode's decision points; `Dyadic` has its own exact fixed-point core over its
+  native `(S, Q)` representation;
 - the **mask-based Float64 core** (`_rtp_f64`) extracts sign/exponent/significand
   fields directly, represents ν as a 128-bit fixed-point integer with an OR-mask
   sticky for bits shifted out, and evaluates every mode — including the stochastic
@@ -120,13 +124,20 @@ renormalization and the subnormal/normal field split.
 
 ## The oracle and the result-kind protocol
 
-Every operation's defined result is computed by `ωeval`, which returns one of five
-result kinds; `apply_op` fast-splits the common one and finishes the rest:
+Every operation's defined result is computed by `ωeval`. It returns one of four
+exact carrier types or four protocol wrappers; `apply_op` fast-splits the common
+`Float64` case and finishes the rest:
 
 | kind | meaning | finished by |
 |---|---|---|
 | `Float64` | exact (specials; representable arithmetic) | direct `project` |
+| `Float128` | exact by **width analysis** | direct `project` |
+| `BigFloat` | exact MPFR value produced at derived precision | direct `project` |
 | `Dyadic` | exact at rung 3: an `Int128` significand and an `Int64` exponent, `isbits` | direct `project` (dyadic carrier) |
+| `StickyF` | wide-spread `FMA`/`FAA` tail: exact head plus tail sign | direct `project` with `sticky` set — no allocation |
+| `BigExactF` | lazy exact result at precision derived from the operands | evaluate, then `project` on `BigFloat` |
+| `Enclose128F` | correctly-rounded Float128 bracket | sticky agreement, then MPFR fallback if needed |
+| `EncloseF` | directed MPFR enclosure with optional Float64/Float128 prefilters | `yd` → `fq` → interval protocol |
 
 The dyadic carrier converts to and from `Rational` **exactly**, and that bridge
 is the cleanest way to reason about a rung-3 value:
@@ -147,12 +158,7 @@ fields: `Dyadic`'s significand is deliberately unnormalized, so `6·2⁻²` and
 `3·2⁻¹` are the same value and round-trip to the canonical one.
 
 The full design, with every edge case and the three laws, is in
-[`docs/other/dyadic_rational.md`](../other/dyadic_rational.md).
-| `Float128` | exact by **width analysis** | direct `project` (Float128 carrier) |
-| `StickyF` | wide-spread `FMA`/`FAA` tail: head value (`Float64` or `Float128`) + tail sign | direct `project` with `sticky` set — no allocation |
-| `BigExactF` | exact at a precision **derived from the operands** — `bigprec`, not a constant (wide-spread tail for `Add`; the near-impossible `FAA` distillation miss) | `project` on `BigFloat` |
-| `Enclose128F` | correctly-rounded Float128 **bracket** | sticky agreement, MPFR fallback |
-| `EncloseF` | MPFR directed enclosure `f(prec)`, optional Float128 pre-filter `fq`, optional eager Float64 estimate `yd` | three-stage: `yd` → `fq` → interval protocol |
+`docs/other/dyadic_rational.md`.
 
 Two **rigor classes** govern every non-`Float64` path, and their arguments are never
 mixed:
@@ -219,17 +225,21 @@ complete.
 
 ## Tables and kernels
 
-For pure specs, unary and binary operations are **finite functions** — 256 or 65 536
-entries — so the kernel layer materializes them once per `(op, formats, ρ)` into a
+For pure specs over K ≤ 8 operands, unary and binary operations are small
+**finite functions** — at most 256 or 65 536 entries — so the kernel layer
+materializes them once per `(op, formats, ρ)` into a
 locked cache (`Dict{TableKey, Memory{UInt8}}`, double-checked locking, builds outside
 the lock) and serves every later array call as a gather: Shape-A, one load per
-element, measured 0.27 ns/elem unary and 0.5 ns/elem binary. Tables are built
+element. On the recorded host that is 0.13 ns/elem unary and 0.26 ns/elem binary.
+Tables are built
 *through the scalar path*, so they inherit its bit-exactness; the suite asserts
-table ≡ scalar over every entry.
+table ≡ scalar over every entry. Signatures involving K > 8 formats compute
+directly.
 
 Ternary (`FMA`, `FAA`, `Clamp`) is a finite function too — 2^(K1+K2+K3) entries —
-but that count spans four orders of magnitude across the 3–16 bitwidth range (512 B
-at K=3, 16 MiB at K=8), so one policy doesn't fit the whole range. A separate
+but that count already spans four orders of magnitude across the table-eligible
+K = 3:8 region (512 B at K=3, 16 MiB at K=8), so one policy does not fit even
+that range. A separate
 `TernaryKey → TernaryEntry` cache (`_ternary_table_for`, in `tables.jl`) tiers by
 Σ bitwidth:
 
@@ -244,6 +254,8 @@ at K=3, 16 MiB at K=8), so one policy doesn't fit the whole range. A separate
   across `Threads.@threads` for long enough arrays (each ternary draw is
   independent under a fixed, non-stochastic ρ, so lanes cannot interact).
 
+Any ternary signature containing a K > 8 format also takes the compute path.
+
 Every ternary table entry, eager or adaptive, is still built *through the scalar
 path* — the tiering changes when/whether the cache exists, never what it contains.
 Stochastic calls of any arity always take Shape-B, with the RNG resolved once per
@@ -251,12 +263,14 @@ array rather than per element.
 
 ## Blocks: exactness without a superaccumulator
 
-`blockdecode` produces each lane's `scale × element` exactly (≤ 17-bit significands
-in Float64). Reductions then apply **span filters**: one integer pass over lane
-exponents decides whether the whole sum (or dot product, with ≤ 33-bit lane
-products) is exactly representable in `Float128`; if so, a plain `Float128`
-accumulation *is* the exact answer; if not, an exact big-float accumulation takes
-over. Either way there is exactly one projection, at the end. `ωBlockProject`
+`blockdecode` produces each lane's `scale × element` exactly on the carrier
+selected jointly from the scale and element formats. Reductions then apply
+**span filters**: one integer pass over lane exponents decides whether the whole
+sum or dot product is exactly representable in `Float128`; the filter is used
+only when the joined carrier is no wider than `Float128`. If it passes, a plain
+`Float128` accumulation *is* the exact answer; otherwise an exact big-float
+accumulation at format-derived precision takes over. Either way there is exactly
+one projection, at the end. `ωBlockProject`
 follows the draft's special rows for the scale (NaN, 0, ±Inf) and divides each
 element result by the scale through its own cheapest-first CR-bracket / enclosure
 cascade (exact Float64 quotient → CR Float128 → bracket/pre-filter → MPFR
@@ -274,8 +288,10 @@ table cache, and the approximation registry.
 
 ## Verification doctrine
 
-The value sets are small enough that sampling is never necessary, so the suite
-enumerates — ≈ 8.9 M assertions in all:
+The suite enumerates every tractable axis and labels the rest. A default run
+reports approximately 35.3 million compared units across 14 gates and tiers;
+the final roll-call distinguishes exhaustive coverage from sampled or
+boundary-targeted coverage. In particular it covers:
 
 - formats against an independent draft transliteration (14 679);
 - ordering over all 2.5 M same-format pairs plus Next-op edge tables (7.6 M);
@@ -319,9 +335,10 @@ number.
 
 ## Deliberate limitations
 
-No implicit cross-format arithmetic (promotion is to `Float64`, explicitly). No
-in-place packed arithmetic. Threading is opt-in and narrow: only the untabled
-ternary (`K = 8`) compute kernel threads, and only above a size cutoff and when
+No implicit cross-format arithmetic: mixed `Binary` formats refuse, while a
+`Binary` mixed with an ordinary Julia number promotes to its public
+`promotecarrier`. No in-place packed arithmetic. Threading is opt-in and narrow:
+only untabled ternary compute kernels thread, and only above a size cutoff and when
 `Threads.nthreads() > 1`; every other kernel is single-threaded.
 `Irrational`/`Rational` inputs to `Convert` are rejected rather than
 double-rounded silently. The `Float128` machinery never changes results — disabling

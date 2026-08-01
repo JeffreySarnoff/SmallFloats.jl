@@ -86,7 +86,10 @@ using SmallFloats: order_key
 
 function monotone_conversion(::Type{From}, ::Type{To}) where {From,To}
     prev = nothing
-    for v in sort(From.(0x00:UInt8(2^bitwidth(From) - 1)))
+    U = codeunit_type(From)
+    values = [rawvalue(From, U(c))
+              for c in UInt64(0):((UInt64(1) << bitwidth(From)) - 1)]
+    for v in sort(values)
         isnan(decode(v)) && continue
         g = Convert(To, RNE_SN, v)
         prev !== nothing && order_key(g) < order_key(prev) && return false
@@ -162,7 +165,10 @@ tie rule is the projection engine's job and is pinned elsewhere in the suite):
 using SmallFloats
 
 function ref_nearest_distance(::Type{T}, x) where {T}
-    fins = [v for v in (rawvalue(T, UInt8(c)) for c in 0:255) if isfinite(decode(v))]
+    U = codeunit_type(T)
+    last = (UInt64(1) << bitwidth(T)) - 1
+    fins = [v for v in (rawvalue(T, U(c)) for c in UInt64(0):last)
+            if isfinite(decode(v))]
     minimum(abs(setprecision(() -> BigFloat(decode(v)) - BigFloat(x), BigFloat, 256))
             for v in fins)
 end
@@ -334,7 +340,9 @@ using Chairmarks, SmallFloats, Random
 using Statistics: median
 
 function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
-    pool = [rawvalue(T, rand(UInt8)) for _ in 1:4096]
+    U = codeunit_type(T)
+    last = (UInt64(1) << bitwidth(T)) - 1
+    pool = [rawvalue(T, U(rand(UInt64(0):last))) for _ in 1:4096]
     @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
 end
 
@@ -342,9 +350,10 @@ b = bench_add(Binary8p4se)
 (round(median(b).time * 1e9; digits=1), median(b).allocs)
 ```
 
-```
-(16.3, 0.0)          # ns per full scalar Add, zero allocations
-```
+On the host recorded in the [benchmark report](benchmarks.md), the corresponding in-domain `Add`
+row has a 9.0 ns median and zero allocations. Treat that as a check on the
+methodology, not a portable expected value: the tuple printed by this snippet
+depends on your CPU, Julia build, and benchmark environment.
 
 !!! warning "The 60× trap"
     The same call with `T` read from a non-`const` global measures ~1 µs — Julia's

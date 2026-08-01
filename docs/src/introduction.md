@@ -34,15 +34,17 @@ the position that for value sets this small there is no excuse for approximation
   Where a space is too large to enumerate (the ordered-pair cross-product above
   K = 8 is 4.3 × 10⁹ pairs for a single format), the suite says **"sampled"** in
   those words rather than rounding up. Every run ends with a coverage roll-call
-  naming each gate, what it compared, and which of the two it was: ≈ 35 million
-  verified units across 13 gates and tiers.
+  naming each gate, what it compared, and which of the two it was: ≈ 35.3 million
+  compared units across 14 gates and tiers.
 - **Fast where it matters.** Pure-mode elementwise work runs through precomputed
   lookup tables (sub-nanosecond per element); the scalar path is fully specialized
-  and allocation-free (`decode` ≈ 1.2 ns, `project` ≈ 6.6 ns, a complete `Add`
-  ≈ 9 ns including projection); sub-byte packed storage, integer-keyed ordering
+  and allocation-free (on the recorded host, `decode` has a 1.6 ns median,
+  `project` a 6.7 ns median, and an in-domain `Add` a 9.0 ns median, including
+  projection); sub-byte packed storage, integer-keyed ordering
   with an O(n) counting sort, and a mask-based rounding core round out the
   performance story. A reproducible Chairmarks benchmark suite ships in
-  `benchmarking/`, and every number here comes from it.
+  `benchmarking/`; see the [benchmark report](benchmarks.md) for the complete dated report and
+  methodology. Absolute timings are host-dependent.
 
 ## Thirty-second tour
 
@@ -86,10 +88,12 @@ abstract (a format is "a datum set and an encoding"), and the alias names its
 concrete *representation*.
 
 Values are immutable wrappers around their code point: one byte at K ≤ 8,
-two above it. Every format has a single NaN and no negative zero. `Float64` is the
-exact interchange carrier for the 432 formats whose exponent range it holds;
-the remaining 72 use `Float128` or an exact dyadic carrier, selected by the
-format and never by the caller.
+two above it. Every format has a single NaN and no negative zero. `Float64` is
+the exact internal datum carrier for 432 formats. Another 64 use `Float128`, and
+the 8 widest-range formats use an exact dyadic carrier. The selection is derived
+from the format; callers do not choose it. Promotion to ordinary Julia numbers
+uses the related public carrier lattice, whose widest rung is `BigFloat` rather
+than the internal dyadic type.
 
 ## Where to go next
 
@@ -97,8 +101,9 @@ format and never by the caller.
   projection specifications, the two operation registers, arrays and sorting, blocks
   and scaled operations, packed storage, conversion, conformance, and performance
   guidance.
-- **[User Examples](@ref)** — worked, runnable examples in three tiers: basic usage,
-  machine-learning quantization workflows, and deep-learning block/kernel patterns.
+- **[User Examples](@ref)** — worked, runnable examples for basic use, general-AI
+  decision pipelines, machine-learning quantization, and deep-learning
+  block/kernel patterns.
 - **[Technical Guide](@ref)** — the internals: the encoding and projection engine, the
   oracle's evaluation protocol and its two rigor classes, tables and kernels, the block
   layer's exactness filters, and the testing and benchmarking doctrine.

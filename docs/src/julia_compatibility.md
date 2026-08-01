@@ -108,10 +108,10 @@ carrier** through the rules in `formats.jl`, so the result is an ordinary float,
 not a re-projected `Binary`.
 
 For the 432 formats at rung 1 that carrier is `Float64`, which is what the
-example below shows. For the other 72 it is `BigFloat`: `Float64` cannot hold a
-`Binary16p1uf` datum, and promoting into it would return `±Inf` from a perfectly
-finite value with no P3109 operation involved. `promotecarrier(T)` names the
-target.
+example below shows. The 64 rung-2 formats promote to `Float128`; the 8 rung-3
+formats promote to `BigFloat`. `Float64` cannot hold a `Binary16p1uf` datum, and
+promoting into it would return `±Inf` from a perfectly finite value with no
+P3109 operation involved. `promotecarrier(T)` names the target.
 
 ```julia-repl
 julia> x + 2.0
@@ -134,7 +134,8 @@ projection engine and decode tables as the draft-named API.
 ### The `AbstractFloat` contract
 
 `Binary <: AbstractFloat`, and generic Julia code reaches for that interface
-without asking. The whole of it is supplied:
+without asking. The routinely used numeric contracts are implemented, while
+operations with no P3109 meaning refuse explicitly:
 
 | verb | behaviour |
 |---|---|
@@ -142,7 +143,7 @@ without asking. The whole of it is supplied:
 | `round`, `floor`, `ceil`, `trunc` | **one** rounding: the integer value is formed exactly on the carrier and projected once, under the session default's saturation |
 | `round(x, r::RoundingMode)` | `RoundNearest`, `RoundNearestTiesAway`, `RoundUp`, `RoundDown`, `RoundToZero` |
 | `exponent`, `significand`, `frexp` | exact; `DomainError` on zero and the non-finites, as in Base |
-| `widen` | the format's promotion carrier — see [the promotion study](../other/promoterules.md) for why it is not another format |
+| `widen` | the format's promotion carrier — see `docs/other/promoterules.md` for why it is not another format |
 | `reinterpret` | both directions, and the incoming one is **checked** against the representation invariant |
 
 ```julia-repl

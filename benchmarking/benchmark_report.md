@@ -446,4 +446,4 @@ Operands: all code points — NaN and ±Inf sampled.
 | `PackedVector unpack (collect), n=65536` | 28.86 μs | 29.05 μs | 3 | 0.44 ns/elem |
 
 ---
-*All numbers from this machine/run; absolute values vary by host. Regenerate with `julia --project=benchmark benchmark/benchmarking.jl`.*
+*All numbers from this machine/run; absolute values vary by host. Regenerate with `julia --project=benchmarking benchmarking/benchmarking.jl benchmarking/benchmark_report.md`.*

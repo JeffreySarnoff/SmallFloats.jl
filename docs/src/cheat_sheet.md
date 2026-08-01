@@ -1,6 +1,6 @@
 # Cheat Sheet
 
-A one-page reference for the SmallFloats.jl operations you are most likely to
+A compact reference for the SmallFloats.jl operations you are most likely to
 write. For explanations and semantics, see the [User Guide](@ref); for
 implementation details, see the [Technical Guide](@ref).
 
@@ -21,8 +21,11 @@ z = Add(T, ρ, x, y)
 The explicit operation shape is always:
 
 ```julia
-Op(result_format, projection_spec, operands...; rng, R)
+OperationName(result_format, projection_spec, operands...; rng, R)
 ```
+
+Here `OperationName` means `Add`, `Exp`, `FMA`, and so on. The separately named
+[`Op`](@ref) type binds one of those operations for `map` and broadcast.
 
 For same-format operands under the default projection, ordinary Julia syntax is
 available:
@@ -253,7 +256,7 @@ FMA(x, y, z)
 | Ternary | `FMA`, `FAA`, `Clamp` |
 | Conversion | `Convert` |
 
-Common Base spellings under `RNE_SN`:
+Common Base spellings under the session projection (initially `RNE_SN`):
 
 ```julia
 x + y; x - y; x * y; x / y
@@ -283,10 +286,11 @@ C = vmap(:Add, T, ρ, A, B)
 vmap!(C, Val(:Add), T, ρ, A, B)
 ```
 
-Operands and destination must have matching axes. Deterministic unary/binary
-operations use cached result tables; affordable ternary signatures may also use
-tables. Stochastic operations compute each element and consume one draw per
-projection.
+Operands and destination must have matching axes. For table-eligible K ≤ 8
+formats, deterministic unary/binary operations use cached result tables and
+affordable ternary signatures may also use tables. Wider signatures compute
+directly. Stochastic operations always compute each element and consume one draw
+per projection.
 
 ```julia
 table_bytes()

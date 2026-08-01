@@ -178,7 +178,7 @@ hot  = F(trap(26.0, 24, 30, 100, 101))       # … and in "hot"
 
 Because every connective is a bit-exact registry op, a fuzzy rule base evaluated
 in `Binary8p6uf` is *reproducible across machines to the code point* — a property
-sampled float pipelines cannot promise.
+an implementation that substitutes unmeasured approximations cannot promise.
 
 ### Search heuristics: what quantized scores keep is the ordering
 
