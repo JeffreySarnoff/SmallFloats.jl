@@ -1,6 +1,6 @@
 # Extending SmallFloats.jl to bitwidths 8 < K ≤ 16 — plan, options, and means
 
-*Status: design study, written 2026-07-29 against the source tree at commit
+*Original status: design study, written 2026-07-29 against the source tree at commit
 `9195d32` and against [IEEE_D1.md](IEEE_D1.md) (IEEE P3109/D1, July 2026) as
 ground truth, with [IEEE_D1.json](IEEE_D1.json) used for section addressing and
 [IEEE_D1_concepts.md](IEEE_D1_concepts.md) for the concept/relation map. No code
@@ -8,15 +8,20 @@ was changed and no tests were run. Every numeric claim below (bias tables, group
 memberships, overflow boundaries, counts) is computed from the D1 formulas by
 exact rational arithmetic; the derivations are shown so they can be re-checked.*
 
-> **SUPERSEDED where it describes `Dyadic`.** This is the design study that chose
-> the carrier; its reasoning stands and is the only place the option comparison
-> (C1 vs C2 vs C3) is written down. Its **code sketches are not the shipped
-> API** — [doingtheextensions.md](doingtheextensions.md) turned this plan into an
-> architecture, [implementextensions.md](implementextensions.md) §1 records what
-> a second audit then changed, and [`src/dyadic.jl`](../../src/dyadic.jl) is the
-> source of truth. The `Dyadic` sketch in §9 Option C2 has been brought onto the
-> shipped shape; the option comparison around it is untouched, and everything
-> else in this document is historical and left as written.
+> **Current role (2026-08-01): decision record for the shipped K ≤ 16
+> extension.** The final package has 504 formats over K in 3:16, an abstract
+> `Binary{K,P,SGN,EXT}` format with `Code8`/`Code16` representations, table
+> decoding for `Code8` and computed decoding for `Code16`, and a three-rung
+> `Float64`/`Float128`/`Dyadic` internal carrier lattice. Wide aliases are
+> available through `SmallFloats.Formats`; the original 120 K ≤ 8 aliases stay
+> exported by `SmallFloats`. The option analysis below explains why those choices
+> were made. [doingtheextensions.md](doingtheextensions.md) maps them to the
+> current architecture, and [implementextensions.md](implementextensions.md)
+> records what execution changed.
+>
+> Code sketches remain design evidence, not public API. Where `Dyadic` is shown,
+> the sketch uses the shipped `(S, Q, kind)` layout and `DY_*` tags; the complete
+> implementation is [`src/dyadic.jl`](../../src/dyadic.jl).
 
 ---
 

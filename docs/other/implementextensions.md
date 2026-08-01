@@ -1,6 +1,6 @@
 # Implementing the extensions — the execution plan for 3 ≤ K ≤ 16
 
-*Status: execution document, written 2026-07-29 against the working tree of
+*Original status: execution document, written 2026-07-29 against the working tree of
 `SmallFloats.jl` (branch `main`, `e1ea2aa`). Third and last of the chain:
 [extendingK.md](extendingK.md) decides **what and why**,
 [doingtheextensions.md](doingtheextensions.md) decides **how** at the
@@ -12,7 +12,17 @@ and what must be true before the next commit**. Ground truth remains
 formulas under Julia 1.12.6; the scripts and their outputs are in
 [Appendix C](#appendix-c--verification-log). Where this document and its two
 predecessors disagree, **this one wins**, and §1 says exactly why in each case.
-No code has been changed and no tests have been run.*
+No code had been changed and no tests had been run when the plan was written.*
+
+> **Current role (2026-08-01): executed plan and gate ledger.** Stages 0–9 are
+> complete. The package now ships the 504-format representation lattice, wide
+> decode/encode and block paths, cost-gated tables, the three carrier heads, the
+> exact `Dyadic` rung, the current exports/docs, and quick/default/release test
+> tiers. Read §4 as the dependency-ordered specification and §11 as what actually
+> happened; when they differ, §11 and the current source win. The compact live
+> map is: representation in [`formats.jl`](../../src/formats.jl), carriers in
+> [`carriers.jl`](../../src/carriers.jl), exact arithmetic in
+> [`dyadic.jl`](../../src/dyadic.jl), and gates in [`test/`](../../test/).
 
 ---
 

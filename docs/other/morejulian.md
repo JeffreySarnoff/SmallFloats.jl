@@ -14,15 +14,23 @@ The findings are ranked by what a user loses, not by how much code they touch.
 > measurement that was simply wrong. Tier 3 is unchanged by decision. Tier 4 is
 > measurement, and one of its entries exists to *stop* a refactor.
 
+> **Reading convention.** Tiers 1 and 2 state the defects in the present tense
+> because they preserve the probes that found them. They are not current API
+> limitations. The current surface supplies `decompose`/`hash`, integer rounding,
+> `widen`, `frexp`/`significand`/`exponent`, named refusals, callable `Op`, and
+> normalized `similar`; the summary and §5 describe the shipped resolution.
+> Their implementation is centralized in
+> [`juliacompat.jl`](../../src/juliacompat.jl).
+
 ---
 
-## Tier 1 — broken contracts
+## Tier 1 — broken contracts found and fixed
 
 `Binary{K,P,σ,δ} <: AbstractFloat`. Subtyping is a promise: Julia's generic code
 assumes the `AbstractFloat`/`Real` interface is there, and reaches for it without
-asking. These are the places the promise is not kept.
+asking. These were the places the promise was not kept.
 
-### 1.1 `hash` throws — `Binary` values cannot be `Dict` keys or `Set` elements
+### 1.1 Before the fix: `hash` threw
 
 The single highest-value fix in this document.
 
@@ -45,10 +53,10 @@ hasmethod(Base.decompose, Tuple{Binary8p4se})  →  false
 hasmethod(Base.decompose, Tuple{Dyadic})       →  true
 ```
 
-The package defines `decompose` for its *internal* carrier (`Dyadic`, added in
-Stage 7 so gate G6 could classify non-finites) and never for the type users
-actually hold. So a value that prints, compares, sorts, and does arithmetic
-cannot be a dictionary key — which is the first thing anyone writing a
+The package defined `decompose` for its *internal* carrier (`Dyadic`, added in
+Stage 7 so gate G6 could classify non-finites) and not for the type users
+actually hold. A value that printed, compared, sorted, and did arithmetic could
+therefore not be a dictionary key — the first thing anyone writing a
 quantization histogram or a code-point frequency table will try.
 
 **Fix.** `decompose` returns `(num, pow, den)` with the value equal to
@@ -82,7 +90,7 @@ Note the shape of the bug: the internal type got the method, the public type did
 not. That is the same asymmetry as §11 M44 — the per-head wrappers were fixed and
 the shared implementation beneath them was not.
 
-### 1.2 The rounding family is absent
+### 1.2 Before the fix: the rounding family was absent
 
 ```
 round  floor  ceil  trunc      →  MethodError
@@ -99,7 +107,7 @@ answer is the one the package already uses for `Base` verbs — the session defa
 projection — with `RoundingMode` arguments mapping through the existing
 `projmode` shim.
 
-### 1.3 `widen`, `frexp`, `significand` are absent; `exponent` refuses
+### 1.3 Before the fix: `widen`, `frexp`, `significand`, and `exponent`
 
 `widen(T)` is used by Base's accumulation paths. `frexp`/`significand`/`exponent`
 are the standard decomposition trio, and the package computes all three
@@ -143,9 +151,9 @@ why, and each names an alternative.
 
 ---
 
-## Tier 2 — idiomatic reshaping worth doing
+## Tier 2 — idiomatic reshaping that shipped
 
-### 2.1 Make the operation register callable, so `map` and broadcast work
+### 2.1 The operation register is callable, so `map` and broadcast work
 
 Today the array path has its own verb:
 
@@ -181,7 +189,7 @@ and where the direct call allocates — a rung-2 or rung-3 `Exp` escalating into
 the MPFR ladder — `Op` allocates exactly the same. It adds nothing. §5.3 records
 how the first attempt at that measurement was wrong.
 
-### 2.2 `similar` should normalize the abstract format everywhere
+### 2.2 `similar` normalizes the abstract format where Julia permits
 
 Measured, and silent:
 
@@ -203,7 +211,7 @@ This stops the abstraction *propagating*; it cannot stop it *arising*, because
 `Vector{Binary{8,4,true,true}}(undef, n)` is a constructor call with no hook.
 That entry is documented in the user guide's performance section instead.
 
-### 2.3 `reinterpret` already works — sanction it
+### 2.3 `reinterpret` is sanctioned and range-checked
 
 ```julia
 julia> reinterpret(UInt8, Binary8p4se(1.5))
@@ -213,15 +221,15 @@ julia> reinterpret(Binary8p4se, 0x44)
 Binary8p4se(1.5 ≡ 0x44)
 ```
 
-`Binary` is `isbits` and one byte, so Julia's generic `reinterpret` applies. It
-is *the* idiomatic Julia spelling for "same bits, different type", and it works
-today without being documented or tested.
+`Binary` is `isbits`, so Julia's generic `reinterpret` supplied the basic
+operation. It is *the* idiomatic Julia spelling for "same bits, different
+type"; the package now documents it and installs a more-specific checked input
+method.
 
-Two consequences. It should be **documented** as the sanctioned bit-level route
-alongside `T(::Unsigned)` and `rawvalue`. And it should be **gated**, because
-`reinterpret` bypasses the representation invariant — nothing stops
-`reinterpret(Binary3p1se, 0xFF)` producing a value with high bits set, which
-invariant 3 says cannot exist. Either constrain it or assert against it.
+The current method makes it the sanctioned bit-level route alongside
+`T(::Unsigned)` and `rawvalue`, and rejects high bits that violate the
+representation invariant. The output direction needs no additional check
+because valid `Binary` values already satisfy that invariant.
 
 (The user guide already documents the *other* half of this: reinterpreting a
 `Float16` as a `Binary16p11se` silently changes the value, because the biases

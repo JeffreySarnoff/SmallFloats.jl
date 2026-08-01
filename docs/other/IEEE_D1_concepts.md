@@ -11,6 +11,14 @@ Concept map of the whole draft **Arithmetic Formats for Machine Learning**
 (IEEE P3109/D1, July 2026), source [IEEE_D1.md](IEEE_D1.md), section index
 [IEEE_D1.json](IEEE_D1.json).
 
+> **Scope.** This is a map of the external D1 specification, not a map of the
+> SmallFloats.jl source tree. It is intentionally stable with the D1 snapshot.
+> The implementation-facing chain is [extendingK.md](extendingK.md) for design
+> decisions, [doingtheextensions.md](doingtheextensions.md) for the resulting
+> architecture, and [implementextensions.md](implementextensions.md) for the
+> executed stages and conformance gates. Current code remains the authority when
+> an implementation record and a source file differ.
+
 ## 0. How to read
 
 - Nodes are **concepts** (types, parameters, functions, modes, artifacts).

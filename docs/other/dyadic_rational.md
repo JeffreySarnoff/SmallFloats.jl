@@ -1,4 +1,4 @@
-# `Dyadic` ↔ `Rational`: a design
+# `Dyadic` ↔ `Rational`: exact bridge and implementation record
 
 *Converting the rung-3 carrier to and from Julia's `Rational`, exactly, with
 every edge named.*
@@ -12,12 +12,19 @@ package wrong.
 > `Rational{T}(::Dyadic)` and `Dyadic(::Rational)` as aliases rather than
 > duplicate bodies. §1's defect is fixed. §10 records what implementing it
 > found — including two holes the design did not predict.
+>
+> **Current boundary.** `Dyadic` is an internal `Real`, not a public promotion
+> target and not an `AbstractFloat`. The bridge is exported from the internal
+> `SmallFloats.DyadicNumbers` module for exact-or-refuse conversion and for the
+> rational differential tests. Finite values and +/-Inf round-trip exactly; NaN
+> and non-dyadic finite rationals refuse. The current implementation and tag
+> invariants are in [`src/dyadic.jl`](../../src/dyadic.jl).
 
 ---
 
-## 1. What exists, and the defect in it
+## 1. The pre-implementation defect (fixed)
 
-`src/dyadic.jl` already has one direction:
+Before this bridge was implemented, `src/dyadic.jl` had one direction:
 
 ```julia
 function Base.Rational{BigInt}(x::Dyadic)
@@ -28,7 +35,7 @@ function Base.Rational{BigInt}(x::Dyadic)
 end
 ```
 
-It was written for gate G7, where only finite datums arise, and its non-finite
+It had been written for gate G7, where only finite datums arise, and its non-finite
 policy was chosen from the premise *"a rational cannot represent infinity"*.
 
 **That premise is false, and Base disagrees with it:**

@@ -1,21 +1,31 @@
 # Float32 inside — detailed implementation of the recommended paths
 
-*Status update 2026-07-24: **M1–M3 are implemented** — `_decode_table32` +
-`Float32`/`BFloat16` scalar surface + `decode!` + array `Convert` (M1),
-`f32_exact` in `tables.jl` (M2), `_f32_base`/`f32_impl`/`register_f32!` in
-`approx.jl` (M3), with `test/float32surface.jl` included from the suite and
-JET `@test_call` lines in `quality.jl`. The new test file passes standalone
-(30/30); the full suite was deliberately not run in that session.*
+*Current role (2026-08-01): implementation record for the package's Float32 and
+BFloat16 surface and for opt-in Float32 computation. M1–M3 are shipped:
+`Float32`/`BFloat16` conversion and `decode!`, `f32_exact`, and
+`f32_impl`/`register_f32!`. The live regression coverage is
+[`test/float32surface.jl`](../../test/float32surface.jl); the 120-format counts
+below are explicitly the K ≤ 8 census from the original validation, not claims
+about all 504 formats.*
+
+> The K ≤ 16 extension preserved the policy but changed the surrounding
+> architecture. Wide formats may decode through `Float128` or `Dyadic`, and
+> narrowed materialization is accepted only when `datumsexact` proves every
+> datum representable. Approximate Float32 arithmetic remains unreachable from
+> the default API and must be registered with a measured kappa. The current
+> implementations live in [`formats.jl`](../../src/formats.jl),
+> [`kernels.jl`](../../src/kernels.jl), [`tables.jl`](../../src/tables.jl), and
+> [`approx.jl`](../../src/approx.jl).
 
 *Companion to [Float32inside.md](Float32inside.md), which established the
-verdict: keep Float64 as the universal internal carrier; add a Float32/BFloat16
-surface (M1), an exactness-gated Float32 compute capability (M2), and
+verdict: do not make Float32 the universal internal carrier; add a
+Float32/BFloat16 surface (M1), an exactness-gated Float32 compute capability (M2), and
 κ-registered Float32 kernels (M3). This document turns each milestone into a
 concrete, file-by-file implementation — and, unlike the first document, its
 claims are **empirically validated by exhaustive enumeration** run against the
 package on 2026-07-24. Every κ and every gate count below is a measured value,
-not a prediction. The harness is reproduced in Appendix A; no changes were made
-to `src/` or `test/`.*
+not a prediction. The harness is reproduced in Appendix A; at validation time,
+before the milestones landed, it made no changes to `src/` or `test/`.*
 
 ## 0. Validation summary (read this first)
 
@@ -234,9 +244,9 @@ Notes reviewed against the codebase:
 - The suite should pin the measured gate contents (§3.2) as regression data —
   the counts 118 and 88 are now known-good constants of the format grid.
 
-### 3.4 What consumes it
+### 3.4 Candidate consumer; deliberately not automatic
 
-The only default-API consumer worth building today: a SIMD-friendly loop for
+The candidate default-API consumer considered here was a SIMD-friendly loop for
 **stochastic** vmap on gated signatures (stochastic ρ is untabulable, so it is
 the one pure-CPU path that actually computes per element). Sketch — Shape B
 variant in `kernels.jl`, selected when `f32_exact(op, F1, F2)`:
@@ -403,16 +413,16 @@ Performance rules: decode32 tables are `@generated` constant tuples (fold like
 `_decode_table`); trait and table fetches are once-per-array-call; new public
 entries get JET `@test_call` + zero-allocation pins.
 
-## 6. Suggested landing order
+## 6. How the implementation landed
 
-1. **M1** (surface): src + tests as §2 — small PR, immediately useful for ML
-   interop, exercises the new BFloat16s dependency.
-2. **M2 trait only** (`f32_exact` + gate-content regression test) — lands the
-   enumeration oracle; defer the stochastic SIMD loop until profiled demand.
-3. **M3** (`_f32_base` guards + `f32_impl` + `register_f32!` + the §4.4 starter
-   registrations as an opt-in snippet or docs example) — κ re-measured at every
-   registration, so the shipped artifact is the mechanism, not frozen numbers.
-4. GPU work branches from §4.5 when hardware targets are real.
+1. **M1** shipped the scalar and bulk surface and the BFloat16s dependency.
+2. **M2** shipped `f32_exact` and its gate-content regression tests; it remains
+   a capability query rather than an automatic arithmetic switch.
+3. **M3** shipped the guarded `f32_impl`/`register_f32!` path. Registration
+   re-measures kappa, so the maintained artifact is the mechanism rather than a
+   frozen table of claims.
+4. §4.5 remains a direction for a future hardware-specific backend; no GPU
+   backend is part of the current package.
 
 ---
 
@@ -425,11 +435,12 @@ three scripts executed for this document; findings above are its output.
 using SmallFloats; const BF = SmallFloats
 using BFloat16s: BFloat16
 
-const FORMATS = sort(collect(BF._NAMED); by=first)
+const FORMATS = sort([(n, T) for (n, T) in BF._NAMED if BF.bitwidth(T) <= 8]; by=first)
 @inline function twosum(a::Float64, b::Float64)
     s = a + b; bb = s - a; (s, (a - (s - bb)) + (b - bb))
 end
-finitecodes(T) = [c for c in 0x00:UInt8((1 << BF.bitwidth(T)) - 1) if isfinite(BF.rawvalue(T, c))]
+finitecodes(T) = [c for c in UInt8(0):UInt8((1 << BF.bitwidth(T)) - 1)
+                  if isfinite(BF.rawvalue(T, c))]
 
 # V1/V2 — decode exactness in Float32 and BFloat16
 for (name, T) in FORMATS, c in 0x00:UInt8((1 << BF.bitwidth(T)) - 1)
@@ -509,4 +520,5 @@ println("sweep: κ = 0 for $nz / $nt")   # measured 2026-07-24: 600 / 600
 (every κ above says `exhaustive=true`). Cross-format pairs, ternary ops, and
 block/scaled paths were not enumerated here; the harness extends to them by
 substituting formats/arity, and M2/M3's mechanisms (trait enumeration,
-registration-time measurement) cover them by construction when implemented.
+registration-time measurement) handle them when the capability is queried or an
+implementation is registered. They were not part of the historical census.

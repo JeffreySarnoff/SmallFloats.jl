@@ -1,14 +1,28 @@
 # Float32 as the internal carrier for `Binary` values — plan, design, review
 
-*Status: design study. No code changed, no tests run. Written against the source
-tree as of 2026-07-24 (draft revision per `draft_revision()`).*
+*Current role (2026-08-01): rationale for the package's Float32 boundary. This
+document supplied the decision; [Float32more.md](Float32more.md) records its
+implementation. The measurements below are the K ≤ 8 evidence available when
+the decision was made, not a description of the entire 504-format grid.*
+
+> **Current implementation.** Float32 did not replace the universal evaluation
+> carrier. `datumcarrier` now selects `Float64`, `Float128`, or the exact
+> `Dyadic` carrier from the operand formats, while `promotecarrier` exposes only
+> complete Julia float interfaces (`Float64`, `Float128`, or `BigFloat`). The
+> useful parts of this study did ship: exact `Float32`/`BFloat16` conversion
+> where the datum set permits it, bulk `decode!`, the `f32_exact` capability
+> query, and opt-in kappa-measured kernels through `register_f32!`. See
+> [`carriers.jl`](../../src/carriers.jl),
+> [`kernels.jl`](../../src/kernels.jl),
+> [`tables.jl`](../../src/tables.jl), and
+> [`approx.jl`](../../src/approx.jl).
 
 ## 1. Question and verdict
 
-SmallFloats.jl uses `Float64` as the internal "carrier" type: `decode` returns
-`Float64`, `ωeval` consumes and (in its fast class) returns `Float64`, and the
-projection engine's fast path (`_rtp_f64`) is a Float64 bit path. The question
-studied here: **can `Float32` serve as that internal type instead?**
+At the time of this study SmallFloats.jl used `Float64` as its only internal
+carrier. The question studied here was: **can `Float32` serve as that internal
+type instead?** The extension later generalized the premise to a carrier ladder,
+but did not change the answer.
 
 **Verdict, up front:**
 
@@ -21,10 +35,9 @@ studied here: **can `Float32` serve as that internal type instead?**
    `_DE_FAA = 98`) is calibrated to a 53-bit head. A Float32 head would escalate
    at spreads around 15 instead of 44+ — strictly more slow-path traffic for zero
    hot-path gain.
-2. **As a surface type: already nearly free, worth finishing.** Decode is
-   Float32-exact for every format (already asserted at
-   [`formats.jl:215`](../../src/formats.jl#L215)); the remaining work is bulk
-   materialization and interop conveniences (§6, Milestone 1).
+2. **As a surface type: yes, and shipped.** Decode is Float32-exact throughout
+   the original K ≤ 8 grid; the package now provides guarded scalar conversion,
+   bulk materialization, and BFloat16 interop (§6, Milestone 1).
 3. **As a compute type for special kernels (SIMD/GPU): yes, but only through the
    two mechanisms the architecture already provides** — an exactness-*gated*
    carrier for the (op, format, ρ) combinations where Float32 arithmetic is
@@ -34,7 +47,7 @@ studied here: **can `Float32` serve as that internal type instead?**
 
 The rest of this document is the evidence.
 
-## 2. Where Float64 lives today — the inventory
+## 2. Where Float64 lived before the carrier extension
 
 "Internal type" is not one declaration; it is a contract threaded through the
 layer stack (119 mentions across 12 of the 14 source files). The load-bearing
@@ -60,7 +73,7 @@ Two structural observations before any feasibility math:
   gathers; the carrier appears only at table-*build* time (cold, oracle-backed).
   The scalar warm path (~26 ns specialized `Add`) is dominated by projection
   logic, not by 64-vs-32-bit ALU width. **A Float32 carrier buys ~nothing on
-  today's CPU paths.** The real motivations are elsewhere: GPU (no fast
+  the original CPU paths.** The real motivations are elsewhere: GPU (no fast
   Float64), SIMD width in a hypothetical vectorized Shape-B kernel, and interop
   with Float32/BFloat16 ML tensors.
 - **Correctness is not carried by Float64 alone but by the oracle result
@@ -85,9 +98,9 @@ unsigned; extremes at `Binary8p1u`):
   exponent (`value scale ≈ 2^(2−B)` when `Q` is minimal), so the subnormal
   region never truncates.
 
-Hence ωDecode is Float32-exact for every format — which is exactly what
-[`formats.jl:215`](../../src/formats.jl#L215) already claims and the suite
-asserts. (Incidentally the same argument shows **BFloat16 is also an exact
+Hence ωDecode is Float32-exact for every K ≤ 8 format — which the current
+`datumsexact` gate and suite preserve. (Incidentally the same argument shows
+**BFloat16 is also an exact
 datum carrier**: 8-bit precision ≥ every P, exponent range identical to
 Float32, subnormals reach `2^−133 < 2^−127`. Relevant to the new `BFloat16s`
 dependency; see §7.)

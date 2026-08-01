@@ -1,6 +1,6 @@
 # Doing the extensions — design, architecture, and implementation direction for 8 < K ≤ 16
 
-*Status: implementation-directing document, written 2026-07-29 against commit
+*Original status: implementation-directing document, written 2026-07-29 against commit
 `9195d32`. Companion to [extendingK.md](extendingK.md), which established the
 plan (grouping, counts, carrier boundaries, milestones) — this document turns
 that plan into an architecture and a mandated set of Julia techniques, staged so
@@ -9,15 +9,20 @@ truth is [IEEE_D1.md](IEEE_D1.md) (IEEE P3109/D1, July 2026), addressed through
 [IEEE_D1.json](IEEE_D1.json) and mapped by
 [IEEE_D1_concepts.md](IEEE_D1_concepts.md). No code changed; no tests run.*
 
-> **SUPERSEDED where it describes `Dyadic`.** This document is kept as the
-> design record — the *reasoning* it gives for the carrier still holds and is
-> not repeated anywhere else. Its **code sketches are not the shipped API**:
-> [implementextensions.md](implementextensions.md) §1 records what the second
-> audit changed, and [`src/dyadic.jl`](../../src/dyadic.jl) is the source of
-> truth. The `Dyadic` sketch in §5 has been brought onto the shipped tag
-> vocabulary and field order so that no reader copies a call that will not
-> compile; the surrounding argument is untouched. Everything else here is
-> historical and is deliberately left as written.
+> **Current role (2026-08-01): architecture map for the implementation that now
+> ships.** `formats.jl` owns the abstract-format/representation lattice and the
+> K = 8 storage split; `carriers.jl` owns rung selection and the distinction
+> between internal `datumcarrier` and public `promotecarrier`;
+> `decode_encode.jl` dispatches between table and computed decoding;
+> `tables.jl`/`kernels.jl` enforce the table-cost policy; and `dyadic.jl` supplies
+> the allocation-free exact rung. The staged verbs below are retained because
+> they expose the dependency structure, but the stages are complete, not future
+> work. [implementextensions.md](implementextensions.md) §11 is the execution
+> record and the source files are the final authority.
+>
+> The `Dyadic` sketch in §5 uses the shipped tag vocabulary and `(S, Q, kind)`
+> field order. It remains explanatory; [`src/dyadic.jl`](../../src/dyadic.jl) is
+> the API and invariant source of truth.
 
 ---
 

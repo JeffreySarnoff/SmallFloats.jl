@@ -7,6 +7,15 @@ Every quantitative claim below is measured against the shipped 504-format grid,
 not derived on paper. Where a rule is conservative or a count is a sample, it
 says so.
 
+> **Current status (2026-08-01).** The negative design decision is the shipped
+> behavior: there is no `promote_rule` between two `Binary` formats. Operations
+> continue to name their result format explicitly, while promotion against Julia
+> numeric types targets the total float lattice selected by `promotecarrier`.
+> §6.1's `formatjoin` and `formatcontains` are a possible explicit reflection
+> API, not current exported functions. The live rules are in
+> [`formats.jl`](../../src/formats.jl) and the Julia-facing rationale is also
+> recorded in [`juliacompat.jl`](../../src/juliacompat.jl).
+
 ---
 
 ## 1. The question, stated precisely
@@ -320,9 +329,10 @@ The carrier promotion has none of these problems: `promotecarrier(F)` is total,
 associative (it is a float-widening lattice), exact for the format's datums, and
 returns a type the user can reason about without consulting a table.
 
-### 6.1 What to offer instead
+### 6.1 A possible explicit API (not currently implemented)
 
-The lattice is real and useful — it just should not be *implicit*. Expose it:
+The lattice is real and useful — it just should not be *implicit*. If a public
+reflection API is needed, this is the proposed shape:
 
 ```julia
 """
@@ -379,9 +389,10 @@ hides which of the two branches was taken.
 - The join exists for only **59.7 %** of pairs, is **not associative**, and even
   where it exists it lands at `K + 1` or `K + 2` for the "nearly identical"
   cases — differing only in `σ`, or only in `δ`.
-- Therefore: **no `promote_rule` between two `Binary` formats.** Promote to the
-  carrier, which is total, associative and exact, and expose `formatjoin` /
-  `formatcontains` for callers who want the lattice explicitly.
+- Therefore: **no `promote_rule` between two `Binary` formats.** The shipped
+  implementation promotes against Julia numbers to the carrier, which is total,
+  associative and exact. `formatjoin` / `formatcontains` remain an unimplemented
+  proposal for callers who may eventually need lattice reflection.
 
 ### Reproducing the numbers
 
