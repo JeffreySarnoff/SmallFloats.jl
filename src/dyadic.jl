@@ -40,8 +40,9 @@ const DY_NEGINF = 0x02
 const DY_NAN    = 0x03
 
 """
-    Dyadic(S::Int128, Q::Int64)      -> the exact value S · 2^Q
-    Dyadic(kind::UInt8)              -> one of the three non-finite rows
+    Dyadic(S::Int128, Q::Int64)          -> the exact value S · 2^Q
+    Dyadic(kind::UInt8)                  -> one of the three non-finite rows
+    Dyadic(S::Int128, Q::Int64, kind)    -> the inner constructor
 
 An exact dyadic rational, the rung-3 evaluation carrier.
 
@@ -50,14 +51,33 @@ after every operation costs a `trailing_zeros` and a shift for no benefit, since
 the only consumer is `round_to_precision`, which realigns anyway. Two `Dyadic`s
 may therefore represent the same value with different `(S, Q)`; `==` compares
 values, not fields.
+
+**`kind` is the LAST field, and the order is load-bearing.** `S` needs 16-byte
+alignment, so a leading `UInt8` tag buys 15 bytes of padding and a 40-byte
+struct; trailing, the tag lands in `Q`'s slack and the struct is 32 bytes. That
+is a quarter off every carrier value the rung-3 path copies, and it costs
+nothing. Anything constructing a `Dyadic` positionally passes `(S, Q, kind)` —
+the two-argument spellings above exist so that most code never has to.
 """
 struct Dyadic <: Real
-    kind::UInt8
     S::Int128
     Q::Int64
+    kind::UInt8
 end
-Dyadic(S::Integer, Q::Integer) = Dyadic(DY_FINITE, Int128(S), Int64(Q))
-Dyadic(kind::UInt8) = Dyadic(kind, Int128(0), Int64(0))
+Dyadic(S::Integer, Q::Integer) = Dyadic(Int128(S), Int64(Q), DY_FINITE)
+
+# The tag is RANGE-CHECKED. `Dyadic(0x7f)` used to construct, and the result was
+# in none of the four rows: `isfinite`, `isnan` and `isinf` all answered false,
+# so every kernel's classification fell through to a branch written for a case
+# that cannot occur. This is the representation invariant for the tag field, and
+# invariant 3's rule applies — constructors check it, kernels assume it. The
+# check is free: this constructor runs five times, at load, for the `const` rows.
+function Dyadic(kind::UInt8)
+    kind <= DY_NAN || throw(ArgumentError(
+        "invalid Dyadic kind $kind: expected one of DY_FINITE, DY_POSINF, " *
+        "DY_NEGINF, DY_NAN (0x00 through 0x03)"))
+    Dyadic(Int128(0), Int64(0), kind)
+end
 
 const DYADIC_ZERO   = Dyadic(Int128(0), Int64(0))
 const DYADIC_ONE    = Dyadic(Int128(1), Int64(0))
@@ -70,6 +90,13 @@ const DYADIC_NAN    = Dyadic(DY_NAN)
 @inline isnan_dy(x::Dyadic)    = x.kind == DY_NAN
 @inline isinf_dy(x::Dyadic)    = x.kind == DY_POSINF || x.kind == DY_NEGINF
 @inline iszero_dy(x::Dyadic)   = x.kind == DY_FINITE && iszero(x.S)
+
+"""Whether both operands are finite, in one OR and one compare.
+
+Sound only because `DY_FINITE == 0x00`. This gates the addition kernels; whether
+it is *worth* gating with depends on what the cold rows cost to inline beside the
+hot body, which is measured per site — see the note above `_add_special`."""
+@inline bothfinite_dy(x::Dyadic, y::Dyadic) = (x.kind | y.kind) == DY_FINITE
 
 Base.isfinite(x::Dyadic) = isfinite_dy(x)
 Base.isnan(x::Dyadic)    = isnan_dy(x)
@@ -84,10 +111,12 @@ Base.one(::Dyadic)        = DYADIC_ONE
 deliberately so — callers must test `isnan` first, and a sign of 0 for NaN makes
 a missing test show up as a wrong answer rather than as a plausible one."""
 @inline function sign_dy(x::Dyadic)
+    # Finite first: `cmp_dy` calls this twice per comparison and the finite row is
+    # the overwhelming case, so it costs one predicate rather than three.
+    isfinite_dy(x) && return x.S > 0 ? 1 : (x.S < 0 ? -1 : 0)
     x.kind == DY_POSINF && return 1
     x.kind == DY_NEGINF && return -1
-    x.kind == DY_NAN    && return 0
-    x.S > 0 ? 1 : (x.S < 0 ? -1 : 0)
+    0                                                  # NaN
 end
 """Sign as an `Int` in `{-1, 0, 1}`; `NaN` answers 0, matching no float and
 deliberately so — callers must test `isnan` first, and a sign of 0 for NaN makes
@@ -95,21 +124,52 @@ a missing test show up as a wrong answer rather than as a plausible one."""
 Base.sign(x::Dyadic) = sign_dy(x)
 Base.signbit(x::Dyadic) = sign_dy(x) < 0
 
-@inline function Base.abs(x::Dyadic)
-    x.kind == DY_NEGINF && return DYADIC_POSINF
-    isfinite_dy(x) || return x
-    Dyadic(DY_FINITE, abs(x.S), x.Q)
-end
-@inline function Base.:-(x::Dyadic)
-    x.kind == DY_POSINF && return DYADIC_NEGINF
-    x.kind == DY_NEGINF && return DYADIC_POSINF
-    isfinite_dy(x) || return x
-    Dyadic(DY_FINITE, -x.S, x.Q)
+# `typemin(Int128)` is the one significand that cannot be negated in place:
+# `-typemin` and `abs(typemin)` both wrap to `typemin`, so `abs` returned a
+# NEGATIVE value and `abs(x) > 0` was false. Silent, and it propagates —
+# `Base.:-(x, y)` is `x + (-y)`.
+#
+# The carrier has the room the integer does not: `|typemin(Int128)|` is exactly
+# `2^127`, so the value is respelled as `1 · 2^(Q+127)`. Exact, not a saturation.
+# `@noinline` because this is one input out of 2^128 and the callers are hot.
+@noinline function _negate_typemin(Q::Int64)
+    Q <= typemax(Int64) - 127 || throw(OverflowError(
+        "Dyadic: negating a typemin(Int128) significand needs exponent " *
+        "$Q + 127, which exceeds Int64"))
+    Dyadic(one(Int128), Q + 127, DY_FINITE)
 end
 
+@inline function Base.abs(x::Dyadic)
+    if isfinite_dy(x)
+        s = x.S
+        s >= 0 && return x
+        s == typemin(Int128) && return _negate_typemin(x.Q)
+        return Dyadic(-s, x.Q, DY_FINITE)
+    end
+    x.kind == DY_NEGINF ? DYADIC_POSINF : x
+end
+@inline function Base.:-(x::Dyadic)
+    if isfinite_dy(x)
+        s = x.S
+        s == typemin(Int128) && return _negate_typemin(x.Q)
+        return Dyadic(-s, x.Q, DY_FINITE)
+    end
+    x.kind == DY_POSINF && return DYADIC_NEGINF
+    x.kind == DY_NEGINF && return DYADIC_POSINF
+    x
+end
+
+"""`|S|` as a `UInt128`.
+
+`abs(typemin(Int128))` wraps to itself; reading those bits as unsigned gives
+`2^127`, which is the true magnitude. That is why the magnitude of a significand
+is taken here rather than with a bare `abs` — `typemin` is a representable `S`,
+and `abs` alone is wrong on exactly that one input."""
+@inline mag_dy(S::Int128) = unsigned(abs(S))
+
 """Number of significant bits in `|S|` — the head width the add band is stated
-against. Zero answers 0."""
-@inline nbits_dy(S::Int128) = iszero(S) ? 0 : (128 - leading_zeros(unsigned(abs(S))))
+against. Zero answers 0, since `leading_zeros(zero(UInt128))` is 128."""
+@inline nbits_dy(S::Int128) = 128 - leading_zeros(mag_dy(S))
 
 # ---- addition, with the C7 bands.
 #
@@ -142,24 +202,64 @@ caller is past the sticky threshold and `add_sticky_dy` applies. Returns a
 `Dyadic` whose `kind` carries the IEEE ∞/NaN algebra.
 """
 @inline function add_dy(x::Dyadic, y::Dyadic)
-    (isnan_dy(x) | isnan_dy(y)) && return DYADIC_NAN
-    if isinf_dy(x) || isinf_dy(y)
-        (isinf_dy(x) && isinf_dy(y) && x.kind != y.kind) && return DYADIC_NAN
-        return isinf_dy(x) ? x : y
-    end
+    bothfinite_dy(x, y) || return _add_special(x, y)
     iszero(x.S) && return y
     iszero(y.S) && return x
-    # align on the lower exponent; the shift is exact while it fits Int128
     if x.Q >= y.Q
         d = x.Q - y.Q
         d > DYADIC_ALIGN_MAX && return _add_wide(x, y, d)
-        Dyadic(DY_FINITE, (x.S << d) + y.S, y.Q)
+        return _add_aligned(x, y, d)
     else
         d = y.Q - x.Q
         d > DYADIC_ALIGN_MAX && return _add_wide(y, x, d)
-        Dyadic(DY_FINITE, (y.S << d) + x.S, x.Q)
+        return _add_aligned(y, x, d)
     end
 end
+
+# MEASUREMENT HISTORY, and the reason the shape above is not obvious.
+#
+# The `(x.kind | y.kind) == DY_FINITE` gate is sound only because `DY_FINITE` is
+# zero, and its worth depends entirely on whether `_add_special` may be inlined:
+#
+#   gate + inlinable `_add_special`        5.96 us   <- this
+#   inline predicate chain, no helper      7.51 us   +26%
+#   gate + `@noinline _add_special`        7.13 us   +20%
+#
+# 4096-element reduction loop, minimum of 4000 reps over six alternating
+# single-variant processes. An earlier note here recorded the gate as "31%
+# slower" and rejected it — that measurement was real but its conclusion was
+# conditional on the `@noinline` it was paired with, which the note did not say.
+# Pairing the gate with an inlinable helper reverses it. A call in the hot block
+# cannot be if-converted, so the finite path pays for cold rows it never takes;
+# this helper is four tag compares returning an operand, so inlining it is nearly
+# free and removes that barrier.
+#
+# The same change at `_cmp_special` would be governed by the size of the body it
+# sits beside, not by the helper — do not generalize this to `cmp_dy` without
+# measuring it there.
+#
+# Before that, the gate was "confirmed" at 1.87x by a harness that compiled every
+# variant in one process. Same-process variant comparison is not a measurement
+# here: one variant per process, alternating, or nothing.
+@inline function _add_special(x::Dyadic, y::Dyadic)
+    kx, ky = x.kind, y.kind
+    (kx == DY_NAN) | (ky == DY_NAN) && return DYADIC_NAN
+    kx == DY_FINITE && return y                    # y is the infinity
+    ky == DY_FINITE && return x                    # x is the infinity
+    kx == ky ? x : DYADIC_NAN                      # ∞ + (−∞)
+end
+
+# The aligned exact sum, shared by `add_dy` and `add_sticky_dy` so the one
+# expression that has to stay inside the C7 band is written once. Both callers
+# arrive having discharged the NaN/∞/zero rows and having checked `d` against
+# `DYADIC_ALIGN_MAX`, which is why this takes the ordered pair and the gap rather
+# than re-deriving them: `add_sticky_dy` is the ω-arithmetic hot path and must
+# not re-enter `add_dy` to re-run the tests it has already answered.
+#
+# `big`/`small` are ordered by EXPONENT, not magnitude — the small operand is the
+# one whose bits fall off the bottom after alignment.
+@inline _add_aligned(big::Dyadic, small::Dyadic, d::Integer) =
+    Dyadic((big.S << d) + small.S, small.Q, DY_FINITE)
 
 # Past the alignment band the small operand cannot reach the head's significant
 # bits at all, so its only contribution is a sticky sign. Returning the head with
@@ -179,36 +279,67 @@ The sum together with a sticky sign in `{-1, 0, +1}` describing a tail below the
 returned value's last bit. Chooses the exact band when the operands align and the
 sign-only band otherwise, which is exactly the C7 overlap argument in code."""
 @inline function add_sticky_dy(x::Dyadic, y::Dyadic)
-    (isnan_dy(x) | isnan_dy(y)) && return (DYADIC_NAN, 0)
-    if isinf_dy(x) || isinf_dy(y)
-        (isinf_dy(x) && isinf_dy(y) && x.kind != y.kind) && return (DYADIC_NAN, 0)
-        return (isinf_dy(x) ? x : y, 0)
-    end
+    # A special row has no tail below its last bit, so the sticky sign is 0.
+    bothfinite_dy(x, y) || return (_add_special(x, y), 0)
     iszero(x.S) && return (y, 0)
     iszero(y.S) && return (x, 0)
-    big, small = x.Q >= y.Q ? (x, y) : (y, x)
-    d = big.Q - small.Q
-    d <= DYADIC_ALIGN_MAX && return (add_dy(x, y), 0)
-    (big, small.S > 0 ? 1 : -1)
+    if x.Q >= y.Q
+        d = x.Q - y.Q
+        d <= DYADIC_ALIGN_MAX && return (_add_aligned(x, y, d), 0)
+        return (x, y.S > 0 ? 1 : -1)
+    else
+        d = y.Q - x.Q
+        d <= DYADIC_ALIGN_MAX && return (_add_aligned(y, x, d), 0)
+        return (y, x.S > 0 ? 1 : -1)
+    end
 end
 
 """
     mul_dy(x, y) -> Dyadic
 
-Exact product. **Precondition:** `nbits(x.S) + nbits(y.S) ≤ 96`, checked under
-`@boundscheck` rather than always, because every operand the engine produces
-satisfies it by a wide margin (a datum's significand is ≤ 16 bits, so a product
-of four is ≤ 64) and the check is pure overhead on the path that matters."""
+Exact product, **unchecked**. Precondition: `nbits(x.S) + nbits(y.S) ≤ 96`, which
+every operand the engine produces satisfies by a wide margin — a datum's
+significand is ≤ 16 bits, so a product of four is ≤ 64.
+
+Use [`mul_dy_checked`](@ref) at any boundary where that precondition is not
+already established. That is a *separate function*, not a `@boundscheck` block,
+and the difference is not stylistic: `@boundscheck` elides only when the caller
+is `@inbounds`, and **no call site in `oracle.jl` is** — `grep -n inbounds
+src/oracle.jl` returns nothing. The check therefore ran on every rung-3
+multiply in production, two `nbits_dy` calls deep, at **3.3×** the cost of the
+multiply itself (5.166 vs 1.546 µs over 4096 pairs). The previous docstring's
+claim that it was "pure overhead on the path that matters" had it exactly
+backwards: it was overhead *on* that path, and free everywhere else.
+
+Making the two paths two names means the contract is visible at the call site
+instead of depending on an `@inbounds` annotation nobody wrote."""
 @inline function mul_dy(x::Dyadic, y::Dyadic)
     (isnan_dy(x) | isnan_dy(y)) && return DYADIC_NAN
     if isinf_dy(x) || isinf_dy(y)
         (iszero_dy(x) | iszero_dy(y)) && return DYADIC_NAN          # 0 · ∞
         return sign_dy(x) * sign_dy(y) > 0 ? DYADIC_POSINF : DYADIC_NEGINF
     end
-    @boundscheck nbits_dy(x.S) + nbits_dy(y.S) <= 96 ||
-        throw(ArgumentError("Dyadic multiply would overflow Int128: " *
-                            "$(nbits_dy(x.S)) + $(nbits_dy(y.S)) significand bits > 96"))
-    Dyadic(DY_FINITE, x.S * y.S, x.Q + y.Q)
+    Dyadic(x.S * y.S, x.Q + y.Q, DY_FINITE)
+end
+
+@noinline _throw_mul_wide(nx::Int, ny::Int) = throw(ArgumentError(
+    "Dyadic multiply would overflow Int128: $nx + $ny significand bits > 96"))
+
+"""
+    mul_dy_checked(x, y) -> Dyadic
+
+[`mul_dy`](@ref) with its precondition enforced: throws `ArgumentError` rather
+than wrapping when the significand product would leave `Int128`. For tests and
+for any caller that has not established the width invariant itself."""
+@inline function mul_dy_checked(x::Dyadic, y::Dyadic)
+    (isnan_dy(x) | isnan_dy(y)) && return DYADIC_NAN
+    if isinf_dy(x) || isinf_dy(y)
+        (iszero_dy(x) | iszero_dy(y)) && return DYADIC_NAN
+        return sign_dy(x) * sign_dy(y) > 0 ? DYADIC_POSINF : DYADIC_NEGINF
+    end
+    nx, ny = nbits_dy(x.S), nbits_dy(y.S)
+    nx + ny <= 96 || _throw_mul_wide(nx, ny)
+    Dyadic(x.S * y.S, x.Q + y.Q, DY_FINITE)
 end
 
 # ---- ordering and equality, by VALUE rather than by field, since `(S, Q)` is
@@ -227,12 +358,18 @@ end
     isinf_dy(x) && return sx > 0 ? 1 : -1              # x infinite, y finite, same sign
     isinf_dy(y) && return sy > 0 ? -1 : 1
     sx == 0 && return 0                                # both zero
-    ex, ey = exponent_dy(x), exponent_dy(y)
+    # `_exponent_raw`, not `exponent_dy`: finite and nonzero is established above,
+    # so the checked form would re-test it on both operands every comparison.
+    ex, ey = _exponent_raw(x), _exponent_raw(y)
     if ex != ey
         m = ex < ey ? -1 : 1
         return sx > 0 ? m : -m
     end
-    ax, ay = abs(x.S), abs(y.S)
+    # Equal exponents, so the widths differ by exactly `ΔQ` and the shift lands
+    # inside 128 bits. UInt128 magnitudes, because `abs(typemin(Int128))` is
+    # negative and would order that significand as the smallest rather than the
+    # largest — see `mag_dy`.
+    ax, ay = mag_dy(x.S), mag_dy(y.S)
     if x.Q >= y.Q
         ax <<= (x.Q - y.Q)
     else
@@ -243,7 +380,62 @@ end
 end
 Base.:(==)(x::Dyadic, y::Dyadic) = cmp_dy(x, y) == 0
 Base.:(<)(x::Dyadic, y::Dyadic)  = cmp_dy(x, y) == -1
-Base.:(<=)(x::Dyadic, y::Dyadic) = (c = cmp_dy(x, y); c == -1 || c == 0)
+# `<= 0` covers -1 and 0 and excludes the unordered 2, which is the only other
+# value `cmp_dy` returns.
+Base.:(<=)(x::Dyadic, y::Dyadic) = cmp_dy(x, y) <= 0
+
+# ---- `isless` and `isequal`: the SORTING order, which is NOT the `<` order.
+#
+# Base's `Real` fallbacks are `isless(x, y) = x < y` and `isequal(x, y) = x == y`,
+# and a type with a NaN row cannot accept either. `<` answers false in both
+# directions for NaN, so `sort` is handed a non-order and shuffles rather than
+# sorts: `[2, NaN, -Inf, 0, Inf]` came back in that order, unchanged and unsorted,
+# where the `Float64` spelling gives `[-Inf, 0.0, 2.0, Inf, NaN]`. `sort`,
+# `extrema`, `searchsorted`, `partialsort` and `maximum` all assume `isless` is a
+# TOTAL order, which for every `AbstractFloat` means NaN sorts last.
+#
+# `cmp_dy`'s unordered answer is what makes both one line: 2 occurs exactly when a
+# NaN is involved, and NaN is greater than everything except another NaN.
+@inline function Base.isless(x::Dyadic, y::Dyadic)
+    c = cmp_dy(x, y)
+    c == 2 ? (!isnan_dy(x) & isnan_dy(y)) : c == -1
+end
+
+# `isequal` follows Base's contract — "the same as `==` except that NaN is equal
+# to itself". There is no signed zero in this carrier, so the other half of that
+# contract has nothing to say here.
+#
+# `Set` and `Dict` already answer correctly WITHOUT this method, which is why the
+# gap is easy to miss: `Dyadic` is immutable and every NaN row is bit-identical,
+# so the hash table's `===` short-circuit covers it. That is a property of the
+# layout, not of the comparison — `unique`, `indexin`, `findfirst` and any direct
+# `isequal` call read the false answer.
+@inline Base.isequal(x::Dyadic, y::Dyadic) =
+    isnan_dy(x) ? isnan_dy(y) : cmp_dy(x, y) == 0
+
+# `isunordered` is the third member of that contract and the one easiest to miss,
+# because Base's default is `false` for every type rather than an error. It is
+# what `isgreater` is built on, and through it `argmin`/`argmax`, `findmin`/
+# `findmax` and descending sorts — all of which placed a `Dyadic` NaN as an
+# ordinary value while the `Float64` spelling places it last.
+@inline Base.isunordered(x::Dyadic) = isnan_dy(x)
+
+# `max`/`min`/`minmax` PROPAGATE NaN, as they do for every `AbstractFloat`.
+# Base's `Real` fallback is `ifelse(isless(y, x), x, y)`, which returns the
+# non-NaN operand — so `maximum`, `minimum` and `extrema` over a vector holding a
+# NaN answered a finite value where the same reduction over `Float64` answers NaN.
+# A carrier that disagrees with the float on a reduction is the disagreement gate
+# G7 exists to catch, so it is settled here rather than left to the call sites.
+#
+# Note this is Julia's `max`, not IEEE `maxNum`: the registry's `Max`/`Min` ops
+# carry the P3109 semantics and are unaffected by these methods.
+@inline Base.max(x::Dyadic, y::Dyadic) =
+    (isnan_dy(x) | isnan_dy(y)) ? DYADIC_NAN : (cmp_dy(x, y) == -1 ? y : x)
+@inline Base.min(x::Dyadic, y::Dyadic) =
+    (isnan_dy(x) | isnan_dy(y)) ? DYADIC_NAN : (cmp_dy(x, y) == 1 ? y : x)
+@inline Base.minmax(x::Dyadic, y::Dyadic) =
+    (isnan_dy(x) | isnan_dy(y)) ? (DYADIC_NAN, DYADIC_NAN) :
+        (cmp_dy(x, y) == 1 ? (y, x) : (x, y))
 # ---- Base arithmetic: TOTAL, and therefore not `add_dy`/`mul_dy`.
 #
 # `add_dy` and `mul_dy` are the engine's kernels and they are deliberately
@@ -295,15 +487,20 @@ generic finite path needs no carrier-specific guard at rung 3.
 """
 @inline function Base.ldexp(x::Dyadic, n::Integer)
     isfinite_dy(x) || return x
-    Dyadic(DY_FINITE, x.S, x.Q + Int64(n))
+    Dyadic(x.S, x.Q + Int64(n), DY_FINITE)
 end
+
+# The exponent arithmetic without the domain test, for callers that have already
+# established finite-and-nonzero. `cmp_dy` is the one that matters: it reaches
+# this twice per comparison, on operands it has just classified.
+@inline _exponent_raw(x::Dyadic) = x.Q + nbits_dy(x.S) - 1
 
 """Binary exponent of `|x|`, i.e. `⌊log₂|x|⌋`. Undefined for zero and the
 non-finite rows, which is why it asserts rather than returning a sentinel."""
 @inline function exponent_dy(x::Dyadic)
     isfinite_dy(x) && !iszero(x.S) ||
         throw(DomainError(x, "Dyadic exponent is defined only for finite nonzero values"))
-    x.Q + nbits_dy(x.S) - 1
+    _exponent_raw(x)
 end
 """Binary exponent of `|x|`, i.e. `⌊log₂|x|⌋`. Undefined for zero and the
 non-finite rows, which is why it asserts rather than returning a sentinel."""
@@ -317,44 +514,82 @@ Base.exponent(x::Dyadic) = exponent_dy(x)
 # too — and would allocate on every call, at the one rung where the carrier was
 # chosen specifically to avoid MPFR on the ordinary path.
 #
-# `-Q ≥ 128` cannot be a shift: the whole significand is below the binary point,
-# so the value is strictly inside `(-1, 1)` and the answer is decided by sign
-# alone. Julia's `>>` on `Int128` saturates rather than wrapping, but relying on
-# that would be relying on a detail; the branch says what it means.
+# `Q ≥ 0` returns the OPERAND, and does not re-form it at `Q = 0`. The value is
+# already an integer, so all four functions are the identity there; re-forming it
+# as `S << Q` was wrong twice over — `Int128` shifts yield 0 past the width, so
+# `floor(Dyadic(1, 200))` answered 0, and there is no `(S′, 0)` for `2^200` to be
+# re-formed into in the first place. That guard is spelled out at each of the four
+# entry points rather than hidden in `_split_dy`, so `_split_dy` gets a clean
+# precondition and its result needs no per-caller reinterpretation.
+#
+# `-Q ≥ 128` likewise cannot be a shift: the whole significand is below the binary
+# point, so `0 < |x| < 2^-1`, and neither the fraction's numerator nor `2^sh` is
+# an `Int128`. `_DY_TINY` reports that case with the floor still exact — `-1` for
+# a negative value, not `0`. The previous encoding returned `(0, S, sh)`, which
+# claims a floor of 0 and a remainder that is negative for negative `x`: it made
+# `floor` of a tiny negative answer 0 instead of -1, and `ceil` answer 1 instead
+# of 0.
+const _DY_TINY = -1
+
+"""Split a finite NON-INTEGER `x` as `x == q + r/2^sh` with `q == ⌊x⌋` and
+`0 ≤ r < 2^sh`. **Precondition: `x.Q < 0` and `x.S ≠ 0`.**
+
+`sh == _DY_TINY` means `0 < |x| < 2^-1`, where the fraction is not an `Int128`
+ratio: `q` is then the exact floor and `r` is a nonzero placeholder, which is all
+`floor`/`ceil`/`trunc` read. `round` is the one caller that compares against ½
+and it tests the tag."""
 @inline function _split_dy(x::Dyadic)
-    x.Q >= 0 && return (x.S << x.Q, zero(Int128), 0)      # already an integer
-    sh = -Int(x.Q)
-    sh >= 128 && return (zero(Int128), x.S, sh)           # |x| < 1
+    # Test the ORIGINAL `Q`, before negating it. `-Int(typemin(Int64))` wraps to
+    # `typemin` — still negative — so `sh >= 128` was false and `x.S >> sh` became
+    # a *left* shift on a negative count. `Dyadic(-3, typemin(Int64))` answered
+    # `floor = 0` (should be −1), `ceil = 1` and `trunc = 1` (both should be 0).
+    x.Q <= -128 && return (x.S < 0 ? -one(Int128) : zero(Int128), one(Int128), _DY_TINY)
+    sh = -Int(x.Q)                                         # now in 1:127
     q = x.S >> sh                                          # arithmetic shift: floors
     (q, x.S - (q << sh), sh)                               # (floor, remainder ≥ 0, shift)
 end
 
-@inline _int_dy(q::Int128) = Dyadic(DY_FINITE, q, 0)
+@inline _int_dy(q::Int128) = Dyadic(q, 0, DY_FINITE)
+
+# Non-finite, or already an integer — the operand IS the answer. `iszero` belongs
+# here and not in `_split_dy`: `(0, -400)` is a perfectly ordinary spelling of
+# zero, and the `_DY_TINY` row would report a nonzero fraction for it, which made
+# `ceil` answer 1.
+@inline _rounds_to_self(x::Dyadic) = !isfinite_dy(x) || x.Q >= 0 || iszero(x.S)
 
 function Base.floor(x::Dyadic)
-    isfinite_dy(x) || return x
+    _rounds_to_self(x) && return x
     q, _, _ = _split_dy(x)
     _int_dy(q)                       # `>>` already floors toward −∞
 end
 
 function Base.ceil(x::Dyadic)
-    isfinite_dy(x) || return x
+    _rounds_to_self(x) && return x
     q, r, _ = _split_dy(x)
     _int_dy(iszero(r) ? q : q + one(Int128))
 end
 
-Base.trunc(x::Dyadic) = isfinite_dy(x) ? (sign_dy(x) < 0 ? ceil(x) : floor(x)) : x
+# One split, rather than a dispatch into `ceil`/`floor` that repeats it: toward
+# zero differs from toward −∞ only for a negative value with a fraction, and both
+# facts are already in hand.
+function Base.trunc(x::Dyadic)
+    _rounds_to_self(x) && return x
+    q, r, _ = _split_dy(x)
+    _int_dy((x.S < 0) & !iszero(r) ? q + one(Int128) : q)
+end
 
 """Round half to even, matching `Base.round(::AbstractFloat)`."""
 function Base.round(x::Dyadic)
-    isfinite_dy(x) || return x
+    _rounds_to_self(x) && return x
     q, r, sh = _split_dy(x)
+    # `0 < |x| < ½`: nearest is zero from either side, and no tie is possible.
+    sh == _DY_TINY && return DYADIC_ZERO
     iszero(r) && return _int_dy(q)
-    # compare the fraction against ½ without forming it: 2r vs 2^sh
-    twice = r << 1
-    half = sh >= 128 ? nothing : (one(Int128) << sh)
-    up = half === nothing ? false :
-         twice > half ? true : twice < half ? false : !iseven(q)   # tie → even
+    # Compare the fraction against ½ as `r` vs `2^(sh-1)`, NOT as `2r` vs `2^sh`:
+    # `r` reaches `2^sh - 1`, so at `sh = 127` the doubling wraps and the tie test
+    # reads the wrong side. `sh ≥ 1` holds because `x.Q < 0`.
+    half = one(Int128) << (sh - 1)
+    up = r > half || (r == half && !iseven(q))                 # tie → even
     _int_dy(up ? q + one(Int128) : q)
 end
 
@@ -381,18 +616,44 @@ function Base.BigFloat(x::Dyadic)
 end
 # Conversion OUT to an ordinary binary float, for every width the package meets.
 #
-# Routed through `BigFloat`, which is exact, so the narrowing is a **single**
-# rounding. The direct `ldexp(Float64(x.S), x.Q)` is a double rounding whenever
-# `|S| > 2^53` — reachable after a multiply, since `mul_dy` permits 96 significand
-# bits — and double rounding can land a tie on the wrong side. Rare, silent, and
-# exactly the class of defect this carrier exists to remove, so it is not worth
-# the cycles saved on a boundary conversion.
+# The wide route is through `BigFloat`, which is exact, so the narrowing is a
+# **single** rounding. A direct `ldexp(Float64(x.S), x.Q)` is a *double* rounding
+# whenever `|S| > 2^53` — reachable after a multiply, since `mul_dy` permits 96
+# significand bits — and double rounding can land a tie on the wrong side. Rare,
+# silent, and exactly the class of defect this carrier exists to remove.
+#
+# The fast path is taken only where NO rounding occurs on either route: the
+# significand fits `T`'s precision, so `T(S)` is exact, and the value's binade is
+# a normal one for `T`, so `ldexp` is a pure exponent-field add. `x` is then
+# exactly representable and both routes return it unchanged — the fast path buys
+# the MPFR allocation back without weakening anything.
+#
+# The normal-binade half of that guard is not decoration. `Base.ldexp` is NOT
+# correctly rounded at the underflow boundary: it flushes to zero as soon as the
+# scaled exponent passes `-significand_bits(T)`, so `ldexp(3.0, -1076)` — the
+# value ¾ ulp above zero, which rounds to the smallest subnormal — answers `0.0`.
+# Measured, not assumed; a fast path guarded only on the significand width was
+# wrong on exactly that band, and the sweep in the suite is what said so.
+#
+# The common case is still the fast one by a wide margin: a datum carries ≤ 16
+# significand bits, and this is the boundary every decoded value crosses.
 function _dyadic_to(::Type{T}, x::Dyadic) where {T<:AbstractFloat}
     x.kind == DY_NAN    && return T(NaN)
     x.kind == DY_POSINF && return T(Inf)
     x.kind == DY_NEGINF && return T(-Inf)
     iszero(x.S) && return zero(T)
+    _exact_in(T, x) && return ldexp(T(x.S), x.Q)
     T(BigFloat(x))
+end
+
+# Whether `x` is a value `T` holds exactly. Both bounds fold to constants for a
+# concrete `T`; `BigFloat` is not a caller (it has its own method) and would read
+# the ambient precision here.
+@inline function _exact_in(::Type{T}, x::Dyadic) where {T<:AbstractFloat}
+    nb = nbits_dy(x.S)                       # once: `_exponent_raw` would repeat it
+    nb <= Base.precision(T) || return false
+    e = x.Q + nb - 1
+    Base.exponent(floatmin(T)) <= e <= Base.exponent(floatmax(T))
 end
 Base.Float64(x::Dyadic) = _dyadic_to(Float64, x)
 # `big` is the standard "widen to arbitrary precision" verb, and for this carrier
@@ -473,7 +734,14 @@ See also [`rational_to_dyadic`](@ref), [`isdyadic`](@ref)."""
 function dyadic_to_rational(::Type{T}, x::Dyadic) where {T<:Integer}
     x.kind == DY_NAN && throw(InexactError(:dyadic_to_rational, Rational{T}, x))
     x.kind == DY_POSINF && return Base.unsafe_rational(one(T), zero(T))
-    x.kind == DY_NEGINF && return Base.unsafe_rational(-one(T), zero(T))
+    # `-one(T)` WRAPS for an unsigned `T`, and the wrap is not detectable
+    # afterwards: `dyadic_to_rational(UInt64, -Inf)` built
+    # `0xffffffffffffffff//0x0`, a numerator of 1.8e19 over a zero denominator,
+    # which every consumer reads as **+Inf**. A sign that the target cannot hold
+    # has to be refused, not silently reinterpreted.
+    x.kind == DY_NEGINF && return (T <: Unsigned || T === Bool) ?
+        throw(InexactError(:dyadic_to_rational, Rational{T}, x)) :
+        Base.unsafe_rational(-one(T), zero(T))
     iszero(x.S) && return Base.unsafe_rational(zero(T), one(T))
     n, q = BigInt(x.S), Int(x.Q)
     if q >= 0
@@ -508,15 +776,23 @@ two has no `Dyadic`, and rounding one here would be a rounding performed outside
 `project` — which invariant 1 forbids. Test with [`isdyadic`](@ref) first if the
 input may not qualify.
 
-`±1//0` map to the infinities. `0//0` cannot arise: Base rejects it at
-construction.
+`±1//0` map to the infinities. `0//0` cannot arise through `//` — Base rejects it
+at construction — but `unsafe_rational(0, 0)` builds it, and it throws
+`InexactError` here rather than falling through the sign test to `-Inf`.
 
 The algorithm never assumes `q` is reduced — the power-of-two test and the
 trailing-zero strip are correct on a hand-built `unsafe_rational(2, 4)` — which
 removes a premise rather than relying on one."""
 function rational_to_dyadic(q::Rational)
     n, d = numerator(q), denominator(q)
-    iszero(d) && return n > 0 ? DYADIC_POSINF : DYADIC_NEGINF
+    # `0//0` is unreachable through `//`, which is what the note below records —
+    # but it IS reachable through `unsafe_rational`, and this function already
+    # declines to assume `q` is reduced. Untested, it fell through the `n > 0`
+    # test and answered `-Inf` for a value that has no sign at all.
+    if iszero(d)
+        iszero(n) && throw(InexactError(:rational_to_dyadic, Dyadic, q))
+        return n > 0 ? DYADIC_POSINF : DYADIC_NEGINF
+    end
     iszero(n) && return DYADIC_ZERO
     ispow2(d) || throw(InexactError(:rational_to_dyadic, Dyadic, q))
     k = trailing_zeros(d)                              # d == 2^k
@@ -574,6 +850,20 @@ are handled here rather than at the call sites."""
 # exact form" call has a hole at exactly the rung the carrier was built for.
 dyadic_from(x::Dyadic) = x
 
+# `Float16`/`Float32`/`Float64` need no `BigInt` at all: `decompose` hands back a
+# machine integer that fits `Int128` outright, so the generic route's arbitrary
+# precision buys nothing and costs an allocation on every decoded value. The
+# normalization below is the same one, done in `Int128`.
+function dyadic_from(x::Base.IEEEFloat)
+    isnan(x) && return DYADIC_NAN
+    isinf(x) && return x > 0 ? DYADIC_POSINF : DYADIC_NEGINF
+    iszero(x) && return DYADIC_ZERO
+    num, pow, den = Base.decompose(x)
+    n = Int128(num) * sign(den)             # `den` is ±1; its SIGN is the value's
+    tz = trailing_zeros(n)                  # `n ≠ 0`, so this terminates
+    Dyadic(n >> tz, Int64(pow) + tz, DY_FINITE)
+end
+
 function dyadic_from(x::AbstractFloat)
     isnan(x) && return DYADIC_NAN
     isinf(x) && return x > 0 ? DYADIC_POSINF : DYADIC_NEGINF
@@ -596,7 +886,7 @@ function dyadic_from(x::AbstractFloat)
         "significand needs $(ndigits(n; base=2)) bits after normalization, " *
         "which exceeds Int128; Dyadic is the carrier for P3109 datums (≤ 16 " *
         "significand bits) and their exact combinations, not for arbitrary reals"))
-    Dyadic(DY_FINITE, Int128(n), Int64(pow))
+    Dyadic(Int128(n), Int64(pow), DY_FINITE)
 end
 @inline _fits_int128(n::BigInt) = ndigits(n; base=2) <= 127
 Dyadic(x::AbstractFloat) = dyadic_from(x)

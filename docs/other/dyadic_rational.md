@@ -72,11 +72,16 @@ the type Base would use.**
 
 ```julia
 struct Dyadic <: Real
-    kind::UInt8      # DY_FINITE | DY_POSINF | DY_NEGINF | DY_NAN
     S::Int128        # signed significand
     Q::Int64         # value = S · 2^Q  (finite kind only)
+    kind::UInt8      # DY_FINITE | DY_POSINF | DY_NEGINF | DY_NAN
 end
 ```
+
+The tag comes **last**, not first, and that is a layout decision rather than a
+stylistic one: `S` needs 16-byte alignment, so a leading `UInt8` costs 15 bytes
+of padding and a 40-byte struct, while a trailing one lands in `Q`'s slack for
+32 bytes. Positional construction is therefore `Dyadic(S, Q, kind)`.
 
 Two properties of the representation drive everything:
 

@@ -502,11 +502,18 @@ pieces of the whole plan and one that must not be improvised at the use site:
 @inline _cinf(::Type{C})  where {C<:AbstractFloat} = C(Inf)
 @inline _cninf(::Type{C}) where {C<:AbstractFloat} = C(-Inf)
 @inline _czero(::Type{C}) where {C<:AbstractFloat} = zero(C)
-@inline _cnan(::Type{Dyadic})  = Dyadic(D_NAN,  Int128(0), Int64(0))
-@inline _cinf(::Type{Dyadic})  = Dyadic(D_PINF, Int128(0), Int64(0))
-@inline _cninf(::Type{Dyadic}) = Dyadic(D_NINF, Int128(0), Int64(0))
-@inline _czero(::Type{Dyadic}) = Dyadic(D_FIN,  Int128(0), Int64(0))
+@inline _cnan(::Type{Dyadic})  = DyadicNumbers.DYADIC_NAN
+@inline _cinf(::Type{Dyadic})  = DyadicNumbers.DYADIC_POSINF
+@inline _cninf(::Type{Dyadic}) = DyadicNumbers.DYADIC_NEGINF
+@inline _czero(::Type{Dyadic}) = DyadicNumbers.DYADIC_ZERO
 ```
+
+*(As shipped — [`carriers.jl:199-202`](../../src/carriers.jl#L199-L202). The
+sketch this section was drafted from spelled the rows out positionally as
+`Dyadic(D_NAN, Int128(0), Int64(0))`, which is doubly stale: the tags are named
+`DY_*` and the tag is the struct's **last** field, so a positional call is
+`Dyadic(S, Q, kind)`. Naming the four `const` rows is what makes the layout an
+implementation detail rather than something every call site restates.)*
 
 This is why `Dyadic` needs a `kind` tag at all (the predecessor's O1), and it
 is where that decision is *consumed*.
@@ -658,7 +665,7 @@ struct HeadF64 <: Head end; struct HeadF128 <: Head end; struct HeadExact <: Hea
 abstract type DecodePolicy end
 struct TableDecode <: DecodePolicy end; struct ComputeDecode <: DecodePolicy end
 
-struct Dyadic <: Real; kind::UInt8; S::Int128; Q::Int64 end    # Stage 7
+struct Dyadic <: Real; S::Int128; Q::Int64; kind::UInt8 end    # Stage 7 — tag LAST: 32 bytes, not 40
 ```
 
 `Binary{K,P,S,E}` is abstract with exactly one concrete subtype per parameter

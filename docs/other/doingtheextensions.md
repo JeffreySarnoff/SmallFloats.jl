@@ -9,6 +9,16 @@ truth is [IEEE_D1.md](IEEE_D1.md) (IEEE P3109/D1, July 2026), addressed through
 [IEEE_D1.json](IEEE_D1.json) and mapped by
 [IEEE_D1_concepts.md](IEEE_D1_concepts.md). No code changed; no tests run.*
 
+> **SUPERSEDED where it describes `Dyadic`.** This document is kept as the
+> design record — the *reasoning* it gives for the carrier still holds and is
+> not repeated anywhere else. Its **code sketches are not the shipped API**:
+> [implementextensions.md](implementextensions.md) §1 records what the second
+> audit changed, and [`src/dyadic.jl`](../../src/dyadic.jl) is the source of
+> truth. The `Dyadic` sketch in §5 has been brought onto the shipped tag
+> vocabulary and field order so that no reader copies a call that will not
+> compile; the surrounding argument is untouched. Everything else here is
+> historical and is deliberately left as written.
+
 ---
 
 ## 0. How to read this, and what it decides
@@ -458,9 +468,9 @@ the design.
 ```julia
 # dyadic.jl
 """
-    Dyadic(kind, S::Int128, Q::Int64)
+    Dyadic(S::Int128, Q::Int64, kind)
 
-A closed-extended-real carrier: the exact real `S · 2^Q` when `kind == D_FIN`,
+A closed-extended-real carrier: the exact real `S · 2^Q` when `kind == DY_FINITE`,
 otherwise NaN / ±∞. Represents every datum of every P3109 format at every
 bitwidth exactly, with no exponent limit and no allocation: a datum's `S` holds
 at most `P ≤ 16` significant bits (at most 32 after one multiplication), and
@@ -471,27 +481,38 @@ draft's special-value patterns, so the carrier must carry the same three
 classes `Float64` and `Float128` carry natively. Mirrors `Rounded`'s tag
 (`project.jl`) rather than inventing a second convention.
 """
-const D_FIN = 0x00; const D_NAN = 0x01; const D_PINF = 0x02; const D_NINF = 0x03
+const DY_FINITE = 0x00; const DY_POSINF = 0x01
+const DY_NEGINF = 0x02; const DY_NAN    = 0x03
 
 struct Dyadic <: Real
-    kind::UInt8
     S::Int128
     Q::Int64
+    kind::UInt8        # tag LAST: leading, it costs 15 bytes of padding
 end
-Dyadic(S::Integer, Q::Integer) = Dyadic(D_FIN, Int128(S), Int64(Q))
+Dyadic(S::Integer, Q::Integer) = Dyadic(Int128(S), Int64(Q), DY_FINITE)
 
-@inline Base.isnan(d::Dyadic)    = d.kind == D_NAN
-@inline Base.isinf(d::Dyadic)    = d.kind == D_PINF || d.kind == D_NINF
-@inline Base.isfinite(d::Dyadic) = d.kind == D_FIN
-@inline Base.iszero(d::Dyadic)   = d.kind == D_FIN && iszero(d.S)
-@inline Base.signbit(d::Dyadic)  = d.kind == D_NINF || (d.kind == D_FIN && d.S < 0)
+@inline Base.isnan(d::Dyadic)    = d.kind == DY_NAN
+@inline Base.isinf(d::Dyadic)    = d.kind == DY_POSINF || d.kind == DY_NEGINF
+@inline Base.isfinite(d::Dyadic) = d.kind == DY_FINITE
+@inline Base.iszero(d::Dyadic)   = d.kind == DY_FINITE && iszero(d.S)
+@inline Base.signbit(d::Dyadic)  = d.kind == DY_NEGINF || (d.kind == DY_FINITE && d.S < 0)
 @inline Base.ldexp(d::Dyadic, n::Integer) =
-    d.kind == D_FIN ? Dyadic(D_FIN, d.S, d.Q + n) : d              # exact, free
+    d.kind == DY_FINITE ? Dyadic(d.S, d.Q + n, DY_FINITE) : d      # exact, free
 @inline function Base.:*(a::Dyadic, b::Dyadic)                     # exact, closed
-    (a.kind == D_FIN && b.kind == D_FIN) || return _mul_special(a, b)
-    Dyadic(D_FIN, a.S * b.S, a.Q + b.Q)
+    (a.kind == DY_FINITE && b.kind == DY_FINITE) || return _mul_special(a, b)
+    Dyadic(a.S * b.S, a.Q + b.Q, DY_FINITE)
 end
 ```
+
+> **Vocabulary note.** This block was written with the tags spelled
+> `D_FIN`/`D_NAN`/`D_PINF`/`D_NINF` and the `kind` field first. Both changed
+> before Stage 7 shipped, and the *numbering* changed with the names — NaN moved
+> from `0x01` to `0x03` — so a sketch left in the original spelling would not
+> merely fail to compile, it would silently classify wrongly against the shipped
+> constants. It is restated above in the shipped vocabulary
+> ([`src/dyadic.jl`](../../src/dyadic.jl)); the argument this section makes is
+> unchanged, and `Base.:*` as shipped is `mul_dy`, a partial engine kernel, with
+> total `Base.:*` routed through `BigFloat`.
 
 **Multiply's precondition, stated because `Int128` is not infinite.** `*` is
 exact only while both operands' significands are datum-sized or
@@ -545,11 +566,11 @@ function round_to_precision(P::Int, B::Int, μ::RoundingMode3109,
     # Specials and zero are handled HERE, not by delegating to `_rtp_core`:
     # that function's zero row builds `zero(float(typeof(X)))`, and `float(Dyadic)`
     # does not exist. The rows are three lines; delegating is what would be subtle.
-    X.kind == D_NAN  && return Rounded(KIND_NAN, Int8(1), 0, 0)
-    X.kind == D_PINF && return (sticky < 0 ? Rounded(KIND_FIN, Int8(1), (Int64(1) << P) - 1, HUGEQ)
-                                           : Rounded(KIND_PINF, Int8(1), 0, 0))
-    X.kind == D_NINF && return (sticky > 0 ? Rounded(KIND_FIN, Int8(-1), (Int64(1) << P) - 1, HUGEQ)
-                                           : Rounded(KIND_NINF, Int8(-1), 0, 0))
+    X.kind == DY_NAN    && return Rounded(KIND_NAN, Int8(1), 0, 0)
+    X.kind == DY_POSINF && return (sticky < 0 ? Rounded(KIND_FIN, Int8(1), (Int64(1) << P) - 1, HUGEQ)
+                                              : Rounded(KIND_PINF, Int8(1), 0, 0))
+    X.kind == DY_NEGINF && return (sticky > 0 ? Rounded(KIND_FIN, Int8(-1), (Int64(1) << P) - 1, HUGEQ)
+                                              : Rounded(KIND_NINF, Int8(-1), 0, 0))
     if iszero(X.S)                                            # zero row, sticky-aware
         sticky == 0 && return Rounded(KIND_FIN, Int8(1), 0, 0)
         return _rtp_zero_sticky(P, B, μ, sticky, R)           # shared with _rtp_core

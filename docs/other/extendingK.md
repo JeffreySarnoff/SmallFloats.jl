@@ -8,6 +8,16 @@ was changed and no tests were run. Every numeric claim below (bias tables, group
 memberships, overflow boundaries, counts) is computed from the D1 formulas by
 exact rational arithmetic; the derivations are shown so they can be re-checked.*
 
+> **SUPERSEDED where it describes `Dyadic`.** This is the design study that chose
+> the carrier; its reasoning stands and is the only place the option comparison
+> (C1 vs C2 vs C3) is written down. Its **code sketches are not the shipped
+> API** — [doingtheextensions.md](doingtheextensions.md) turned this plan into an
+> architecture, [implementextensions.md](implementextensions.md) §1 records what
+> a second audit then changed, and [`src/dyadic.jl`](../../src/dyadic.jl) is the
+> source of truth. The `Dyadic` sketch in §9 Option C2 has been brought onto the
+> shipped shape; the option comparison around it is untouched, and everything
+> else in this document is historical and left as written.
+
 ---
 
 ## 0. Verdict up front
@@ -944,8 +954,21 @@ Recommended.**
 ```julia
 """Exact dyadic value sign·S·2^Q. Represents every datum of every format at any
 K exactly, with no exponent limit; isbits, so allocation-free."""
-struct Dyadic; S::Int128; Q::Int64; end     # value = S · 2^Q, sign carried in S
+struct Dyadic <: Real
+    S::Int128       # value = S · 2^Q, sign carried in S
+    Q::Int64
+    kind::UInt8     # DY_FINITE | DY_POSINF | DY_NEGINF | DY_NAN
+end
 ```
+
+> **Two fields became three.** This sketch carries no non-finite rows, and that
+> is the one thing the option comparison below gets wrong: the ω-semantics
+> catalog produces NaN and ±∞, a dyadic rational cannot spell either, and
+> encoding them as `(S, Q)` sentinels puts a special case in every kernel's fast
+> path. [doingtheextensions.md](doingtheextensions.md) §5 added the tag; Stage 7
+> shipped it **last** rather than first, because `S` needs 16-byte alignment and
+> a leading `UInt8` costs 15 bytes of padding — 40 bytes against 32. Nothing
+> else in this option's argument depends on the field count.
 
 Why this is the better fit for *this* codebase specifically:
 
