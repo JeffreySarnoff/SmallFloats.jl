@@ -301,10 +301,6 @@ This selects the pure-MPFR configuration. Results are \textbf{bit-identical} —
 \label{10347256324259028405}{}
 
 
-One continuous session: two values, two ways of adding them, an array through a nonlinearity, and a block of quantized values. Every line is explained as it happens; the \hyperlinkref{9940662133030407839}{Mental Model} page picks up the {\textquotedbl}why{\textquotedbl} where this leaves off.
-
-
-
 Assumes a \href{installation.md}{working install}. Start Julia and:
 
 
@@ -368,6 +364,129 @@ Same digit, two very different results: \texttt{0x02} is code point 2; \texttt{2
 \texttt{T(0x02)} constructs code point \texttt{0x02}; \texttt{T(2)} projects the numeric value two. Signedness of the integer type is what distinguishes them, and the rule holds for \texttt{UInt8}, \texttt{UInt16} and any other \texttt{Unsigned}. Use \texttt{Convert} when intent should be unmistakable.
 
 \end{tcolorbox}
+
+
+\needspace{19\baselineskip}
+\section{Choose how values print}
+
+
+
+\label{14626719229294664551}{}
+
+
+Throughout this documention, most examples show their results in a fully type-annotated manner, using the style \texttt{:typed}. This is one of four available styles.
+
+
+
+The styles, all showing the same value \texttt{Binary8p4se(1.6)}:
+
+
+
+
+\begin{table}[h]
+\centering
+\begin{tabulary}{\linewidth}{L L}
+\toprule
+style & shows \\
+\toprule
+\texttt{:typed} & \texttt{Binary8p4se(\allowbreak{}1.625 ≡ 0x45)} \\
+\texttt{:datum} & \texttt{(1.625 ≡ 0x45)} \\
+\texttt{:value} & \texttt{1.625} \\
+\texttt{:codepoint} & \texttt{0x45} \\
+\bottomrule
+\end{tabulary}
+
+\end{table}
+
+
+
+\texttt{:value} is the package default — a \texttt{Binary} prints as the number it denotes, which is what ordinary output and generic Julia code want.
+
+
+
+Set the process-wide style with \href{@ref}{\texttt{set\_\allowbreak{}show\_\allowbreak{}style!}}, and query it with \hyperlinkref{16179625954962935066}{\texttt{get\_\allowbreak{}show\_\allowbreak{}style}}:
+
+
+
+
+\nopagebreak[4]
+\begin{minted}{jlcon}
+julia> set_show_style!(:value)
+:value
+
+julia> get_show_style()
+:value
+
+julia> Binary8p4se(1.6)
+1.625
+
+julia> set_show_style!(:codepoint)
+:codepoint
+
+julia> Binary8p4se(1.6)
+0x45
+\end{minted}
+
+
+
+The style applies wherever a value prints, containers included — which is where it earns its keep:
+
+
+
+
+\nopagebreak[4]
+\begin{minted}{jlcon}
+julia> set_show_style!(:value)
+:value
+
+julia> [Binary8p4se(1.0), Binary8p4se(2.0)]
+2-element Vector{Binary8p4se}:
+ 1.0
+ 2.0
+\end{minted}
+
+
+
+\texttt{VALID\_\allowbreak{}SHOW\_\allowbreak{}STYLES} lists the four, and an unknown style is refused rather than silently ignored:
+
+
+
+
+\nopagebreak[4]
+\begin{minted}{jlcon}
+julia> VALID_SHOW_STYLES
+(:value, :codepoint, :datum, :typed)
+
+julia> set_show_style!(:bogus)
+ERROR: ArgumentError: invalid Binary show style: bogus
+\end{minted}
+
+
+
+\begin{tcolorbox}[toptitle=-1mm,bottomtitle=1mm,colback=admonition-tip!50!white,colframe=admonition-tip,title=\textbf{Scoped rather than global}]
+\texttt{set\_\allowbreak{}show\_\allowbreak{}style!} is process-wide and stays set. To change the style for one piece of output without disturbing anything else, put it on the \texttt{IO} — an \texttt{:binary\_\allowbreak{}show\_\allowbreak{}style} property overrides the process default for that stream only, and \texttt{get\_\allowbreak{}show\_\allowbreak{}style(io)} reports what a given stream resolves to:
+
+
+\nopagebreak[4]
+\begin{minted}{jlcon}
+julia> show(IOContext(stdout, :binary_show_style => :typed), Binary8p4se(1.6))
+Binary8p4se(1.625 ≡ 0x45)
+
+julia> get_show_style()
+:value
+\end{minted}
+
+This is also the form to prefer under concurrency: the process-wide setter is shared mutable state, an \texttt{IOContext} is not.
+
+\end{tcolorbox}
+
+
+
+\begin{minted}{jlcon}
+julia> set_show_style!(:typed)      # the style the rest of this documentation uses
+:typed
+\end{minted}
+
 
 
 \section{Add them, two ways}
@@ -7270,6 +7389,27 @@ ftz_variant(op, fr, f1, ρ) -> fn
 \end{minted}
 
 Build the Annex-style approximate unary implementation: compute the defined result, then flush subnormal results to zero or \texttt{MinNormalOf(fr)}, whichever is nearer, ties toward zero (magnitude-symmetric for signed formats). Returned \texttt{fn} is suitable for \texttt{register\_\allowbreak{}approx!}; for \texttt{fr} with precision P its κ is 2{\textasciicircum}(P-2) when P ≥ 2 (largest flushed-to-zero subnormal) and 0 when P = 1 (no subnormals exist).
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{16179625954962935066}{\texttt{SmallFloats.get\_\allowbreak{}show\_\allowbreak{}style}}  -- {Method.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+
+\begin{minted}{julia}
+get_show_style()      -> Symbol
+get_show_style(io::IO) -> Symbol
+\end{minted}
+
+The style \texttt{show} will use: the process default, or — given an \texttt{IO} — the style that \texttt{io} resolves to, which is its \texttt{:binary\_\allowbreak{}show\_\allowbreak{}style} property when set and the process default otherwise.
+
+The no-argument form previously read an undefined \texttt{io} and threw \texttt{UndefVarError} on every call.
 
 
 

@@ -62,6 +62,7 @@ using .Float128FAA
 # "the carrier is a property of values in flight, not of formats at rest"
 # checkable rather than merely stated.
 include("formats.jl")
+include("show.jl")
 include("carriers.jl")
 include("projspec.jl")
 include("defaults.jl")
@@ -146,6 +147,9 @@ export bitwidth, issigned, isextended, expbias, expbitwidth, trailingsigbits,
        MaxFiniteOf, MinFiniteOf, MinPositiveOf, MaxSubnormalOf, MinNormalOf,
        maxfinite_datum, minfinite_datum, formatname, rawvalue, decode, decode!,  # codepoint extends Base
        format, reptype, codeunit_type
+
+# control the display of Binary datum
+export VALID_SHOW_STYLES, DEFAULT_SHOW_STYLE, set_show_style!, get_show_style
 
 # projection specifications
 export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,

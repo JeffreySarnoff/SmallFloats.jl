@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{get\PYGZus{}show\PYGZus{}style}\PYG{p}{()}\PYG{+w}{      }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{Symbol}
+\PYG{n}{get\PYGZus{}show\PYGZus{}style}\PYG{p}{(}\PYG{n}{io}\PYG{o}{::}\PYG{k+kt}{IO}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{Symbol}
+\end{MintedVerbatim}

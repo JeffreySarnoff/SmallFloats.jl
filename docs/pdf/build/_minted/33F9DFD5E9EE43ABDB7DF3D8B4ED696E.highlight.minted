@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{show}\PYG{p}{(}\PYG{k+kt}{IOContext}\PYG{p}{(}\PYG{n+nb}{stdout}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:binary\PYGZus{}show\PYGZus{}style}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{l+s+ss}{:typed}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{))}
+\PYG{g+go}{Binary8p4se(1.625 ≡ 0x45)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{get\PYGZus{}show\PYGZus{}style}\PYG{p}{()}
+\PYG{g+go}{:value}
+\end{MintedVerbatim}

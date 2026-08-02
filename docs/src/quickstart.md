@@ -1,9 +1,5 @@
 # Quickstart
 
-One continuous session: two values, two ways of adding them, an array through a
-nonlinearity, and a block of quantized values. Every line is explained as it
-happens; the [Mental Model](@ref) page picks up the "why" where this leaves off.
-
 Assumes a [working install](installation.md). Start Julia and:
 
 ```julia-repl
@@ -48,6 +44,90 @@ numeric value two, projected.
     two. Signedness of the integer type is what distinguishes them, and the
     rule holds for `UInt8`, `UInt16` and any other `Unsigned`. Use `Convert`
     when intent should be unmistakable.
+
+## Choose how values print
+
+Throughout this documention, most examples show their results in a fully
+type-annotated manner, using the style `:typed`. This is one of four available
+styles.
+
+The styles, all showing the same value `Binary8p4se(1.6)`:
+
+| style | shows |
+|:---|:---|
+| `:typed` | `Binary8p4se(1.625 ≡ 0x45)` |
+| `:datum` | `(1.625 ≡ 0x45)` |
+| `:value` | `1.625` |
+| `:codepoint` | `0x45` |
+
+`:value` is the package default — a `Binary` prints as the number it denotes,
+which is what ordinary output and generic Julia code want.
+
+Set the process-wide style with [`set_show_style!`](@ref), and query it with
+[`get_show_style`](@ref):
+
+```julia-repl
+julia> set_show_style!(:value)
+:value
+
+julia> get_show_style()
+:value
+
+julia> Binary8p4se(1.6)
+1.625
+
+julia> set_show_style!(:codepoint)
+:codepoint
+
+julia> Binary8p4se(1.6)
+0x45
+```
+
+The style applies wherever a value prints, containers included — which is where
+it earns its keep:
+
+```julia-repl
+julia> set_show_style!(:value)
+:value
+
+julia> [Binary8p4se(1.0), Binary8p4se(2.0)]
+2-element Vector{Binary8p4se}:
+ 1.0
+ 2.0
+```
+
+`VALID_SHOW_STYLES` lists the four, and an unknown style is refused rather than
+silently ignored:
+
+```julia-repl
+julia> VALID_SHOW_STYLES
+(:value, :codepoint, :datum, :typed)
+
+julia> set_show_style!(:bogus)
+ERROR: ArgumentError: invalid Binary show style: bogus
+```
+
+!!! tip "Scoped rather than global"
+    `set_show_style!` is process-wide and stays set. To change the style for one
+    piece of output without disturbing anything else, put it on the `IO` — an
+    `:binary_show_style` property overrides the process default for that stream
+    only, and `get_show_style(io)` reports what a given stream resolves to:
+
+    ```julia-repl
+    julia> show(IOContext(stdout, :binary_show_style => :typed), Binary8p4se(1.6))
+    Binary8p4se(1.625 ≡ 0x45)
+
+    julia> get_show_style()
+    :value
+    ```
+
+    This is also the form to prefer under concurrency: the process-wide setter
+    is shared mutable state, an `IOContext` is not.
+
+```julia-repl
+julia> set_show_style!(:typed)      # the style the rest of this documentation uses
+:typed
+```
 
 ## Add them, two ways
 

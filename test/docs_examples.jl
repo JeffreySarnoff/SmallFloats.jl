@@ -153,10 +153,19 @@ end
 
     # The session defaults are process-global; restore them per file so one
     # page's demonstration cannot rewrite the next page's documented output.
+    #
+    # The Binary show style is one of them, and it is set to `:typed` rather
+    # than to the package default `:value`: the documentation renders values in
+    # the fully type-annotated form (`Binary8p4se(1.625 ≡ 0x45)`), which the
+    # Quickstart states outright. Establishing that convention HERE is what
+    # keeps the statement true — a page whose examples were captured in one
+    # style and checked in another would fail loudly rather than drift.
     pristine = (type = DefaultType(), proj = DefaultProjection(),
-                rng = DefaultRNG(), rbits = DefaultRbits())
+                rng = DefaultRNG(), rbits = DefaultRbits(),
+                show = get_show_style())
     reset!() = (DefaultType!(pristine.type); DefaultProjection!(pristine.proj);
-                DefaultRNG!(pristine.rng); DefaultRbits!(pristine.rbits); nothing)
+                DefaultRNG!(pristine.rng); DefaultRbits!(pristine.rbits);
+                set_show_style!(:typed); nothing)
 
     ncases = ncmp = nskip = nblocks = 0
     for f in files

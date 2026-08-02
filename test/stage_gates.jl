@@ -166,8 +166,36 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
 
     # ---- `show` must never be the thing that throws: a failing testset has to
     # be able to print the values it is comparing, at every carrier.
-    @test repr(Binary8p4se(0x02)) == "Binary8p4se(0.001953125 ≡ 0x02)"
-    @test repr(Binary12p5se(0x0abc)) == "Binary12p5se(-8.344650268554688e-7 ≡ 0x0abc)"
+    #
+    # The renderings are pinned under an EXPLICIT style, not the ambient one.
+    # These two assertions used to spell the `:typed` form while reading
+    # whatever `get_show_style()` happened to be — which passed only because a
+    # duplicate `Base.show` method was forcing `:typed` regardless of the
+    # setting. With that method removed and the default at `:value`, an ambient
+    # assertion tests whichever style ran last. All four are pinned instead, so
+    # the selector itself is covered rather than assumed.
+    let prev = get_show_style()
+        try
+            set_show_style!(:typed)
+            @test repr(Binary8p4se(0x02)) == "Binary8p4se(0.001953125 ≡ 0x02)"
+            @test repr(Binary12p5se(0x0abc)) == "Binary12p5se(-8.344650268554688e-7 ≡ 0x0abc)"
+            set_show_style!(:datum)
+            @test repr(Binary8p4se(0x02)) == "(0.001953125 ≡ 0x02)"
+            set_show_style!(:value)
+            @test repr(Binary8p4se(0x02)) == "0.001953125"
+            set_show_style!(:codepoint)
+            @test repr(Binary8p4se(0x02)) == "0x02"
+            # an IOContext property overrides the process default for that stream only
+            set_show_style!(:value)
+            @test sprint(io -> show(IOContext(io, :binary_show_style => :typed),
+                                    Binary8p4se(0x02))) ==
+                  "Binary8p4se(0.001953125 ≡ 0x02)"
+            @test get_show_style() === :value
+            @test_throws ArgumentError set_show_style!(:bogus)
+        finally
+            set_show_style!(prev)
+        end
+    end
     for nm in sort!(collect(keys(_NAMED)))
         T = getfield(SmallFloats, nm)
         @test (nm, repr(T(zero(SmallFloats.codeunit_type(T)))) isa String) == (nm, true)
