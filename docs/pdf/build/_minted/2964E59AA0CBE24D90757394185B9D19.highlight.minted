@@ -1,5 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{with\PYGZus{}default\PYGZus{}projection}\PYG{p}{(}\PYG{n}{RTP\PYGZus{}SF}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{do}
-\PYG{+w}{    }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1e9}\PYG{p}{)}
-\PYG{k}{end}
-\end{MintedVerbatim}

@@ -1,4 +1,4 @@
-# Worked Examples: Applied
+# Applied Sessions
 
 Runnable examples spanning basic use, general AI, machine learning, and deep
 learning. Every output shown was captured from a real session; seeds are fixed
@@ -6,12 +6,13 @@ so you can reproduce them exactly.
 
 ## Basic
 
-!!! note "Two Basic examples live in the Tutorials"
+!!! note "Two foundational examples live with their explanations"
     *One value, every rounding mode* is in
-    [Projection: Rounding & Saturation](tutorial2_projection.md), and
+    [Rounding and Saturation](concept_rounding_saturation.md), and
     *Enumerating a whole format* is in
-    [Values, Code Points & Conversion](tutorial1_values.md). They are teaching
-    material first; this page does not restate them.
+    [Values, Code Points, and Conversion](concept_values_codepoints.md). Those pages
+    explain the ideas the examples expose, so this collection links to them rather
+    than repeating them.
 
 ### Saturation in one line each
 

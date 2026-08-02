@@ -1,95 +1,124 @@
 # SmallFloats.jl
 
-*A conforming, performance-oriented Julia implementation of the IEEE P3109 draft
-standard — arithmetic formats for machine learning at bitwidths 3–16.*
+SmallFloats.jl implements the IEEE P3109 draft's small binary formats for
+Julia, across bitwidths 3 through 16. Its default operations compute the
+mathematically exact result and project once into the requested format.
 
 ```julia-repl
 julia> using SmallFloats
 
-julia> Binary8p4se(1.6) + Binary8p4se(0.25)
-Binary8p4se(1.875 ≡ 0x47)
+julia> x = Binary8p4se(1.6)
+Binary8p4se(1.625 ≡ 0x45)
 
-julia> Binary5p3sf(0x08) == Binary5p3sf(1.0)     # an Unsigned is a CODE POINT
-true
+julia> Add(Binary8p4se, RNE_SN, x, Binary8p4se(1.75))
+Binary8p4se(3.5 ≡ 0x4e)
 ```
 
-## Why this package exists
+The display shows both parts of a stored value: `1.625` is the exact datum and
+`0x45` is the code point that names it. The addition computes the exact sum,
+3.375, then applies the named projection `RNE_SN` once. That relationship—an
+exact value, a code point, and an explicit projection—is the center of the
+package and of this manual.
 
-Small floating-point formats are easy to implement *approximately* and
-surprisingly hard to implement *exactly*. An FP8 `Exp` differs from a bit-exact
-one only in a handful of code points near rounding boundaries — invisible in a
-demo, decisive in a conformance suite, and quietly corrosive in research that
-compares number formats. SmallFloats.jl takes the position that for value sets
-this small there is no excuse for approximation:
+## Choose a route
 
-- **Bit-exact defined results on every default path.** Every operation's result
-  is the correct projection of the mathematically exact value.
-- **One projection engine.** `RoundToPrecision → Saturate → Encode` is the
-  single write path into a code point. There is no second, "fast but slightly
-  different" rounding routine anywhere in the package.
-- **Approximation is opt-in, named, and measured.** Faster-but-inexact kernels
-  live behind an explicit registry whose deviation bound κ is *measured by
-  exhaustive enumeration* at registration time; understated declarations are
-  rejected.
-- **Enumerated where enumeration is affordable, labelled where it is not.**
-  ≈ 35 million verified units across the gates and tiers, each labelled
-  *exhaustive* or *sampled* in a roll-call printed at the end of every run.
-- **Fast where it matters.** Table-gather kernels at fractions of a nanosecond
-  per element; the scalar path fully specialized and allocation-free.
+### Start using the package
 
-## Two things to know before you start
+Begin with [Install and Verify](install_and_verify.md), then work through
+[First Session](first_session.md). Read [Core Model](core_model.md) once before
+moving into a larger workflow. Together these pages take you from installation
+to the four distinctions that prevent most mistakes.
 
-!!! warning "`Binary16p11se` is not `Float16`"
-    Nor is `Binary16p8se` a `BFloat16`. The exponent biases differ by one, so
-    *every code point denotes a different value*. Converting between them is a
-    conversion, never a reinterpretation. See
-    [Why `Binary16p11se` is not `Float16`](explain_float16.md).
+### Complete an application task
 
-!!! warning "Most format names are opt-in"
-    `using SmallFloats` exports the **120 aliases at K ≤ 8**. The other 384
-    arrive with `using SmallFloats.Formats`, and are reachable without it as
-    `SmallFloats.Binary16p6se` or `format(16, 6, true, true)`.
+Go directly to a workflow when you already know the core model:
 
-## Finding your way
+- [Choose a Format](workflow_choose_format.md)
+- [Quantize and Measure a Tensor](workflow_quantize_measure.md)
+- [Control Rounding and Overflow](workflow_rounding_overflow.md)
+- [Run Operations over Arrays](workflow_arrays.md)
+- [Use Blocks for Dynamic Range](workflow_blocks.md)
+- [Make Stochastic Work Reproducible](workflow_stochastic.md)
+- [Pack Values for Storage](workflow_packed_storage.md)
+- [Interoperate with Float16 and BFloat16](workflow_float16.md)
 
-The documentation is organized by *what you are trying to do*, not by module.
-Five entrances:
+Each workflow gives one shortest correct procedure, a way to validate the
+result, and the failure modes most likely to produce a plausible but wrong
+answer.
 
-| If you want to… | Start at |
-|---|---|
-| **run something now** | [Installation](installation.md) → [Quickstart](quickstart.md) |
-| **understand the ideas** | [Mental Model](mentalmodel.md) — five ideas that carry the whole package |
-| **learn the standard** | [Introducing P3109](fifteenminutes.md) |
-| **do a specific task** | the [How-To](howto_choose_format.md) section — each page is one job |
-| **look something up** | the [Cheat Sheet](cheatsheet.md), or [Reference](ref_formats.md) |
+### Understand the semantics
 
-### The sections, and what each is for
+[P3109 in One Chapter](concept_p3109.md) introduces the draft standard.
+[Format Anatomy](concept_format_anatomy.md),
+[Values, Code Points, and Conversion](concept_values_codepoints.md), and
+[The Exact-Then-Project Contract](concept_exact_then_project.md) form the
+conceptual spine. The remaining concept pages explain Julia integration,
+session state, performance, and the difference between defined, stochastic,
+and approximate results.
 
-- **Getting Started** — installation, a first session, and the two orientation
-  pages. Read `Mental Model` once, slowly; the rest of the docs become
-  reference material rather than prose to wade through.
-- **Tutorials** — five sequenced lessons that build on each other: values,
-  projection, arrays, blocks, stochastic rounding. Follow them in order the
-  first time.
-- **How-To** — task-shaped answers. "Choose a format", "quantize a tensor",
-  "make stochastic rounding reproducible". Independent of each other; go
-  straight to the one you need.
-- **Explanations** — the *why* behind decisions that surprise people: the
-  projection contract, session defaults, `Float16` non-equivalence, the absence
-  of automatic promotion, the performance model.
-- **Reference** — the API surface: formats, projections, operations, defaults,
-  arrays and blocks, conformance, the Base register, and the docstrings.
-- **Foundations** — the code-point algebra the whole package computes on,
-  stated as verified identities.
-- **Examples** — complete runnable sessions with their output, split into
-  applied (public API) and internals (unexported machinery).
-- **Insights** — how it works inside: architecture, the engine, the oracle,
-  tables, blocks, and the verification and benchmark doctrines. Also where to
-  go to extend the package.
-- **Support** — troubleshooting by symptom, glossary, benchmarks.
+### Look up a contract
 
-!!! tip "The one rule that catches everyone"
-    An `Unsigned` argument always means a **code point**; every other `Real`
-    means a **value**. `T(0x08)` and `T(8.0)` are different things by design,
-    and `T(8)` is the value 8.0 — the signedness of the integer type is what
-    distinguishes them. This holds at every bitwidth.
+Reference pages are organized by API family. Start with
+[Formats and Value Queries](reference_formats_values.md),
+[Projection Specifications](reference_projections.md), or the
+[Operation Catalog](reference_operations.md). The
+[Public API Index](reference_public_api.md) collects source docstrings after
+the curated family references.
+
+### Inspect evidence or implementation
+
+[Examples and Evidence](examples_gallery.md) indexes complete applied and
+verification sessions. Maintainers should begin with
+[Architecture and Invariants](internals_architecture.md), then follow the data
+path through encoding, projection, the oracle, tables, and block reductions.
+
+## Three promises and one boundary
+
+### Defined paths are bit-exact
+
+For a defined operation, the package returns the projection of the
+mathematically exact result. Table kernels and scalar methods implement the
+same function; a table is a cache, not an approximate alternate path.
+
+### Policy is visible
+
+Rounding and saturation are values in a `ProjSpec`. Convenience operators use
+the session default, while the spec-named register—`Add(T, ρ, x, y)`,
+`Exp(T, ρ, x)`, and so on—makes policy explicit and reproducible.
+
+### Approximation is declared and measured
+
+Optional approximate kernels live behind a registry. Registration measures
+their maximum code-point deviation κ and rejects an understated bound.
+
+### P3109 is not IEEE 754 in smaller storage
+
+P3109 has one NaN and one zero, defines a different bias rule, and makes
+signedness and finite/extended domain format parameters. In particular,
+`Binary16p11se` is not `Float16`, and converting between them is never a
+reinterpretation. See [P3109 in One Chapter](concept_p3109.md) before porting
+IEEE-specific assumptions.
+
+## The rule to remember first
+
+An `Unsigned` constructor argument is a **code point**. Every other `Real`
+constructor argument is a **value to project**.
+
+```julia-repl
+julia> Binary8p4se(0x02), Binary8p4se(2)
+(Binary8p4se(0.001953125 ≡ 0x02), Binary8p4se(2.0 ≡ 0x48))
+```
+
+Use `codepoint(x)` and `decode(x)` to make the two interpretations explicit.
+
+## Supported formats
+
+The package implements all 504 legal formats at `K ∈ 3:16`. `using
+SmallFloats` exports the 120 aliases at `K ≤ 8`; the other 384 are available
+through `SmallFloats.Binary…`, `format(K, P, SGN, EXT)`, or `using
+SmallFloats.Formats`.
+
+## Next
+
+[Install and Verify](install_and_verify.md) → [First Session](first_session.md)
+→ [Core Model](core_model.md).

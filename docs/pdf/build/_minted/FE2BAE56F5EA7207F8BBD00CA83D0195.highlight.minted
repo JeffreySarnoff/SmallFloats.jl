@@ -1,4 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{Binary6p3ue}\PYG{p}{)}
-\PYG{g+gr}{ERROR: ArgumentError: randn requires a signed format; Binary6p3ue cannot represent negative draws}
-\end{MintedVerbatim}

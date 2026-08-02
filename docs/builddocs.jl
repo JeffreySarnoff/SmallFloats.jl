@@ -12,13 +12,15 @@
 import Pkg
 
 const DOCS = @__DIR__
-const PKG  = dirname(DOCS)
 
 Pkg.activate(DOCS)
-Pkg.develop(Pkg.PackageSpec(path = PKG))
-Pkg.instantiate()
-
-include(joinpath(DOCS, "make.jl"))
+cd(DOCS) do
+    # Keep the manifest path portable (`..`) regardless of the directory from
+    # which this wrapper was invoked.
+    Pkg.develop(Pkg.PackageSpec(path = ".."))
+    Pkg.instantiate()
+    include(joinpath(DOCS, "make.jl"))
+end
 
 const BUILD = get(ENV, "DOCS_BUILD_DIR", "build")
 const INDEX = joinpath(DOCS, BUILD, "index.html")
@@ -33,10 +35,10 @@ end
 # lived only in this wrapper let those paths leave a stale tracked PDF behind.
 # Nothing to do here but report what make.jl produced.
 const PDF = joinpath(DOCS, "pdf", "SmallFloats.pdf")
-if isfile(PDF)
-    @info "PDF present" pdf = PDF size_kb = round(Int, filesize(PDF) / 1024)
-elseif get(ENV, "DOCS_PDF", "") == "skip"
+if get(ENV, "DOCS_PDF", "") == "skip"
     @info "PDF stage was skipped (DOCS_PDF=skip)"
+elseif isfile(PDF)
+    @info "PDF built" pdf = PDF size_kb = round(Int, filesize(PDF) / 1024)
 else
     error("make.jl finished but no PDF at $PDF")
 end

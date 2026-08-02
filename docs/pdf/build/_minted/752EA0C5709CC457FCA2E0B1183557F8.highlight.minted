@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{F}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}
+\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{F}\PYG{p}{(}\PYG{l+m+mf}{1.625}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{F}\PYG{p}{(}\PYG{l+m+mf}{1.75}\PYG{p}{)}
+\end{MintedVerbatim}

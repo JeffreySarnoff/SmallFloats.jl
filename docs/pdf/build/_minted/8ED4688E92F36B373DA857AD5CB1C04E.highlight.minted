@@ -1,7 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{VALID\PYGZus{}SHOW\PYGZus{}STYLES}
-\PYG{g+go}{(:value, :codepoint, :datum, :typed)}
-
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{set\PYGZus{}show\PYGZus{}style!}\PYG{p}{(}\PYG{l+s+ss}{:bogus}\PYG{p}{)}
-\PYG{g+gr}{ERROR: ArgumentError: invalid Binary show style: bogus}
-\end{MintedVerbatim}

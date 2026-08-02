@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{F}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}
+\PYG{n}{q}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{F}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SF}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{x}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{]}
+\PYG{n}{back}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{decode}\PYG{o}{.}\PYG{p}{(}\PYG{n}{q}\PYG{p}{)}
+\end{MintedVerbatim}

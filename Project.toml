@@ -1,6 +1,6 @@
 name = "SmallFloats"
 uuid = "1a823dc9-6fcb-4967-90f0-adc1d2cc8013"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Jeffrey Sarnoff <jeffrey.sarnoff@ieee.org>"]
 
 [deps]

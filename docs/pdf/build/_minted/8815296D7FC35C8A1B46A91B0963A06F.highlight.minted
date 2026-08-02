@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{z}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mf}{1.6}
+\PYG{p}{[(}\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{z}\PYG{p}{)))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{ρ}\PYG{+w}{ }\PYG{k}{in}
+\PYG{+w}{ }\PYG{p}{(}\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNA\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RTP\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RTN\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RTZ\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RTO\PYGZus{}SN}\PYG{p}{)]}
+\end{MintedVerbatim}

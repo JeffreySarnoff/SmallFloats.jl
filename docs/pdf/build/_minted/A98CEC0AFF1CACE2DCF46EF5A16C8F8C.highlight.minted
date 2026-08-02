@@ -1,4 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{table\PYGZus{}bytes}\PYG{p}{()}
-\PYG{g+go}{256}
-\end{MintedVerbatim}

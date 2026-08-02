@@ -1,4 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{set\PYGZus{}show\PYGZus{}style!}\PYG{p}{(}\PYG{l+s+ss}{:typed}\PYG{p}{)}\PYG{+w}{      }\PYG{c}{\PYGZsh{} the style the rest of this documentation uses}
-\PYG{g+go}{:typed}
-\end{MintedVerbatim}

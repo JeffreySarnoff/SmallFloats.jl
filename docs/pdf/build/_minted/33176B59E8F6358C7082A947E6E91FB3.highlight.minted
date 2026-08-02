@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Random}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Statistics}
+
+\PYG{n}{rng}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{42}\PYG{p}{)}
+\PYG{n}{w}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{50\PYGZus{}000}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{.*}\PYG{+w}{ }\PYG{l+m+mf}{0.25}
+\end{MintedVerbatim}
