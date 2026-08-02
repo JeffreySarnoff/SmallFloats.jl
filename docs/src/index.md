@@ -3,13 +3,6 @@
 *A conforming, performance-oriented Julia implementation of the IEEE P3109 draft
 standard — arithmetic formats for machine learning at bitwidths 3–16.*
 
-Bit-exact defined results on every default path; one projection engine as the single
-write path into a code point; approximation only behind an explicitly named,
-exhaustively measured κ registry; **≈ 35.3 million compared units across 14 gates and
-tiers**, each labelled exhaustive or sampled in a roll-call printed at the end of
-every run; table-gather kernels at fractions of a nanosecond per element on the
-recorded benchmark host.
-
 ```julia-repl
 julia> using SmallFloats
 
@@ -20,41 +13,47 @@ julia> Binary5p3sf(0x08) == Binary5p3sf(1.0)     # an Unsigned is a CODE POINT
 true
 ```
 
+## Why this package exists
+
+Small floating-point formats are easy to implement *approximately* and surprisingly
+hard to implement *exactly*. An FP8 `Exp` differs from a bit-exact one only in a
+handful of code points near rounding boundaries — invisible in a demo, decisive in
+a conformance suite, and quietly corrosive in research that compares number formats.
+SmallFloats.jl takes the position that for value sets this small there is no excuse
+for approximation:
+
+- **Bit-exact defined results on every default path.** Every operation's result is
+  the correct projection of the mathematically exact value.
+- **One projection engine.** `RoundToPrecision → Saturate → Encode` is the single
+  write path into a code point. There is no second, "fast but slightly different"
+  rounding routine anywhere in the package.
+- **Approximation is opt-in, named, and measured.** Faster-but-inexact kernels live
+  behind an explicit registry whose deviation bound κ is *measured by exhaustive
+  enumeration* at registration time; understated declarations are rejected.
+- **Enumerated where enumeration is affordable, and labelled where it is not.**
+  ≈ 35 million verified units across 13 gates and tiers, each labelled *exhaustive*
+  or *sampled* in a roll-call printed at the end of every run.
+- **Fast where it matters.** Table-gather kernels at fractions of a nanosecond per
+  element; the scalar path fully specialized and allocation-free.
+
 ## Two things to know before you start
 
-**Most format names are opt-in.** `using SmallFloats` exports the **120 aliases at
-K ≤ 8**. The other 384 arrive with `using SmallFloats.Formats`, and are reachable
-without it as `SmallFloats.Binary16p6se` or `format(16, 6, true, true)`.
+!!! warning "`Binary16p11se` is not `Float16`"
+    Nor is `Binary16p8se` a `BFloat16`. The exponent biases differ by one, so
+    *every code point denotes a different value*. Converting between them is a
+    conversion, never a reinterpretation.
 
-**`Binary16p11se` is not `Float16`** (nor is `Binary16p8se` a `BFloat16`). The
-exponent biases differ by one, so *every code point denotes a different value*.
-Converting between them is a conversion, never a reinterpretation — the
-[User Guide](@ref) has the full comparison.
+!!! warning "Most format names are opt-in"
+    `using SmallFloats` exports the **120 aliases at K ≤ 8**. The other 384
+    arrive with `using SmallFloats.Formats`, and are reachable without it as
+    `SmallFloats.Binary16p6se` or `format(16, 6, true, true)`.
 
-## Documentation map
+## Where to go
 
-- **[Introduction](@ref)** — what the package is, the design pillars, a
-  thirty-second tour, installation.
-- **[Cheat Sheet](@ref)** — compact lookup for format names, conversion,
-  projections, operations, arrays, blocks, packed storage, and common traps.
-- **[User Guide](@ref)** — the complete public API in usage order: formats, values,
-  projection specifications, the two operation registers, arrays and sorting,
-  blocks, packed storage, conformance and κ, performance guidance.
-- **[User Examples](@ref)** — runnable examples spanning basic use, general AI,
-  machine learning, and deep learning.
-- **[Julia Compatibility](@ref)** — the Base register: which Base functions work
-  on `Binary` values, what they map to, and what deliberately isn't mapped.
-- **[Technical Guide](@ref)** — internals: the encoding and projection engine, the
-  oracle's rigor classes, tables and kernels, the block layer's exactness filters,
-  the verification and benchmark doctrines.
-- **[Technical Examples](@ref)** — internals-level recipes: pipeline introspection,
-  exhaustive verification of custom code, κ measurement, doctrine-compliant
-  benchmarking.
-- **[Adding Operations](@ref)** — how to add new scalar (unary through
-  quaternary) and block (scaled, elementwise, reductive) operations with every
-  guarantee intact: registry mechanics, ω-semantics duties, worked examples.
-- **[Benchmarks](benchmarks.md)** — dated performance measurements, methodology,
-  host details, and reproduction instructions.
-- **[External Reference](@ref)** — docstrings for the documented public surface.
-- **[Internal Reference](@ref)** — docstrings for the documented unexported
-  machinery.
+- **Get started** — [Installation & Setup](@ref installation), then the
+  [Quickstart](@ref quickstart): a working session in ten minutes.
+- **Understand the ideas** — the [Mental Model](@ref mentalmodel) (five ideas
+  that carry the whole package), or [P3109 in Fifteen Minutes](@ref fifteenminutes)
+  if you want the standard itself first.
+- **Look something up** — the Reference section: formats, projection specs, the
+  operation catalog, and the one-page [Cheat Sheet](@ref cheatsheet).

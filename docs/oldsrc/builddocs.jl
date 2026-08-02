@@ -5,9 +5,8 @@
 #   julia builddocs.jl               (from docs/)
 #
 # Activates the docs environment, dev's the package from the parent directory,
-# instantiates, runs make.jl (which builds from docs/resrc/), and reports where
-# the site landed. CI should skip this file and run
-# `julia --project=docs docs/make.jl` after its own Pkg setup.
+# instantiates, runs make.jl, and reports where the site landed. CI should skip
+# this file and run `julia --project=docs docs/make.jl` after its own Pkg setup.
 
 import Pkg
 
@@ -28,14 +27,14 @@ else
     @warn "make.jl completed but no index.html found — check the build log" dir = joinpath(DOCS, BUILD)
 end
 
-# ---- PDF stage (docs/pdf pipeline; set DOCS_PDF=skip to omit) ----
+# ---- PDF stage (docs/pdf/howto.md pipeline; set DOCS_PDF=skip to omit) ----
 if get(ENV, "DOCS_PDF", "") != "skip"
     missing_tools = filter(t -> Sys.which(t) === nothing,
                            ["xelatex", "latexmk", "pygmentize", "pdftoppm", "qpdf"])
     if !isempty(missing_tools)
         @warn "PDF stage skipped: TeX/validation toolchain incomplete" missing = missing_tools
     else
-        @info "Building PDF (docs/pdf/buildpdf.sh)"
+        @info "Building PDF (docs/pdf/buildpdf.sh — see docs/pdf/howto.md)"
         run(`bash $(joinpath(DOCS, "pdf", "buildpdf.sh"))`)
     end
 end
