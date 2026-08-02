@@ -21,7 +21,7 @@ the steady-state warm cache hit, since callers amortize the former through the
 latter. Vary one binding per variant; verify specialization before believing a
 number.
 
-## Benchmarking without measuring the dispatcher
+## Set up a measurement that is actually measuring your code
 
 The package's benchmark doctrine, in one snippet (needs the `benchmarking/`
 environment for Chairmarks). Format types enter as **type parameters**;
@@ -55,6 +55,8 @@ b = bench_add(Binary8p4se)
 
 ## see also
 
-[Verification & Benchmark Doctrine](under_verification.md),
+[Package Verification & Benchmarking](under_verification.md),
 [Verify Custom Code](howto_verify_custom.md),
-[Internals Recipes](under_recipes.md).
+[Worked Examples: Internals](examples_internals.md) — whose
+*Benchmarking without measuring the dispatcher* is the complete version of the
+snippet above, with the two measurement post-mortems that produced it.

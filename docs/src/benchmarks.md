@@ -1,4 +1,4 @@
-# SmallFloats.jl benchmark report
+# Benchmark report
 
 Generated: 2026-07-30 12:32 UTC  ·  Julia 1.12.6  ·  alderlake (32 logical CPUs, 1 Julia thread)  ·  Float128 paths: enabled  ·  Chairmarks 1.3.1
 

@@ -36,8 +36,9 @@ array rather than per element.
 
 Ordering runs on **integer order keys**: a sign-magnitude fold into an unsigned
 type wide enough for the format's `2^K + 1` keys (`UInt16` at K ≤ 8, wider above),
-monotone with the total order. NaN (which has the msb set) orders less than other
-values. Same-format `TotalOrder`, `isless`, and the numeric comparisons are key
+monotone with the total order. Key `0` is reserved for the single NaN, which the
+draft orders below −Inf (§4.12.1); every datum key is therefore ≥ 1.
+Same-format `TotalOrder`, `isless`, and the numeric comparisons are key
 comparisons (~1 ns); since a format has at most `2^K + 1` distinct keys, vectors
 sort with an **O(n) counting sort** installed via `Base.Sort.defalg` (forward and
 reverse orderings; anything exotic falls back to the stock algorithm).
@@ -46,4 +47,4 @@ reverse orderings; anything exotic falls back to the stock algorithm).
 
 [The Encoding & Projection Engine](under_engine.md),
 [The Oracle & Rigor Classes](under_oracle.md),
-[Internals Recipes](under_recipes.md).
+[Worked Examples: Internals](examples_internals.md).

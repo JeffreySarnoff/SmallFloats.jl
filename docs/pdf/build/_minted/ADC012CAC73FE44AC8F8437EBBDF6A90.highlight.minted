@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+exact Float64 quotient  →  correctly rounded Float128
+                        →  bracket / pre\PYGZhy{}filter  →  MPFR interval
+\end{MintedVerbatim}

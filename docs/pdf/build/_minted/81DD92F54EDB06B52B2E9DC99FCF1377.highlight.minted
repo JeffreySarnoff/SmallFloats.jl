@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+MagCode(c) = c mod H        code of |V(c)|
+NegCode(c) = c xor H        code of −V(c)
+\end{MintedVerbatim}

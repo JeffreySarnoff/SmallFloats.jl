@@ -1,6 +1,6 @@
 # ===== docs/make_latex.jl — LaTeX resolution pass for the PDF pipeline
 #
-# A copy of make.jl per docs/pdf/generate_pdf.md Stage 1: format swapped to the
+# A copy of make.jl per docs/pdf/howto.md Stage 1: format swapped to the
 # LaTeX writer with platform = "none" (emit resolved .tex, don't compile),
 # build directory build_latex, remotes = nothing (local build), deploydocs and
 # HTML-only options dropped. pages / modules / checkdocs / warnonly kept
@@ -38,43 +38,55 @@ makedocs(;
             "fifteenminutes.md",
         ],
 
-        "Using SmallFloats" => [
-            "Tutorials" => [
-                "tutorial1_values.md",
-                "tutorial2_projection.md",
-                "tutorial3_arrays.md",
-                "tutorial4_blocks.md",
-                "tutorial5_stochastic.md",
-            ],
-            "How-Tos" => [
-                "howto_choose_format.md",
-                "howto_quantize_tensor.md",
-                "howto_blocks_dynamic_range.md",
-                "howto_reproducible_stochastic.md",
-                "howto_packed_storage.md",
-                "howto_register_approx.md",
-                "howto_float16_interop.md",
-                "howto_conformance.md",
-            ],
-            "Explanations" => [
-                "explain_formats.md",
-                "explain_projection_contract.md",
-                "explain_session_defaults.md",
-                "explain_float16.md",
-                "explain_random.md",
-                "explain_no_promotion.md",
-                "explain_performance.md",
-            ],
-            "Specifics" => [
-                "ref_formats.md",
-                "ref_projections.md",
-                "ref_operations.md",
-                "ref_defaults.md",
-                "ref_arrays_blocks.md",
-                "ref_conformance.md",
-                "ref_external.md",
-                "ref_internal.md",
-            ],
+        "Tutorials" => [
+            "tutorial1_values.md",
+            "tutorial2_projection.md",
+            "tutorial3_arrays.md",
+            "tutorial4_blocks.md",
+            "tutorial5_stochastic.md",
+        ],
+
+        "How-To" => [
+            "howto_choose_format.md",
+            "howto_quantize_tensor.md",
+            "howto_blocks_dynamic_range.md",
+            "howto_reproducible_stochastic.md",
+            "howto_packed_storage.md",
+            "howto_float16_interop.md",
+            "howto_register_approx.md",
+            "howto_conformance.md",
+        ],
+
+        "Explanations" => [
+            "explain_formats.md",
+            "explain_projection_contract.md",
+            "explain_session_defaults.md",
+            "explain_float16.md",
+            "explain_no_promotion.md",
+            "explain_random.md",
+            "explain_performance.md",
+        ],
+
+        "Reference" => [
+            "ref_formats.md",
+            "ref_projections.md",
+            "ref_operations.md",
+            "ref_defaults.md",
+            "ref_arrays_blocks.md",
+            "ref_julia_compat.md",
+            "ref_conformance.md",
+            "ref_external.md",
+            "ref_internal.md",
+        ],
+
+        "Foundations" => [
+            "formal_codepoints.md",
+        ],
+
+        "Examples" => [
+            "examples_index.md",
+            "examples_applied.md",
+            "examples_internals.md",
         ],
 
         "Insights" => [
@@ -87,19 +99,14 @@ makedocs(;
             "howto_add_operation.md",
             "howto_verify_custom.md",
             "howto_benchmark.md",
-            "under_recipes.md",
         ],
 
         "Support" => [
-            "troubleshooting.md",
-            "glossary.md",
-            "examples_index.md",
             "cheatsheet.md",
             "benchmarks.md",
-        ],
-
-        "Standard & Design Papers" => [
+            "troubleshooting.md",
             "papers_index.md",
+            "glossary.md",
         ],
     ],
     checkdocs = :none,

@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+sums     2(B\PYGZus{}S + B\PYGZus{}E + P\PYGZus{}S + P\PYGZus{}E) + 64 + ⌈log₂B⌉
+products B(P\PYGZus{}S + P\PYGZus{}E) + 128
+\end{MintedVerbatim}

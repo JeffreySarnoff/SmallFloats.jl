@@ -185,4 +185,4 @@ at registration rather than promised.
 
 [Add an Operation](howto_add_operation.md),
 [Benchmark Correctly](howto_benchmark.md),
-[Internals Recipes](under_recipes.md).
+[Worked Examples: Internals](examples_internals.md).

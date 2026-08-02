@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+C(+∞)        = N − 1        (when D = 1)
+C(MaxFinite) = N − 1 − D    always
+\end{MintedVerbatim}

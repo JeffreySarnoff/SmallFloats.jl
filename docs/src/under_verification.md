@@ -1,6 +1,6 @@
-# Verification & Benchmark Doctrine
+# Package Verification & Benchmarking
 
-## Verification doctrine
+## What Is Verified
 
 The value sets are small enough that sampling is never necessary, so the suite
 enumerates — ≈ 8.9 M assertions in all:
@@ -24,7 +24,7 @@ enumerates — ≈ 8.9 M assertions in all:
 Deterministic **specialization regressions** (concrete inferred return types at the
 public entry points, zero warm-path allocation) stand in for timing assertions.
 
-## Benchmark doctrine
+## The Approach to Benchmarking
 
 Recorded after two measurement post-mortems: a benchmark closure over any non-`const`
 global measures Julia's dispatch machinery, not the code under test — and it distorts

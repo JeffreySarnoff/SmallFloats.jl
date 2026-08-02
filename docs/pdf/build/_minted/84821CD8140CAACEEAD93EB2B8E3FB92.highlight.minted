@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+j = c ÷ L        the biased exponent (unbiased: e = j − B)
+t = c mod L      the trailing significand
+\end{MintedVerbatim}

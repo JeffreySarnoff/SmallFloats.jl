@@ -71,6 +71,64 @@ def heading_text(cmd):
     return arg.replace("{", "").replace("}", "").strip()
 
 
+# ---------------------------------------------------------------------------
+# Figures
+# ---------------------------------------------------------------------------
+def rasterless_figures(tex, src_dir, out_dir):
+    r"""Make every `\includegraphics` target something xelatex can actually read.
+
+    Documenter emits the asset path verbatim, extension included, so an SVG in
+    the Markdown becomes `\includegraphics{assets/x.svg}` — which xelatex cannot
+    open at all. (`graphicx` has no SVG reader; the `svg` package shells out to
+    Inkscape per build.) The HTML site wants the SVG, so the fix belongs here,
+    in the layer that already adapts Documenter's output for print.
+
+    SVG is converted ONCE, to PDF rather than to a bitmap: the figure stays
+    vector, so it prints at the device's resolution instead of the raster's.
+    `rsvg-convert` is preferred over `inkscape` only because it is the smaller
+    dependency; either produces the same page.
+
+    Assets are copied into the build directory regardless of type, because the
+    build directory is also the editable source bundle (howto.md Stage 6) and a
+    bundle that cannot recompile on its own is not one.
+    """
+    import os, re, shutil, subprocess
+
+    refs = re.findall(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", tex)
+    if not refs:
+        return tex, 0, 0
+
+    converted = 0
+    for ref in sorted(set(refs)):
+        src = os.path.join(src_dir, ref)
+        dst = os.path.join(out_dir, ref)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        if not os.path.exists(src):
+            die(f"figure {ref} referenced but not found under {src_dir}")
+
+        if ref.lower().endswith(".svg"):
+            pdf_ref = ref[:-4] + ".pdf"
+            pdf_dst = os.path.join(out_dir, pdf_ref)
+            if shutil.which("rsvg-convert"):
+                cmd = ["rsvg-convert", "-f", "pdf", "-o", pdf_dst, src]
+            elif shutil.which("inkscape"):
+                cmd = ["inkscape", src, "--export-type=pdf",
+                       f"--export-filename={pdf_dst}"]
+            else:
+                die(f"{ref} is an SVG and xelatex cannot read one; install "
+                    "rsvg-convert or inkscape, or reference a PDF/PNG asset")
+            r = subprocess.run(cmd, capture_output=True, text=True)
+            if r.returncode != 0 or not os.path.exists(pdf_dst):
+                die(f"SVG->PDF conversion failed for {ref}: "
+                    f"{(r.stderr or r.stdout).strip()[:400]}")
+            # Point the document at the converted file.
+            tex = tex.replace("{" + ref + "}", "{" + pdf_ref + "}")
+            converted += 1
+        shutil.copy(src, dst)
+
+    return tex, len(set(refs)), converted
+
+
 def die(msg):
     print(f"transform.py: FAIL — {msg}", file=sys.stderr)
     sys.exit(1)
@@ -225,10 +283,10 @@ def main():
 
     # Unimplemented decision-table treatments must fail loudly, not be
     # silently skipped (asserted-edit principle applied to coverage).
-    if survey["longtables"] or survey["figures"]:
-        die(f"survey found longtables={survey['longtables']} "
-            f"figures={survey['figures']} — the multi-page-table/figure "
-            "treatments are not implemented here; extend transform.py first")
+    if survey["longtables"]:
+        die(f"survey found longtables={survey['longtables']} — the "
+            "multi-page-table treatment is not implemented here; extend "
+            "transform.py first")
     if survey["longest_block_lines"] > PAGE_BUDGET:
         die(f"longest code block ({survey['longest_block_lines']} lines) "
             f"exceeds the page budget ({PAGE_BUDGET}) — the global minted "
@@ -421,6 +479,9 @@ def main():
 
     import os
     os.makedirs(out_dir, exist_ok=True)
+    tex, nfig, nconv = rasterless_figures(tex, src_dir, out_dir)
+    survey["figures_copied"] = nfig
+    survey["figures_svg_converted"] = nconv
     open(f"{out_dir}/main.tex", "w", encoding="utf-8").write(tex)
     open(f"{out_dir}/custom.sty", "w", encoding="utf-8").write(sty)
     for f in ("documenter.sty", "preamble.tex"):

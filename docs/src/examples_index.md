@@ -1,98 +1,79 @@
-# Examples from AI
+# Examples Index
 
-A map of the worked examples. Each is identified in boldface and briefly described. The source for each example is linkded.
+Every worked example in the documentation, in one list. Each title links to the
+example itself. All are runnable as shown; outputs were captured from real
+sessions and seeds are fixed, so you can reproduce them exactly.
+
+The examples live on two pages, split by the level they work at rather than by
+subject:
+
+- **[Applied](examples_applied.md)** — the public API only. Format choice,
+  quantization, blocks, stochastic rounding, packing.
+- **[Internals](examples_internals.md)** — unexported machinery. Pipeline
+  introspection, exhaustive self-verification, κ measurement, benchmarking.
+  Stable enough to learn from, not covered by semver.
+
+---
+
+## Basic
+
+| example | what it shows |
+|:---|:---|
+| [One value, every rounding mode](tutorial2_projection.md#One-value,-every-rounding-mode) | the six deterministic μ side by side on one between-grid value |
+| [Enumerating a whole format](tutorial1_values.md#Enumerating-a-whole-format) | a 16-point format printed in full, in total order |
+| [Saturation in one line each](examples_applied.md#Saturation-in-one-line-each) | `SatNone` / `SatFinite` / `SatPropagate` on the same overflow |
+| [Random values under a chosen projection](examples_applied.md#Random-values-under-a-chosen-projection) | `rand`/`randn` land on code points through the engine |
+| [Watching RoundToPrecision work](examples_internals.md#Watching-RoundToPrecision-work) | the exact `(sign, S, Q)` decomposition before saturation sees it |
+| [Symbolic sticky](examples_internals.md#Symbolic-sticky:-projecting-just-below-a-number) | how directed modes land exactly on asymptotes |
+| [Tables are the scalar path, memoized](examples_internals.md#Tables-are-the-scalar-path,-memoized) | table entry ≡ scalar result, by construction |
+| [Order keys](examples_internals.md#Order-keys) | the sign–magnitude fold that comparisons and the counting sort run on |
 
 ## General AI
 
-**Log-odds belief updating.** Accumulating log-likelihood ratios in an 8-bit
-format: the running belief can drift far from the exact value while the
-threshold decision it drives stays correct — order survives quantization even
-when magnitude does not. Source: [User Examples — General AI](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L119).
-
-**Fuzzy inference in unsigned formats.** Membership degrees on `[0, 1]`
-evaluated with an unsigned finite format; the classic fuzzy connectives
-(Gödel t-norm, s-norm, product t-norm) are bit-exact registry operations, so
-a fuzzy rule base reproduces to the code point across machines. Source:
-[User Examples — General AI](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L156).
-
-**Search-heuristic ordering and a monotonicity audit.** Quantizing 200
-heuristic scores to 8 bits collapses many distinct scores onto shared code
-points, yet argmax and top-k survive; a companion exhaustive walk proves a
-format conversion never inverts the total order. Sources:
-[User Examples — General AI](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L183),
-[Technical Examples — General AI](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/technical_examples.md#L75).
-
-**κ-safe decision margins for approximate evaluators.** Turning a measured κ
-bound into a provable rule — two evaluations more than 2κ code points apart
-cannot have their comparison inverted by a κ-bounded approximate evaluator —
-and verifying the rule exhaustively. Source:
-[Technical Examples — General AI](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/technical_examples.md#L112).
+| example | what it shows |
+|:---|:---|
+| [Log-odds belief updating](examples_applied.md#Log-odds-belief-updating-—-and-where-tiny-formats-bite-reasoning) | the running belief drifts far from exact while the threshold decision stays correct — order survives quantization when magnitude does not |
+| [Fuzzy inference in an unsigned format](examples_applied.md#Fuzzy-inference-in-an-unsigned-format) | Gödel t-norm/s-norm and product t-norm as bit-exact registry ops, so a rule base reproduces to the code point across machines |
+| [Search heuristics keep the ordering](examples_applied.md#Search-heuristics:-what-quantized-scores-keep-is-the-ordering) | 200 scores collapse onto 78 code points; argmax and top-k survive |
+| [Exhaustive monotonicity audit](examples_internals.md#Ranking-safety:-an-exhaustive-monotonicity-audit-of-score-conversion) | proving by enumeration that a format conversion never inverts the total order |
+| [κ-safe decision margins](examples_internals.md#κ-safe-decision-margins-for-approximate-evaluators) | two results more than 2κ code points apart cannot have their comparison inverted — and the exhaustive check of that rule |
 
 ## Machine Learning
 
-**Quantizing a weight tensor and measuring the damage.** Projecting a
-Gaussian weight tensor into an 8-bit format and reporting MSE, max error, and
-overflow fraction as the three-number check for any quantization. Source:
-[User Examples — Machine Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L211).
-
-**Picking a format: precision vs range.** A table of RMSE and MaxFinite
-across four `K = 8` formats trading significand bits for exponent range on
-the same data. Source: [User Examples — Machine Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L231).
-
-**Stochastic unbiasedness.** Nearest rounding is systematically biased on a
-fixed input; stochastic rounding is unbiased on average — the property that
-matters for accumulating many small contributions in low precision. Source:
-[User Examples — Machine Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L255).
-
-**Exhaustive quantizer verification.** Checking every in-range code point of
-a quantizer against an independent 256-bit reference computation, rather
-than spot-checking. Source: [Technical Examples — Machine Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/technical_examples.md#L157).
-
-**κ workflow with rejection.** Registering an approximate kernel, measuring
-its κ by exhaustive enumeration, and watching the registry refuse an
-understated κ declaration. Source: [Technical Examples — Machine Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/technical_examples.md#L197).
-
-**Conformance export.** Producing a machine-readable conformance dictionary
-suitable for attaching to experiment artifacts. Source:
-[Technical Examples — Machine Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/technical_examples.md#L221).
+| example | what it shows |
+|:---|:---|
+| [Quantizing a weight tensor](examples_applied.md#Quantizing-a-weight-tensor-and-measuring-the-damage) | MSE, max error, overflow fraction — the three-number check for any quantization |
+| [Picking a format: precision vs range](examples_applied.md#Picking-a-format:-precision-vs-range) | RMSE and MaxFinite across four `K = 8` formats on the same data |
+| [Stochastic rounding is unbiased](examples_applied.md#Stochastic-rounding-is-unbiased-where-nearest-is-not) | where nearest accumulates a systematic drift and stochastic does not |
+| [Verifying a quantizer exhaustively](examples_internals.md#Verifying-a-quantizer-exhaustively-against-an-independent-reference) | your own code checked against an independent reference over every input |
+| [The κ workflow, including the refusal](examples_internals.md#The-κ-workflow,-including-the-part-where-it-says-no) | registration rejecting an understated κ — the registry measures, it does not trust |
+| [Exporting the conformance declaration](examples_internals.md#Exporting-the-conformance-declaration) | what you hand a reviewer |
 
 ## Deep Learning
 
-**MX block quantization and the staging pitfall.** Per-row block scales
-tracking dynamic range a bare element format cannot, plus the specific case
-of staging through the narrow element format before block-quantizing — which
-silently discards the benefit. Source: [User Examples — Deep Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L277).
+| example | what it shows |
+|:---|:---|
+| [MX-style block quantization](examples_applied.md#MX-style-block-quantization-—-and-the-staging-pitfall) | shared-scale blocks, and the staging mistake that silently costs accuracy |
+| [Quantized dot products, one rounding](examples_applied.md#Quantized-dot-products-with-one-final-rounding) | all lane products accumulated exactly, projected once at the end |
+| [The swamping demo](examples_applied.md#Why-training-loops-like-stochastic-rounding:-the-swamping-demo) | why a training loop stalls under nearest and does not under stochastic |
+| [Activations are 256-byte tables](examples_applied.md#Activation-functions-are-256-byte-lookup-tables) | a whole unary op *is* its table, at a fraction of a nanosecond per element |
+| [Packing a quantized model](examples_applied.md#Packing-a-quantized-model) | bit-packed storage at K not a multiple of 8 |
+| [Proving a fused kernel exact](examples_internals.md#Proving-your-fused-kernel-exact:-BlockDotProduct-vs-512-bit-truth) | `BlockDotProduct` against 512-bit truth |
+| [Stochastic rounding, audited](examples_internals.md#Stochastic-rounding,-audited:-the-full-R-sweep) | the full-R sweep: every random draw, not a sample |
+| [Hard-tanh κ measurement](examples_internals.md#An-accelerator-style-activation,-κ-measured:-hard-tanh-vs-Tanh) | an accelerator-style activation, measured rather than assumed |
+| [Benchmarking without measuring the dispatcher](examples_internals.md#Benchmarking-without-measuring-the-dispatcher) | the two measurement post-mortems this package learned from |
 
-**One-rounding dot products.** `BlockDotProduct` computing every lane product
-and the accumulation exactly, then rounding exactly once. Source:
-[User Examples — Deep Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L322).
+## Verification
 
-**Swamping and stall demo.** Accumulating many small gradient steps under
-nearest rounding stalls completely once the accumulator dwarfs the
-increment; stochastic rounding keeps absorbing the increments in
-expectation. Source: [User Examples — Deep Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L340).
+| example | what it shows |
+|:---|:---|
+| [Checking the code-point algebra](examples_internals.md#Checking-the-code-point-algebra-against-the-package) | every distinguished code of all 504 formats, and the decoding formula at every positive finite code point |
 
-**Activation LUT audit.** An 8-bit unary activation is a 256-byte lookup
-table; auditing saturation fraction and distinct output codes is cheap
-enough to run for every candidate nonlinearity. Source:
-[User Examples — Deep Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L369).
+---
 
-**Hard-tanh κ measurement.** Measuring the worst-case code-point deviation of
-a piecewise hardware-style activation against the defined activation,
-exhaustively, and registering it under the measured bound. Source:
-[Technical Examples — Deep Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/technical_examples.md#L291).
+## See also
 
-**Packing a quantized model.** Storing a million-element quantized model in
-a `PackedVector` at the format's true bitwidth instead of a full byte per
-element. Source: [User Examples — Deep Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/user_examples.md#L415).
-
-**BlockDotProduct 512-bit verification.** Proving a fused block dot-product
-kernel exact against 512-bit big-float truth over random blocks with mixed
-scales and a special-value mix — the pattern to reuse for any custom fused
-kernel. Source: [Technical Examples — Deep Learning](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/oldsrc/technical_examples.md#L234).
-
-## see also
-
-[How-Tos](howto_choose_format.md),
-[Architecture Overview](under_architecture.md),
-[Cheat Sheet](cheatsheet.md).
+Task-shaped instructions, as opposed to worked demonstrations, are in the
+How-To section — start at [Choosing a Format](howto_choose_format.md). The
+difference: a how-to tells you what to do, an example shows a complete session
+with its output and discusses what the output means.

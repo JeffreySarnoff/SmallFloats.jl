@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+(lane significand bits) + (exponent span) + ⌈log₂B⌉  ≤  113
+\end{MintedVerbatim}

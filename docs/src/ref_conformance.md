@@ -56,4 +56,4 @@ substituted into the default API; the default API is bit-exact, always.
 ## see also
 
 [Read & Export the Conformance Declaration](howto_conformance.md),
-[Verification & Benchmark Doctrine](under_verification.md).
+[Package Verification & Benchmarking](under_verification.md).

@@ -286,7 +286,7 @@ The other 384 arrive with \TU/DejaVuSansMono(0)/m/n/10 using
 Chapter 2.
 (./_minted/9FC63D5FBF09D55F897EBF05820B8423.highlight.minted)
 (./_minted/AA1136E9BE0A5CA99D77ADEAC66D0F81.highlight.minted)
-Overfull \hbox (7.38509pt too wide) in paragraph at lines 166--167
+Overfull \hbox (7.38509pt too wide) in paragraph at lines 221--222
 []\TU/DejaVuSans(0)/m/n/10 For an editable install, \TU/DejaVuSansMono(0)/m/n/1
 0 pkg> dev https://github.com/JeffreySarnoff/SmallFloats.jl \TU/DejaVuSans(0)/m
 /n/10 clones into \TU/DejaVuSansMono(0)/m/n/10 ~/.julia/dev\TU/DejaVuSans(0)/m/
@@ -309,18 +309,17 @@ Chapter 3.
 (./_minted/DF6A0CC781D09529DD7195A58BCCED2E.highlight.minted)
 (./_minted/3573F538609362B3E50ECC8E8E43D921.highlight.minted) [9]
 Chapter 4.
-(./_minted/99CF7B13F46FBBE8A80A3830CBDC9AE2.highlight.minted) [10]
+(./_minted/8B696342178501D9A9CF89DDA86CA13A.highlight.minted) [10]
 (./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
 (./_minted/7AA8B67B2458ED2272CE91278D0E0FF6.highlight.minted)
 (./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [11]
 (./_minted/ED5695E79FD860212A92800159A332AB.highlight.minted)
-(./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [12]
-(./_minted/7F5B3992E33B0B9622171D3E6BDFD949.highlight.minted) [13]
+(./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [12] [13]
 Chapter 5.
 (./_minted/D1E811343CC4F867BDC8B7C8529B9927.highlight.minted)
 (./_minted/84C6C7B2D324FED5946ED90801F6765E.highlight.minted)
 (./_minted/6872D03381CB350E2BAFFEB6F55F1C34.highlight.minted) [14]
-Overfull \hbox (7.39253pt too wide) in paragraph at lines 971--971
+Overfull \hbox (7.39253pt too wide) in paragraph at lines 1020--1020
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
 [15] [16] [17]
 Chapter 6.
@@ -329,341 +328,460 @@ Chapter 6.
 (./_minted/751982D492CCA07529D70EA74ACB8E8F.highlight.minted)
 (./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
 (./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
-(./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
+(./_minted/992BB09E9AEFCDA6E68F87624C1A61F4.highlight.minted)
 (./_minted/4CF17B922FBC6981D0E57EACA7EF618C.highlight.minted) [19]
-(./_minted/176DD8320A8DA664543832735177EF07.highlight.minted)
+(./_minted/176DD8320A8DA664543832735177EF07.highlight.minted) [20]
+Chapter 7.
 (./_minted/E23046ECBB4FD8A756C449378C02AB39.highlight.minted)
-(./_minted/12A15D60BBF01CD4B09473FE0329C5D8.highlight.minted) [20]
-(./_minted/BDA7DCFC27E2CB9077F8245B4FEE4327.highlight.minted)
-(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [21]
-(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted)
-(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [22]
-(./_minted/2964E59AA0CBE24D90757394185B9D19.highlight.minted) [23]
-(./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted)
+(./_minted/12A15D60BBF01CD4B09473FE0329C5D8.highlight.minted)
+(./_minted/BDA7DCFC27E2CB9077F8245B4FEE4327.highlight.minted) [21]
+(./_minted/558546E03545DA04904488768F473D40.highlight.minted)
+(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted) [22]
+(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted)
+(./_minted/2964E59AA0CBE24D90757394185B9D19.highlight.minted) [23] [24]
+Chapter 8.
+(./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted) [25]
 (./_minted/35EBACEBC0C695923F34013EB60B0F02.highlight.minted)
 (./_minted/1BC2A1151554D66C634DBD8A88350743.highlight.minted)
 (./_minted/01C62FF12E659616913D1B50EA98AED1.highlight.minted)
-(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted) [24]
+(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted)
 (./_minted/94066BE698638A0CCD3E399F2C51534F.highlight.minted)
-(./_minted/151F618B27227E041996CC5A5B729B72.highlight.minted)
+(./_minted/151F618B27227E041996CC5A5B729B72.highlight.minted) [26]
 (./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
 (./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
-(./_minted/55E1B6E85860C6D4C1F21D17BB4F5E63.highlight.minted) [25]
+(./_minted/55E1B6E85860C6D4C1F21D17BB4F5E63.highlight.minted) [27]
+Chapter 9.
 (./_minted/D6D8C14E8AA3B0AF82E2973879937CDB.highlight.minted)
 (./_minted/545E52F0DD625002A97EDF1151312636.highlight.minted)
-(./_minted/18378B06C772FE3B1514F2702A47DAEA.highlight.minted) [26]
+(./_minted/18378B06C772FE3B1514F2702A47DAEA.highlight.minted) [28]
 (./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
 (./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted)
 (./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
-(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [27]
-Underfull \hbox (badness 2418) in paragraph at lines 2054--2055
+(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [29]
+Underfull \hbox (badness 2418) in paragraph at lines 2100--2101
 \TU/DejaVuSans(0)/m/n/10 You have raw \TU/DejaVuSansMono(0)/m/n/10 Float64 \TU/
 DejaVuSans(0)/m/n/10 data with widely varying per-row magnitude, and you want t
 o quantize it into
+[30]
+Chapter 10.
 
-Underfull \hbox (badness 1178) in paragraph at lines 2092--2093
+Underfull \hbox (badness 1178) in paragraph at lines 2138--2139
 \TU/DejaVuSans(0)/m/n/10 Projection: Rounding & Saturation introduced the stoch
 astic families — \TU/DejaVuSansMono(0)/m/n/10 StochasticA{N}\TU/DejaVuSans(0)/m
 /n/10 , \TU/DejaVuSansMono(0)/m/n/10 StochasticB{N}\TU/DejaVuSans(0)/m/n/10 ,
 (./_minted/18E583C5417677FA4DCAC2F1BC16A871.highlight.minted)
-(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted) [28]
+(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted)
 (./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
 (./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/8645CB4775FD08AD6E9C98888C47BCD0.highlight.minted)
+(./_minted/8645CB4775FD08AD6E9C98888C47BCD0.highlight.minted) [31]
 (./_minted/703C1CA7665BD4E85B3307851E048B14.highlight.minted)
-(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [29] [30]
-Chapter 7.
+(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [32] [33]
+[34]
+Chapter 11.
 (./_minted/A6781F2D5B6C9B8E04F29555CAE05A76.highlight.minted)
 (./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
 (./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
 (./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted)
 (./_minted/24171F4760C567CE1EA40911C5483997.highlight.minted)
-(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [31] [32]
+(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [35] [36]
+Chapter 12.
 (./_minted/D776F933A6751DA6EAB7F04C6DE8AFE5.highlight.minted)
 (./_minted/48E933C5363F9935310D70B3162A40E4.highlight.minted)
 (./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted)
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [37]
 (./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [33]
-Underfull \hbox (badness 2726) in paragraph at lines 2640--2641
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [38]
+Chapter 13.
+
+Underfull \hbox (badness 2726) in paragraph at lines 2686--2687
 []\TU/DejaVuSansMono(0)/m/n/10 ConvertToBlockMaxAbsFinite(FS, FE, scale_ρ, elem
 ent_ρ, values_tuple) \TU/DejaVuSans(0)/m/n/10 to build one block per
-[34] (./_minted/D3C6FCAF3A2A0C9A819EFF9D533F9DB6.highlight.minted)
+(./_minted/D3C6FCAF3A2A0C9A819EFF9D533F9DB6.highlight.minted)
 (./_minted/2D1A1A6FE2CBA3399C11E233ADFC4E15.highlight.minted)
-(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [35]
+(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [39] [40]
+Chapter 14.
 (./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted)
 (./_minted/F79E40D4B4234E3838E952E1187B9F30.highlight.minted)
-(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [36]
-(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [37]
+(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [41]
+(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [42] [43]
+Chapter 15.
 (./_minted/B2AE9B0F67DCEB32C91D9A341DD02B70.highlight.minted)
 (./_minted/B51BB4189BF4784CB6F36A8FEFAA20C3.highlight.minted)
 (./_minted/5E323BFA7ED255963337AF9ED3F4AE8F.highlight.minted)
 (./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [38]
-Underfull \hbox (badness 1320) in paragraph at lines 3084--3085
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [44] [45]
+Chapter 16.
+
+Underfull \hbox (badness 2521) in paragraph at lines 3174--3175
+[]\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
+sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
+VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
+(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [46] [47]
+Chapter 17.
+
+Underfull \hbox (badness 1320) in paragraph at lines 3256--3257
 []\TU/DejaVuSansMono(0)/m/n/10 register_approx!(name, opname, resultformat, ope
 randformats, ρ, fn; κ) \TU/DejaVuSans(0)/m/n/10 to register the imple-
 (./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
-(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted) [39]
+(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
 (./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
 (./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
 (./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
 (./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted)
 (./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
-(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted)
-(./_minted/68936046CEC636C7E6E3F6B2FE139E97.highlight.minted) [40]
-Underfull \hbox (badness 2521) in paragraph at lines 3308--3309
-[]\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
-sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
-VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
-(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [41] [42]
-(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [43] [44]
-Chapter 8.
+(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted) [48]
+(./_minted/68936046CEC636C7E6E3F6B2FE139E97.highlight.minted) [49]
+Chapter 18.
+(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [50] [51]
+[52]
+Chapter 19.
 (./_minted/6F79178BDBC794DDD7F65A736E883AF3.highlight.minted)
-(./_minted/BECBE3CE15471A5A218878B24EE7412E.highlight.minted) [45]
-(./_minted/E9512BCFAAB389535A6DA73C59EE7CFE.highlight.minted) [46]
+(./_minted/BECBE3CE15471A5A218878B24EE7412E.highlight.minted) [53]
+(./_minted/E9512BCFAAB389535A6DA73C59EE7CFE.highlight.minted)
 (./_minted/086CD7E41A2D2C77077154575F43EF10.highlight.minted)
-(./_minted/178966B7DCAB0086D92B690ED667CFDF.highlight.minted) [47]
-(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted)
+(./_minted/178966B7DCAB0086D92B690ED667CFDF.highlight.minted) [54] [55]
+Chapter 20.
+(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [56]
 (./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
-(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted) [48] [49]
+(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted) [57] [58]
+Chapter 21.
 (./_minted/664E167B431B0266E71475DA411DA732.highlight.minted)
-(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [50]
-(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted) [51]
-(./_minted/F08C9D7423EA7DEAD7F929E0409EDF49.highlight.minted) [52] [53]
-(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [54] [55]
+(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [59]
+(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted)
+(./_minted/F08C9D7423EA7DEAD7F929E0409EDF49.highlight.minted) [60] [61]
+Chapter 22.
+[62] (./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [63]
+[64] [65]
+Chapter 23.
+(./_minted/5505F1A858F5BAE2B4A8FE326AA153EB.highlight.minted)
+(./_minted/F658A3A8D165F6BE3F95DAD57EF9E713.highlight.minted)
+(./_minted/C13A272E0D57DBB02A182F8D0555F2BD.highlight.minted) [66] [67]
+[68]
+Chapter 24.
 (./_minted/FE2BAE56F5EA7207F8BBD00CA83D0195.highlight.minted)
 (./_minted/F79E40D4B4234E3838E952E1187B9F30.highlight.minted)
-(./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted) [56]
+(./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted) [69]
 (./_minted/206E40ED02A569626A24B225953797CE.highlight.minted)
-(./_minted/ACF13E76E8BD99A4597B6CAA2FFC9ED3.highlight.minted) [57]
-(./_minted/5505F1A858F5BAE2B4A8FE326AA153EB.highlight.minted)
-(./_minted/F658A3A8D165F6BE3F95DAD57EF9E713.highlight.minted) [58]
-(./_minted/C13A272E0D57DBB02A182F8D0555F2BD.highlight.minted) [59]
+(./_minted/ACF13E76E8BD99A4597B6CAA2FFC9ED3.highlight.minted) [70] [71]
+Chapter 25.
 (./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [60] [61]
-[62] [63]
-Chapter 9.
-[64] (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted) [65]
-(./_minted/90475641BF22AFA2738963DE3308E104.highlight.minted)
-(./_minted/D112EECA7117437A55F73F7699877FBF.highlight.minted) [66]
+(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [72] [73]
+[74] [75]
+Chapter 26.
+[76] (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted) [77]
+(./_minted/90475641BF22AFA2738963DE3308E104.highlight.minted) [78]
+Chapter 27.
+(./_minted/D112EECA7117437A55F73F7699877FBF.highlight.minted) [79]
 (./_minted/558ECE6E71BCEBF34723A43181538BF0.highlight.minted)
-Overfull \hbox (6.05873pt too wide) in paragraph at lines 5034--5034
+Overfull \hbox (6.05873pt too wide) in paragraph at lines 5080--5080
 []\TU/DejaVuSansMono(0)/m/n/8 SatFinite|  
 
-Overfull \hbox (17.4464pt too wide) in paragraph at lines 5034--5034
+Overfull \hbox (17.4464pt too wide) in paragraph at lines 5080--5080
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
-(./_minted/86896283132DB045F422B07B57E23836.highlight.minted) [67] [68]
-[69]
-Overfull \hbox (4.1584pt too wide) in paragraph at lines 5223--5223
+(./_minted/86896283132DB045F422B07B57E23836.highlight.minted) [80]
+Chapter 28.
+[81] [82]
+Overfull \hbox (4.1584pt too wide) in paragraph at lines 5269--5269
 []\TU/DejaVuSansMono(0)/m/n/8 Convert|  
-[70] (./_minted/3C0B2FB4A11F82583163EE50EC36DF14.highlight.minted)
-(./_minted/B1390EBAC9863498805623F0202275A6.highlight.minted) [71]
-(./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted)
-(./_minted/57984FFE13B6207F5B2547F95A621066.highlight.minted) [72]
-(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [73] [74]
-(./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted) [75]
-(./_minted/E2DCE1C54EBF4ED4E17B2CA5A024D3E7.highlight.minted) [76]
-(./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [77] [78]
+[83] (./_minted/3C0B2FB4A11F82583163EE50EC36DF14.highlight.minted)
+(./_minted/B1390EBAC9863498805623F0202275A6.highlight.minted) [84]
+Chapter 29.
+(./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted) [85]
+(./_minted/57984FFE13B6207F5B2547F95A621066.highlight.minted)
+(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [86]
+Chapter 30.
+[87] (./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted) [88]
+[89]
+Chapter 31.
+(./_minted/3ED9788E266FE9DB56A02F44E2809F42.highlight.minted)
+(./_minted/B8F21DE663E16F38CA260F06E6B8C471.highlight.minted) [90]
+(./_minted/B630BA28595FAC2F26CA8B39F76056E1.highlight.minted)
+(./_minted/344103355B1B1CD09974EB7265879D81.highlight.minted)
+(./_minted/2E65C335A01DBB89C4D593B33117874C.highlight.minted) [91]
+(./_minted/07CA368FA7F6F500482619BE2EBAEF70.highlight.minted)
+(./_minted/BD4A9518B790D33F291326E5C17709CF.highlight.minted) [92]
+Chapter 32.
+[93] (./_minted/E2DCE1C54EBF4ED4E17B2CA5A024D3E7.highlight.minted) [94]
+Chapter 33.
+(./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [95] [96]
 (./_minted/10381BB93BBA8C764996C7FC69679950.highlight.minted)
 (./_minted/B3A58D09D82AEA802F413DA53C01D568.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6171--6172
+Underfull \hbox (badness 10000) in paragraph at lines 6458--6459
 []\TU/DejaVuSans(0)/m/n/10 Consequently \TU/DejaVuSansMono(0)/m/n/10 Binary8p4s
 e === Binary{8,4,true,true} \TU/DejaVuSans(0)/m/n/10 is \TU/DejaVuSansMono(0)/b
 /n/10 false \TU/DejaVuSans(0)/m/n/10 and \TU/DejaVuSansMono(0)/m/n/10 Binary8p4
 se <:
-(./_minted/627F3DDA11A3A56FF811C343C374B73B.highlight.minted)
-(./_minted/48E5F69E65FF7A7FA7D51B48B98D7467.highlight.minted) [79]
+[97] (./_minted/627F3DDA11A3A56FF811C343C374B73B.highlight.minted)
+(./_minted/48E5F69E65FF7A7FA7D51B48B98D7467.highlight.minted)
 (./_minted/7D3C1A969B31C38EA8662C2F6E57066E.highlight.minted)
-(./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted)
+(./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted) [98]
 (./_minted/BF570C084BC3A67A5A7C9E4647CED36E.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6295--6296
+Underfull \hbox (badness 10000) in paragraph at lines 6582--6583
 []\TU/DejaVuSans(0)/m/n/10 Bit-packed storage of \TU/DejaVuSansMono(0)/m/n/10 F
  \TU/DejaVuSans(0)/m/n/10 code points at \TU/DejaVuSansMono(0)/m/n/10 bitwidth(
 F) \TU/DejaVuSans(0)/m/n/10 bits per element. Construct with
 
-Underfull \hbox (badness 1024) in paragraph at lines 6295--6296
+Underfull \hbox (badness 1024) in paragraph at lines 6582--6583
 \TU/DejaVuSansMono(0)/m/n/10 PackedVector(A::AbstractVector{F})\TU/DejaVuSans(0
 )/m/n/10 ; recover with \TU/DejaVuSansMono(0)/m/n/10 Vector(pv) \TU/DejaVuSans(
 0)/m/n/10 or \TU/DejaVuSansMono(0)/m/n/10 collect(pv)\TU/DejaVuSans(0)/m/n/10 .
  Memory: \TU/DejaVuSansMono(0)/m/n/10 ⌈n·K/64⌉
-(./_minted/02D8000DAB315D57FDA2A7DCEB63F7AC.highlight.minted) [80]
+(./_minted/02D8000DAB315D57FDA2A7DCEB63F7AC.highlight.minted) [99]
 (./_minted/B7FBE62B8A43596CB50217EFF5EFC03C.highlight.minted)
 (./_minted/F2D7F2369BA71030EC6E0929F4762B4D.highlight.minted)
 (./_minted/07E9226138ABB95EBCC075EC21E305E9.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6553--6554
+Underfull \hbox (badness 10000) in paragraph at lines 6840--6841
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default projection specification. Ini
 tialized to \TU/DejaVuSansMono(0)/m/n/10 (DefaultRoundingMode(),
-[81] (./_minted/6BCB094CFCA7263C62B880348A8D6316.highlight.minted)
+(./_minted/6BCB094CFCA7263C62B880348A8D6316.highlight.minted) [100]
 (./_minted/18A8C228B0622160748BFF87069B1557.highlight.minted)
-Underfull \hbox (badness 6268) in paragraph at lines 6591--6592
+Underfull \hbox (badness 6268) in paragraph at lines 6878--6879
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default random-bit budget N for the s
 tochastic rounding families (\TU/DejaVuSansMono(0)/m/n/10 StochasticA{N}\TU/Dej
 aVuSans(0)/m/n/10 ,
 (./_minted/F313BF3755A5F31EE1A13C3F5B752838.highlight.minted)
 (./_minted/56B91C3BCC354A14E7B0FD2254BAB3AF.highlight.minted)
-Underfull \hbox (badness 6708) in paragraph at lines 6629--6630
+Underfull \hbox (badness 6708) in paragraph at lines 6916--6917
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default rounding mode. Initialized to
  \TU/DejaVuSansMono(0)/m/n/10 NearestTiesToEven()\TU/DejaVuSans(0)/m/n/10 . Set
 ting it rebuilds
-(./_minted/A9457530AE3DB537695338F4B4230D39.highlight.minted) [82]
+(./_minted/A9457530AE3DB537695338F4B4230D39.highlight.minted) [101]
 (./_minted/7514C9508753C13D6C4B8C4C449130E6.highlight.minted)
-(./_minted/2716F071634B921A9BDB8DF54178236A.highlight.minted) [83]
-(./_minted/4A4775BA738AACAED5254B8046993652.highlight.minted)
+(./_minted/2716F071634B921A9BDB8DF54178236A.highlight.minted)
+(./_minted/4A4775BA738AACAED5254B8046993652.highlight.minted) [102]
 (./_minted/D20520B6965B13885588B3F9DCB80E35.highlight.minted)
-(./_minted/AEA045F4195108DBEB929985F8CE0909.highlight.minted) [84]
-(./_minted/43A053D9303E3D0822107B887427CFAA.highlight.minted)
+(./_minted/AEA045F4195108DBEB929985F8CE0909.highlight.minted)
+(./_minted/43A053D9303E3D0822107B887427CFAA.highlight.minted) [103]
 (./_minted/646D7B6ED6679C9665EF166F1E2332CC.highlight.minted)
-(./_minted/D185D8F586BA41A304BCD11BB3E43A98.highlight.minted) [85]
+(./_minted/D185D8F586BA41A304BCD11BB3E43A98.highlight.minted)
 (./_minted/6EB94FFC241531A8FF1A7FF06C4981EA.highlight.minted)
-(./_minted/3E7BC3653ADFFCFF5192FEA3D017801D.highlight.minted)
+(./_minted/3E7BC3653ADFFCFF5192FEA3D017801D.highlight.minted) [104]
 (./_minted/6984BD013738752208982C499EE7FF99.highlight.minted)
-(./_minted/15460B7E2E7DD7C0BB8EE0629BAE6133.highlight.minted) [86]
-(./_minted/3B6F3A83BD0980D40528155662E22D3E.highlight.minted)
+(./_minted/15460B7E2E7DD7C0BB8EE0629BAE6133.highlight.minted)
+(./_minted/3B6F3A83BD0980D40528155662E22D3E.highlight.minted) [105]
 (./_minted/F2E910FBEFD5BB3FDA6ED34077013230.highlight.minted)
-(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [87]
 (./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
 (./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted)
 (./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [88] [89]
-(./_minted/0FF39E463DC677199B8D407DCC067572.highlight.minted) [90]
+(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [106]
+(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
+(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [107]
+Chapter 34.
+[108] (./_minted/0FF39E463DC677199B8D407DCC067572.highlight.minted)
 (./_minted/754FB2A589420F40E17E19D9DC8E718F.highlight.minted)
-(./_minted/EF4A561B3016D8C66619F8C7B566E4E3.highlight.minted)
-(./_minted/E3E8DE1633F596F32A58AD81EC1DCBC3.highlight.minted) [91] [92]
+(./_minted/EF4A561B3016D8C66619F8C7B566E4E3.highlight.minted) [109]
+(./_minted/E3E8DE1633F596F32A58AD81EC1DCBC3.highlight.minted) [110] [111]
 (./_minted/61B57B8FE42333E8762A2D0D3D94C25D.highlight.minted)
-(./_minted/C161E89C03E050B5E8CD16A53B2DD56D.highlight.minted) [93]
-(./_minted/3E534D6E53C8BA4BD22C7197226F169C.highlight.minted) [94]
-(./_minted/AD7D038312F779FD7ADA103325F15849.highlight.minted)
+(./_minted/C161E89C03E050B5E8CD16A53B2DD56D.highlight.minted) [112]
+(./_minted/3E534D6E53C8BA4BD22C7197226F169C.highlight.minted)
+(./_minted/AD7D038312F779FD7ADA103325F15849.highlight.minted) [113]
 (./_minted/FB9F70652F9AA52AEA69E210352BD238.highlight.minted)
 (./_minted/315D63FCB2A3C1D3F0425640E7807F25.highlight.minted)
-(./_minted/E85E67CF648CD2953BFA72F13356D062.highlight.minted) [95]
-(./_minted/1E6A15F261624BA3E24B50D399B59D73.highlight.minted)
+(./_minted/E85E67CF648CD2953BFA72F13356D062.highlight.minted)
+(./_minted/1E6A15F261624BA3E24B50D399B59D73.highlight.minted) [114]
 (./_minted/F48657C253397B9E76197134CD4AD1A9.highlight.minted)
 (./_minted/099F0F1D9BAC7C21C0681301BB0CC371.highlight.minted)
-(./_minted/7F6485EB6A3CB98207385020DAA0110C.highlight.minted) [96]
+(./_minted/7F6485EB6A3CB98207385020DAA0110C.highlight.minted) [115]
 (./_minted/525319D406B7BBE1895883430E251D2D.highlight.minted)
-(./_minted/8C8802386B483197761CC271D27AF48A.highlight.minted) [97] [98]
-[99]
-Chapter 10.
-[100] [101]
-Chapter 11.
-(./_minted/D901BFFDC96646B7B537CD54BF7B1DAB.highlight.minted) [102] [103]
-Chapter 12.
+(./_minted/8C8802386B483197761CC271D27AF48A.highlight.minted) [116] [117]
+[118]
+Chapter 35.
+[119] (./_minted/1DA78753D525B498DBC59F013E6FB0AC.highlight.minted)
+(./_minted/B5FA59F14DD32CE19098FA9E2ABB5CA7.highlight.minted)
+(./_minted/84821CD8140CAACEEAD93EB2B8E3FB92.highlight.minted)
+(./_minted/24C5A677D96D491627B884ADA8697BA0.highlight.minted) [120]
+(./_minted/CC980ADB670337480BA78ED00A63E527.highlight.minted)
+(./_minted/7311EC3F5A5990E7BDC202B722D5D71B.highlight.minted)
+(./_minted/014411AE4E4DAB9E504B540987334AD8.highlight.minted)
+(./_minted/81DD92F54EDB06B52B2E9DC99FCF1377.highlight.minted) [121]
+(./_minted/64518416754FD99B5827C9ABDA3E5F1B.highlight.minted)
+(./_minted/FB9C8891DF81231A0E929FE4C0090429.highlight.minted)
+(./_minted/A1173F98BFA2F78571E2B08DD37C0716.highlight.minted) [122] [123]
+Chapter 36.
+[124] [125] [126]
+Chapter 37.
+(./_minted/EF4A0B44321D331A18D2B9915C88468E.highlight.minted)
+(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [127]
+(./_minted/652530FAEADDB819116063E078BFE6EE.highlight.minted)
+(./_minted/FD433E53A3DA30905F825492DD9DC6A5.highlight.minted)
+(./_minted/6317B3D3342C7C694D9A54C7F2DFCB51.highlight.minted)
+(./_minted/4E4D80A23F670BC1B6BFEDE688C19E99.highlight.minted)
+(./_minted/98673B52D93C5BD71994999AA0146DCF.highlight.minted)
+(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [128]
+(./_minted/1EB14C3BA86A79CC0A22D85B3FB9C041.highlight.minted)
+(./_minted/C047B74E7E6879B6A3F69D9CF109904E.highlight.minted)
+(./_minted/D776F933A6751DA6EAB7F04C6DE8AFE5.highlight.minted)
+(./_minted/48E933C5363F9935310D70B3162A40E4.highlight.minted) [129]
+(./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
+(./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted)
+(./_minted/18E583C5417677FA4DCAC2F1BC16A871.highlight.minted)
+(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted)
+(./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
+(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [130]
+(./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
+(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted)
+(./_minted/703C1CA7665BD4E85B3307851E048B14.highlight.minted)
+(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [131]
+(./_minted/35EBACEBC0C695923F34013EB60B0F02.highlight.minted)
+(./_minted/1BC2A1151554D66C634DBD8A88350743.highlight.minted)
+(./_minted/01C62FF12E659616913D1B50EA98AED1.highlight.minted)
+(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted) [132]
+(./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [133]
+Chapter 38.
 
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 Float128|  
+Underfull \hbox (badness 1881) in paragraph at lines 9948--9949
+\TU/DejaVuSans(0)/m/n/10 Internals-level recipes: pipeline introspection, exhau
+stive verification of your own code, κ measurement,
 
-Overfull \hbox (6.05104pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
-
-Overfull \hbox (13.6428pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
-
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
-(./_minted/7542DA689EC474092F9127FB2697040F.highlight.minted) [104] [105]
-Chapter 13.
-[106]
-Chapter 14.
-[107]
-Chapter 15.
-[108] [109]
-Chapter 16.
-
-Underfull \hbox (badness 2096) in paragraph at lines 9018--9019
-[]\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
-eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
-loat64 | Float128 | StickyF | BigExactF |
-[110] [111] (./_minted/ABC2DF04343882B2315A4A7BAABF2AA4.highlight.minted)
-(./_minted/928E3D2E0EA571B1CCBEE70D266979D3.highlight.minted) [112]
-(./_minted/AA4AF40FC8E1795E1A9A1C1E7FB963EA.highlight.minted)
-(./_minted/35C445D26325FEA8A9A57A442FA825BA.highlight.minted) [113]
-(./_minted/EB42B160B1DD470EDD8665FF0EF11318.highlight.minted) [114]
-(./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [115]
-(./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
-(./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [116]
-Underfull \hbox (badness 3209) in paragraph at lines 9489--9490
-[]\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
-ows the op (automatic for registry ops; manual block additions extend
-[117] [118]
-Chapter 17.
-(./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
-(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [119]
-(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
-(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/E5AF88883A1274A43734B8D8D85CD2B6.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [120]
-(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
-(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [121] [122]
-Chapter 18.
-(./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [123] [124]
-Chapter 19.
+Underfull \hbox (badness 2035) in paragraph at lines 9948--9949
+\TU/DejaVuSans(0)/m/n/10 and doctrine-compliant benchmarking. These use unexpor
+ted names (\TU/DejaVuSansMono(0)/m/n/10 SmallFloats.round_to_precision\TU/DejaV
+uSans(0)/m/n/10 ,
 (./_minted/7BD6A8A5894C6EDACFB8F27976FA1794.highlight.minted)
 (./_minted/B2561F5BE89600E0FEC3C71B5EDA83FE.highlight.minted)
 (./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
 (./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted)
 (./_minted/00B2C4389D21AE4E88BE4B80536967C1.highlight.minted)
-(./_minted/AC983B3F097735EAD89C4C150F1756E1.highlight.minted)
+(./_minted/AC983B3F097735EAD89C4C150F1756E1.highlight.minted) [134]
 (./_minted/826C9FAD5662B5F78878DCCE9EDEAAAA.highlight.minted)
-(./_minted/6E42B6F86A9D82964609196CB6CB1D06.highlight.minted) [125] [126]
-[127]
-Chapter 20.
-[128]
-Underfull \hbox (badness 2698) in paragraph at lines 10080--10081
-[]\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
-K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
- though you
-[129] [130]
-Chapter 21.
+(./_minted/8912717BAD1DB6AF48ABFDFCD9D27756.highlight.minted)
+(./_minted/F231494559665543005AAB3FA5D8FCC7.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
+(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [135]
+(./_minted/48FB06ABFB0CCC838F92A3F1E1C4310A.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [136]
+(./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
+(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
+(./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
+(./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
+(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [137]
+(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
+(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
+(./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
+(./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted) [138]
+(./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
+(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted)
+(./_minted/E3C933533957BCF4EE57DAC7FB902C9C.highlight.minted) [139]
+(./_minted/EA588882AD22FAE5A592FB62751BE5E8.highlight.minted)
+(./_minted/98A3FE3D3C6C87FFEF1DF6D775902FD3.highlight.minted) [140] [141]
+Chapter 39.
+[142] [143]
+Chapter 40.
+(./_minted/D901BFFDC96646B7B537CD54BF7B1DAB.highlight.minted) [144] [145]
+Chapter 41.
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 Float128|  
 
-[131] [132]
-Chapter 22.
-[133] [134]
-Chapter 23.
+Overfull \hbox (6.05104pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
+
+Overfull \hbox (13.6428pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
+
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
+(./_minted/7542DA689EC474092F9127FB2697040F.highlight.minted) [146] [147]
+Chapter 42.
+[148]
+Chapter 43.
+(./_minted/5DAD30065C591BB20FE57F6F8F5660F7.highlight.minted)
+(./_minted/A5E9D01E118EFA8B338C4A207C2F4B13.highlight.minted) [149]
+(./_minted/64A87CBD1B5C18B15C6289E60CC7E795.highlight.minted)
+(./_minted/AF905E838692151675F3B98481E2659F.highlight.minted) [150]
+(./_minted/ADC012CAC73FE44AC8F8437EBBDF6A90.highlight.minted) [151] [152]
+Chapter 44.
+[153] [154]
+Chapter 45.
+
+Underfull \hbox (badness 2096) in paragraph at lines 11363--11364
+[]\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
+eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
+loat64 | Float128 | StickyF | BigExactF |
+[155] [156] (./_minted/ABC2DF04343882B2315A4A7BAABF2AA4.highlight.minted)
+(./_minted/928E3D2E0EA571B1CCBEE70D266979D3.highlight.minted) [157]
+(./_minted/AA4AF40FC8E1795E1A9A1C1E7FB963EA.highlight.minted)
+(./_minted/35C445D26325FEA8A9A57A442FA825BA.highlight.minted) [158]
+(./_minted/EB42B160B1DD470EDD8665FF0EF11318.highlight.minted) [159]
+(./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [160]
+(./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
+(./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [161]
+Underfull \hbox (badness 3209) in paragraph at lines 11834--11835
+[]\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
+ows the op (automatic for registry ops; manual block additions extend
+[162] [163]
+Chapter 46.
+(./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [164]
+(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
+(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
+(./_minted/E5AF88883A1274A43734B8D8D85CD2B6.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [165]
+(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
+(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [166] [167]
+Chapter 47.
+(./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
+(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [168] [169]
+[170]
+Chapter 48.
 (./_minted/84A90A9B2B4C74F7026D7CC233FC9E3D.highlight.minted)
-(./_minted/1741B017B9B890133A1518453C40CF62.highlight.minted)
-(./_minted/2BFD2C2747A17E7B7D9F08C964623EE0.highlight.minted) [135]
+(./_minted/1EF2902BD5C0D835A502F67390D89EC6.highlight.minted)
+(./_minted/2BFD2C2747A17E7B7D9F08C964623EE0.highlight.minted) [171]
 (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted)
 (./_minted/F703E6CC9F09FC9FA8B19212C6540031.highlight.minted)
 (./_minted/B151FF6DB04AECFC964D55A0B0EAFFA4.highlight.minted)
 (./_minted/42D0FAF94820CC48FEA22F0E68586C90.highlight.minted)
-(./_minted/CA80CFAADF990F6848E34BC75E3780A3.highlight.minted) [136]
+(./_minted/CA80CFAADF990F6848E34BC75E3780A3.highlight.minted) [172]
 (./_minted/7262042352FFDB90D04CB63208B7B00F.highlight.minted)
 (./_minted/F1391FB6C6AC2922181D4EA6EEFFB40F.highlight.minted)
-(./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [137]
+(./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [173]
 (./_minted/51BF9C8795CF5651D61D8B3D356A3328.highlight.minted)
 (./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted)
-Underfull \hbox (badness 3039) in paragraph at lines 10661--10662
+Underfull \hbox (badness 3039) in paragraph at lines 12576--12577
 []\TU/DejaVuSans(0)/m/n/10 Setting a rounding/saturation component rebuilds \TU
 /DejaVuSansMono(0)/m/n/10 DefaultProjection\TU/DejaVuSans(0)/m/n/10 ; setting \
 TU/DejaVuSansMono(0)/m/n/10 DefaultProjection! \TU/DejaVuSans(0)/m/n/10 di-
 
-Underfull \hbox (badness 1817) in paragraph at lines 10661--10662
+Underfull \hbox (badness 1817) in paragraph at lines 12576--12577
 \TU/DejaVuSans(0)/m/n/10 rectly updates both components. Always: \TU/DejaVuSans
 Mono(0)/m/n/10 DefaultProjection() === ProjSpec(DefaultRoundingMode(),
-[138] (./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted)
+[174] (./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted)
 (./_minted/B400E262F2B13FDE8DE3C87DB9DABEA1.highlight.minted)
-Overfull \hbox (1.30995pt too wide) in paragraph at lines 10717--10717
+Overfull \hbox (1.30995pt too wide) in paragraph at lines 12632--12632
 []\TU/DejaVuSans(0)/m/n/8 Ternary|  
 (./_minted/AE2293A77638F0CAFBFD89EA5C2F5495.highlight.minted)
-(./_minted/24F221DCB574BFDDC8719325DD18AA91.highlight.minted) [139]
+(./_minted/24F221DCB574BFDDC8719325DD18AA91.highlight.minted) [175]
 (./_minted/52F087A7E3FDBBD4636577CF9B074EAE.highlight.minted)
-(./_minted/0D4B83877DACA6B55F675191F5DF5AA0.highlight.minted) [140]
+(./_minted/0D4B83877DACA6B55F675191F5DF5AA0.highlight.minted) [176]
 (./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted)
 (./_minted/BD07044F7FBC9DBA83A8497B454C54C0.highlight.minted)
 (./_minted/53006BE75C801F46B18A48EA6942AE93.highlight.minted)
-(./_minted/099B5B2017330BB14CDC8D9E316D0D03.highlight.minted) [141] [142]
-Chapter 24.
-[143] [144] [145] [146] [147] [148] [149] [150] [151] [152] [153] [154]
-[155]
-Chapter 25.
-[156] [157] (./main.aux)
+(./_minted/099B5B2017330BB14CDC8D9E316D0D03.highlight.minted) [177]
+Overfull \hbox (39.146pt too wide) in paragraph at lines 12836--12836
+[]\TU/DejaVuSansMono(0)/m/n/8 Vector{Binary{K,P,Σ,Δ}}(undef, 
+[178] [179]
+Chapter 49.
+[180] [181] [182] [183] [184] [185] [186] [187] [188] [189] [190] [191]
+Chapter 50.
+[192]
+Underfull \hbox (badness 2698) in paragraph at lines 13857--13858
+[]\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
+K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
+ though you
+[193] [194]
+Chapter 51.
+[195] [196]
+Chapter 52.
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[197] [198] (./main.aux)
 
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
@@ -674,7 +792,7 @@ Package rerunfilecheck Warning: File `main.out' has changed.
 
  )
 (see the transcript file for additional information)
-Output written on main.xdv (159 pages, 3699716 bytes).
+Output written on main.xdv (200 pages, 4385812 bytes).
 Transcript written on main.log.
 Latexmk: Getting log file 'main.log'
 Latexmk: Examining 'main.fls'
@@ -953,250 +1071,319 @@ Sidefootvsep and sidefootheight: 12pt and 548.39996pt
 ) (./main.aux) (./main.out) (./main.out)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd) [1] (./main.toc
-[2]
-Overfull \hbox (4.23534pt too wide) detected at line 233
- \TU/DejaVuSans(0)/b/n/10 100
-
-Overfull \hbox (2.82689pt too wide) detected at line 234
- \TU/DejaVuSans(0)/m/n/10 101
-
-Overfull \hbox (2.82689pt too wide) detected at line 235
- \TU/DejaVuSans(0)/m/n/10 101
-
-Overfull \hbox (4.23534pt too wide) detected at line 236
- \TU/DejaVuSans(0)/b/n/10 102
-
-Overfull \hbox (2.82689pt too wide) detected at line 237
- \TU/DejaVuSans(0)/m/n/10 102
-
-Overfull \hbox (2.82689pt too wide) detected at line 238
- \TU/DejaVuSans(0)/m/n/10 102
-
-Overfull \hbox (2.82689pt too wide) detected at line 239
- \TU/DejaVuSans(0)/m/n/10 103
-
-Overfull \hbox (4.23534pt too wide) detected at line 240
- \TU/DejaVuSans(0)/b/n/10 104
-
-Overfull \hbox (2.82689pt too wide) detected at line 241
- \TU/DejaVuSans(0)/m/n/10 104
-
-Overfull \hbox (2.82689pt too wide) detected at line 242
- \TU/DejaVuSans(0)/m/n/10 104
-
-Overfull \hbox (2.82689pt too wide) detected at line 243
- \TU/DejaVuSans(0)/m/n/10 105
-
-Overfull \hbox (2.82689pt too wide) detected at line 244
- \TU/DejaVuSans(0)/m/n/10 105
-
-Overfull \hbox (4.23534pt too wide) detected at line 245
- \TU/DejaVuSans(0)/b/n/10 106
-
-Overfull \hbox (2.82689pt too wide) detected at line 246
- \TU/DejaVuSans(0)/m/n/10 106
-
-Overfull \hbox (2.82689pt too wide) detected at line 247
- \TU/DejaVuSans(0)/m/n/10 106
-
-Overfull \hbox (2.82689pt too wide) detected at line 248
- \TU/DejaVuSans(0)/m/n/10 106
-
-Overfull \hbox (4.23534pt too wide) detected at line 249
- \TU/DejaVuSans(0)/b/n/10 107
-
-Overfull \hbox (2.82689pt too wide) detected at line 250
- \TU/DejaVuSans(0)/m/n/10 107
-
-Overfull \hbox (4.23534pt too wide) detected at line 251
+[2] [3] [4] [5]
+Overfull \hbox (4.23534pt too wide) detected at line 237
  \TU/DejaVuSans(0)/b/n/10 108
 
-Overfull \hbox (2.82689pt too wide) detected at line 252
- \TU/DejaVuSans(0)/m/n/10 108
-
-Overfull \hbox (2.82689pt too wide) detected at line 253
- \TU/DejaVuSans(0)/m/n/10 108
-
-Overfull \hbox (2.82689pt too wide) detected at line 254
- \TU/DejaVuSans(0)/m/n/10 109
-[3]
-Overfull \hbox (2.82689pt too wide) detected at line 255
- \TU/DejaVuSans(0)/m/n/10 109
-
-Overfull \hbox (4.23534pt too wide) detected at line 256
- \TU/DejaVuSans(0)/b/n/10 110
-
-Overfull \hbox (2.82689pt too wide) detected at line 257
- \TU/DejaVuSans(0)/m/n/10 110
-
-Overfull \hbox (2.82689pt too wide) detected at line 258
- \TU/DejaVuSans(0)/m/n/10 111
-
-Overfull \hbox (2.82689pt too wide) detected at line 263
- \TU/DejaVuSans(0)/m/n/10 115
-
-Overfull \hbox (2.82689pt too wide) detected at line 267
- \TU/DejaVuSans(0)/m/n/10 117
-
-Overfull \hbox (2.82689pt too wide) detected at line 268
- \TU/DejaVuSans(0)/m/n/10 118
-
-Overfull \hbox (4.23534pt too wide) detected at line 269
+Overfull \hbox (4.23534pt too wide) detected at line 239
  \TU/DejaVuSans(0)/b/n/10 119
 
-Overfull \hbox (2.82689pt too wide) detected at line 270
+Overfull \hbox (2.82689pt too wide) detected at line 240
  \TU/DejaVuSans(0)/m/n/10 119
 
-Overfull \hbox (2.82689pt too wide) detected at line 271
+Overfull \hbox (2.82689pt too wide) detected at line 241
  \TU/DejaVuSans(0)/m/n/10 120
 
-Overfull \hbox (2.82689pt too wide) detected at line 272
+Overfull \hbox (2.82689pt too wide) detected at line 242
  \TU/DejaVuSans(0)/m/n/10 120
 
-Overfull \hbox (2.82689pt too wide) detected at line 273
+Overfull \hbox (2.82689pt too wide) detected at line 243
+ \TU/DejaVuSans(0)/m/n/10 120
+
+Overfull \hbox (2.82689pt too wide) detected at line 245
  \TU/DejaVuSans(0)/m/n/10 121
 
-Overfull \hbox (2.82689pt too wide) detected at line 274
+Overfull \hbox (2.82689pt too wide) detected at line 246
+ \TU/DejaVuSans(0)/m/n/10 121
+
+Overfull \hbox (2.82689pt too wide) detected at line 247
+ \TU/DejaVuSans(0)/m/n/10 121
+
+Overfull \hbox (2.82689pt too wide) detected at line 248
  \TU/DejaVuSans(0)/m/n/10 122
 
-Overfull \hbox (2.82689pt too wide) detected at line 275
+Overfull \hbox (2.82689pt too wide) detected at line 249
  \TU/DejaVuSans(0)/m/n/10 122
 
-Overfull \hbox (4.23534pt too wide) detected at line 276
- \TU/DejaVuSans(0)/b/n/10 123
+Overfull \hbox (2.82689pt too wide) detected at line 250
+ \TU/DejaVuSans(0)/m/n/10 122
 
-Overfull \hbox (2.82689pt too wide) detected at line 277
- \TU/DejaVuSans(0)/m/n/10 123
+Overfull \hbox (4.23534pt too wide) detected at line 252
+ \TU/DejaVuSans(0)/b/n/10 124
 
-Overfull \hbox (2.82689pt too wide) detected at line 278
- \TU/DejaVuSans(0)/m/n/10 123
-
-Overfull \hbox (2.82689pt too wide) detected at line 279
+Overfull \hbox (2.82689pt too wide) detected at line 253
  \TU/DejaVuSans(0)/m/n/10 124
 
-Overfull \hbox (4.23534pt too wide) detected at line 280
- \TU/DejaVuSans(0)/b/n/10 125
-
-Overfull \hbox (2.82689pt too wide) detected at line 281
+Overfull \hbox (2.82689pt too wide) detected at line 254
+ \TU/DejaVuSans(0)/m/n/10 125
+[6]
+Overfull \hbox (2.82689pt too wide) detected at line 255
  \TU/DejaVuSans(0)/m/n/10 125
 
-Overfull \hbox (2.82689pt too wide) detected at line 282
- \TU/DejaVuSans(0)/m/n/10 125
-
-Overfull \hbox (2.82689pt too wide) detected at line 283
- \TU/DejaVuSans(0)/m/n/10 125
-
-Overfull \hbox (2.82689pt too wide) detected at line 284
+Overfull \hbox (2.82689pt too wide) detected at line 256
  \TU/DejaVuSans(0)/m/n/10 126
 
-Overfull \hbox (2.82689pt too wide) detected at line 285
+Overfull \hbox (2.82689pt too wide) detected at line 257
  \TU/DejaVuSans(0)/m/n/10 126
 
-Overfull \hbox (4.23534pt too wide) detected at line 287
- \TU/DejaVuSans(0)/b/n/10 128
+Overfull \hbox (2.82689pt too wide) detected at line 258
+ \TU/DejaVuSans(0)/m/n/10 126
 
-Overfull \hbox (2.82689pt too wide) detected at line 288
+Overfull \hbox (4.23534pt too wide) detected at line 259
+ \TU/DejaVuSans(0)/b/n/10 127
+
+Overfull \hbox (2.82689pt too wide) detected at line 260
+ \TU/DejaVuSans(0)/m/n/10 127
+
+Overfull \hbox (2.82689pt too wide) detected at line 263
  \TU/DejaVuSans(0)/m/n/10 128
 
-Overfull \hbox (2.82689pt too wide) detected at line 289
- \TU/DejaVuSans(0)/m/n/10 129
-
-Overfull \hbox (2.82689pt too wide) detected at line 290
- \TU/DejaVuSans(0)/m/n/10 129
-
-Overfull \hbox (2.82689pt too wide) detected at line 291
- \TU/DejaVuSans(0)/m/n/10 129
-
-Overfull \hbox (2.82689pt too wide) detected at line 292
+Overfull \hbox (2.82689pt too wide) detected at line 267
  \TU/DejaVuSans(0)/m/n/10 130
 
-Overfull \hbox (4.23534pt too wide) detected at line 293
- \TU/DejaVuSans(0)/b/n/10 131
-
-Overfull \hbox (2.82689pt too wide) detected at line 294
+Overfull \hbox (2.82689pt too wide) detected at line 271
  \TU/DejaVuSans(0)/m/n/10 131
 
-Overfull \hbox (4.23534pt too wide) detected at line 295
- \TU/DejaVuSans(0)/b/n/10 133
+Overfull \hbox (4.23534pt too wide) detected at line 277
+ \TU/DejaVuSans(0)/b/n/10 134
 
-Overfull \hbox (2.82689pt too wide) detected at line 296
- \TU/DejaVuSans(0)/m/n/10 133
-
-Overfull \hbox (2.82689pt too wide) detected at line 297
- \TU/DejaVuSans(0)/m/n/10 133
-
-Overfull \hbox (2.82689pt too wide) detected at line 298
+Overfull \hbox (2.82689pt too wide) detected at line 278
  \TU/DejaVuSans(0)/m/n/10 134
 
-Overfull \hbox (2.82689pt too wide) detected at line 299
- \TU/DejaVuSans(0)/m/n/10 134
-
-Overfull \hbox (4.23534pt too wide) detected at line 300
- \TU/DejaVuSans(0)/b/n/10 135
-
-Overfull \hbox (2.82689pt too wide) detected at line 301
+Overfull \hbox (2.82689pt too wide) detected at line 283
  \TU/DejaVuSans(0)/m/n/10 135
 
+Overfull \hbox (2.82689pt too wide) detected at line 286
+ \TU/DejaVuSans(0)/m/n/10 137
+
+Overfull \hbox (2.82689pt too wide) detected at line 290
+ \TU/DejaVuSans(0)/m/n/10 138
+
+Overfull \hbox (4.23534pt too wide) detected at line 297
+ \TU/DejaVuSans(0)/b/n/10 142
+
+Overfull \hbox (2.82689pt too wide) detected at line 298
+ \TU/DejaVuSans(0)/m/n/10 143
+
+Overfull \hbox (2.82689pt too wide) detected at line 299
+ \TU/DejaVuSans(0)/m/n/10 143
+
+Overfull \hbox (4.23534pt too wide) detected at line 300
+ \TU/DejaVuSans(0)/b/n/10 144
+
+Overfull \hbox (2.82689pt too wide) detected at line 301
+ \TU/DejaVuSans(0)/m/n/10 144
+
 Overfull \hbox (2.82689pt too wide) detected at line 302
- \TU/DejaVuSans(0)/m/n/10 136
+ \TU/DejaVuSans(0)/m/n/10 144
 
 Overfull \hbox (2.82689pt too wide) detected at line 303
- \TU/DejaVuSans(0)/m/n/10 137
+ \TU/DejaVuSans(0)/m/n/10 145
 
-Overfull \hbox (2.82689pt too wide) detected at line 304
- \TU/DejaVuSans(0)/m/n/10 137
+Overfull \hbox (4.23534pt too wide) detected at line 304
+ \TU/DejaVuSans(0)/b/n/10 146
+
+Overfull \hbox (2.82689pt too wide) detected at line 305
+ \TU/DejaVuSans(0)/m/n/10 146
+
+Overfull \hbox (2.82689pt too wide) detected at line 306
+ \TU/DejaVuSans(0)/m/n/10 146
+
+Overfull \hbox (2.82689pt too wide) detected at line 307
+ \TU/DejaVuSans(0)/m/n/10 147
 
 Overfull \hbox (2.82689pt too wide) detected at line 308
- \TU/DejaVuSans(0)/m/n/10 140
+ \TU/DejaVuSans(0)/m/n/10 147
 
-Overfull \hbox (2.82689pt too wide) detected at line 309
- \TU/DejaVuSans(0)/m/n/10 140
+Overfull \hbox (4.23534pt too wide) detected at line 309
+ \TU/DejaVuSans(0)/b/n/10 148
 
 Overfull \hbox (2.82689pt too wide) detected at line 310
- \TU/DejaVuSans(0)/m/n/10 141
+ \TU/DejaVuSans(0)/m/n/10 148
 
 Overfull \hbox (2.82689pt too wide) detected at line 311
- \TU/DejaVuSans(0)/m/n/10 141
+ \TU/DejaVuSans(0)/m/n/10 148
 
 Overfull \hbox (2.82689pt too wide) detected at line 312
- \TU/DejaVuSans(0)/m/n/10 142
+ \TU/DejaVuSans(0)/m/n/10 148
 
-Overfull \hbox (2.82689pt too wide) detected at line 313
- \TU/DejaVuSans(0)/m/n/10 142
+Overfull \hbox (4.23534pt too wide) detected at line 313
+ \TU/DejaVuSans(0)/b/n/10 149
 
 Overfull \hbox (2.82689pt too wide) detected at line 314
- \TU/DejaVuSans(0)/m/n/10 142
+ \TU/DejaVuSans(0)/m/n/10 149
 
-Overfull \hbox (4.23534pt too wide) detected at line 315
- \TU/DejaVuSans(0)/b/n/10 143
+Overfull \hbox (2.82689pt too wide) detected at line 315
+ \TU/DejaVuSans(0)/m/n/10 149
 
 Overfull \hbox (2.82689pt too wide) detected at line 316
- \TU/DejaVuSans(0)/m/n/10 143
-[4]
-Overfull \hbox (2.82689pt too wide) detected at line 317
- \TU/DejaVuSans(0)/m/n/10 143
+ \TU/DejaVuSans(0)/m/n/10 150
 
-Overfull \hbox (2.82689pt too wide) detected at line 333
+Overfull \hbox (2.82689pt too wide) detected at line 320
  \TU/DejaVuSans(0)/m/n/10 151
 
-Overfull \hbox (2.82689pt too wide) detected at line 336
- \TU/DejaVuSans(0)/m/n/10 152
+Overfull \hbox (2.82689pt too wide) detected at line 321
+ \TU/DejaVuSans(0)/m/n/10 151
 
-Overfull \hbox (4.23534pt too wide) detected at line 344
- \TU/DejaVuSans(0)/b/n/10 156
+Overfull \hbox (2.82689pt too wide) detected at line 322
+ \TU/DejaVuSans(0)/m/n/10 151
+
+Overfull \hbox (4.23534pt too wide) detected at line 323
+ \TU/DejaVuSans(0)/b/n/10 153
+
+Overfull \hbox (2.82689pt too wide) detected at line 324
+ \TU/DejaVuSans(0)/m/n/10 153
+
+Overfull \hbox (2.82689pt too wide) detected at line 325
+ \TU/DejaVuSans(0)/m/n/10 153
+
+Overfull \hbox (2.82689pt too wide) detected at line 326
+ \TU/DejaVuSans(0)/m/n/10 154
+
+Overfull \hbox (2.82689pt too wide) detected at line 327
+ \TU/DejaVuSans(0)/m/n/10 154
+
+Overfull \hbox (4.23534pt too wide) detected at line 328
+ \TU/DejaVuSans(0)/b/n/10 155
+
+Overfull \hbox (2.82689pt too wide) detected at line 329
+ \TU/DejaVuSans(0)/m/n/10 155
+
+Overfull \hbox (2.82689pt too wide) detected at line 330
+ \TU/DejaVuSans(0)/m/n/10 156
+
+Overfull \hbox (2.82689pt too wide) detected at line 335
+ \TU/DejaVuSans(0)/m/n/10 160
+
+Overfull \hbox (2.82689pt too wide) detected at line 339
+ \TU/DejaVuSans(0)/m/n/10 162
+
+Overfull \hbox (2.82689pt too wide) detected at line 340
+ \TU/DejaVuSans(0)/m/n/10 163
+
+Overfull \hbox (4.23534pt too wide) detected at line 341
+ \TU/DejaVuSans(0)/b/n/10 164
+
+Overfull \hbox (2.82689pt too wide) detected at line 342
+ \TU/DejaVuSans(0)/m/n/10 164
+
+Overfull \hbox (2.82689pt too wide) detected at line 343
+ \TU/DejaVuSans(0)/m/n/10 165
+[7]
+Overfull \hbox (2.82689pt too wide) detected at line 344
+ \TU/DejaVuSans(0)/m/n/10 165
 
 Overfull \hbox (2.82689pt too wide) detected at line 345
- \TU/DejaVuSans(0)/m/n/10 156
+ \TU/DejaVuSans(0)/m/n/10 166
 
 Overfull \hbox (2.82689pt too wide) detected at line 346
- \TU/DejaVuSans(0)/m/n/10 156
+ \TU/DejaVuSans(0)/m/n/10 167
 
 Overfull \hbox (2.82689pt too wide) detected at line 347
- \TU/DejaVuSans(0)/m/n/10 156
+ \TU/DejaVuSans(0)/m/n/10 167
 
-Overfull \hbox (2.82689pt too wide) detected at line 348
- \TU/DejaVuSans(0)/m/n/10 157
-)) [5] [1]
+Overfull \hbox (4.23534pt too wide) detected at line 348
+ \TU/DejaVuSans(0)/b/n/10 168
+
+Overfull \hbox (2.82689pt too wide) detected at line 349
+ \TU/DejaVuSans(0)/m/n/10 168
+
+Overfull \hbox (2.82689pt too wide) detected at line 350
+ \TU/DejaVuSans(0)/m/n/10 168
+
+Overfull \hbox (2.82689pt too wide) detected at line 351
+ \TU/DejaVuSans(0)/m/n/10 169
+
+Overfull \hbox (4.23534pt too wide) detected at line 353
+ \TU/DejaVuSans(0)/b/n/10 171
+
+Overfull \hbox (2.82689pt too wide) detected at line 354
+ \TU/DejaVuSans(0)/m/n/10 171
+
+Overfull \hbox (2.82689pt too wide) detected at line 355
+ \TU/DejaVuSans(0)/m/n/10 172
+
+Overfull \hbox (2.82689pt too wide) detected at line 356
+ \TU/DejaVuSans(0)/m/n/10 173
+
+Overfull \hbox (2.82689pt too wide) detected at line 357
+ \TU/DejaVuSans(0)/m/n/10 173
+
+Overfull \hbox (2.82689pt too wide) detected at line 361
+ \TU/DejaVuSans(0)/m/n/10 176
+
+Overfull \hbox (2.82689pt too wide) detected at line 362
+ \TU/DejaVuSans(0)/m/n/10 176
+
+Overfull \hbox (2.82689pt too wide) detected at line 363
+ \TU/DejaVuSans(0)/m/n/10 177
+
+Overfull \hbox (2.82689pt too wide) detected at line 364
+ \TU/DejaVuSans(0)/m/n/10 177
+
+Overfull \hbox (2.82689pt too wide) detected at line 365
+ \TU/DejaVuSans(0)/m/n/10 178
+
+Overfull \hbox (2.82689pt too wide) detected at line 366
+ \TU/DejaVuSans(0)/m/n/10 178
+
+Overfull \hbox (2.82689pt too wide) detected at line 367
+ \TU/DejaVuSans(0)/m/n/10 178
+
+Overfull \hbox (4.23534pt too wide) detected at line 368
+ \TU/DejaVuSans(0)/b/n/10 180
+
+Overfull \hbox (2.82689pt too wide) detected at line 369
+ \TU/DejaVuSans(0)/m/n/10 180
+
+Overfull \hbox (2.82689pt too wide) detected at line 370
+ \TU/DejaVuSans(0)/m/n/10 180
+
+Overfull \hbox (2.82689pt too wide) detected at line 386
+ \TU/DejaVuSans(0)/m/n/10 188
+
+Overfull \hbox (2.82689pt too wide) detected at line 389
+ \TU/DejaVuSans(0)/m/n/10 189
+
+Overfull \hbox (4.23534pt too wide) detected at line 396
+ \TU/DejaVuSans(0)/b/n/10 192
+
+Overfull \hbox (2.82689pt too wide) detected at line 397
+ \TU/DejaVuSans(0)/m/n/10 192
+
+Overfull \hbox (2.82689pt too wide) detected at line 398
+ \TU/DejaVuSans(0)/m/n/10 193
+
+Overfull \hbox (2.82689pt too wide) detected at line 399
+ \TU/DejaVuSans(0)/m/n/10 193
+
+Overfull \hbox (2.82689pt too wide) detected at line 400
+ \TU/DejaVuSans(0)/m/n/10 193
+
+Overfull \hbox (2.82689pt too wide) detected at line 401
+ \TU/DejaVuSans(0)/m/n/10 194
+
+Overfull \hbox (4.23534pt too wide) detected at line 402
+ \TU/DejaVuSans(0)/b/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 403
+ \TU/DejaVuSans(0)/m/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 404
+ \TU/DejaVuSans(0)/m/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 405
+ \TU/DejaVuSans(0)/m/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 406
+ \TU/DejaVuSans(0)/m/n/10 196
+
+Overfull \hbox (4.23534pt too wide) detected at line 407
+ \TU/DejaVuSans(0)/b/n/10 197
+
+Overfull \hbox (2.82689pt too wide) detected at line 408
+ \TU/DejaVuSans(0)/m/n/10 197
+)) [8] [1]
 Chapter 1.
 (./_FAD58DE7366495DB4650CFEFAC2FCD61.config.minted)
 (./_minted/default.style.minted)
@@ -1209,7 +1396,7 @@ The other 384 arrive with \TU/DejaVuSansMono(0)/m/n/10 using
 Chapter 2.
 (./_minted/9FC63D5FBF09D55F897EBF05820B8423.highlight.minted)
 (./_minted/AA1136E9BE0A5CA99D77ADEAC66D0F81.highlight.minted)
-Overfull \hbox (7.38509pt too wide) in paragraph at lines 166--167
+Overfull \hbox (7.38509pt too wide) in paragraph at lines 221--222
 []\TU/DejaVuSans(0)/m/n/10 For an editable install, \TU/DejaVuSansMono(0)/m/n/1
 0 pkg> dev https://github.com/JeffreySarnoff/SmallFloats.jl \TU/DejaVuSans(0)/m
 /n/10 clones into \TU/DejaVuSansMono(0)/m/n/10 ~/.julia/dev\TU/DejaVuSans(0)/m/
@@ -1232,18 +1419,17 @@ Chapter 3.
 (./_minted/DF6A0CC781D09529DD7195A58BCCED2E.highlight.minted)
 (./_minted/3573F538609362B3E50ECC8E8E43D921.highlight.minted) [9]
 Chapter 4.
-(./_minted/99CF7B13F46FBBE8A80A3830CBDC9AE2.highlight.minted) [10]
+(./_minted/8B696342178501D9A9CF89DDA86CA13A.highlight.minted) [10]
 (./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
 (./_minted/7AA8B67B2458ED2272CE91278D0E0FF6.highlight.minted)
 (./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [11]
 (./_minted/ED5695E79FD860212A92800159A332AB.highlight.minted)
-(./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [12]
-(./_minted/7F5B3992E33B0B9622171D3E6BDFD949.highlight.minted) [13]
+(./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [12] [13]
 Chapter 5.
 (./_minted/D1E811343CC4F867BDC8B7C8529B9927.highlight.minted)
 (./_minted/84C6C7B2D324FED5946ED90801F6765E.highlight.minted)
 (./_minted/6872D03381CB350E2BAFFEB6F55F1C34.highlight.minted) [14]
-Overfull \hbox (7.39253pt too wide) in paragraph at lines 971--971
+Overfull \hbox (7.39253pt too wide) in paragraph at lines 1020--1020
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
 [15] [16] [17]
 Chapter 6.
@@ -1252,343 +1438,462 @@ Chapter 6.
 (./_minted/751982D492CCA07529D70EA74ACB8E8F.highlight.minted)
 (./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
 (./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
-(./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
+(./_minted/992BB09E9AEFCDA6E68F87624C1A61F4.highlight.minted)
 (./_minted/4CF17B922FBC6981D0E57EACA7EF618C.highlight.minted) [19]
-(./_minted/176DD8320A8DA664543832735177EF07.highlight.minted)
+(./_minted/176DD8320A8DA664543832735177EF07.highlight.minted) [20]
+Chapter 7.
 (./_minted/E23046ECBB4FD8A756C449378C02AB39.highlight.minted)
-(./_minted/12A15D60BBF01CD4B09473FE0329C5D8.highlight.minted) [20]
-(./_minted/BDA7DCFC27E2CB9077F8245B4FEE4327.highlight.minted)
-(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [21]
-(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted)
-(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [22]
-(./_minted/2964E59AA0CBE24D90757394185B9D19.highlight.minted) [23]
-(./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted)
+(./_minted/12A15D60BBF01CD4B09473FE0329C5D8.highlight.minted)
+(./_minted/BDA7DCFC27E2CB9077F8245B4FEE4327.highlight.minted) [21]
+(./_minted/558546E03545DA04904488768F473D40.highlight.minted)
+(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted) [22]
+(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted)
+(./_minted/2964E59AA0CBE24D90757394185B9D19.highlight.minted) [23] [24]
+Chapter 8.
+(./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted) [25]
 (./_minted/35EBACEBC0C695923F34013EB60B0F02.highlight.minted)
 (./_minted/1BC2A1151554D66C634DBD8A88350743.highlight.minted)
 (./_minted/01C62FF12E659616913D1B50EA98AED1.highlight.minted)
-(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted) [24]
+(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted)
 (./_minted/94066BE698638A0CCD3E399F2C51534F.highlight.minted)
-(./_minted/151F618B27227E041996CC5A5B729B72.highlight.minted)
+(./_minted/151F618B27227E041996CC5A5B729B72.highlight.minted) [26]
 (./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
 (./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
-(./_minted/55E1B6E85860C6D4C1F21D17BB4F5E63.highlight.minted) [25]
+(./_minted/55E1B6E85860C6D4C1F21D17BB4F5E63.highlight.minted) [27]
+Chapter 9.
 (./_minted/D6D8C14E8AA3B0AF82E2973879937CDB.highlight.minted)
 (./_minted/545E52F0DD625002A97EDF1151312636.highlight.minted)
-(./_minted/18378B06C772FE3B1514F2702A47DAEA.highlight.minted) [26]
+(./_minted/18378B06C772FE3B1514F2702A47DAEA.highlight.minted) [28]
 (./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
 (./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted)
 (./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
-(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [27]
-Underfull \hbox (badness 2418) in paragraph at lines 2054--2055
+(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [29]
+Underfull \hbox (badness 2418) in paragraph at lines 2100--2101
 \TU/DejaVuSans(0)/m/n/10 You have raw \TU/DejaVuSansMono(0)/m/n/10 Float64 \TU/
 DejaVuSans(0)/m/n/10 data with widely varying per-row magnitude, and you want t
 o quantize it into
+[30]
+Chapter 10.
 
-Underfull \hbox (badness 1178) in paragraph at lines 2092--2093
+Underfull \hbox (badness 1178) in paragraph at lines 2138--2139
 \TU/DejaVuSans(0)/m/n/10 Projection: Rounding & Saturation introduced the stoch
 astic families — \TU/DejaVuSansMono(0)/m/n/10 StochasticA{N}\TU/DejaVuSans(0)/m
 /n/10 , \TU/DejaVuSansMono(0)/m/n/10 StochasticB{N}\TU/DejaVuSans(0)/m/n/10 ,
 (./_minted/18E583C5417677FA4DCAC2F1BC16A871.highlight.minted)
-(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted) [28]
+(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted)
 (./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
 (./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/8645CB4775FD08AD6E9C98888C47BCD0.highlight.minted)
+(./_minted/8645CB4775FD08AD6E9C98888C47BCD0.highlight.minted) [31]
 (./_minted/703C1CA7665BD4E85B3307851E048B14.highlight.minted)
-(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [29] [30]
-Chapter 7.
+(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [32] [33]
+[34]
+Chapter 11.
 (./_minted/A6781F2D5B6C9B8E04F29555CAE05A76.highlight.minted)
 (./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
 (./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
 (./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted)
 (./_minted/24171F4760C567CE1EA40911C5483997.highlight.minted)
-(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [31] [32]
+(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [35] [36]
+Chapter 12.
 (./_minted/D776F933A6751DA6EAB7F04C6DE8AFE5.highlight.minted)
 (./_minted/48E933C5363F9935310D70B3162A40E4.highlight.minted)
 (./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted)
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [37]
 (./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [33]
-Underfull \hbox (badness 2726) in paragraph at lines 2640--2641
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [38]
+Chapter 13.
+
+Underfull \hbox (badness 2726) in paragraph at lines 2686--2687
 []\TU/DejaVuSansMono(0)/m/n/10 ConvertToBlockMaxAbsFinite(FS, FE, scale_ρ, elem
 ent_ρ, values_tuple) \TU/DejaVuSans(0)/m/n/10 to build one block per
-[34] (./_minted/D3C6FCAF3A2A0C9A819EFF9D533F9DB6.highlight.minted)
+(./_minted/D3C6FCAF3A2A0C9A819EFF9D533F9DB6.highlight.minted)
 (./_minted/2D1A1A6FE2CBA3399C11E233ADFC4E15.highlight.minted)
-(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [35]
+(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [39] [40]
+Chapter 14.
 (./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted)
 (./_minted/F79E40D4B4234E3838E952E1187B9F30.highlight.minted)
-(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [36]
-(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [37]
+(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [41]
+(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [42] [43]
+Chapter 15.
 (./_minted/B2AE9B0F67DCEB32C91D9A341DD02B70.highlight.minted)
 (./_minted/B51BB4189BF4784CB6F36A8FEFAA20C3.highlight.minted)
 (./_minted/5E323BFA7ED255963337AF9ED3F4AE8F.highlight.minted)
 (./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [38]
-Underfull \hbox (badness 1320) in paragraph at lines 3084--3085
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [44] [45]
+Chapter 16.
+
+Underfull \hbox (badness 2521) in paragraph at lines 3174--3175
+[]\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
+sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
+VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
+(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [46] [47]
+Chapter 17.
+
+Underfull \hbox (badness 1320) in paragraph at lines 3256--3257
 []\TU/DejaVuSansMono(0)/m/n/10 register_approx!(name, opname, resultformat, ope
 randformats, ρ, fn; κ) \TU/DejaVuSans(0)/m/n/10 to register the imple-
 (./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
-(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted) [39]
+(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
 (./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
 (./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
 (./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
 (./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted)
 (./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
-(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted)
-(./_minted/68936046CEC636C7E6E3F6B2FE139E97.highlight.minted) [40]
-Underfull \hbox (badness 2521) in paragraph at lines 3308--3309
-[]\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
-sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
-VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
-(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [41] [42]
-(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [43] [44]
-Chapter 8.
+(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted) [48]
+(./_minted/68936046CEC636C7E6E3F6B2FE139E97.highlight.minted) [49]
+Chapter 18.
+(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [50] [51]
+[52]
+Chapter 19.
 (./_minted/6F79178BDBC794DDD7F65A736E883AF3.highlight.minted)
-(./_minted/BECBE3CE15471A5A218878B24EE7412E.highlight.minted) [45]
-(./_minted/E9512BCFAAB389535A6DA73C59EE7CFE.highlight.minted) [46]
+(./_minted/BECBE3CE15471A5A218878B24EE7412E.highlight.minted) [53]
+(./_minted/E9512BCFAAB389535A6DA73C59EE7CFE.highlight.minted)
 (./_minted/086CD7E41A2D2C77077154575F43EF10.highlight.minted)
-(./_minted/178966B7DCAB0086D92B690ED667CFDF.highlight.minted) [47]
-(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted)
+(./_minted/178966B7DCAB0086D92B690ED667CFDF.highlight.minted) [54] [55]
+Chapter 20.
+(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [56]
 (./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
-(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted) [48] [49]
+(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted) [57] [58]
+Chapter 21.
 (./_minted/664E167B431B0266E71475DA411DA732.highlight.minted)
-(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [50]
-(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted) [51]
-(./_minted/F08C9D7423EA7DEAD7F929E0409EDF49.highlight.minted) [52] [53]
-(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [54] [55]
+(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [59]
+(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted)
+(./_minted/F08C9D7423EA7DEAD7F929E0409EDF49.highlight.minted) [60] [61]
+Chapter 22.
+[62] (./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [63]
+[64] [65]
+Chapter 23.
+(./_minted/5505F1A858F5BAE2B4A8FE326AA153EB.highlight.minted)
+(./_minted/F658A3A8D165F6BE3F95DAD57EF9E713.highlight.minted)
+(./_minted/C13A272E0D57DBB02A182F8D0555F2BD.highlight.minted) [66] [67]
+[68]
+Chapter 24.
 (./_minted/FE2BAE56F5EA7207F8BBD00CA83D0195.highlight.minted)
 (./_minted/F79E40D4B4234E3838E952E1187B9F30.highlight.minted)
-(./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted) [56]
+(./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted) [69]
 (./_minted/206E40ED02A569626A24B225953797CE.highlight.minted)
-(./_minted/ACF13E76E8BD99A4597B6CAA2FFC9ED3.highlight.minted) [57]
-(./_minted/5505F1A858F5BAE2B4A8FE326AA153EB.highlight.minted)
-(./_minted/F658A3A8D165F6BE3F95DAD57EF9E713.highlight.minted) [58]
-(./_minted/C13A272E0D57DBB02A182F8D0555F2BD.highlight.minted) [59]
+(./_minted/ACF13E76E8BD99A4597B6CAA2FFC9ED3.highlight.minted) [70] [71]
+Chapter 25.
 (./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [60] [61]
-[62] [63]
-Chapter 9.
-[64] (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted) [65]
-(./_minted/90475641BF22AFA2738963DE3308E104.highlight.minted)
-(./_minted/D112EECA7117437A55F73F7699877FBF.highlight.minted) [66]
+(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [72] [73]
+[74] [75]
+Chapter 26.
+[76] (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted) [77]
+(./_minted/90475641BF22AFA2738963DE3308E104.highlight.minted) [78]
+Chapter 27.
+(./_minted/D112EECA7117437A55F73F7699877FBF.highlight.minted) [79]
 (./_minted/558ECE6E71BCEBF34723A43181538BF0.highlight.minted)
-Overfull \hbox (6.05873pt too wide) in paragraph at lines 5034--5034
+Overfull \hbox (6.05873pt too wide) in paragraph at lines 5080--5080
 []\TU/DejaVuSansMono(0)/m/n/8 SatFinite|  
 
-Overfull \hbox (17.4464pt too wide) in paragraph at lines 5034--5034
+Overfull \hbox (17.4464pt too wide) in paragraph at lines 5080--5080
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
-(./_minted/86896283132DB045F422B07B57E23836.highlight.minted) [67] [68]
-[69]
-Overfull \hbox (4.1584pt too wide) in paragraph at lines 5223--5223
+(./_minted/86896283132DB045F422B07B57E23836.highlight.minted) [80]
+Chapter 28.
+[81] [82]
+Overfull \hbox (4.1584pt too wide) in paragraph at lines 5269--5269
 []\TU/DejaVuSansMono(0)/m/n/8 Convert|  
-[70] (./_minted/3C0B2FB4A11F82583163EE50EC36DF14.highlight.minted)
-(./_minted/B1390EBAC9863498805623F0202275A6.highlight.minted) [71]
-(./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted)
-(./_minted/57984FFE13B6207F5B2547F95A621066.highlight.minted) [72]
-(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [73] [74]
-(./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted) [75]
-(./_minted/E2DCE1C54EBF4ED4E17B2CA5A024D3E7.highlight.minted) [76]
-(./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [77] [78]
+[83] (./_minted/3C0B2FB4A11F82583163EE50EC36DF14.highlight.minted)
+(./_minted/B1390EBAC9863498805623F0202275A6.highlight.minted) [84]
+Chapter 29.
+(./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted) [85]
+(./_minted/57984FFE13B6207F5B2547F95A621066.highlight.minted)
+(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [86]
+Chapter 30.
+[87] (./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted) [88]
+[89]
+Chapter 31.
+(./_minted/3ED9788E266FE9DB56A02F44E2809F42.highlight.minted)
+(./_minted/B8F21DE663E16F38CA260F06E6B8C471.highlight.minted) [90]
+(./_minted/B630BA28595FAC2F26CA8B39F76056E1.highlight.minted)
+(./_minted/344103355B1B1CD09974EB7265879D81.highlight.minted)
+(./_minted/2E65C335A01DBB89C4D593B33117874C.highlight.minted) [91]
+(./_minted/07CA368FA7F6F500482619BE2EBAEF70.highlight.minted)
+(./_minted/BD4A9518B790D33F291326E5C17709CF.highlight.minted) [92]
+Chapter 32.
+[93] (./_minted/E2DCE1C54EBF4ED4E17B2CA5A024D3E7.highlight.minted) [94]
+Chapter 33.
+(./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [95] [96]
 (./_minted/10381BB93BBA8C764996C7FC69679950.highlight.minted)
 (./_minted/B3A58D09D82AEA802F413DA53C01D568.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6171--6172
+Underfull \hbox (badness 10000) in paragraph at lines 6458--6459
 []\TU/DejaVuSans(0)/m/n/10 Consequently \TU/DejaVuSansMono(0)/m/n/10 Binary8p4s
 e === Binary{8,4,true,true} \TU/DejaVuSans(0)/m/n/10 is \TU/DejaVuSansMono(0)/b
 /n/10 false \TU/DejaVuSans(0)/m/n/10 and \TU/DejaVuSansMono(0)/m/n/10 Binary8p4
 se <:
-(./_minted/627F3DDA11A3A56FF811C343C374B73B.highlight.minted)
-(./_minted/48E5F69E65FF7A7FA7D51B48B98D7467.highlight.minted) [79]
+[97] (./_minted/627F3DDA11A3A56FF811C343C374B73B.highlight.minted)
+(./_minted/48E5F69E65FF7A7FA7D51B48B98D7467.highlight.minted)
 (./_minted/7D3C1A969B31C38EA8662C2F6E57066E.highlight.minted)
-(./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted)
+(./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted) [98]
 (./_minted/BF570C084BC3A67A5A7C9E4647CED36E.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6295--6296
+Underfull \hbox (badness 10000) in paragraph at lines 6582--6583
 []\TU/DejaVuSans(0)/m/n/10 Bit-packed storage of \TU/DejaVuSansMono(0)/m/n/10 F
  \TU/DejaVuSans(0)/m/n/10 code points at \TU/DejaVuSansMono(0)/m/n/10 bitwidth(
 F) \TU/DejaVuSans(0)/m/n/10 bits per element. Construct with
 
-Underfull \hbox (badness 1024) in paragraph at lines 6295--6296
+Underfull \hbox (badness 1024) in paragraph at lines 6582--6583
 \TU/DejaVuSansMono(0)/m/n/10 PackedVector(A::AbstractVector{F})\TU/DejaVuSans(0
 )/m/n/10 ; recover with \TU/DejaVuSansMono(0)/m/n/10 Vector(pv) \TU/DejaVuSans(
 0)/m/n/10 or \TU/DejaVuSansMono(0)/m/n/10 collect(pv)\TU/DejaVuSans(0)/m/n/10 .
  Memory: \TU/DejaVuSansMono(0)/m/n/10 ⌈n·K/64⌉
-(./_minted/02D8000DAB315D57FDA2A7DCEB63F7AC.highlight.minted) [80]
+(./_minted/02D8000DAB315D57FDA2A7DCEB63F7AC.highlight.minted) [99]
 (./_minted/B7FBE62B8A43596CB50217EFF5EFC03C.highlight.minted)
 (./_minted/F2D7F2369BA71030EC6E0929F4762B4D.highlight.minted)
 (./_minted/07E9226138ABB95EBCC075EC21E305E9.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6553--6554
+Underfull \hbox (badness 10000) in paragraph at lines 6840--6841
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default projection specification. Ini
 tialized to \TU/DejaVuSansMono(0)/m/n/10 (DefaultRoundingMode(),
-[81] (./_minted/6BCB094CFCA7263C62B880348A8D6316.highlight.minted)
+(./_minted/6BCB094CFCA7263C62B880348A8D6316.highlight.minted) [100]
 (./_minted/18A8C228B0622160748BFF87069B1557.highlight.minted)
-Underfull \hbox (badness 6268) in paragraph at lines 6591--6592
+Underfull \hbox (badness 6268) in paragraph at lines 6878--6879
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default random-bit budget N for the s
 tochastic rounding families (\TU/DejaVuSansMono(0)/m/n/10 StochasticA{N}\TU/Dej
 aVuSans(0)/m/n/10 ,
 (./_minted/F313BF3755A5F31EE1A13C3F5B752838.highlight.minted)
 (./_minted/56B91C3BCC354A14E7B0FD2254BAB3AF.highlight.minted)
-Underfull \hbox (badness 6708) in paragraph at lines 6629--6630
+Underfull \hbox (badness 6708) in paragraph at lines 6916--6917
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default rounding mode. Initialized to
  \TU/DejaVuSansMono(0)/m/n/10 NearestTiesToEven()\TU/DejaVuSans(0)/m/n/10 . Set
 ting it rebuilds
-(./_minted/A9457530AE3DB537695338F4B4230D39.highlight.minted) [82]
+(./_minted/A9457530AE3DB537695338F4B4230D39.highlight.minted) [101]
 (./_minted/7514C9508753C13D6C4B8C4C449130E6.highlight.minted)
-(./_minted/2716F071634B921A9BDB8DF54178236A.highlight.minted) [83]
-(./_minted/4A4775BA738AACAED5254B8046993652.highlight.minted)
+(./_minted/2716F071634B921A9BDB8DF54178236A.highlight.minted)
+(./_minted/4A4775BA738AACAED5254B8046993652.highlight.minted) [102]
 (./_minted/D20520B6965B13885588B3F9DCB80E35.highlight.minted)
-(./_minted/AEA045F4195108DBEB929985F8CE0909.highlight.minted) [84]
-(./_minted/43A053D9303E3D0822107B887427CFAA.highlight.minted)
+(./_minted/AEA045F4195108DBEB929985F8CE0909.highlight.minted)
+(./_minted/43A053D9303E3D0822107B887427CFAA.highlight.minted) [103]
 (./_minted/646D7B6ED6679C9665EF166F1E2332CC.highlight.minted)
-(./_minted/D185D8F586BA41A304BCD11BB3E43A98.highlight.minted) [85]
+(./_minted/D185D8F586BA41A304BCD11BB3E43A98.highlight.minted)
 (./_minted/6EB94FFC241531A8FF1A7FF06C4981EA.highlight.minted)
-(./_minted/3E7BC3653ADFFCFF5192FEA3D017801D.highlight.minted)
+(./_minted/3E7BC3653ADFFCFF5192FEA3D017801D.highlight.minted) [104]
 (./_minted/6984BD013738752208982C499EE7FF99.highlight.minted)
-(./_minted/15460B7E2E7DD7C0BB8EE0629BAE6133.highlight.minted) [86]
-(./_minted/3B6F3A83BD0980D40528155662E22D3E.highlight.minted)
+(./_minted/15460B7E2E7DD7C0BB8EE0629BAE6133.highlight.minted)
+(./_minted/3B6F3A83BD0980D40528155662E22D3E.highlight.minted) [105]
 (./_minted/F2E910FBEFD5BB3FDA6ED34077013230.highlight.minted)
-(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [87]
 (./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
 (./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted)
 (./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [88] [89]
-(./_minted/0FF39E463DC677199B8D407DCC067572.highlight.minted) [90]
+(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [106]
+(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
+(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [107]
+Chapter 34.
+[108] (./_minted/0FF39E463DC677199B8D407DCC067572.highlight.minted)
 (./_minted/754FB2A589420F40E17E19D9DC8E718F.highlight.minted)
-(./_minted/EF4A561B3016D8C66619F8C7B566E4E3.highlight.minted)
-(./_minted/E3E8DE1633F596F32A58AD81EC1DCBC3.highlight.minted) [91] [92]
+(./_minted/EF4A561B3016D8C66619F8C7B566E4E3.highlight.minted) [109]
+(./_minted/E3E8DE1633F596F32A58AD81EC1DCBC3.highlight.minted) [110] [111]
 (./_minted/61B57B8FE42333E8762A2D0D3D94C25D.highlight.minted)
-(./_minted/C161E89C03E050B5E8CD16A53B2DD56D.highlight.minted) [93]
-(./_minted/3E534D6E53C8BA4BD22C7197226F169C.highlight.minted) [94]
-(./_minted/AD7D038312F779FD7ADA103325F15849.highlight.minted)
+(./_minted/C161E89C03E050B5E8CD16A53B2DD56D.highlight.minted) [112]
+(./_minted/3E534D6E53C8BA4BD22C7197226F169C.highlight.minted)
+(./_minted/AD7D038312F779FD7ADA103325F15849.highlight.minted) [113]
 (./_minted/FB9F70652F9AA52AEA69E210352BD238.highlight.minted)
 (./_minted/315D63FCB2A3C1D3F0425640E7807F25.highlight.minted)
-(./_minted/E85E67CF648CD2953BFA72F13356D062.highlight.minted) [95]
-(./_minted/1E6A15F261624BA3E24B50D399B59D73.highlight.minted)
+(./_minted/E85E67CF648CD2953BFA72F13356D062.highlight.minted)
+(./_minted/1E6A15F261624BA3E24B50D399B59D73.highlight.minted) [114]
 (./_minted/F48657C253397B9E76197134CD4AD1A9.highlight.minted)
 (./_minted/099F0F1D9BAC7C21C0681301BB0CC371.highlight.minted)
-(./_minted/7F6485EB6A3CB98207385020DAA0110C.highlight.minted) [96]
+(./_minted/7F6485EB6A3CB98207385020DAA0110C.highlight.minted) [115]
 (./_minted/525319D406B7BBE1895883430E251D2D.highlight.minted)
-(./_minted/8C8802386B483197761CC271D27AF48A.highlight.minted) [97] [98]
-[99]
-Chapter 10.
-[100] [101]
-Chapter 11.
-(./_minted/D901BFFDC96646B7B537CD54BF7B1DAB.highlight.minted) [102] [103]
-Chapter 12.
+(./_minted/8C8802386B483197761CC271D27AF48A.highlight.minted) [116] [117]
+[118]
+Chapter 35.
+[119] (./_minted/1DA78753D525B498DBC59F013E6FB0AC.highlight.minted)
+(./_minted/B5FA59F14DD32CE19098FA9E2ABB5CA7.highlight.minted)
+(./_minted/84821CD8140CAACEEAD93EB2B8E3FB92.highlight.minted)
+(./_minted/24C5A677D96D491627B884ADA8697BA0.highlight.minted) [120]
+(./_minted/CC980ADB670337480BA78ED00A63E527.highlight.minted)
+(./_minted/7311EC3F5A5990E7BDC202B722D5D71B.highlight.minted)
+(./_minted/014411AE4E4DAB9E504B540987334AD8.highlight.minted)
+(./_minted/81DD92F54EDB06B52B2E9DC99FCF1377.highlight.minted) [121]
+(./_minted/64518416754FD99B5827C9ABDA3E5F1B.highlight.minted)
+(./_minted/FB9C8891DF81231A0E929FE4C0090429.highlight.minted)
+(./_minted/A1173F98BFA2F78571E2B08DD37C0716.highlight.minted) [122] [123]
+Chapter 36.
+[124] [125] [126]
+Chapter 37.
+(./_minted/EF4A0B44321D331A18D2B9915C88468E.highlight.minted)
+(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [127]
+(./_minted/652530FAEADDB819116063E078BFE6EE.highlight.minted)
+(./_minted/FD433E53A3DA30905F825492DD9DC6A5.highlight.minted)
+(./_minted/6317B3D3342C7C694D9A54C7F2DFCB51.highlight.minted)
+(./_minted/4E4D80A23F670BC1B6BFEDE688C19E99.highlight.minted)
+(./_minted/98673B52D93C5BD71994999AA0146DCF.highlight.minted)
+(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [128]
+(./_minted/1EB14C3BA86A79CC0A22D85B3FB9C041.highlight.minted)
+(./_minted/C047B74E7E6879B6A3F69D9CF109904E.highlight.minted)
+(./_minted/D776F933A6751DA6EAB7F04C6DE8AFE5.highlight.minted)
+(./_minted/48E933C5363F9935310D70B3162A40E4.highlight.minted) [129]
+(./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
+(./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted)
+(./_minted/18E583C5417677FA4DCAC2F1BC16A871.highlight.minted)
+(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted)
+(./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
+(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [130]
+(./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
+(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted)
+(./_minted/703C1CA7665BD4E85B3307851E048B14.highlight.minted)
+(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [131]
+(./_minted/35EBACEBC0C695923F34013EB60B0F02.highlight.minted)
+(./_minted/1BC2A1151554D66C634DBD8A88350743.highlight.minted)
+(./_minted/01C62FF12E659616913D1B50EA98AED1.highlight.minted)
+(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted) [132]
+(./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [133]
+Chapter 38.
 
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 Float128|  
+Underfull \hbox (badness 1881) in paragraph at lines 9948--9949
+\TU/DejaVuSans(0)/m/n/10 Internals-level recipes: pipeline introspection, exhau
+stive verification of your own code, κ measurement,
 
-Overfull \hbox (6.05104pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
-
-Overfull \hbox (13.6428pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
-
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
-(./_minted/7542DA689EC474092F9127FB2697040F.highlight.minted) [104] [105]
-Chapter 13.
-[106]
-Chapter 14.
-[107]
-Chapter 15.
-[108] [109]
-Chapter 16.
-
-Underfull \hbox (badness 2096) in paragraph at lines 9018--9019
-[]\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
-eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
-loat64 | Float128 | StickyF | BigExactF |
-[110] [111] (./_minted/ABC2DF04343882B2315A4A7BAABF2AA4.highlight.minted)
-(./_minted/928E3D2E0EA571B1CCBEE70D266979D3.highlight.minted) [112]
-(./_minted/AA4AF40FC8E1795E1A9A1C1E7FB963EA.highlight.minted)
-(./_minted/35C445D26325FEA8A9A57A442FA825BA.highlight.minted) [113]
-(./_minted/EB42B160B1DD470EDD8665FF0EF11318.highlight.minted) [114]
-(./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [115]
-(./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
-(./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [116]
-Underfull \hbox (badness 3209) in paragraph at lines 9489--9490
-[]\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
-ows the op (automatic for registry ops; manual block additions extend
-[117] [118]
-Chapter 17.
-(./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
-(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [119]
-(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
-(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/E5AF88883A1274A43734B8D8D85CD2B6.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [120]
-(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
-(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [121] [122]
-Chapter 18.
-(./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [123] [124]
-Chapter 19.
+Underfull \hbox (badness 2035) in paragraph at lines 9948--9949
+\TU/DejaVuSans(0)/m/n/10 and doctrine-compliant benchmarking. These use unexpor
+ted names (\TU/DejaVuSansMono(0)/m/n/10 SmallFloats.round_to_precision\TU/DejaV
+uSans(0)/m/n/10 ,
 (./_minted/7BD6A8A5894C6EDACFB8F27976FA1794.highlight.minted)
 (./_minted/B2561F5BE89600E0FEC3C71B5EDA83FE.highlight.minted)
 (./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
 (./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted)
 (./_minted/00B2C4389D21AE4E88BE4B80536967C1.highlight.minted)
-(./_minted/AC983B3F097735EAD89C4C150F1756E1.highlight.minted)
+(./_minted/AC983B3F097735EAD89C4C150F1756E1.highlight.minted) [134]
 (./_minted/826C9FAD5662B5F78878DCCE9EDEAAAA.highlight.minted)
-(./_minted/6E42B6F86A9D82964609196CB6CB1D06.highlight.minted) [125] [126]
-[127]
-Chapter 20.
-[128]
-Underfull \hbox (badness 2698) in paragraph at lines 10080--10081
-[]\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
-K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
- though you
-[129] [130]
-Chapter 21.
+(./_minted/8912717BAD1DB6AF48ABFDFCD9D27756.highlight.minted)
+(./_minted/F231494559665543005AAB3FA5D8FCC7.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
+(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [135]
+(./_minted/48FB06ABFB0CCC838F92A3F1E1C4310A.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [136]
+(./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
+(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
+(./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
+(./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
+(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [137]
+(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
+(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
+(./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
+(./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted) [138]
+(./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
+(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted)
+(./_minted/E3C933533957BCF4EE57DAC7FB902C9C.highlight.minted) [139]
+(./_minted/EA588882AD22FAE5A592FB62751BE5E8.highlight.minted)
+(./_minted/98A3FE3D3C6C87FFEF1DF6D775902FD3.highlight.minted) [140] [141]
+Chapter 39.
+[142] [143]
+Chapter 40.
+(./_minted/D901BFFDC96646B7B537CD54BF7B1DAB.highlight.minted) [144] [145]
+Chapter 41.
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 Float128|  
 
-[131] [132]
-Chapter 22.
-[133] [134]
-Chapter 23.
+Overfull \hbox (6.05104pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
+
+Overfull \hbox (13.6428pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
+
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
+(./_minted/7542DA689EC474092F9127FB2697040F.highlight.minted) [146] [147]
+Chapter 42.
+[148]
+Chapter 43.
+(./_minted/5DAD30065C591BB20FE57F6F8F5660F7.highlight.minted)
+(./_minted/A5E9D01E118EFA8B338C4A207C2F4B13.highlight.minted) [149]
+(./_minted/64A87CBD1B5C18B15C6289E60CC7E795.highlight.minted)
+(./_minted/AF905E838692151675F3B98481E2659F.highlight.minted) [150]
+(./_minted/ADC012CAC73FE44AC8F8437EBBDF6A90.highlight.minted) [151] [152]
+Chapter 44.
+[153] [154]
+Chapter 45.
+
+Underfull \hbox (badness 2096) in paragraph at lines 11363--11364
+[]\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
+eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
+loat64 | Float128 | StickyF | BigExactF |
+[155] [156] (./_minted/ABC2DF04343882B2315A4A7BAABF2AA4.highlight.minted)
+(./_minted/928E3D2E0EA571B1CCBEE70D266979D3.highlight.minted) [157]
+(./_minted/AA4AF40FC8E1795E1A9A1C1E7FB963EA.highlight.minted)
+(./_minted/35C445D26325FEA8A9A57A442FA825BA.highlight.minted) [158]
+(./_minted/EB42B160B1DD470EDD8665FF0EF11318.highlight.minted) [159]
+(./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [160]
+(./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
+(./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [161]
+Underfull \hbox (badness 3209) in paragraph at lines 11834--11835
+[]\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
+ows the op (automatic for registry ops; manual block additions extend
+[162] [163]
+Chapter 46.
+(./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [164]
+(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
+(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
+(./_minted/E5AF88883A1274A43734B8D8D85CD2B6.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [165]
+(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
+(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [166] [167]
+Chapter 47.
+(./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
+(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [168] [169]
+[170]
+Chapter 48.
 (./_minted/84A90A9B2B4C74F7026D7CC233FC9E3D.highlight.minted)
-(./_minted/1741B017B9B890133A1518453C40CF62.highlight.minted)
-(./_minted/2BFD2C2747A17E7B7D9F08C964623EE0.highlight.minted) [135]
+(./_minted/1EF2902BD5C0D835A502F67390D89EC6.highlight.minted)
+(./_minted/2BFD2C2747A17E7B7D9F08C964623EE0.highlight.minted) [171]
 (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted)
 (./_minted/F703E6CC9F09FC9FA8B19212C6540031.highlight.minted)
 (./_minted/B151FF6DB04AECFC964D55A0B0EAFFA4.highlight.minted)
 (./_minted/42D0FAF94820CC48FEA22F0E68586C90.highlight.minted)
-(./_minted/CA80CFAADF990F6848E34BC75E3780A3.highlight.minted) [136]
+(./_minted/CA80CFAADF990F6848E34BC75E3780A3.highlight.minted) [172]
 (./_minted/7262042352FFDB90D04CB63208B7B00F.highlight.minted)
 (./_minted/F1391FB6C6AC2922181D4EA6EEFFB40F.highlight.minted)
-(./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [137]
+(./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [173]
 (./_minted/51BF9C8795CF5651D61D8B3D356A3328.highlight.minted)
 (./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted)
-Underfull \hbox (badness 3039) in paragraph at lines 10661--10662
+Underfull \hbox (badness 3039) in paragraph at lines 12576--12577
 []\TU/DejaVuSans(0)/m/n/10 Setting a rounding/saturation component rebuilds \TU
 /DejaVuSansMono(0)/m/n/10 DefaultProjection\TU/DejaVuSans(0)/m/n/10 ; setting \
 TU/DejaVuSansMono(0)/m/n/10 DefaultProjection! \TU/DejaVuSans(0)/m/n/10 di-
 
-Underfull \hbox (badness 1817) in paragraph at lines 10661--10662
+Underfull \hbox (badness 1817) in paragraph at lines 12576--12577
 \TU/DejaVuSans(0)/m/n/10 rectly updates both components. Always: \TU/DejaVuSans
 Mono(0)/m/n/10 DefaultProjection() === ProjSpec(DefaultRoundingMode(),
-[138] (./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted)
+[174] (./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted)
 (./_minted/B400E262F2B13FDE8DE3C87DB9DABEA1.highlight.minted)
-Overfull \hbox (1.30995pt too wide) in paragraph at lines 10717--10717
+Overfull \hbox (1.30995pt too wide) in paragraph at lines 12632--12632
 []\TU/DejaVuSans(0)/m/n/8 Ternary|  
 (./_minted/AE2293A77638F0CAFBFD89EA5C2F5495.highlight.minted)
-(./_minted/24F221DCB574BFDDC8719325DD18AA91.highlight.minted) [139]
+(./_minted/24F221DCB574BFDDC8719325DD18AA91.highlight.minted) [175]
 (./_minted/52F087A7E3FDBBD4636577CF9B074EAE.highlight.minted)
-(./_minted/0D4B83877DACA6B55F675191F5DF5AA0.highlight.minted) [140]
+(./_minted/0D4B83877DACA6B55F675191F5DF5AA0.highlight.minted) [176]
 (./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted)
 (./_minted/BD07044F7FBC9DBA83A8497B454C54C0.highlight.minted)
 (./_minted/53006BE75C801F46B18A48EA6942AE93.highlight.minted)
-(./_minted/099B5B2017330BB14CDC8D9E316D0D03.highlight.minted) [141] [142]
-Chapter 24.
-[143] [144] [145] [146] [147] [148] [149] [150] [151] [152] [153] [154]
-[155]
-Chapter 25.
-[156] [157] (./main.aux) )
+(./_minted/099B5B2017330BB14CDC8D9E316D0D03.highlight.minted) [177]
+Overfull \hbox (39.146pt too wide) in paragraph at lines 12836--12836
+[]\TU/DejaVuSansMono(0)/m/n/8 Vector{Binary{K,P,Σ,Δ}}(undef, 
+[178] [179]
+Chapter 49.
+[180] [181] [182] [183] [184] [185] [186] [187] [188] [189] [190] [191]
+Chapter 50.
+[192]
+Underfull \hbox (badness 2698) in paragraph at lines 13857--13858
+[]\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
+K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
+ though you
+[193] [194]
+Chapter 51.
+[195] [196]
+Chapter 52.
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[197] [198] (./main.aux) )
 (see the transcript file for additional information)
-Output written on main.xdv (162 pages, 3917752 bytes).
+Output written on main.xdv (206 pages, 4877460 bytes).
 Transcript written on main.log.
 Latexmk: Getting log file 'main.log'
 Latexmk: Examining 'main.fls'
@@ -1860,250 +2165,319 @@ Sidefootvsep and sidefootheight: 12pt and 548.39996pt
 ) (./main.aux) (./main.out) (./main.out)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd) [1] (./main.toc
-[2]
-Overfull \hbox (4.23534pt too wide) detected at line 233
- \TU/DejaVuSans(0)/b/n/10 100
-
-Overfull \hbox (2.82689pt too wide) detected at line 234
- \TU/DejaVuSans(0)/m/n/10 101
-
-Overfull \hbox (2.82689pt too wide) detected at line 235
- \TU/DejaVuSans(0)/m/n/10 101
-
-Overfull \hbox (4.23534pt too wide) detected at line 236
- \TU/DejaVuSans(0)/b/n/10 102
-
-Overfull \hbox (2.82689pt too wide) detected at line 237
- \TU/DejaVuSans(0)/m/n/10 102
-
-Overfull \hbox (2.82689pt too wide) detected at line 238
- \TU/DejaVuSans(0)/m/n/10 102
-
-Overfull \hbox (2.82689pt too wide) detected at line 239
- \TU/DejaVuSans(0)/m/n/10 103
-
-Overfull \hbox (4.23534pt too wide) detected at line 240
- \TU/DejaVuSans(0)/b/n/10 104
-
-Overfull \hbox (2.82689pt too wide) detected at line 241
- \TU/DejaVuSans(0)/m/n/10 104
-
-Overfull \hbox (2.82689pt too wide) detected at line 242
- \TU/DejaVuSans(0)/m/n/10 104
-
-Overfull \hbox (2.82689pt too wide) detected at line 243
- \TU/DejaVuSans(0)/m/n/10 105
-
-Overfull \hbox (2.82689pt too wide) detected at line 244
- \TU/DejaVuSans(0)/m/n/10 105
-
-Overfull \hbox (4.23534pt too wide) detected at line 245
- \TU/DejaVuSans(0)/b/n/10 106
-
-Overfull \hbox (2.82689pt too wide) detected at line 246
- \TU/DejaVuSans(0)/m/n/10 106
-
-Overfull \hbox (2.82689pt too wide) detected at line 247
- \TU/DejaVuSans(0)/m/n/10 106
-
-Overfull \hbox (2.82689pt too wide) detected at line 248
- \TU/DejaVuSans(0)/m/n/10 106
-
-Overfull \hbox (4.23534pt too wide) detected at line 249
- \TU/DejaVuSans(0)/b/n/10 107
-
-Overfull \hbox (2.82689pt too wide) detected at line 250
- \TU/DejaVuSans(0)/m/n/10 107
-
-Overfull \hbox (4.23534pt too wide) detected at line 251
+[2] [3] [4] [5]
+Overfull \hbox (4.23534pt too wide) detected at line 237
  \TU/DejaVuSans(0)/b/n/10 108
 
-Overfull \hbox (2.82689pt too wide) detected at line 252
- \TU/DejaVuSans(0)/m/n/10 108
-
-Overfull \hbox (2.82689pt too wide) detected at line 253
- \TU/DejaVuSans(0)/m/n/10 108
-
-Overfull \hbox (2.82689pt too wide) detected at line 254
- \TU/DejaVuSans(0)/m/n/10 109
-[3]
-Overfull \hbox (2.82689pt too wide) detected at line 255
- \TU/DejaVuSans(0)/m/n/10 109
-
-Overfull \hbox (4.23534pt too wide) detected at line 256
- \TU/DejaVuSans(0)/b/n/10 110
-
-Overfull \hbox (2.82689pt too wide) detected at line 257
- \TU/DejaVuSans(0)/m/n/10 110
-
-Overfull \hbox (2.82689pt too wide) detected at line 258
- \TU/DejaVuSans(0)/m/n/10 111
-
-Overfull \hbox (2.82689pt too wide) detected at line 263
- \TU/DejaVuSans(0)/m/n/10 115
-
-Overfull \hbox (2.82689pt too wide) detected at line 267
- \TU/DejaVuSans(0)/m/n/10 117
-
-Overfull \hbox (2.82689pt too wide) detected at line 268
- \TU/DejaVuSans(0)/m/n/10 118
-
-Overfull \hbox (4.23534pt too wide) detected at line 269
+Overfull \hbox (4.23534pt too wide) detected at line 239
  \TU/DejaVuSans(0)/b/n/10 119
 
-Overfull \hbox (2.82689pt too wide) detected at line 270
+Overfull \hbox (2.82689pt too wide) detected at line 240
  \TU/DejaVuSans(0)/m/n/10 119
 
-Overfull \hbox (2.82689pt too wide) detected at line 271
+Overfull \hbox (2.82689pt too wide) detected at line 241
  \TU/DejaVuSans(0)/m/n/10 120
 
-Overfull \hbox (2.82689pt too wide) detected at line 272
+Overfull \hbox (2.82689pt too wide) detected at line 242
  \TU/DejaVuSans(0)/m/n/10 120
 
-Overfull \hbox (2.82689pt too wide) detected at line 273
+Overfull \hbox (2.82689pt too wide) detected at line 243
+ \TU/DejaVuSans(0)/m/n/10 120
+
+Overfull \hbox (2.82689pt too wide) detected at line 245
  \TU/DejaVuSans(0)/m/n/10 121
 
-Overfull \hbox (2.82689pt too wide) detected at line 274
+Overfull \hbox (2.82689pt too wide) detected at line 246
+ \TU/DejaVuSans(0)/m/n/10 121
+
+Overfull \hbox (2.82689pt too wide) detected at line 247
+ \TU/DejaVuSans(0)/m/n/10 121
+
+Overfull \hbox (2.82689pt too wide) detected at line 248
  \TU/DejaVuSans(0)/m/n/10 122
 
-Overfull \hbox (2.82689pt too wide) detected at line 275
+Overfull \hbox (2.82689pt too wide) detected at line 249
  \TU/DejaVuSans(0)/m/n/10 122
 
-Overfull \hbox (4.23534pt too wide) detected at line 276
- \TU/DejaVuSans(0)/b/n/10 123
+Overfull \hbox (2.82689pt too wide) detected at line 250
+ \TU/DejaVuSans(0)/m/n/10 122
 
-Overfull \hbox (2.82689pt too wide) detected at line 277
- \TU/DejaVuSans(0)/m/n/10 123
+Overfull \hbox (4.23534pt too wide) detected at line 252
+ \TU/DejaVuSans(0)/b/n/10 124
 
-Overfull \hbox (2.82689pt too wide) detected at line 278
- \TU/DejaVuSans(0)/m/n/10 123
-
-Overfull \hbox (2.82689pt too wide) detected at line 279
+Overfull \hbox (2.82689pt too wide) detected at line 253
  \TU/DejaVuSans(0)/m/n/10 124
 
-Overfull \hbox (4.23534pt too wide) detected at line 280
- \TU/DejaVuSans(0)/b/n/10 125
-
-Overfull \hbox (2.82689pt too wide) detected at line 281
+Overfull \hbox (2.82689pt too wide) detected at line 254
+ \TU/DejaVuSans(0)/m/n/10 125
+[6]
+Overfull \hbox (2.82689pt too wide) detected at line 255
  \TU/DejaVuSans(0)/m/n/10 125
 
-Overfull \hbox (2.82689pt too wide) detected at line 282
- \TU/DejaVuSans(0)/m/n/10 125
-
-Overfull \hbox (2.82689pt too wide) detected at line 283
- \TU/DejaVuSans(0)/m/n/10 125
-
-Overfull \hbox (2.82689pt too wide) detected at line 284
+Overfull \hbox (2.82689pt too wide) detected at line 256
  \TU/DejaVuSans(0)/m/n/10 126
 
-Overfull \hbox (2.82689pt too wide) detected at line 285
+Overfull \hbox (2.82689pt too wide) detected at line 257
  \TU/DejaVuSans(0)/m/n/10 126
 
-Overfull \hbox (4.23534pt too wide) detected at line 287
- \TU/DejaVuSans(0)/b/n/10 128
+Overfull \hbox (2.82689pt too wide) detected at line 258
+ \TU/DejaVuSans(0)/m/n/10 126
 
-Overfull \hbox (2.82689pt too wide) detected at line 288
+Overfull \hbox (4.23534pt too wide) detected at line 259
+ \TU/DejaVuSans(0)/b/n/10 127
+
+Overfull \hbox (2.82689pt too wide) detected at line 260
+ \TU/DejaVuSans(0)/m/n/10 127
+
+Overfull \hbox (2.82689pt too wide) detected at line 263
  \TU/DejaVuSans(0)/m/n/10 128
 
-Overfull \hbox (2.82689pt too wide) detected at line 289
- \TU/DejaVuSans(0)/m/n/10 129
-
-Overfull \hbox (2.82689pt too wide) detected at line 290
- \TU/DejaVuSans(0)/m/n/10 129
-
-Overfull \hbox (2.82689pt too wide) detected at line 291
- \TU/DejaVuSans(0)/m/n/10 129
-
-Overfull \hbox (2.82689pt too wide) detected at line 292
+Overfull \hbox (2.82689pt too wide) detected at line 267
  \TU/DejaVuSans(0)/m/n/10 130
 
-Overfull \hbox (4.23534pt too wide) detected at line 293
- \TU/DejaVuSans(0)/b/n/10 131
-
-Overfull \hbox (2.82689pt too wide) detected at line 294
+Overfull \hbox (2.82689pt too wide) detected at line 271
  \TU/DejaVuSans(0)/m/n/10 131
 
-Overfull \hbox (4.23534pt too wide) detected at line 295
- \TU/DejaVuSans(0)/b/n/10 133
+Overfull \hbox (4.23534pt too wide) detected at line 277
+ \TU/DejaVuSans(0)/b/n/10 134
 
-Overfull \hbox (2.82689pt too wide) detected at line 296
- \TU/DejaVuSans(0)/m/n/10 133
-
-Overfull \hbox (2.82689pt too wide) detected at line 297
- \TU/DejaVuSans(0)/m/n/10 133
-
-Overfull \hbox (2.82689pt too wide) detected at line 298
+Overfull \hbox (2.82689pt too wide) detected at line 278
  \TU/DejaVuSans(0)/m/n/10 134
 
-Overfull \hbox (2.82689pt too wide) detected at line 299
- \TU/DejaVuSans(0)/m/n/10 134
-
-Overfull \hbox (4.23534pt too wide) detected at line 300
- \TU/DejaVuSans(0)/b/n/10 135
-
-Overfull \hbox (2.82689pt too wide) detected at line 301
+Overfull \hbox (2.82689pt too wide) detected at line 283
  \TU/DejaVuSans(0)/m/n/10 135
 
+Overfull \hbox (2.82689pt too wide) detected at line 286
+ \TU/DejaVuSans(0)/m/n/10 137
+
+Overfull \hbox (2.82689pt too wide) detected at line 290
+ \TU/DejaVuSans(0)/m/n/10 138
+
+Overfull \hbox (4.23534pt too wide) detected at line 297
+ \TU/DejaVuSans(0)/b/n/10 142
+
+Overfull \hbox (2.82689pt too wide) detected at line 298
+ \TU/DejaVuSans(0)/m/n/10 143
+
+Overfull \hbox (2.82689pt too wide) detected at line 299
+ \TU/DejaVuSans(0)/m/n/10 143
+
+Overfull \hbox (4.23534pt too wide) detected at line 300
+ \TU/DejaVuSans(0)/b/n/10 144
+
+Overfull \hbox (2.82689pt too wide) detected at line 301
+ \TU/DejaVuSans(0)/m/n/10 144
+
 Overfull \hbox (2.82689pt too wide) detected at line 302
- \TU/DejaVuSans(0)/m/n/10 136
+ \TU/DejaVuSans(0)/m/n/10 144
 
 Overfull \hbox (2.82689pt too wide) detected at line 303
- \TU/DejaVuSans(0)/m/n/10 137
+ \TU/DejaVuSans(0)/m/n/10 145
 
-Overfull \hbox (2.82689pt too wide) detected at line 304
- \TU/DejaVuSans(0)/m/n/10 137
+Overfull \hbox (4.23534pt too wide) detected at line 304
+ \TU/DejaVuSans(0)/b/n/10 146
+
+Overfull \hbox (2.82689pt too wide) detected at line 305
+ \TU/DejaVuSans(0)/m/n/10 146
+
+Overfull \hbox (2.82689pt too wide) detected at line 306
+ \TU/DejaVuSans(0)/m/n/10 146
+
+Overfull \hbox (2.82689pt too wide) detected at line 307
+ \TU/DejaVuSans(0)/m/n/10 147
 
 Overfull \hbox (2.82689pt too wide) detected at line 308
- \TU/DejaVuSans(0)/m/n/10 140
+ \TU/DejaVuSans(0)/m/n/10 147
 
-Overfull \hbox (2.82689pt too wide) detected at line 309
- \TU/DejaVuSans(0)/m/n/10 140
+Overfull \hbox (4.23534pt too wide) detected at line 309
+ \TU/DejaVuSans(0)/b/n/10 148
 
 Overfull \hbox (2.82689pt too wide) detected at line 310
- \TU/DejaVuSans(0)/m/n/10 141
+ \TU/DejaVuSans(0)/m/n/10 148
 
 Overfull \hbox (2.82689pt too wide) detected at line 311
- \TU/DejaVuSans(0)/m/n/10 141
+ \TU/DejaVuSans(0)/m/n/10 148
 
 Overfull \hbox (2.82689pt too wide) detected at line 312
- \TU/DejaVuSans(0)/m/n/10 142
+ \TU/DejaVuSans(0)/m/n/10 148
 
-Overfull \hbox (2.82689pt too wide) detected at line 313
- \TU/DejaVuSans(0)/m/n/10 142
+Overfull \hbox (4.23534pt too wide) detected at line 313
+ \TU/DejaVuSans(0)/b/n/10 149
 
 Overfull \hbox (2.82689pt too wide) detected at line 314
- \TU/DejaVuSans(0)/m/n/10 142
+ \TU/DejaVuSans(0)/m/n/10 149
 
-Overfull \hbox (4.23534pt too wide) detected at line 315
- \TU/DejaVuSans(0)/b/n/10 143
+Overfull \hbox (2.82689pt too wide) detected at line 315
+ \TU/DejaVuSans(0)/m/n/10 149
 
 Overfull \hbox (2.82689pt too wide) detected at line 316
- \TU/DejaVuSans(0)/m/n/10 143
-[4]
-Overfull \hbox (2.82689pt too wide) detected at line 317
- \TU/DejaVuSans(0)/m/n/10 143
+ \TU/DejaVuSans(0)/m/n/10 150
 
-Overfull \hbox (2.82689pt too wide) detected at line 333
+Overfull \hbox (2.82689pt too wide) detected at line 320
  \TU/DejaVuSans(0)/m/n/10 151
 
-Overfull \hbox (2.82689pt too wide) detected at line 336
- \TU/DejaVuSans(0)/m/n/10 152
+Overfull \hbox (2.82689pt too wide) detected at line 321
+ \TU/DejaVuSans(0)/m/n/10 151
 
-Overfull \hbox (4.23534pt too wide) detected at line 344
- \TU/DejaVuSans(0)/b/n/10 156
+Overfull \hbox (2.82689pt too wide) detected at line 322
+ \TU/DejaVuSans(0)/m/n/10 151
+
+Overfull \hbox (4.23534pt too wide) detected at line 323
+ \TU/DejaVuSans(0)/b/n/10 153
+
+Overfull \hbox (2.82689pt too wide) detected at line 324
+ \TU/DejaVuSans(0)/m/n/10 153
+
+Overfull \hbox (2.82689pt too wide) detected at line 325
+ \TU/DejaVuSans(0)/m/n/10 153
+
+Overfull \hbox (2.82689pt too wide) detected at line 326
+ \TU/DejaVuSans(0)/m/n/10 154
+
+Overfull \hbox (2.82689pt too wide) detected at line 327
+ \TU/DejaVuSans(0)/m/n/10 154
+
+Overfull \hbox (4.23534pt too wide) detected at line 328
+ \TU/DejaVuSans(0)/b/n/10 155
+
+Overfull \hbox (2.82689pt too wide) detected at line 329
+ \TU/DejaVuSans(0)/m/n/10 155
+
+Overfull \hbox (2.82689pt too wide) detected at line 330
+ \TU/DejaVuSans(0)/m/n/10 156
+
+Overfull \hbox (2.82689pt too wide) detected at line 335
+ \TU/DejaVuSans(0)/m/n/10 160
+
+Overfull \hbox (2.82689pt too wide) detected at line 339
+ \TU/DejaVuSans(0)/m/n/10 162
+
+Overfull \hbox (2.82689pt too wide) detected at line 340
+ \TU/DejaVuSans(0)/m/n/10 163
+
+Overfull \hbox (4.23534pt too wide) detected at line 341
+ \TU/DejaVuSans(0)/b/n/10 164
+
+Overfull \hbox (2.82689pt too wide) detected at line 342
+ \TU/DejaVuSans(0)/m/n/10 164
+
+Overfull \hbox (2.82689pt too wide) detected at line 343
+ \TU/DejaVuSans(0)/m/n/10 165
+[7]
+Overfull \hbox (2.82689pt too wide) detected at line 344
+ \TU/DejaVuSans(0)/m/n/10 165
 
 Overfull \hbox (2.82689pt too wide) detected at line 345
- \TU/DejaVuSans(0)/m/n/10 156
+ \TU/DejaVuSans(0)/m/n/10 166
 
 Overfull \hbox (2.82689pt too wide) detected at line 346
- \TU/DejaVuSans(0)/m/n/10 156
+ \TU/DejaVuSans(0)/m/n/10 167
 
 Overfull \hbox (2.82689pt too wide) detected at line 347
- \TU/DejaVuSans(0)/m/n/10 156
+ \TU/DejaVuSans(0)/m/n/10 167
 
-Overfull \hbox (2.82689pt too wide) detected at line 348
- \TU/DejaVuSans(0)/m/n/10 157
-)) [5] [1]
+Overfull \hbox (4.23534pt too wide) detected at line 348
+ \TU/DejaVuSans(0)/b/n/10 168
+
+Overfull \hbox (2.82689pt too wide) detected at line 349
+ \TU/DejaVuSans(0)/m/n/10 168
+
+Overfull \hbox (2.82689pt too wide) detected at line 350
+ \TU/DejaVuSans(0)/m/n/10 168
+
+Overfull \hbox (2.82689pt too wide) detected at line 351
+ \TU/DejaVuSans(0)/m/n/10 169
+
+Overfull \hbox (4.23534pt too wide) detected at line 353
+ \TU/DejaVuSans(0)/b/n/10 171
+
+Overfull \hbox (2.82689pt too wide) detected at line 354
+ \TU/DejaVuSans(0)/m/n/10 171
+
+Overfull \hbox (2.82689pt too wide) detected at line 355
+ \TU/DejaVuSans(0)/m/n/10 172
+
+Overfull \hbox (2.82689pt too wide) detected at line 356
+ \TU/DejaVuSans(0)/m/n/10 173
+
+Overfull \hbox (2.82689pt too wide) detected at line 357
+ \TU/DejaVuSans(0)/m/n/10 173
+
+Overfull \hbox (2.82689pt too wide) detected at line 361
+ \TU/DejaVuSans(0)/m/n/10 176
+
+Overfull \hbox (2.82689pt too wide) detected at line 362
+ \TU/DejaVuSans(0)/m/n/10 176
+
+Overfull \hbox (2.82689pt too wide) detected at line 363
+ \TU/DejaVuSans(0)/m/n/10 177
+
+Overfull \hbox (2.82689pt too wide) detected at line 364
+ \TU/DejaVuSans(0)/m/n/10 177
+
+Overfull \hbox (2.82689pt too wide) detected at line 365
+ \TU/DejaVuSans(0)/m/n/10 178
+
+Overfull \hbox (2.82689pt too wide) detected at line 366
+ \TU/DejaVuSans(0)/m/n/10 178
+
+Overfull \hbox (2.82689pt too wide) detected at line 367
+ \TU/DejaVuSans(0)/m/n/10 178
+
+Overfull \hbox (4.23534pt too wide) detected at line 368
+ \TU/DejaVuSans(0)/b/n/10 180
+
+Overfull \hbox (2.82689pt too wide) detected at line 369
+ \TU/DejaVuSans(0)/m/n/10 180
+
+Overfull \hbox (2.82689pt too wide) detected at line 370
+ \TU/DejaVuSans(0)/m/n/10 180
+
+Overfull \hbox (2.82689pt too wide) detected at line 386
+ \TU/DejaVuSans(0)/m/n/10 188
+
+Overfull \hbox (2.82689pt too wide) detected at line 389
+ \TU/DejaVuSans(0)/m/n/10 189
+
+Overfull \hbox (4.23534pt too wide) detected at line 396
+ \TU/DejaVuSans(0)/b/n/10 192
+
+Overfull \hbox (2.82689pt too wide) detected at line 397
+ \TU/DejaVuSans(0)/m/n/10 192
+
+Overfull \hbox (2.82689pt too wide) detected at line 398
+ \TU/DejaVuSans(0)/m/n/10 193
+
+Overfull \hbox (2.82689pt too wide) detected at line 399
+ \TU/DejaVuSans(0)/m/n/10 193
+
+Overfull \hbox (2.82689pt too wide) detected at line 400
+ \TU/DejaVuSans(0)/m/n/10 193
+
+Overfull \hbox (2.82689pt too wide) detected at line 401
+ \TU/DejaVuSans(0)/m/n/10 194
+
+Overfull \hbox (4.23534pt too wide) detected at line 402
+ \TU/DejaVuSans(0)/b/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 403
+ \TU/DejaVuSans(0)/m/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 404
+ \TU/DejaVuSans(0)/m/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 405
+ \TU/DejaVuSans(0)/m/n/10 195
+
+Overfull \hbox (2.82689pt too wide) detected at line 406
+ \TU/DejaVuSans(0)/m/n/10 196
+
+Overfull \hbox (4.23534pt too wide) detected at line 407
+ \TU/DejaVuSans(0)/b/n/10 197
+
+Overfull \hbox (2.82689pt too wide) detected at line 408
+ \TU/DejaVuSans(0)/m/n/10 197
+)) [8] [1]
 Chapter 1.
 (./_FAD58DE7366495DB4650CFEFAC2FCD61.config.minted)
 (./_minted/default.style.minted)
@@ -2116,7 +2490,7 @@ The other 384 arrive with \TU/DejaVuSansMono(0)/m/n/10 using
 Chapter 2.
 (./_minted/9FC63D5FBF09D55F897EBF05820B8423.highlight.minted)
 (./_minted/AA1136E9BE0A5CA99D77ADEAC66D0F81.highlight.minted)
-Overfull \hbox (7.38509pt too wide) in paragraph at lines 166--167
+Overfull \hbox (7.38509pt too wide) in paragraph at lines 221--222
 []\TU/DejaVuSans(0)/m/n/10 For an editable install, \TU/DejaVuSansMono(0)/m/n/1
 0 pkg> dev https://github.com/JeffreySarnoff/SmallFloats.jl \TU/DejaVuSans(0)/m
 /n/10 clones into \TU/DejaVuSansMono(0)/m/n/10 ~/.julia/dev\TU/DejaVuSans(0)/m/
@@ -2139,18 +2513,17 @@ Chapter 3.
 (./_minted/DF6A0CC781D09529DD7195A58BCCED2E.highlight.minted)
 (./_minted/3573F538609362B3E50ECC8E8E43D921.highlight.minted) [9]
 Chapter 4.
-(./_minted/99CF7B13F46FBBE8A80A3830CBDC9AE2.highlight.minted) [10]
+(./_minted/8B696342178501D9A9CF89DDA86CA13A.highlight.minted) [10]
 (./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
 (./_minted/7AA8B67B2458ED2272CE91278D0E0FF6.highlight.minted)
 (./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [11]
 (./_minted/ED5695E79FD860212A92800159A332AB.highlight.minted)
-(./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [12]
-(./_minted/7F5B3992E33B0B9622171D3E6BDFD949.highlight.minted) [13]
+(./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [12] [13]
 Chapter 5.
 (./_minted/D1E811343CC4F867BDC8B7C8529B9927.highlight.minted)
 (./_minted/84C6C7B2D324FED5946ED90801F6765E.highlight.minted)
 (./_minted/6872D03381CB350E2BAFFEB6F55F1C34.highlight.minted) [14]
-Overfull \hbox (7.39253pt too wide) in paragraph at lines 971--971
+Overfull \hbox (7.39253pt too wide) in paragraph at lines 1020--1020
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
 [15] [16] [17]
 Chapter 6.
@@ -2159,343 +2532,462 @@ Chapter 6.
 (./_minted/751982D492CCA07529D70EA74ACB8E8F.highlight.minted)
 (./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
 (./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
-(./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
+(./_minted/992BB09E9AEFCDA6E68F87624C1A61F4.highlight.minted)
 (./_minted/4CF17B922FBC6981D0E57EACA7EF618C.highlight.minted) [19]
-(./_minted/176DD8320A8DA664543832735177EF07.highlight.minted)
+(./_minted/176DD8320A8DA664543832735177EF07.highlight.minted) [20]
+Chapter 7.
 (./_minted/E23046ECBB4FD8A756C449378C02AB39.highlight.minted)
-(./_minted/12A15D60BBF01CD4B09473FE0329C5D8.highlight.minted) [20]
-(./_minted/BDA7DCFC27E2CB9077F8245B4FEE4327.highlight.minted)
-(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [21]
-(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted)
-(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [22]
-(./_minted/2964E59AA0CBE24D90757394185B9D19.highlight.minted) [23]
-(./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted)
+(./_minted/12A15D60BBF01CD4B09473FE0329C5D8.highlight.minted)
+(./_minted/BDA7DCFC27E2CB9077F8245B4FEE4327.highlight.minted) [21]
+(./_minted/558546E03545DA04904488768F473D40.highlight.minted)
+(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted) [22]
+(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted)
+(./_minted/2964E59AA0CBE24D90757394185B9D19.highlight.minted) [23] [24]
+Chapter 8.
+(./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted) [25]
 (./_minted/35EBACEBC0C695923F34013EB60B0F02.highlight.minted)
 (./_minted/1BC2A1151554D66C634DBD8A88350743.highlight.minted)
 (./_minted/01C62FF12E659616913D1B50EA98AED1.highlight.minted)
-(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted) [24]
+(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted)
 (./_minted/94066BE698638A0CCD3E399F2C51534F.highlight.minted)
-(./_minted/151F618B27227E041996CC5A5B729B72.highlight.minted)
+(./_minted/151F618B27227E041996CC5A5B729B72.highlight.minted) [26]
 (./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
 (./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
-(./_minted/55E1B6E85860C6D4C1F21D17BB4F5E63.highlight.minted) [25]
+(./_minted/55E1B6E85860C6D4C1F21D17BB4F5E63.highlight.minted) [27]
+Chapter 9.
 (./_minted/D6D8C14E8AA3B0AF82E2973879937CDB.highlight.minted)
 (./_minted/545E52F0DD625002A97EDF1151312636.highlight.minted)
-(./_minted/18378B06C772FE3B1514F2702A47DAEA.highlight.minted) [26]
+(./_minted/18378B06C772FE3B1514F2702A47DAEA.highlight.minted) [28]
 (./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
 (./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted)
 (./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
-(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [27]
-Underfull \hbox (badness 2418) in paragraph at lines 2054--2055
+(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [29]
+Underfull \hbox (badness 2418) in paragraph at lines 2100--2101
 \TU/DejaVuSans(0)/m/n/10 You have raw \TU/DejaVuSansMono(0)/m/n/10 Float64 \TU/
 DejaVuSans(0)/m/n/10 data with widely varying per-row magnitude, and you want t
 o quantize it into
+[30]
+Chapter 10.
 
-Underfull \hbox (badness 1178) in paragraph at lines 2092--2093
+Underfull \hbox (badness 1178) in paragraph at lines 2138--2139
 \TU/DejaVuSans(0)/m/n/10 Projection: Rounding & Saturation introduced the stoch
 astic families — \TU/DejaVuSansMono(0)/m/n/10 StochasticA{N}\TU/DejaVuSans(0)/m
 /n/10 , \TU/DejaVuSansMono(0)/m/n/10 StochasticB{N}\TU/DejaVuSans(0)/m/n/10 ,
 (./_minted/18E583C5417677FA4DCAC2F1BC16A871.highlight.minted)
-(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted) [28]
+(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted)
 (./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
 (./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/8645CB4775FD08AD6E9C98888C47BCD0.highlight.minted)
+(./_minted/8645CB4775FD08AD6E9C98888C47BCD0.highlight.minted) [31]
 (./_minted/703C1CA7665BD4E85B3307851E048B14.highlight.minted)
-(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [29] [30]
-Chapter 7.
+(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [32] [33]
+[34]
+Chapter 11.
 (./_minted/A6781F2D5B6C9B8E04F29555CAE05A76.highlight.minted)
 (./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
 (./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
 (./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted)
 (./_minted/24171F4760C567CE1EA40911C5483997.highlight.minted)
-(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [31] [32]
+(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [35] [36]
+Chapter 12.
 (./_minted/D776F933A6751DA6EAB7F04C6DE8AFE5.highlight.minted)
 (./_minted/48E933C5363F9935310D70B3162A40E4.highlight.minted)
 (./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted)
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [37]
 (./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [33]
-Underfull \hbox (badness 2726) in paragraph at lines 2640--2641
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [38]
+Chapter 13.
+
+Underfull \hbox (badness 2726) in paragraph at lines 2686--2687
 []\TU/DejaVuSansMono(0)/m/n/10 ConvertToBlockMaxAbsFinite(FS, FE, scale_ρ, elem
 ent_ρ, values_tuple) \TU/DejaVuSans(0)/m/n/10 to build one block per
-[34] (./_minted/D3C6FCAF3A2A0C9A819EFF9D533F9DB6.highlight.minted)
+(./_minted/D3C6FCAF3A2A0C9A819EFF9D533F9DB6.highlight.minted)
 (./_minted/2D1A1A6FE2CBA3399C11E233ADFC4E15.highlight.minted)
-(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [35]
+(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [39] [40]
+Chapter 14.
 (./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted)
 (./_minted/F79E40D4B4234E3838E952E1187B9F30.highlight.minted)
-(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [36]
-(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [37]
+(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [41]
+(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [42] [43]
+Chapter 15.
 (./_minted/B2AE9B0F67DCEB32C91D9A341DD02B70.highlight.minted)
 (./_minted/B51BB4189BF4784CB6F36A8FEFAA20C3.highlight.minted)
 (./_minted/5E323BFA7ED255963337AF9ED3F4AE8F.highlight.minted)
 (./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [38]
-Underfull \hbox (badness 1320) in paragraph at lines 3084--3085
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [44] [45]
+Chapter 16.
+
+Underfull \hbox (badness 2521) in paragraph at lines 3174--3175
+[]\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
+sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
+VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
+(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [46] [47]
+Chapter 17.
+
+Underfull \hbox (badness 1320) in paragraph at lines 3256--3257
 []\TU/DejaVuSansMono(0)/m/n/10 register_approx!(name, opname, resultformat, ope
 randformats, ρ, fn; κ) \TU/DejaVuSans(0)/m/n/10 to register the imple-
 (./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
-(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted) [39]
+(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
 (./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
 (./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
 (./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
 (./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted)
 (./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
-(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted)
-(./_minted/68936046CEC636C7E6E3F6B2FE139E97.highlight.minted) [40]
-Underfull \hbox (badness 2521) in paragraph at lines 3308--3309
-[]\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
-sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
-VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
-(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [41] [42]
-(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [43] [44]
-Chapter 8.
+(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted) [48]
+(./_minted/68936046CEC636C7E6E3F6B2FE139E97.highlight.minted) [49]
+Chapter 18.
+(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [50] [51]
+[52]
+Chapter 19.
 (./_minted/6F79178BDBC794DDD7F65A736E883AF3.highlight.minted)
-(./_minted/BECBE3CE15471A5A218878B24EE7412E.highlight.minted) [45]
-(./_minted/E9512BCFAAB389535A6DA73C59EE7CFE.highlight.minted) [46]
+(./_minted/BECBE3CE15471A5A218878B24EE7412E.highlight.minted) [53]
+(./_minted/E9512BCFAAB389535A6DA73C59EE7CFE.highlight.minted)
 (./_minted/086CD7E41A2D2C77077154575F43EF10.highlight.minted)
-(./_minted/178966B7DCAB0086D92B690ED667CFDF.highlight.minted) [47]
-(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted)
+(./_minted/178966B7DCAB0086D92B690ED667CFDF.highlight.minted) [54] [55]
+Chapter 20.
+(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [56]
 (./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
-(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted) [48] [49]
+(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted) [57] [58]
+Chapter 21.
 (./_minted/664E167B431B0266E71475DA411DA732.highlight.minted)
-(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [50]
-(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted) [51]
-(./_minted/F08C9D7423EA7DEAD7F929E0409EDF49.highlight.minted) [52] [53]
-(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [54] [55]
+(./_minted/558546E03545DA04904488768F473D40.highlight.minted) [59]
+(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted)
+(./_minted/F08C9D7423EA7DEAD7F929E0409EDF49.highlight.minted) [60] [61]
+Chapter 22.
+[62] (./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [63]
+[64] [65]
+Chapter 23.
+(./_minted/5505F1A858F5BAE2B4A8FE326AA153EB.highlight.minted)
+(./_minted/F658A3A8D165F6BE3F95DAD57EF9E713.highlight.minted)
+(./_minted/C13A272E0D57DBB02A182F8D0555F2BD.highlight.minted) [66] [67]
+[68]
+Chapter 24.
 (./_minted/FE2BAE56F5EA7207F8BBD00CA83D0195.highlight.minted)
 (./_minted/F79E40D4B4234E3838E952E1187B9F30.highlight.minted)
-(./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted) [56]
+(./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted) [69]
 (./_minted/206E40ED02A569626A24B225953797CE.highlight.minted)
-(./_minted/ACF13E76E8BD99A4597B6CAA2FFC9ED3.highlight.minted) [57]
-(./_minted/5505F1A858F5BAE2B4A8FE326AA153EB.highlight.minted)
-(./_minted/F658A3A8D165F6BE3F95DAD57EF9E713.highlight.minted) [58]
-(./_minted/C13A272E0D57DBB02A182F8D0555F2BD.highlight.minted) [59]
+(./_minted/ACF13E76E8BD99A4597B6CAA2FFC9ED3.highlight.minted) [70] [71]
+Chapter 25.
 (./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [60] [61]
-[62] [63]
-Chapter 9.
-[64] (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted) [65]
-(./_minted/90475641BF22AFA2738963DE3308E104.highlight.minted)
-(./_minted/D112EECA7117437A55F73F7699877FBF.highlight.minted) [66]
+(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [72] [73]
+[74] [75]
+Chapter 26.
+[76] (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted) [77]
+(./_minted/90475641BF22AFA2738963DE3308E104.highlight.minted) [78]
+Chapter 27.
+(./_minted/D112EECA7117437A55F73F7699877FBF.highlight.minted) [79]
 (./_minted/558ECE6E71BCEBF34723A43181538BF0.highlight.minted)
-Overfull \hbox (6.05873pt too wide) in paragraph at lines 5034--5034
+Overfull \hbox (6.05873pt too wide) in paragraph at lines 5080--5080
 []\TU/DejaVuSansMono(0)/m/n/8 SatFinite|  
 
-Overfull \hbox (17.4464pt too wide) in paragraph at lines 5034--5034
+Overfull \hbox (17.4464pt too wide) in paragraph at lines 5080--5080
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
-(./_minted/86896283132DB045F422B07B57E23836.highlight.minted) [67] [68]
-[69]
-Overfull \hbox (4.1584pt too wide) in paragraph at lines 5223--5223
+(./_minted/86896283132DB045F422B07B57E23836.highlight.minted) [80]
+Chapter 28.
+[81] [82]
+Overfull \hbox (4.1584pt too wide) in paragraph at lines 5269--5269
 []\TU/DejaVuSansMono(0)/m/n/8 Convert|  
-[70] (./_minted/3C0B2FB4A11F82583163EE50EC36DF14.highlight.minted)
-(./_minted/B1390EBAC9863498805623F0202275A6.highlight.minted) [71]
-(./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted)
-(./_minted/57984FFE13B6207F5B2547F95A621066.highlight.minted) [72]
-(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [73] [74]
-(./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted) [75]
-(./_minted/E2DCE1C54EBF4ED4E17B2CA5A024D3E7.highlight.minted) [76]
-(./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [77] [78]
+[83] (./_minted/3C0B2FB4A11F82583163EE50EC36DF14.highlight.minted)
+(./_minted/B1390EBAC9863498805623F0202275A6.highlight.minted) [84]
+Chapter 29.
+(./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted) [85]
+(./_minted/57984FFE13B6207F5B2547F95A621066.highlight.minted)
+(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [86]
+Chapter 30.
+[87] (./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted) [88]
+[89]
+Chapter 31.
+(./_minted/3ED9788E266FE9DB56A02F44E2809F42.highlight.minted)
+(./_minted/B8F21DE663E16F38CA260F06E6B8C471.highlight.minted) [90]
+(./_minted/B630BA28595FAC2F26CA8B39F76056E1.highlight.minted)
+(./_minted/344103355B1B1CD09974EB7265879D81.highlight.minted)
+(./_minted/2E65C335A01DBB89C4D593B33117874C.highlight.minted) [91]
+(./_minted/07CA368FA7F6F500482619BE2EBAEF70.highlight.minted)
+(./_minted/BD4A9518B790D33F291326E5C17709CF.highlight.minted) [92]
+Chapter 32.
+[93] (./_minted/E2DCE1C54EBF4ED4E17B2CA5A024D3E7.highlight.minted) [94]
+Chapter 33.
+(./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [95] [96]
 (./_minted/10381BB93BBA8C764996C7FC69679950.highlight.minted)
 (./_minted/B3A58D09D82AEA802F413DA53C01D568.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6171--6172
+Underfull \hbox (badness 10000) in paragraph at lines 6458--6459
 []\TU/DejaVuSans(0)/m/n/10 Consequently \TU/DejaVuSansMono(0)/m/n/10 Binary8p4s
 e === Binary{8,4,true,true} \TU/DejaVuSans(0)/m/n/10 is \TU/DejaVuSansMono(0)/b
 /n/10 false \TU/DejaVuSans(0)/m/n/10 and \TU/DejaVuSansMono(0)/m/n/10 Binary8p4
 se <:
-(./_minted/627F3DDA11A3A56FF811C343C374B73B.highlight.minted)
-(./_minted/48E5F69E65FF7A7FA7D51B48B98D7467.highlight.minted) [79]
+[97] (./_minted/627F3DDA11A3A56FF811C343C374B73B.highlight.minted)
+(./_minted/48E5F69E65FF7A7FA7D51B48B98D7467.highlight.minted)
 (./_minted/7D3C1A969B31C38EA8662C2F6E57066E.highlight.minted)
-(./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted)
+(./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted) [98]
 (./_minted/BF570C084BC3A67A5A7C9E4647CED36E.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6295--6296
+Underfull \hbox (badness 10000) in paragraph at lines 6582--6583
 []\TU/DejaVuSans(0)/m/n/10 Bit-packed storage of \TU/DejaVuSansMono(0)/m/n/10 F
  \TU/DejaVuSans(0)/m/n/10 code points at \TU/DejaVuSansMono(0)/m/n/10 bitwidth(
 F) \TU/DejaVuSans(0)/m/n/10 bits per element. Construct with
 
-Underfull \hbox (badness 1024) in paragraph at lines 6295--6296
+Underfull \hbox (badness 1024) in paragraph at lines 6582--6583
 \TU/DejaVuSansMono(0)/m/n/10 PackedVector(A::AbstractVector{F})\TU/DejaVuSans(0
 )/m/n/10 ; recover with \TU/DejaVuSansMono(0)/m/n/10 Vector(pv) \TU/DejaVuSans(
 0)/m/n/10 or \TU/DejaVuSansMono(0)/m/n/10 collect(pv)\TU/DejaVuSans(0)/m/n/10 .
  Memory: \TU/DejaVuSansMono(0)/m/n/10 ⌈n·K/64⌉
-(./_minted/02D8000DAB315D57FDA2A7DCEB63F7AC.highlight.minted) [80]
+(./_minted/02D8000DAB315D57FDA2A7DCEB63F7AC.highlight.minted) [99]
 (./_minted/B7FBE62B8A43596CB50217EFF5EFC03C.highlight.minted)
 (./_minted/F2D7F2369BA71030EC6E0929F4762B4D.highlight.minted)
 (./_minted/07E9226138ABB95EBCC075EC21E305E9.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6553--6554
+Underfull \hbox (badness 10000) in paragraph at lines 6840--6841
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default projection specification. Ini
 tialized to \TU/DejaVuSansMono(0)/m/n/10 (DefaultRoundingMode(),
-[81] (./_minted/6BCB094CFCA7263C62B880348A8D6316.highlight.minted)
+(./_minted/6BCB094CFCA7263C62B880348A8D6316.highlight.minted) [100]
 (./_minted/18A8C228B0622160748BFF87069B1557.highlight.minted)
-Underfull \hbox (badness 6268) in paragraph at lines 6591--6592
+Underfull \hbox (badness 6268) in paragraph at lines 6878--6879
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default random-bit budget N for the s
 tochastic rounding families (\TU/DejaVuSansMono(0)/m/n/10 StochasticA{N}\TU/Dej
 aVuSans(0)/m/n/10 ,
 (./_minted/F313BF3755A5F31EE1A13C3F5B752838.highlight.minted)
 (./_minted/56B91C3BCC354A14E7B0FD2254BAB3AF.highlight.minted)
-Underfull \hbox (badness 6708) in paragraph at lines 6629--6630
+Underfull \hbox (badness 6708) in paragraph at lines 6916--6917
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default rounding mode. Initialized to
  \TU/DejaVuSansMono(0)/m/n/10 NearestTiesToEven()\TU/DejaVuSans(0)/m/n/10 . Set
 ting it rebuilds
-(./_minted/A9457530AE3DB537695338F4B4230D39.highlight.minted) [82]
+(./_minted/A9457530AE3DB537695338F4B4230D39.highlight.minted) [101]
 (./_minted/7514C9508753C13D6C4B8C4C449130E6.highlight.minted)
-(./_minted/2716F071634B921A9BDB8DF54178236A.highlight.minted) [83]
-(./_minted/4A4775BA738AACAED5254B8046993652.highlight.minted)
+(./_minted/2716F071634B921A9BDB8DF54178236A.highlight.minted)
+(./_minted/4A4775BA738AACAED5254B8046993652.highlight.minted) [102]
 (./_minted/D20520B6965B13885588B3F9DCB80E35.highlight.minted)
-(./_minted/AEA045F4195108DBEB929985F8CE0909.highlight.minted) [84]
-(./_minted/43A053D9303E3D0822107B887427CFAA.highlight.minted)
+(./_minted/AEA045F4195108DBEB929985F8CE0909.highlight.minted)
+(./_minted/43A053D9303E3D0822107B887427CFAA.highlight.minted) [103]
 (./_minted/646D7B6ED6679C9665EF166F1E2332CC.highlight.minted)
-(./_minted/D185D8F586BA41A304BCD11BB3E43A98.highlight.minted) [85]
+(./_minted/D185D8F586BA41A304BCD11BB3E43A98.highlight.minted)
 (./_minted/6EB94FFC241531A8FF1A7FF06C4981EA.highlight.minted)
-(./_minted/3E7BC3653ADFFCFF5192FEA3D017801D.highlight.minted)
+(./_minted/3E7BC3653ADFFCFF5192FEA3D017801D.highlight.minted) [104]
 (./_minted/6984BD013738752208982C499EE7FF99.highlight.minted)
-(./_minted/15460B7E2E7DD7C0BB8EE0629BAE6133.highlight.minted) [86]
-(./_minted/3B6F3A83BD0980D40528155662E22D3E.highlight.minted)
+(./_minted/15460B7E2E7DD7C0BB8EE0629BAE6133.highlight.minted)
+(./_minted/3B6F3A83BD0980D40528155662E22D3E.highlight.minted) [105]
 (./_minted/F2E910FBEFD5BB3FDA6ED34077013230.highlight.minted)
-(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [87]
 (./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
 (./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted)
 (./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [88] [89]
-(./_minted/0FF39E463DC677199B8D407DCC067572.highlight.minted) [90]
+(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [106]
+(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
+(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [107]
+Chapter 34.
+[108] (./_minted/0FF39E463DC677199B8D407DCC067572.highlight.minted)
 (./_minted/754FB2A589420F40E17E19D9DC8E718F.highlight.minted)
-(./_minted/EF4A561B3016D8C66619F8C7B566E4E3.highlight.minted)
-(./_minted/E3E8DE1633F596F32A58AD81EC1DCBC3.highlight.minted) [91] [92]
+(./_minted/EF4A561B3016D8C66619F8C7B566E4E3.highlight.minted) [109]
+(./_minted/E3E8DE1633F596F32A58AD81EC1DCBC3.highlight.minted) [110] [111]
 (./_minted/61B57B8FE42333E8762A2D0D3D94C25D.highlight.minted)
-(./_minted/C161E89C03E050B5E8CD16A53B2DD56D.highlight.minted) [93]
-(./_minted/3E534D6E53C8BA4BD22C7197226F169C.highlight.minted) [94]
-(./_minted/AD7D038312F779FD7ADA103325F15849.highlight.minted)
+(./_minted/C161E89C03E050B5E8CD16A53B2DD56D.highlight.minted) [112]
+(./_minted/3E534D6E53C8BA4BD22C7197226F169C.highlight.minted)
+(./_minted/AD7D038312F779FD7ADA103325F15849.highlight.minted) [113]
 (./_minted/FB9F70652F9AA52AEA69E210352BD238.highlight.minted)
 (./_minted/315D63FCB2A3C1D3F0425640E7807F25.highlight.minted)
-(./_minted/E85E67CF648CD2953BFA72F13356D062.highlight.minted) [95]
-(./_minted/1E6A15F261624BA3E24B50D399B59D73.highlight.minted)
+(./_minted/E85E67CF648CD2953BFA72F13356D062.highlight.minted)
+(./_minted/1E6A15F261624BA3E24B50D399B59D73.highlight.minted) [114]
 (./_minted/F48657C253397B9E76197134CD4AD1A9.highlight.minted)
 (./_minted/099F0F1D9BAC7C21C0681301BB0CC371.highlight.minted)
-(./_minted/7F6485EB6A3CB98207385020DAA0110C.highlight.minted) [96]
+(./_minted/7F6485EB6A3CB98207385020DAA0110C.highlight.minted) [115]
 (./_minted/525319D406B7BBE1895883430E251D2D.highlight.minted)
-(./_minted/8C8802386B483197761CC271D27AF48A.highlight.minted) [97] [98]
-[99]
-Chapter 10.
-[100] [101]
-Chapter 11.
-(./_minted/D901BFFDC96646B7B537CD54BF7B1DAB.highlight.minted) [102] [103]
-Chapter 12.
+(./_minted/8C8802386B483197761CC271D27AF48A.highlight.minted) [116] [117]
+[118]
+Chapter 35.
+[119] (./_minted/1DA78753D525B498DBC59F013E6FB0AC.highlight.minted)
+(./_minted/B5FA59F14DD32CE19098FA9E2ABB5CA7.highlight.minted)
+(./_minted/84821CD8140CAACEEAD93EB2B8E3FB92.highlight.minted)
+(./_minted/24C5A677D96D491627B884ADA8697BA0.highlight.minted) [120]
+(./_minted/CC980ADB670337480BA78ED00A63E527.highlight.minted)
+(./_minted/7311EC3F5A5990E7BDC202B722D5D71B.highlight.minted)
+(./_minted/014411AE4E4DAB9E504B540987334AD8.highlight.minted)
+(./_minted/81DD92F54EDB06B52B2E9DC99FCF1377.highlight.minted) [121]
+(./_minted/64518416754FD99B5827C9ABDA3E5F1B.highlight.minted)
+(./_minted/FB9C8891DF81231A0E929FE4C0090429.highlight.minted)
+(./_minted/A1173F98BFA2F78571E2B08DD37C0716.highlight.minted) [122] [123]
+Chapter 36.
+[124] [125] [126]
+Chapter 37.
+(./_minted/EF4A0B44321D331A18D2B9915C88468E.highlight.minted)
+(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [127]
+(./_minted/652530FAEADDB819116063E078BFE6EE.highlight.minted)
+(./_minted/FD433E53A3DA30905F825492DD9DC6A5.highlight.minted)
+(./_minted/6317B3D3342C7C694D9A54C7F2DFCB51.highlight.minted)
+(./_minted/4E4D80A23F670BC1B6BFEDE688C19E99.highlight.minted)
+(./_minted/98673B52D93C5BD71994999AA0146DCF.highlight.minted)
+(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [128]
+(./_minted/1EB14C3BA86A79CC0A22D85B3FB9C041.highlight.minted)
+(./_minted/C047B74E7E6879B6A3F69D9CF109904E.highlight.minted)
+(./_minted/D776F933A6751DA6EAB7F04C6DE8AFE5.highlight.minted)
+(./_minted/48E933C5363F9935310D70B3162A40E4.highlight.minted) [129]
+(./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
+(./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted)
+(./_minted/18E583C5417677FA4DCAC2F1BC16A871.highlight.minted)
+(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted)
+(./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
+(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [130]
+(./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
+(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted)
+(./_minted/703C1CA7665BD4E85B3307851E048B14.highlight.minted)
+(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted) [131]
+(./_minted/35EBACEBC0C695923F34013EB60B0F02.highlight.minted)
+(./_minted/1BC2A1151554D66C634DBD8A88350743.highlight.minted)
+(./_minted/01C62FF12E659616913D1B50EA98AED1.highlight.minted)
+(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted) [132]
+(./_minted/53023AEEA83572620C6A653A446E0778.highlight.minted)
+(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [133]
+Chapter 38.
 
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 Float128|  
+Underfull \hbox (badness 1881) in paragraph at lines 9948--9949
+\TU/DejaVuSans(0)/m/n/10 Internals-level recipes: pipeline introspection, exhau
+stive verification of your own code, κ measurement,
 
-Overfull \hbox (6.05104pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
-
-Overfull \hbox (13.6428pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
-
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 8691--8691
-[]\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
-(./_minted/7542DA689EC474092F9127FB2697040F.highlight.minted) [104] [105]
-Chapter 13.
-[106]
-Chapter 14.
-[107]
-Chapter 15.
-[108] [109]
-Chapter 16.
-
-Underfull \hbox (badness 2096) in paragraph at lines 9018--9019
-[]\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
-eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
-loat64 | Float128 | StickyF | BigExactF |
-[110] [111] (./_minted/ABC2DF04343882B2315A4A7BAABF2AA4.highlight.minted)
-(./_minted/928E3D2E0EA571B1CCBEE70D266979D3.highlight.minted) [112]
-(./_minted/AA4AF40FC8E1795E1A9A1C1E7FB963EA.highlight.minted)
-(./_minted/35C445D26325FEA8A9A57A442FA825BA.highlight.minted) [113]
-(./_minted/EB42B160B1DD470EDD8665FF0EF11318.highlight.minted) [114]
-(./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [115]
-(./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
-(./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [116]
-Underfull \hbox (badness 3209) in paragraph at lines 9489--9490
-[]\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
-ows the op (automatic for registry ops; manual block additions extend
-[117] [118]
-Chapter 17.
-(./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
-(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [119]
-(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
-(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/E5AF88883A1274A43734B8D8D85CD2B6.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [120]
-(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
-(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [121] [122]
-Chapter 18.
-(./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [123] [124]
-Chapter 19.
+Underfull \hbox (badness 2035) in paragraph at lines 9948--9949
+\TU/DejaVuSans(0)/m/n/10 and doctrine-compliant benchmarking. These use unexpor
+ted names (\TU/DejaVuSansMono(0)/m/n/10 SmallFloats.round_to_precision\TU/DejaV
+uSans(0)/m/n/10 ,
 (./_minted/7BD6A8A5894C6EDACFB8F27976FA1794.highlight.minted)
 (./_minted/B2561F5BE89600E0FEC3C71B5EDA83FE.highlight.minted)
 (./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
 (./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted)
 (./_minted/00B2C4389D21AE4E88BE4B80536967C1.highlight.minted)
-(./_minted/AC983B3F097735EAD89C4C150F1756E1.highlight.minted)
+(./_minted/AC983B3F097735EAD89C4C150F1756E1.highlight.minted) [134]
 (./_minted/826C9FAD5662B5F78878DCCE9EDEAAAA.highlight.minted)
-(./_minted/6E42B6F86A9D82964609196CB6CB1D06.highlight.minted) [125] [126]
-[127]
-Chapter 20.
-[128]
-Underfull \hbox (badness 2698) in paragraph at lines 10080--10081
-[]\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
-K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
- though you
-[129] [130]
-Chapter 21.
+(./_minted/8912717BAD1DB6AF48ABFDFCD9D27756.highlight.minted)
+(./_minted/F231494559665543005AAB3FA5D8FCC7.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
+(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [135]
+(./_minted/48FB06ABFB0CCC838F92A3F1E1C4310A.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [136]
+(./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
+(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
+(./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
+(./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
+(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [137]
+(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
+(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
+(./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
+(./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted) [138]
+(./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
+(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted)
+(./_minted/E3C933533957BCF4EE57DAC7FB902C9C.highlight.minted) [139]
+(./_minted/EA588882AD22FAE5A592FB62751BE5E8.highlight.minted)
+(./_minted/98A3FE3D3C6C87FFEF1DF6D775902FD3.highlight.minted) [140] [141]
+Chapter 39.
+[142] [143]
+Chapter 40.
+(./_minted/D901BFFDC96646B7B537CD54BF7B1DAB.highlight.minted) [144] [145]
+Chapter 41.
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 Float128|  
 
-[131] [132]
-Chapter 22.
-[133] [134]
-Chapter 23.
+Overfull \hbox (6.05104pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
+
+Overfull \hbox (13.6428pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
+
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 10793--10793
+[]\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
+(./_minted/7542DA689EC474092F9127FB2697040F.highlight.minted) [146] [147]
+Chapter 42.
+[148]
+Chapter 43.
+(./_minted/5DAD30065C591BB20FE57F6F8F5660F7.highlight.minted)
+(./_minted/A5E9D01E118EFA8B338C4A207C2F4B13.highlight.minted) [149]
+(./_minted/64A87CBD1B5C18B15C6289E60CC7E795.highlight.minted)
+(./_minted/AF905E838692151675F3B98481E2659F.highlight.minted) [150]
+(./_minted/ADC012CAC73FE44AC8F8437EBBDF6A90.highlight.minted) [151] [152]
+Chapter 44.
+[153] [154]
+Chapter 45.
+
+Underfull \hbox (badness 2096) in paragraph at lines 11363--11364
+[]\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
+eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
+loat64 | Float128 | StickyF | BigExactF |
+[155] [156] (./_minted/ABC2DF04343882B2315A4A7BAABF2AA4.highlight.minted)
+(./_minted/928E3D2E0EA571B1CCBEE70D266979D3.highlight.minted) [157]
+(./_minted/AA4AF40FC8E1795E1A9A1C1E7FB963EA.highlight.minted)
+(./_minted/35C445D26325FEA8A9A57A442FA825BA.highlight.minted) [158]
+(./_minted/EB42B160B1DD470EDD8665FF0EF11318.highlight.minted) [159]
+(./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [160]
+(./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
+(./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [161]
+Underfull \hbox (badness 3209) in paragraph at lines 11834--11835
+[]\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
+ows the op (automatic for registry ops; manual block additions extend
+[162] [163]
+Chapter 46.
+(./_minted/B490AEB8006D851A5528860AE216EACD.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
+(./_minted/7C74DB3F9021DDFCEA8AB5208F37BEB4.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [164]
+(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
+(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
+(./_minted/E5AF88883A1274A43734B8D8D85CD2B6.highlight.minted)
+(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [165]
+(./_minted/6FD29455DE2EC0478657623D292A0523.highlight.minted)
+(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [166] [167]
+Chapter 47.
+(./_minted/D968C27334F36CF425F2A26FAC703B47.highlight.minted)
+(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [168] [169]
+[170]
+Chapter 48.
 (./_minted/84A90A9B2B4C74F7026D7CC233FC9E3D.highlight.minted)
-(./_minted/1741B017B9B890133A1518453C40CF62.highlight.minted)
-(./_minted/2BFD2C2747A17E7B7D9F08C964623EE0.highlight.minted) [135]
+(./_minted/1EF2902BD5C0D835A502F67390D89EC6.highlight.minted)
+(./_minted/2BFD2C2747A17E7B7D9F08C964623EE0.highlight.minted) [171]
 (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted)
 (./_minted/F703E6CC9F09FC9FA8B19212C6540031.highlight.minted)
 (./_minted/B151FF6DB04AECFC964D55A0B0EAFFA4.highlight.minted)
 (./_minted/42D0FAF94820CC48FEA22F0E68586C90.highlight.minted)
-(./_minted/CA80CFAADF990F6848E34BC75E3780A3.highlight.minted) [136]
+(./_minted/CA80CFAADF990F6848E34BC75E3780A3.highlight.minted) [172]
 (./_minted/7262042352FFDB90D04CB63208B7B00F.highlight.minted)
 (./_minted/F1391FB6C6AC2922181D4EA6EEFFB40F.highlight.minted)
-(./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [137]
+(./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [173]
 (./_minted/51BF9C8795CF5651D61D8B3D356A3328.highlight.minted)
 (./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted)
-Underfull \hbox (badness 3039) in paragraph at lines 10661--10662
+Underfull \hbox (badness 3039) in paragraph at lines 12576--12577
 []\TU/DejaVuSans(0)/m/n/10 Setting a rounding/saturation component rebuilds \TU
 /DejaVuSansMono(0)/m/n/10 DefaultProjection\TU/DejaVuSans(0)/m/n/10 ; setting \
 TU/DejaVuSansMono(0)/m/n/10 DefaultProjection! \TU/DejaVuSans(0)/m/n/10 di-
 
-Underfull \hbox (badness 1817) in paragraph at lines 10661--10662
+Underfull \hbox (badness 1817) in paragraph at lines 12576--12577
 \TU/DejaVuSans(0)/m/n/10 rectly updates both components. Always: \TU/DejaVuSans
 Mono(0)/m/n/10 DefaultProjection() === ProjSpec(DefaultRoundingMode(),
-[138] (./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted)
+[174] (./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted)
 (./_minted/B400E262F2B13FDE8DE3C87DB9DABEA1.highlight.minted)
-Overfull \hbox (1.30995pt too wide) in paragraph at lines 10717--10717
+Overfull \hbox (1.30995pt too wide) in paragraph at lines 12632--12632
 []\TU/DejaVuSans(0)/m/n/8 Ternary|  
 (./_minted/AE2293A77638F0CAFBFD89EA5C2F5495.highlight.minted)
-(./_minted/24F221DCB574BFDDC8719325DD18AA91.highlight.minted) [139]
+(./_minted/24F221DCB574BFDDC8719325DD18AA91.highlight.minted) [175]
 (./_minted/52F087A7E3FDBBD4636577CF9B074EAE.highlight.minted)
-(./_minted/0D4B83877DACA6B55F675191F5DF5AA0.highlight.minted) [140]
+(./_minted/0D4B83877DACA6B55F675191F5DF5AA0.highlight.minted) [176]
 (./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted)
 (./_minted/BD07044F7FBC9DBA83A8497B454C54C0.highlight.minted)
 (./_minted/53006BE75C801F46B18A48EA6942AE93.highlight.minted)
-(./_minted/099B5B2017330BB14CDC8D9E316D0D03.highlight.minted) [141] [142]
-Chapter 24.
-[143] [144] [145] [146] [147] [148] [149] [150] [151] [152] [153] [154]
-[155]
-Chapter 25.
-[156] [157] (./main.aux) )
+(./_minted/099B5B2017330BB14CDC8D9E316D0D03.highlight.minted) [177]
+Overfull \hbox (39.146pt too wide) in paragraph at lines 12836--12836
+[]\TU/DejaVuSansMono(0)/m/n/8 Vector{Binary{K,P,Σ,Δ}}(undef, 
+[178] [179]
+Chapter 49.
+[180] [181] [182] [183] [184] [185] [186] [187] [188] [189] [190] [191]
+Chapter 50.
+[192]
+Underfull \hbox (badness 2698) in paragraph at lines 13857--13858
+[]\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
+K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
+ though you
+[193] [194]
+Chapter 51.
+[195] [196]
+Chapter 52.
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[197] [198] (./main.aux) )
 (see the transcript file for additional information)
-Output written on main.xdv (162 pages, 3917752 bytes).
+Output written on main.xdv (206 pages, 4877460 bytes).
 Transcript written on main.log.
 Latexmk: Getting log file 'main.log'
 Latexmk: Examining 'main.fls'
@@ -2517,7 +3009,7 @@ Run number 1 of rule 'xdvipdfmx'
 Running 'xdvipdfmx -E -o "main.pdf"  "main.xdv"'
 ------------
 main.xdv -> main.pdf
-[1][2][3][4][5][6][7][8][9][10][11][12][13][14][15][16][17][18][19][20][21][22][23][24][25][26][27][28][29][30][31][32][33][34][35][36][37][38][39][40][41][42][43][44][45][46][47][48][49][50][51][52][53][54][55][56][57][58][59][60][61][62][63][64][65][66][67][68][69][70][71][72][73][74][75][76][77][78][79][80][81][82][83][84][85][86][87][88][89][90][91][92][93][94][95][96][97][98][99][100][101][102][103][104][105][106][107][108][109][110][111][112][113][114][115][116][117][118][119][120][121][122][123][124][125][126][127][128][129][130][131][132][133][134][135][136][137][138][139][140][141][142][143][144][145][146][147][148][149][150][151][152][153][154][155][156][157][158][159][160][161][162]
-608188 bytes written
+[1][2][3][4][5][6][7][8][9][10][11][12][13][14][15][16][17][18][19][20][21][22][23][24][25][26][27][28][29][30][31][32][33][34][35][36][37][38][39][40][41][42][43][44][45][46][47][48][49][50][51][52][53][54][55][56][57][58][59][60][61][62][63][64][65][66][67][68][69][70][71][72][73][74][75][76][77][78][79][80][81][82][83][84][85][86][87][88][89][90][91][92][93][94][95][96][97][98][99][100][101][102][103][104][105][106][107][108][109][110][111][112][113][114][115][116][117][118][119][120][121][122][123][124][125][126][127][128][129][130][131][132][133][134][135][136][137][138][139][140][141][142][143][144][145][146][147][148][149][150][151][152][153][154][155][156][157][158][159][160][161][162][163][164][165][166][167][168][169][170][171][172][173][174][175][176][177][178][179][180][181][182][183][184][185][186][187][188][189][190][191][192][193][194][195][196][197][198][199][200][201][202][203][204][205][206]
+843667 bytes written
 Latexmk: All targets (main.xdv main.pdf) are up-to-date
 

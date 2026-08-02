@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+V(c) = c · η                                    1 ≤ c \PYGZlt{} L      (subnormal)
+V(c) = (L + t) · 2\PYGZca{}(j−1) · η                    L ≤ c ≤ M      (normal)
+\end{MintedVerbatim}

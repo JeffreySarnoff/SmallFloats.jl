@@ -1,0 +1,30 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{Formats}
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{\PYGZus{}NAMED}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{nan\PYGZus{}code}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{posinf\PYGZus{}code}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{MaxFiniteOf}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rawvalue}\PYG{p}{,}
+\PYG{+w}{                   }\PYG{n}{codeunit\PYGZus{}type}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{codepoint}
+
+\PYG{n}{bad}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}
+\PYG{k}{for}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{nm}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{sort}\PYG{p}{(}\PYG{n}{collect}\PYG{p}{(}\PYG{n}{\PYGZus{}NAMED}\PYG{p}{);}\PYG{+w}{ }\PYG{n}{by}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{first}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{K}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{P}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{T}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{precision}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{S}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{D}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{issigned}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{isextended}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{:}\PYG{+w}{ }\PYG{l+m+mi}{0}
+\PYG{+w}{    }\PYG{n}{Q}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{H}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{L}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{+w}{ }\PYG{n}{K}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{K}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{),}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{P}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{B}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{K}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{P}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{S}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{N}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Q}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{S}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{H}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{+w}{                      }\PYG{c}{\PYGZsh{} the NaN anchor}
+\PYG{+w}{    }\PYG{n}{M}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{N}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{D}\PYG{+w}{                                }\PYG{c}{\PYGZsh{} max positive finite code}
+
+\PYG{+w}{    }\PYG{n}{B}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{expbias}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{                }\PYG{o}{||}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{bad}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{N}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{k+kt}{Int}\PYG{p}{(}\PYG{n}{nan\PYGZus{}code}\PYG{p}{(}\PYG{n}{T}\PYG{p}{))}\PYG{+w}{          }\PYG{o}{||}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{bad}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{M}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{k+kt}{Int}\PYG{p}{(}\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{MaxFiniteOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)))}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{bad}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{D}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{N}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{k+kt}{Int}\PYG{p}{(}\PYG{n}{posinf\PYGZus{}code}\PYG{p}{(}\PYG{n}{T}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{bad}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{))}
+
+\PYG{+w}{    }\PYG{n}{setprecision}\PYG{p}{(}\PYG{k+kt}{BigFloat}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{256}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{do}
+\PYG{+w}{        }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{M}\PYG{+w}{                             }\PYG{c}{\PYGZsh{} every positive finite code}
+\PYG{+w}{            }\PYG{n}{v}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{codeunit\PYGZus{}type}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)(}\PYG{n}{c}\PYG{p}{)))}
+\PYG{+w}{            }\PYG{n}{want}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{L}\PYG{+w}{ }\PYG{o}{?}\PYG{+w}{ }\PYG{n}{ldexp}\PYG{p}{(}\PYG{k+kt}{BigFloat}\PYG{p}{(}\PYG{n}{c}\PYG{p}{),}\PYG{+w}{ }\PYG{l+m+mi}{2}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{P}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{:}
+\PYG{+w}{                           }\PYG{n}{ldexp}\PYG{p}{(}\PYG{k+kt}{BigFloat}\PYG{p}{(}\PYG{n}{L}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{c}\PYG{+w}{ }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n}{L}\PYG{p}{)),}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{c}\PYG{+w}{ }\PYG{o}{÷}\PYG{+w}{ }\PYG{n}{L}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{l+m+mi}{2}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{P}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{)}
+\PYG{+w}{            }\PYG{k+kt}{BigFloat}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{==}\PYG{+w}{ }\PYG{n}{want}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{bad}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{+w}{        }\PYG{k}{end}
+\PYG{+w}{    }\PYG{k}{end}
+\PYG{k}{end}
+\PYG{n}{bad}
+\end{MintedVerbatim}

@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+OrderKey(c) =
+    Q − c,      H \PYGZlt{} c \PYGZlt{} Q       negative values, folded below H
+    H,          c = 0           zero
+    H + c,      0 \PYGZlt{} c \PYGZlt{} H       positive values, above H
+\end{MintedVerbatim}

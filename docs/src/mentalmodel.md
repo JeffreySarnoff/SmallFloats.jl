@@ -209,11 +209,11 @@ the choice explicit and quantified.
 *Now you can read:* [Register & Measure an Approximation](howto_register_approx.md), and
 [Conformance & Approximation Registry](ref_conformance.md).
 
-## The five ideas, as one picture
+## Visual Synopsis
 
-![The five ideas behind SmallFloats: a finite set of datums, values as code
-points, exact computation, one controlled projection, and exact or measured
-results.](assets/fiveideas.png)
+![A whole of five parts: a finite set of datums, values as code points, exact
+computation, one controlled projection, and exact or measured
+results.](assets/fiveideas.svg)
 
 Read left to right: a value is a name in a finite set (1–2); computing is
 exact math followed by one projection (3); the projection is your choice of

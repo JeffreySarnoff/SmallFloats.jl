@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+order\PYGZus{}key(NaN) = 0  \PYGZlt{}  order\PYGZus{}key(−Inf)  \PYGZlt{}  …  \PYGZlt{}  order\PYGZus{}key(+Inf)
+\end{MintedVerbatim}

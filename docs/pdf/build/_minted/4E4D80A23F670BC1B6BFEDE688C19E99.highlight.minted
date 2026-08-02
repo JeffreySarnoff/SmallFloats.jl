@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+(1.0, 12.5, 8.0, 1.0, 0.99966)
+\PYGZsh{} llr datum, exact log\PYGZhy{}odds, quantized log\PYGZhy{}odds, exact posterior, quantized posterior
+\end{MintedVerbatim}

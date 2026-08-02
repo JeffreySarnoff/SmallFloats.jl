@@ -141,8 +141,8 @@ bookmarks present, no near-blank pages, margin ink respected, no code-band
 page-boundary crossings, TOC block integrity (rule 9) clean.
 
 ## Reproducing
-    julia docs/builddocs.jl            # HTML + PDF (set DOCS_PDF=skip to omit)
-    bash docs/pdf/buildpdf.sh          # PDF only (docs env must be instantiated)
+    julia docs/builddocs.jl         # HTML + PDF (set DOCS_PDF=skip to omit)
+    bash docs/pdf/buildpdf.sh       # PDF only (docs env must be instantiated)
 Content changes regenerate from docs/src — never edit the LaTeX by hand.
 """
 open(f"{build}/../buildnote.md", "w").write(note)

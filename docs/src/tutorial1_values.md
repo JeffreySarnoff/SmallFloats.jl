@@ -98,15 +98,16 @@ always returns a `Float64` and rounds where the datum does not fit.
 ## Enumerating a whole format
 
 Small formats are small enough to look at in full. `Binary4p2se` has 16 code
-points, sorted here by the total order (single NaN last):
+points, sorted here by the draft's total order — which places the single NaN
+**first**, below −Inf (§4.12.1), not last as `Float64` sorting does:
 
 ```julia
 decode.(sort(Binary4p2se.(0x00:0x0f)))      # broadcast the code-point constructor
 ```
 
 ```
-[-Inf, -2.0, -1.5, -1.0, -0.75, -0.5, -0.25, 0.0,
-  0.25, 0.5, 0.75, 1.0, 1.5, 2.0, Inf, NaN]
+[NaN, -Inf, -2.0, -1.5, -1.0, -0.75, -0.5, -0.25, 0.0,
+  0.25, 0.5, 0.75, 1.0, 1.5, 2.0, Inf]
 ```
 
 That listing *is* the format: one NaN, no negative zero, subnormal spacing near

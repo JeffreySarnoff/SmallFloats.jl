@@ -1,10 +1,8 @@
 # Cheat Sheet
 
-A one-page reference for the SmallFloats.jl operations you are most likely to
-write. For explanations and semantics, see the User Guide; for
-implementation details, see the Technical Guide.
-
-Single-topic cards: Format Card · Ops Card · Blocks & Packed Card (appendix pages below).
+A compact reference for the SmallFloats.jl operations you are most likely to
+write. For semantics and explanation, follow the links out of each section; for
+implementation detail, see [Insights](under_architecture.md).
 
 ## Start here
 
@@ -23,7 +21,7 @@ z = Add(T, ρ, x, y)
 The explicit operation shape is always:
 
 ```julia
-Op(result_format, projection_spec, operands...; rng, R)
+OperationName(result_format, projection_spec, operands...; rng, R)
 ```
 
 For same-format operands under the default projection, ordinary Julia syntax is
@@ -255,7 +253,8 @@ FMA(x, y, z)
 | Ternary | `FMA`, `FAA`, `Clamp` |
 | Conversion | `Convert` |
 
-Common Base spellings under `RNE_SN`:
+Common Base spellings under the session projection (initially `RNE_SN`) —
+the full register is in [Julia Compatibility](ref_julia_compat.md):
 
 ```julia
 x + y; x - y; x * y; x / y
@@ -285,10 +284,11 @@ C = vmap(:Add, T, ρ, A, B)
 vmap!(C, Val(:Add), T, ρ, A, B)
 ```
 
-Operands and destination must have matching axes. Deterministic unary/binary
-operations use cached result tables; affordable ternary signatures may also use
-tables. Stochastic operations compute each element and consume one draw per
-projection.
+Operands and destination must have matching axes. For table-eligible K ≤ 8
+formats, deterministic unary/binary operations use cached result tables and
+affordable ternary signatures may also use tables. Wider signatures compute
+directly. Stochastic operations always compute each element and consume one draw
+per projection.
 
 ```julia
 table_bytes()
@@ -367,15 +367,41 @@ unregister_approx!(:fast_exp)
 
 Approximate implementations are never substituted into the default API.
 
-## Common pitfalls
+## Common traps
 
-See [Troubleshooting](troubleshooting.md) for the full symptom-first list.
+| Trap | Correct pattern |
+|---|---|
+| Treating an `Unsigned` as a number | `T(Int(c))` for a numeric integer; `T(c::Unsigned)` for a code point — at every width |
+| `Vector{Binary{K,P,Σ,Δ}}(undef, n)` | **Silently boxes every element** — the abstract format is not `isbits`. Use `Vector{Binary8p4se}` or `Vector{format(K,P,Σ,Δ)}`. `similar` normalizes; `Vector{…}(undef, n)` cannot be intercepted |
+| Silently mixing formats | Convert explicitly: `Convert(T, ρ, x)` |
+| Assuming `SatNone` always clamps | Choose `SatFinite` when clamping is required |
+| Expecting IEEE division-by-zero | P3109 semantics here define `x / 0 → NaN` |
+| Expecting negative zero | Every format has one zero; `T(-0.0) === zero(T)` |
+| Expecting `sort` to put NaN last | The draft's total order puts the single NaN **first**, below −Inf (§4.12.1) — the opposite end from `Float64` |
+| Passing a `Rational` | Convert explicitly to an exact supported carrier or knowingly to `Float64` |
+| Reproducibility with stochastic rounding | Supply a seeded `rng`, or an explicit `R` in tests |
+| Using `rawvalue` on unchecked input | Prefer validated `T(c::Unsigned)` outside kernels |
+
+Symptom-first versions of these, with the error text you would actually see, are
+in [Troubleshooting](troubleshooting.md).
 
 ## Performance checklist
 
-See [Verification & Benchmark Doctrine](under_verification.md) and the
-[Performance Model](explain_performance.md) for the full checklist.
+- Keep format types and projection specs in `const` bindings, function arguments,
+  or type parameters.
+- Put code using runtime-selected formats behind a function barrier.
+- Expect the first deterministic array call for a specialization to build a table;
+  benchmark warm calls separately.
+- Use `PackedVector` when storage bandwidth matters more than direct byte access.
+- Use `table_bytes()` to inspect cache footprint and `empty_tables!()` to reset it.
+- Do not replace explicit projection semantics with `@fastmath`.
 
-For worked applications, continue to [Examples from AI](examples_index.md).
+The reasoning behind each is in the [Performance Model](explain_performance.md);
+the measurement rules are in
+[Package Verification & Benchmarking](under_verification.md).
+
+---
+
+For worked applications, continue to the [Examples Index](examples_index.md).
 For correctness and benchmark methodology, continue to
-[Insights](under_architecture.md).
+[Architecture](under_architecture.md).

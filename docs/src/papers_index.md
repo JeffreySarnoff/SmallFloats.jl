@@ -1,4 +1,4 @@
-# The Standard & Design Papers
+# The Standard and this Design
 
 An index to the curated `docs/other/` collection: the standard's concept map,
 the design rationales behind specific implementation choices, and the working

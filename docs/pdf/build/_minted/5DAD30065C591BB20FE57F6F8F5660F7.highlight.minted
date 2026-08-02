@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{b}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Block}\PYG{p}{(}\PYG{n}{Binary8p1uf}\PYG{p}{(}\PYG{l+m+mf}{0.5}\PYG{p}{),}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{80.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{0.375}\PYG{p}{),}
+\PYG{+w}{                                    }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{5.5}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{2.25}\PYG{p}{)));}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{scaleformat}\PYG{p}{(}\PYG{n}{b}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{elemformat}\PYG{p}{(}\PYG{n}{b}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{blocksize}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}
+\PYG{g+go}{(Binary8p1uf, Binary8p4se, 4)}
+\end{MintedVerbatim}

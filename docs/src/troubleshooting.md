@@ -108,7 +108,7 @@ Fix: keep format types and projection specs in `const` bindings, function
 arguments, or type parameters; put runtime-selected-format code behind a
 function barrier; verify zero warm-path allocation before trusting a number.
 Full explanation: Technical Examples, Benchmarking without measuring the
-dispatcher; Verification & Benchmark Doctrine.
+dispatcher; Package Verification & Benchmarking.
 
 **Symptom: the first array call for a given format/operation is much slower
 than every call after it.**
@@ -144,4 +144,4 @@ projections.
 [Cheat Sheet](cheatsheet.md),
 [Glossary](glossary.md),
 [Performance Model](explain_performance.md),
-[Verification & Benchmark Doctrine](under_verification.md).
+[Package Verification & Benchmarking](under_verification.md).

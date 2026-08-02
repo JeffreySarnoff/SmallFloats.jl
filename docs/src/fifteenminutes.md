@@ -149,5 +149,5 @@ between them is a conversion, never a reinterpretation.
 ## see also
 
 [Mental Model](mentalmodel.md),
-[The Standard & Design Papers](papers_index.md),
+[The Standard and this Design](papers_index.md),
 [Quickstart](quickstart.md).

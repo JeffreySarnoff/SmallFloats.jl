@@ -53,4 +53,4 @@ Source files load in dependency order, each layer speaking only downward:
 [The Oracle & Rigor Classes](under_oracle.md),
 [Tables, Kernels & Sorting](under_tables.md),
 [Blocks: Exactness without Superaccumulators](under_blocks.md),
-[Verification & Benchmark Doctrine](under_verification.md).
+[Package Verification & Benchmarking](under_verification.md).
