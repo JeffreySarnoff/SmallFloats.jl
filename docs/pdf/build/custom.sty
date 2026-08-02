@@ -38,13 +38,19 @@
 \copypagestyle{chapter}{ruled} \makeevenhead{chapter}{}{}{}
 \makeoddhead{chapter}{}{}{} \makeheadrule{chapter}{\textwidth}{0pt}
 
-% TOC block integrity (howto.md rule 9): contents-page breaks belong BEFORE
-% chapter entries, never inside a chapter's subentry block — so discourage
-% breaks before section-level TOC lines (penalty 3, not infinite: a block
-% taller than a contents page may still break, per the rule's exception).
+% TOC block integrity (howto.md rule 9): mirror body pagination recursively.
+% A wrapped entry stays whole like a paragraph (the global interline penalty
+% above enforces that). A break belongs before the governing parent, never
+% between it and its first displayed child. The generated, survey-conditional
+% patches below discourage each parent->child break. Penalty 3 is intentionally
+% finite: an oversized run may still break before a complete child-entry block.
 \makeatletter
-% \pretocmd, not \preto: \l@section is parameterized, and \preto would strip
-% its parameter text (the ".toc has an extra }" failure). Loud on failure.
+% \pretocmd, not \preto: the \l@... macros are parameterized, and \preto would
+% strip their parameter text (the ".toc has an extra }" failure). Every patch
+% has a loud failure branch. The part->chapter patch appears only when parts
+% remain after Stage 3.1; other edges likewise require both displayed levels.
+\pretocmd{\l@chapter}{\nopagebreak[3]}{}
+  {\PackageError{custom}{l@chapter TOC rule-9 patch failed to apply}{}}
 \pretocmd{\l@section}{\nopagebreak[3]}{}
   {\PackageError{custom}{l@section TOC rule-9 patch failed to apply}{}}
 \makeatother
@@ -57,7 +63,7 @@
 
 % Cover page date: the build's UTC timestamp (memoir's \maketitle prints \date;
 % the title/author macros in preamble.tex leave it untouched).
-\date{2026-08-02T19:44Z}
+\date{2026-08-02T21:16Z}
 
 \hypersetup{pdftitle={SmallFloats.jl 0.3.0 — Documentation}, pdfauthor={Jeffrey Sarnoff},
   bookmarksnumbered=true, bookmarksopen=true}

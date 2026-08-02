@@ -74,6 +74,10 @@ satisfy one must record the deliberate exception in the build note.
    page), break only before a complete child-entry block and apply the same
    rule again at that child's level. Thus a continuation begins with a complete
    entry, never the second line of an entry or a child stranded from its parent.
+   Use the least-confining realization for any complete parent block that fits
+   a contents page: write a measured `\needspace` reservation immediately
+   before its TOC entry. The reservation does nothing when enough room remains
+   and moves the governing entry only when the block would otherwise split.
 
 ---
 
@@ -232,7 +236,7 @@ the decision table:
 | non-ASCII characters present | fallback-map exactly those absent from the document fonts (Stage 3.7) |
 | longest raw code line at chosen geometry | if wider than the text block: widen margins first, then rely on `breaklines` with a visible continuation marker; landscape only for pathological cases |
 | longest inline `\texttt` token vs the measure | tokens longer than ~25 chars (URLs, qualified names, call chains) get intra-token `\allowbreak` at unambiguous points (`/`, `(`, after `\_`) as a Stage 3.6 transform — `breaklines` only helps *minted*, never inline mono, and `\emergencystretch` cannot absorb a 90 pt token |
-| any displayed TOC parent (part, chapter, or section) with many child entries, or any wrapped entry | estimate each complete recursive block; the rule-9 check in Stage 5 must choose breaks before the highest governing entry whose block fits, just as body pagination moves a section, subsection, or paragraph before splitting what it introduces |
+| any displayed TOC parent (part, chapter, or section) with many child entries, or any wrapped entry | estimate each complete recursive block; for every part block that fits a contents page, write a `\needspace` reservation before its TOC entry, sized to the measured block plus spacing headroom. Let the recursive penalties protect lower-level parent→child edges; Stage 5 chooses an explicit residual break only when those least-confining measures cannot place the block correctly |
 | a table whose heading→end-of-table extent fits the page budget (any heading level) | keep-together (rule 3): `\needspace{⌈est⌉\baselineskip}` before the governing heading (Stage 3.6); larger extents get the glue fallback — `\nopagebreak` between the table and its introducing paragraph |
 | a fragmented heading, any of: ≳ 6 children with spans under a third of a page; more children than a contents block comfortably holds (≳ 12, rule 9 headroom); or ≥ 3 children whose titles share a prefix and differ only by a variant suffix | **editorial regrouping, at the source level**: demote-first, then cluster under concise group headings — the note below the table gives the procedure; it applies identically at every level. Variant families are the strongest natural-cluster signal: the shared prefix names the group, the suffixes become the demoted headings |
 
@@ -270,15 +274,28 @@ resort only — the PDF's structure then silently diverges from the site's.
 
 Apply the decision table in a single script against a pristine copy of the
 resolved `.tex`. Order matters (later steps match text produced by earlier
-ones): **3.1 flatten parts → 3.2 uniquify labels → 3.3 glue colon-introduced
-code → 3.4 group code chains → 3.5 wrap docstrings → 3.6 token and
+ones): **3.1 resolve parts + reserve fitting TOC blocks → 3.2 uniquify labels
+→ 3.3 glue colon-introduced code → 3.4 group code chains → 3.5 wrap docstrings → 3.6 token and
 table/figure fixes → 3.7 write `custom.sty` → 3.8 probe the preamble.**
 Every regex substitution
 asserts its match count against the survey (`assert n == expected`) so a
 silently failing edit stops the build instead of shipping.
 
-**3.1 Flatten `\part` wrappers** — only under the survey condition. Report it
-as a reorganization in the build note.
+**3.1 Resolve parts and their TOC blocks.** Flatten `\part` wrappers only under
+the survey condition and report that reorganization in the build note. When
+parts remain, estimate each part's complete displayed TOC block. If the block
+fits a contents page, insert immediately before that source `\part`:
+
+```latex
+\addtocontents{toc}{\protect\needspace{<measured lines + headroom>\baselineskip}}
+```
+
+This writes the reservation immediately before the part entry in the generated
+`.toc`; it does not force a new page when the block fits the space already
+available. Assert that the number and order of reservations match the surveyed
+part blocks. Oversized part blocks receive no whole-block reservation: their
+legal boundaries are governed recursively by rule 9's child-level penalties
+and verified in Stage 5.
 
 **3.2 Uniquify duplicate labels** — rename second and later occurrences with
 a deterministic suffix; patch references only if the survey found any.

@@ -1,6 +1,7 @@
 \changetocdepth {1}
 \xpg@aux {}{latex}
 \contentsline {chapter}{Contents}{ii}{chapter*.1}%
+\needspace {9\baselineskip }
 \contentsline {part}{\partnumberline {I}Home}{1}{part.1}%
 \contentsline {chapter}{\chapternumberline {1}SmallFloats.jl}{2}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Choose a route}{2}{section.1.1}%
@@ -17,6 +18,7 @@
 \contentsline {section}{\numberline {1.3}The rule to remember first}{3}{section.1.3}%
 \contentsline {section}{\numberline {1.4}Supported formats}{3}{section.1.4}%
 \contentsline {section}{\numberline {1.5}Next}{4}{section.1.5}%
+\needspace {9\baselineskip }
 \contentsline {part}{\partnumberline {II}Start Here}{5}{part.2}%
 \contentsline {chapter}{\chapternumberline {2}Install and Verify}{6}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Install and Verify}{6}{section.2.1}%
@@ -47,6 +49,7 @@
 \contentsline {subsection}{Visual Synopsis}{14}{section*.31}%
 \contentsline {subsection}{Next}{14}{section*.32}%
 \contentsline {subsection}{Look it up}{15}{section*.33}%
+\needspace {23\baselineskip }
 \contentsline {part}{\partnumberline {III}Workflows}{16}{part.3}%
 \contentsline {chapter}{\chapternumberline {5}Choose a Format}{17}{chapter.5}%
 \contentsline {section}{\numberline {5.1}Choose a Format}{17}{section.5.1}%
@@ -125,6 +128,7 @@
 \contentsline {subsection}{Recipe}{40}{section*.88}%
 \contentsline {subsection}{What can go wrong}{41}{section*.89}%
 \contentsline {subsection}{Next steps}{41}{section*.90}%
+\needspace {23\baselineskip }
 \contentsline {part}{\partnumberline {IV}Concepts}{42}{part.4}%
 \contentsline {chapter}{\chapternumberline {15}P3109 in One Chapter}{43}{chapter.15}%
 \contentsline {section}{\numberline {15.1}P3109 in One Chapter}{43}{section.15.1}%
@@ -226,6 +230,7 @@
 \contentsline {subsection}{Parameter recovery}{71}{section*.168}%
 \contentsline {subsection}{Checking your own derivation}{71}{section*.169}%
 \contentsline {subsection}{Continue}{71}{section*.170}%
+\needspace {21\baselineskip }
 \contentsline {part}{\partnumberline {V}Reference}{72}{part.5}%
 \contentsline {chapter}{\chapternumberline {25}Formats and Values}{73}{chapter.25}%
 \contentsline {section}{\numberline {25.1}Formats and Value Queries}{73}{section.25.1}%
@@ -291,6 +296,7 @@
 \contentsline {subsection}{Index}{94}{section*.216}%
 \contentsline {chapter}{\chapternumberline {33}Internal API Index}{106}{chapter.33}%
 \contentsline {section}{\numberline {33.1}Internal API Index}{106}{section.33.1}%
+\needspace {11\baselineskip }
 \contentsline {part}{\partnumberline {VI}Examples and Evidence}{116}{part.6}%
 \contentsline {chapter}{\chapternumberline {34}Gallery}{117}{chapter.34}%
 \contentsline {section}{\numberline {34.1}Example Gallery}{117}{section.34.1}%
@@ -368,6 +374,7 @@
 \contentsline {subsubsection}{Table builds (oracle + projection, Float128-first)}{143}{section*.282}%
 \contentsline {subsubsection}{Block and scaled operations}{143}{section*.283}%
 \contentsline {subsubsection}{Conversions and packed storage}{143}{section*.284}%
+\needspace {23\baselineskip }
 \contentsline {part}{\partnumberline {VII}Implementation}{144}{part.7}%
 \contentsline {chapter}{\chapternumberline {38}Architecture and Invariants}{145}{chapter.38}%
 \contentsline {section}{\numberline {38.1}Architecture and Invariants}{145}{section.38.1}%
@@ -454,6 +461,7 @@
 \contentsline {subsection}{The rules}{175}{section*.347}%
 \contentsline {subsection}{Set up a measurement that is actually measuring your code}{175}{section*.348}%
 \contentsline {subsection}{Continue through the implementation}{176}{section*.349}%
+\needspace {11\baselineskip }
 \contentsline {part}{\partnumberline {VIII}Help}{177}{part.8}%
 \contentsline {chapter}{\chapternumberline {48}Troubleshooting}{178}{chapter.48}%
 \contentsline {section}{\numberline {48.1}Troubleshooting}{178}{section.48.1}%

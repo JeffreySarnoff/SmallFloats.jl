@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.7.24)  2 AUG 2026 15:45
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.7.24)  2 AUG 2026 17:16
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1280,8 +1280,8 @@ Sidefoothsep and sidefootwidth: 7pt and 71pt
 Sidefootvsep and sidefootheight: 12pt and 548.39996pt
 ******************************************************
 
-Package hyperref Info: Option `bookmarksnumbered' set `true' on input line 63.
-Package hyperref Info: Option `bookmarksopen' set `true' on input line 63.
+Package hyperref Info: Option `bookmarksnumbered' set `true' on input line 69.
+Package hyperref Info: Option `bookmarksopen' set `true' on input line 69.
 ) (./main.aux)
 \openout1 = `main.aux'.
 
@@ -1402,207 +1402,207 @@ LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
 (Font)              scaled to size 7.88116pt on input line 3.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
-(Font)              scaled to size 8.62987pt on input line 4.
+(Font)              scaled to size 8.62987pt on input line 5.
 
 [2
 
 ]
-Overfull \hbox (4.23534pt too wide) detected at line 292
+Overfull \hbox (4.23534pt too wide) detected at line 297
  \TU/DejaVuSans(0)/b/n/10 106
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 293
+Overfull \hbox (2.82689pt too wide) detected at line 298
  \TU/DejaVuSans(0)/m/n/10 106
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 295
+Overfull \hbox (4.23534pt too wide) detected at line 301
  \TU/DejaVuSans(0)/b/n/10 117
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 296
+Overfull \hbox (2.82689pt too wide) detected at line 302
  \TU/DejaVuSans(0)/m/n/10 117
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 303
+Overfull \hbox (4.23534pt too wide) detected at line 309
  \TU/DejaVuSans(0)/b/n/10 120
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 304
+Overfull \hbox (2.82689pt too wide) detected at line 310
  \TU/DejaVuSans(0)/m/n/10 120
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 322
+Overfull \hbox (4.23534pt too wide) detected at line 328
  \TU/DejaVuSans(0)/b/n/10 127
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 323
+Overfull \hbox (2.82689pt too wide) detected at line 329
  \TU/DejaVuSans(0)/m/n/10 127
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 342
+Overfull \hbox (4.23534pt too wide) detected at line 348
  \TU/DejaVuSans(0)/b/n/10 134
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 343
+Overfull \hbox (2.82689pt too wide) detected at line 349
  \TU/DejaVuSans(0)/m/n/10 134
- []
-
-
-Overfull \hbox (4.23534pt too wide) detected at line 372
- \TU/DejaVuSans(0)/b/n/10 145
- []
-
-
-Overfull \hbox (2.82689pt too wide) detected at line 373
- \TU/DejaVuSans(0)/m/n/10 145
- []
-
-
-Overfull \hbox (4.23534pt too wide) detected at line 376
- \TU/DejaVuSans(0)/b/n/10 147
  []
 
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
 (Font)              scaled to size 7.09305pt on input line 377.
 [3]
-Overfull \hbox (2.82689pt too wide) detected at line 377
+Overfull \hbox (4.23534pt too wide) detected at line 379
+ \TU/DejaVuSans(0)/b/n/10 145
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 380
+ \TU/DejaVuSans(0)/m/n/10 145
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 383
+ \TU/DejaVuSans(0)/b/n/10 147
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 384
  \TU/DejaVuSans(0)/m/n/10 147
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 387
+Overfull \hbox (4.23534pt too wide) detected at line 394
  \TU/DejaVuSans(0)/b/n/10 149
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 388
+Overfull \hbox (2.82689pt too wide) detected at line 395
  \TU/DejaVuSans(0)/m/n/10 149
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 398
+Overfull \hbox (4.23534pt too wide) detected at line 405
  \TU/DejaVuSans(0)/b/n/10 151
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 399
+Overfull \hbox (2.82689pt too wide) detected at line 406
  \TU/DejaVuSans(0)/m/n/10 151
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 405
+Overfull \hbox (4.23534pt too wide) detected at line 412
  \TU/DejaVuSans(0)/b/n/10 154
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 406
+Overfull \hbox (2.82689pt too wide) detected at line 413
  \TU/DejaVuSans(0)/m/n/10 154
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 411
+Overfull \hbox (4.23534pt too wide) detected at line 418
  \TU/DejaVuSans(0)/b/n/10 156
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 412
+Overfull \hbox (2.82689pt too wide) detected at line 419
  \TU/DejaVuSans(0)/m/n/10 156
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 423
+Overfull \hbox (4.23534pt too wide) detected at line 430
  \TU/DejaVuSans(0)/b/n/10 160
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 424
+Overfull \hbox (2.82689pt too wide) detected at line 431
  \TU/DejaVuSans(0)/m/n/10 160
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 430
+Overfull \hbox (4.23534pt too wide) detected at line 437
  \TU/DejaVuSans(0)/b/n/10 162
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 431
+Overfull \hbox (2.82689pt too wide) detected at line 438
  \TU/DejaVuSans(0)/m/n/10 162
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 444
+Overfull \hbox (4.23534pt too wide) detected at line 451
  \TU/DejaVuSans(0)/b/n/10 171
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 445
+Overfull \hbox (2.82689pt too wide) detected at line 452
  \TU/DejaVuSans(0)/m/n/10 171
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 452
+Overfull \hbox (4.23534pt too wide) detected at line 459
  \TU/DejaVuSans(0)/b/n/10 175
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 453
+Overfull \hbox (2.82689pt too wide) detected at line 460
  \TU/DejaVuSans(0)/m/n/10 175
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 458
+Overfull \hbox (4.23534pt too wide) detected at line 466
  \TU/DejaVuSans(0)/b/n/10 178
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 459
+Overfull \hbox (2.82689pt too wide) detected at line 467
  \TU/DejaVuSans(0)/m/n/10 178
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 465
+Overfull \hbox (4.23534pt too wide) detected at line 473
  \TU/DejaVuSans(0)/b/n/10 181
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 466
+Overfull \hbox (2.82689pt too wide) detected at line 474
  \TU/DejaVuSans(0)/m/n/10 181
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 481
+Overfull \hbox (4.23534pt too wide) detected at line 489
  \TU/DejaVuSans(0)/b/n/10 188
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 482
+Overfull \hbox (2.82689pt too wide) detected at line 490
  \TU/DejaVuSans(0)/m/n/10 188
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 484
+Overfull \hbox (4.23534pt too wide) detected at line 492
  \TU/DejaVuSans(0)/b/n/10 190
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 485
+Overfull \hbox (2.82689pt too wide) detected at line 493
  \TU/DejaVuSans(0)/m/n/10 190
  []
 
 )) [4]
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
-(Font)              scaled to size 13.61864pt on input line 11.
+(Font)              scaled to size 13.61864pt on input line 12.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
-(Font)              scaled to size 13.61864pt on input line 11.
+(Font)              scaled to size 13.61864pt on input line 12.
  [1
 
 
@@ -1611,11 +1611,11 @@ Chapter 1.
 \pydata@fh@0=\write7
 \openout7 = `_FAD58DE7366495DB4650CFEFAC2FCD61.data.minted'.
 
-runsystem(latexminted config  --timestamp 20260802154507 FAD58DE7366495DB4650CF
+runsystem(latexminted config  --timestamp 20260802171623 FAD58DE7366495DB4650CF
 EFAC2FCD61)...executed.
 
 (./_FAD58DE7366495DB4650CFEFAC2FCD61.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20260802154507 FAD58DE7366495DB4
+runsystem(latexminted cleanconfig  --timestamp 20260802171623 FAD58DE7366495DB4
 650CFEFAC2FCD61)...executed.
 
 
@@ -1627,14 +1627,14 @@ LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/b/n' will be
 (Font)              scaled to size 7.09305pt on input line 2.
 )
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/n' will be
-(Font)              scaled to size 7.88116pt on input line 38.
+(Font)              scaled to size 7.88116pt on input line 39.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
-(Font)              scaled to size 9.4574pt on input line 42.
+(Font)              scaled to size 9.4574pt on input line 43.
  [2
 
 ]
 (./_minted/68E8009F1C8EAD31218C8D81F9861A1F.highlight.minted)
-Underfull \hbox (badness 1184) in paragraph at lines 216--217
+Underfull \hbox (badness 1184) in paragraph at lines 217--218
 \TU/DejaVuSans(0)/m/n/10 at \TU/DejaVuSansMono(0)/m/n/10 K ≤ 8\TU/DejaVuSans(0)
 /m/n/10 ; the other 384 are available through \TU/DejaVuSansMono(0)/m/n/10 Smal
 lFloats.Binary…\TU/DejaVuSans(0)/m/n/10 , \TU/DejaVuSansMono(0)/m/n/10 format(K
@@ -1646,10 +1646,10 @@ lFloats.Binary…\TU/DejaVuSans(0)/m/n/10 , \TU/DejaVuSansMono(0)/m/n/10 format(
 ]
 Chapter 2.
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/b/n' will be
-(Font)              scaled to size 7.88116pt on input line 259.
+(Font)              scaled to size 7.88116pt on input line 261.
 (./_minted/9FC63D5FBF09D55F897EBF05820B8423.highlight.minted)
 (./_minted/AA1136E9BE0A5CA99D77ADEAC66D0F81.highlight.minted)
-Overfull \hbox (7.38509pt too wide) in paragraph at lines 295--296
+Overfull \hbox (7.38509pt too wide) in paragraph at lines 297--298
 []\TU/DejaVuSans(0)/m/n/10 For an editable install, \TU/DejaVuSansMono(0)/m/n/1
 0 pkg> dev https://github.com/JeffreySarnoff/SmallFloats.jl \TU/DejaVuSans(0)/m
 /n/10 clones into \TU/DejaVuSansMono(0)/m/n/10 ~/.julia/dev\TU/DejaVuSans(0)/m/
@@ -1677,7 +1677,7 @@ Chapter 3.
 (./_minted/A60F35EC912B75F9D6E858F2E6B10C50.highlight.minted) [9] [10]
 Chapter 4.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
-(Font)              scaled to size 7.88116pt on input line 658.
+(Font)              scaled to size 7.88116pt on input line 660.
 (./_minted/8B696342178501D9A9CF89DDA86CA13A.highlight.minted) [11
 
 ]
@@ -1685,11 +1685,11 @@ LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
 (./_minted/7AA8B67B2458ED2272CE91278D0E0FF6.highlight.minted)
 (./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [12]
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
-(Font)              scaled to size 6.30493pt on input line 820.
+(Font)              scaled to size 6.30493pt on input line 822.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
-(Font)              scaled to size 6.30493pt on input line 827.
+(Font)              scaled to size 6.30493pt on input line 829.
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/n' will be
-(Font)              scaled to size 6.30493pt on input line 827.
+(Font)              scaled to size 6.30493pt on input line 829.
 
 (./_minted/ED5695E79FD860212A92800159A332AB.highlight.minted
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/it' will be
@@ -1729,7 +1729,7 @@ Chapter 7.
 (./_minted/23F95FE104DEECFA040E559C82B94FD0.highlight.minted) [23]
 Chapter 8.
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/b/n' will be
-(Font)              scaled to size 8.62987pt on input line 1558.
+(Font)              scaled to size 8.62987pt on input line 1561.
 (./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted) [24
 
 ]
@@ -1748,7 +1748,7 @@ Chapter 9.
 (./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted)
 (./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
 (./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [28]
-Underfull \hbox (badness 2418) in paragraph at lines 1951--1952
+Underfull \hbox (badness 2418) in paragraph at lines 1954--1955
 \TU/DejaVuSans(0)/m/n/10 You have raw \TU/DejaVuSansMono(0)/m/n/10 Float64 \TU/
 DejaVuSans(0)/m/n/10 data with widely varying per-row magnitude, and you want t
 o quantize it into
@@ -1772,7 +1772,7 @@ Chapter 11.
 ] [34]
 Chapter 12.
 
-Underfull \hbox (badness 2521) in paragraph at lines 2370--2371
+Underfull \hbox (badness 2521) in paragraph at lines 2373--2374
 []\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
 sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
 VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
@@ -1788,7 +1788,7 @@ Chapter 13.
 ] [39]
 Chapter 14.
 
-Underfull \hbox (badness 1320) in paragraph at lines 2566--2567
+Underfull \hbox (badness 1320) in paragraph at lines 2569--2570
 []\TU/DejaVuSansMono(0)/m/n/10 register_approx!(name, opname, resultformat, ope
 randformats, ρ, fn; κ) \TU/DejaVuSans(0)/m/n/10 to register the imple-
  []
@@ -1812,7 +1812,7 @@ Chapter 15.
 (./_minted/6872D03381CB350E2BAFFEB6F55F1C34.highlight.minted) [43
 
 ]
-Overfull \hbox (7.39253pt too wide) in paragraph at lines 2879--2879
+Overfull \hbox (7.39253pt too wide) in paragraph at lines 2883--2883
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
  []
 
@@ -1874,9 +1874,9 @@ Chapter 23.
 ] [67]
 Chapter 24.
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/it' will be
-(Font)              scaled to size 7.88116pt on input line 4475.
+(Font)              scaled to size 7.88116pt on input line 4479.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
-(Font)              scaled to size 6.30493pt on input line 4507.
+(Font)              scaled to size 6.30493pt on input line 4511.
 [68
 
 ] (./_minted/1DA78753D525B498DBC59F013E6FB0AC.highlight.minted)
@@ -1902,12 +1902,12 @@ Chapter 26.
 
 ]
 (./_minted/558ECE6E71BCEBF34723A43181538BF0.highlight.minted)
-Overfull \hbox (6.05873pt too wide) in paragraph at lines 5188--5188
+Overfull \hbox (6.05873pt too wide) in paragraph at lines 5193--5193
 []\TU/DejaVuSansMono(0)/m/n/8 SatFinite|  
  []
 
 
-Overfull \hbox (17.4464pt too wide) in paragraph at lines 5188--5188
+Overfull \hbox (17.4464pt too wide) in paragraph at lines 5193--5193
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
  []
 
@@ -1919,7 +1919,7 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 [79
 
 ]
-Overfull \hbox (4.49115pt too wide) in paragraph at lines 5380--5380
+Overfull \hbox (4.49115pt too wide) in paragraph at lines 5385--5385
 []\TU/DejaVuSansMono(0)/m/n/8 Convert|  
  []
 
@@ -1942,7 +1942,7 @@ Chapter 30.
 
 ]
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/it' will be
-(Font)              scaled to size 8.62987pt on input line 6062.
+(Font)              scaled to size 8.62987pt on input line 6067.
 
 (./_minted/B630BA28595FAC2F26CA8B39F76056E1.highlight.minted)
 (./_minted/344103355B1B1CD09974EB7265879D81.highlight.minted)
@@ -1951,12 +1951,12 @@ LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/it' will be
 (./_minted/BD4A9518B790D33F291326E5C17709CF.highlight.minted) [90]
 Chapter 31.
 
-Overfull \hbox (0.99739pt too wide) in paragraph at lines 6228--6228
+Overfull \hbox (0.99739pt too wide) in paragraph at lines 6233--6233
 []\TU/DejaVuSansMono(0)/m/n/8 conformance_ 
  []
 
 
-Overfull \hbox (0.99739pt too wide) in paragraph at lines 6228--6228
+Overfull \hbox (0.99739pt too wide) in paragraph at lines 6233--6233
 []\TU/DejaVuSansMono(0)/m/n/8 conformance_ 
  []
 
@@ -1969,7 +1969,7 @@ Chapter 32.
 ] (./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [94]
 (./_minted/10381BB93BBA8C764996C7FC69679950.highlight.minted)
 (./_minted/B3A58D09D82AEA802F413DA53C01D568.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6651--6652
+Underfull \hbox (badness 10000) in paragraph at lines 6656--6657
 []\TU/DejaVuSans(0)/m/n/10 Consequently \TU/DejaVuSansMono(0)/m/n/10 Binary8p4s
 e === Binary{8,4,true,true} \TU/DejaVuSans(0)/m/n/10 is \TU/DejaVuSansMono(0)/b
 /n/10 false \TU/DejaVuSans(0)/m/n/10 and \TU/DejaVuSansMono(0)/m/n/10 Binary8p4
@@ -1981,14 +1981,14 @@ se <:
 (./_minted/7D3C1A969B31C38EA8662C2F6E57066E.highlight.minted)
 (./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted) [96]
 (./_minted/BF570C084BC3A67A5A7C9E4647CED36E.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6775--6776
+Underfull \hbox (badness 10000) in paragraph at lines 6780--6781
 []\TU/DejaVuSans(0)/m/n/10 Bit-packed storage of \TU/DejaVuSansMono(0)/m/n/10 F
  \TU/DejaVuSans(0)/m/n/10 code points at \TU/DejaVuSansMono(0)/m/n/10 bitwidth(
 F) \TU/DejaVuSans(0)/m/n/10 bits per element. Construct with
  []
 
 
-Underfull \hbox (badness 1024) in paragraph at lines 6775--6776
+Underfull \hbox (badness 1024) in paragraph at lines 6780--6781
 \TU/DejaVuSansMono(0)/m/n/10 PackedVector(A::AbstractVector{F})\TU/DejaVuSans(0
 )/m/n/10 ; recover with \TU/DejaVuSansMono(0)/m/n/10 Vector(pv) \TU/DejaVuSans(
 0)/m/n/10 or \TU/DejaVuSansMono(0)/m/n/10 collect(pv)\TU/DejaVuSans(0)/m/n/10 .
@@ -1999,14 +1999,14 @@ Underfull \hbox (badness 1024) in paragraph at lines 6775--6776
 (./_minted/B7FBE62B8A43596CB50217EFF5EFC03C.highlight.minted)
 (./_minted/F2D7F2369BA71030EC6E0929F4762B4D.highlight.minted)
 (./_minted/07E9226138ABB95EBCC075EC21E305E9.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 7033--7034
+Underfull \hbox (badness 10000) in paragraph at lines 7038--7039
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default projection specification. Ini
 tialized to \TU/DejaVuSansMono(0)/m/n/10 (DefaultRoundingMode(),
  []
 
 (./_minted/6BCB094CFCA7263C62B880348A8D6316.highlight.minted) [98]
 (./_minted/18A8C228B0622160748BFF87069B1557.highlight.minted)
-Underfull \hbox (badness 6268) in paragraph at lines 7071--7072
+Underfull \hbox (badness 6268) in paragraph at lines 7076--7077
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default random-bit budget N for the s
 tochastic rounding families (\TU/DejaVuSansMono(0)/m/n/10 StochasticA{N}\TU/Dej
 aVuSans(0)/m/n/10 ,
@@ -2014,7 +2014,7 @@ aVuSans(0)/m/n/10 ,
 
 (./_minted/F313BF3755A5F31EE1A13C3F5B752838.highlight.minted)
 (./_minted/56B91C3BCC354A14E7B0FD2254BAB3AF.highlight.minted)
-Underfull \hbox (badness 6708) in paragraph at lines 7109--7110
+Underfull \hbox (badness 6708) in paragraph at lines 7114--7115
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default rounding mode. Initialized to
  \TU/DejaVuSansMono(0)/m/n/10 NearestTiesToEven()\TU/DejaVuSans(0)/m/n/10 . Set
 ting it rebuilds
@@ -2102,13 +2102,13 @@ Chapter 35.
 (./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [126]
 Chapter 36.
 
-Underfull \hbox (badness 1881) in paragraph at lines 9786--9787
+Underfull \hbox (badness 1881) in paragraph at lines 9792--9793
 \TU/DejaVuSans(0)/m/n/10 Internals-level recipes: pipeline introspection, exhau
 stive verification of your own code, κ measurement,
  []
 
 
-Underfull \hbox (badness 2035) in paragraph at lines 9786--9787
+Underfull \hbox (badness 2035) in paragraph at lines 9792--9793
 \TU/DejaVuSans(0)/m/n/10 and doctrine-compliant benchmarking. These use unexpor
 ted names (\TU/DejaVuSansMono(0)/m/n/10 SmallFloats.round_to_precision\TU/DejaV
 uSans(0)/m/n/10 ,
@@ -2184,22 +2184,22 @@ Chapter 40.
 ] [150]
 Chapter 41.
 
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 11761--11761
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 11768--11768
 []\TU/DejaVuSansMono(0)/m/n/8 Float128|  
  []
 
 
-Overfull \hbox (6.05104pt too wide) in paragraph at lines 11761--11761
+Overfull \hbox (6.05104pt too wide) in paragraph at lines 11768--11768
 []\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
  []
 
 
-Overfull \hbox (13.6428pt too wide) in paragraph at lines 11761--11761
+Overfull \hbox (13.6428pt too wide) in paragraph at lines 11768--11768
 []\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
  []
 
 
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 11761--11761
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 11768--11768
 []\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
  []
 
@@ -2219,7 +2219,7 @@ Chapter 43.
 (./_minted/64A87CBD1B5C18B15C6289E60CC7E795.highlight.minted) [157]
 (./_minted/AF905E838692151675F3B98481E2659F.highlight.minted) [158]
 (./_minted/ADC012CAC73FE44AC8F8437EBBDF6A90.highlight.minted)
-Underfull \hbox (badness 3068) in paragraph at lines 12193--12194
+Underfull \hbox (badness 3068) in paragraph at lines 12200--12201
 \TU/DejaVuSansMono(0)/m/n/10 src/blocks.jl \TU/DejaVuSans(0)/m/n/10 owns block 
 construction, scale/element operations, span filtering, exact reductions, and
  []
@@ -2231,7 +2231,7 @@ Chapter 44.
 ] [161]
 Chapter 45.
 
-Underfull \hbox (badness 2096) in paragraph at lines 12391--12392
+Underfull \hbox (badness 2096) in paragraph at lines 12398--12399
 []\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
 eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
 loat64 | Float128 | StickyF | BigExactF |
@@ -2247,7 +2247,7 @@ loat64 | Float128 | StickyF | BigExactF |
 (./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [167]
 (./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
 (./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [168]
-Underfull \hbox (badness 3209) in paragraph at lines 12862--12863
+Underfull \hbox (badness 3209) in paragraph at lines 12869--12870
 []\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
 ows the op (automatic for registry ops; manual block additions extend
  []
@@ -2278,7 +2278,7 @@ Chapter 48.
 [178
 
 ]
-Underfull \hbox (badness 2698) in paragraph at lines 13317--13318
+Underfull \hbox (badness 2698) in paragraph at lines 13325--13326
 []\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
 K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
  though you
@@ -2301,21 +2301,21 @@ Chapter 49.
 (./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [183]
 (./_minted/51BF9C8795CF5651D61D8B3D356A3328.highlight.minted)
 (./_minted/B2BCB911A25797B1F001F5029B439394.highlight.minted)
-Underfull \hbox (badness 3039) in paragraph at lines 13726--13727
+Underfull \hbox (badness 3039) in paragraph at lines 13734--13735
 []\TU/DejaVuSans(0)/m/n/10 Setting a rounding/saturation component rebuilds \TU
 /DejaVuSansMono(0)/m/n/10 DefaultProjection\TU/DejaVuSans(0)/m/n/10 ; setting \
 TU/DejaVuSansMono(0)/m/n/10 DefaultProjection! \TU/DejaVuSans(0)/m/n/10 di-
  []
 
 
-Underfull \hbox (badness 1817) in paragraph at lines 13726--13727
+Underfull \hbox (badness 1817) in paragraph at lines 13734--13735
 \TU/DejaVuSans(0)/m/n/10 rectly updates both components. Always: \TU/DejaVuSans
 Mono(0)/m/n/10 DefaultProjection() === ProjSpec(DefaultRoundingMode(),
  []
 
 [184] (./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted)
 (./_minted/B400E262F2B13FDE8DE3C87DB9DABEA1.highlight.minted)
-Overfull \hbox (1.30995pt too wide) in paragraph at lines 13782--13782
+Overfull \hbox (1.30995pt too wide) in paragraph at lines 13790--13790
 []\TU/DejaVuSans(0)/m/n/8 Ternary|  
  []
 
@@ -2327,7 +2327,7 @@ Overfull \hbox (1.30995pt too wide) in paragraph at lines 13782--13782
 (./_minted/BD07044F7FBC9DBA83A8497B454C54C0.highlight.minted)
 (./_minted/53006BE75C801F46B18A48EA6942AE93.highlight.minted)
 (./_minted/099B5B2017330BB14CDC8D9E316D0D03.highlight.minted) [186]
-Overfull \hbox (39.146pt too wide) in paragraph at lines 13986--13986
+Overfull \hbox (39.146pt too wide) in paragraph at lines 13994--13994
 []\TU/DejaVuSansMono(0)/m/n/8 Vector{Binary{K,P,Σ,Δ}}(undef, 
  []
 
@@ -2357,10 +2357,10 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 Here is how much of TeX's memory you used:
  36714 strings out of 469223
  840972 string characters out of 5454114
- 1382719 words of memory out of 6000000
+ 1382723 words of memory out of 6000000
  64159 multiletter control sequences out of 15000+600000
  635601 words of font info for 121 fonts, out of 8000000 for 9000
  430 hyphenation exceptions out of 8191
  114i,13n,133p,1288b,1095s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (195 pages, 4330460 bytes).
+Output written on main.xdv (195 pages, 4330468 bytes).

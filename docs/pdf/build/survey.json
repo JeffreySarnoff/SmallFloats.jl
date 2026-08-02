@@ -13,7 +13,95 @@
  "escaped_underscores_prose": 1079,
  "longest_texttt_token": 91,
  "nonascii": "\u00a7\u00b0\u00b1\u00b2\u00b3\u00b5\u00b7\u00b9\u00bc\u00bd\u00be\u00d7\u00f6\u00f7\u02b8\u02e3\u0394\u03a3\u03b4\u03b5\u03b7\u03ba\u03bc\u03bd\u03c0\u03c1\u03c3\u03c9\u1d62\u2013\u2014\u201c\u201d\u2026\u2070\u2074\u2075\u2076\u2077\u2078\u2079\u207b\u2081\u2082\u211d\u2192\u2194\u21a6\u21d2\u2208\u2209\u2212\u2218\u221a\u221e\u2248\u2261\u2264\u2265\u227c\u2308\u2309\u230a\u230b\u2500\u2502\u2514\u27e8\u27e9\u27fa",
+ "toc_depth": 1,
+ "toc": {
+  "levels": [
+   "part",
+   "chapter",
+   "section"
+  ],
+  "wrapped_entries": 0,
+  "max_entry_lines": 1,
+  "blocks": {
+   "part": {
+    "parents": 8,
+    "max_direct_children": 10,
+    "max_recursive_entries": 21,
+    "max_estimated_lines": 21
+   },
+   "chapter": {
+    "parents": 51,
+    "max_direct_children": 5,
+    "max_recursive_entries": 6,
+    "max_estimated_lines": 6
+   },
+   "section": {
+    "parents": 55,
+    "max_direct_children": 0,
+    "max_recursive_entries": 1,
+    "max_estimated_lines": 1
+   }
+  },
+  "part_blocks": [
+   {
+    "title": "Home",
+    "direct_children": 1,
+    "recursive_entries": 7,
+    "estimated_lines": 7
+   },
+   {
+    "title": "Start Here",
+    "direct_children": 3,
+    "recursive_entries": 7,
+    "estimated_lines": 7
+   },
+   {
+    "title": "Workflows",
+    "direct_children": 10,
+    "recursive_entries": 21,
+    "estimated_lines": 21
+   },
+   {
+    "title": "Concepts",
+    "direct_children": 10,
+    "recursive_entries": 21,
+    "estimated_lines": 21
+   },
+   {
+    "title": "Reference",
+    "direct_children": 9,
+    "recursive_entries": 19,
+    "estimated_lines": 19
+   },
+   {
+    "title": "Examples and Evidence",
+    "direct_children": 4,
+    "recursive_entries": 9,
+    "estimated_lines": 9
+   },
+   {
+    "title": "Implementation",
+    "direct_children": 10,
+    "recursive_entries": 21,
+    "estimated_lines": 21
+   },
+   {
+    "title": "Help",
+    "direct_children": 4,
+    "recursive_entries": 9,
+    "estimated_lines": 9
+   }
+  ],
+  "patch_children": [
+   "chapter",
+   "section"
+  ]
+ },
  "toc_max_chapter_block": 5,
+ "toc_patch_levels": [
+  "chapter",
+  "section"
+ ],
  "regroup_candidates": [
   "section 'First Session' (10 subsections; avg 10 est lines; short spans)",
   "section 'Quantize and Measure a Tensor' (8 subsections; avg 12 est lines; short spans)",
@@ -26,6 +114,40 @@
   "section 'Encoding and Decoding' (9 subsections; avg 8 est lines; short spans)",
   "section 'Projection Engine' (9 subsections; avg 8 est lines; short spans)",
   "section 'Exact Block Reductions' (7 subsections; avg 13 est lines; short spans)"
+ ],
+ "toc_part_reservations": [
+  {
+   "title": "Home",
+   "lines": 9
+  },
+  {
+   "title": "Start Here",
+   "lines": 9
+  },
+  {
+   "title": "Workflows",
+   "lines": 23
+  },
+  {
+   "title": "Concepts",
+   "lines": 23
+  },
+  {
+   "title": "Reference",
+   "lines": 21
+  },
+  {
+   "title": "Examples and Evidence",
+   "lines": 11
+  },
+  {
+   "title": "Implementation",
+   "lines": 23
+  },
+  {
+   "title": "Help",
+   "lines": 11
+  }
  ],
  "labels_uniquified": 28,
  "colon_glued": 141,

@@ -20,6 +20,7 @@ measurement of the pristine text, not from the substitution itself.
 import collections
 import glob
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -28,6 +29,9 @@ import sys
 PAGE_BUDGET = 45          # code lines per page at the custom.sty geometry
 DOCSTRING_BUDGET = 38     # estimated lines for an unbreakable docstring
 PROSE_CHARS_PER_LINE = 95
+TOC_CHARS_PER_LINE = 72   # conservative after numbering and level indentation
+TOC_PAGE_BUDGET = 45      # displayed TOC lines at the configured geometry
+TOC_BLOCK_HEADROOM = 2    # vertical space around a part entry
 
 # Fallbacks for characters DejaVu lacks; extend as surveys demand (howto 3.7).
 UNICODE_FALLBACKS = {
@@ -69,6 +73,96 @@ def heading_text(cmd):
     arg = re.sub(r"\\[a-zA-Z]+\s*\{([^{}]*)\}", r"\1", arg)   # \texttt{x} -> x
     arg = re.sub(r"\\[a-zA-Z]+\s*", "", arg)                   # bare commands
     return arg.replace("{", "").replace("}", "").strip()
+
+
+TOC_LEVELS = ("part", "chapter", "section", "subsection")
+TOC_RANK = {level: rank for rank, level in enumerate(TOC_LEVELS)}
+TOC_DEPTH = {"part": -1, "chapter": 0, "section": 1, "subsection": 2}
+
+
+def configured_toc_depth(preamble):
+    """Return the deepest displayed TOC level configured by the preamble."""
+    symbolic = re.findall(r"\\settocdepth\{(part|chapter|section|subsection)\}",
+                          preamble)
+    numeric = re.findall(r"\\setcounter\{tocdepth\}\{(-?\d+)\}", preamble)
+    if symbolic:
+        return TOC_DEPTH[symbolic[-1]]
+    if numeric:
+        return int(numeric[-1])
+    # Standard book-like classes display through sections by default. This is
+    # conservative: a deeper class-specific default can opt in explicitly.
+    return TOC_DEPTH["section"]
+
+
+def toc_survey(marks, parts_flattened, max_depth):
+    """Measure rule-9 blocks at every displayed TOC hierarchy level.
+
+    Each mark is ``(position, level, rendered_title)``. ``max_depth`` comes
+    from the resolved preamble's ``tocdepth`` setting, so hidden source levels
+    do not acquire irrelevant patches. A block contains a governing entry and
+    every displayed descendant before the next entry at the same or a higher
+    level. Line estimates count wrapped entries as whole, paragraph-like units;
+    they are deliberately conservative because numbering and indentation reduce
+    the available TOC measure.
+    """
+    displayed = [mark for mark in marks
+                 if mark[1] in TOC_RANK and
+                 TOC_DEPTH[mark[1]] <= max_depth and
+                 not (parts_flattened and mark[1] == "part")]
+    entry_lines = [max(1, -(-len(title) // TOC_CHARS_PER_LINE))
+                   for _pos, _level, title in displayed]
+    levels = {level for _pos, level, _title in displayed}
+    blocks = {}
+    block_units = {}
+    for parent in TOC_LEVELS[:-1]:
+        parent_rank = TOC_RANK[parent]
+        child = TOC_LEVELS[parent_rank + 1]
+        samples = []
+        for i, (_pos, level, parent_title) in enumerate(displayed):
+            if level != parent:
+                continue
+            end = i + 1
+            while end < len(displayed) and TOC_RANK[displayed[end][1]] > parent_rank:
+                end += 1
+            direct_children = sum(displayed[j][1] == child
+                                  for j in range(i + 1, end))
+            samples.append({
+                "title": parent_title,
+                "direct_children": direct_children,
+                "recursive_entries": end - i,
+                "estimated_lines": sum(entry_lines[i:end]),
+            })
+        block_units[parent] = samples
+        blocks[parent] = {
+            "parents": len(samples),
+            "max_direct_children": max(
+                (sample["direct_children"] for sample in samples), default=0),
+            "max_recursive_entries": max(
+                (sample["recursive_entries"] for sample in samples), default=0),
+            "max_estimated_lines": max(
+                (sample["estimated_lines"] for sample in samples), default=0),
+        }
+
+    # Protect an edge only when both displayed levels occur. The chapter hook
+    # is therefore emitted exactly when unflattened parts remain, as howto.md
+    # requires; no irrelevant class-internal macro is patched speculatively.
+    patch_children = [TOC_LEVELS[i + 1] for i in range(len(TOC_LEVELS) - 1)
+                      if TOC_LEVELS[i] in levels and TOC_LEVELS[i + 1] in levels]
+    return {
+        "levels": [level for level in TOC_LEVELS if level in levels],
+        "wrapped_entries": sum(lines > 1 for lines in entry_lines),
+        "max_entry_lines": max(entry_lines, default=0),
+        "blocks": blocks,
+        "part_blocks": block_units["part"],
+        "patch_children": patch_children,
+    }
+
+
+def toc_patch(level):
+    """A loud, parameter-safe parent→child TOC cohesion patch."""
+    return (f"\\pretocmd{{\\l@{level}}}{{\\nopagebreak[3]}}{{}}\n"
+            f"  {{\\PackageError{{custom}}{{l@{level} TOC rule-9 patch "
+            f"failed to apply}}{{}}}}")
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +254,10 @@ def main():
     if len(texfiles) != 1:
         die(f"expected exactly one resolved .tex in {src_dir}, found {texfiles}")
     tex = open(texfiles[0], encoding="utf-8").read()
+    preamble_path = f"{src_dir}/preamble.tex"
+    if not os.path.exists(preamble_path):
+        die(f"expected resolved preamble at {preamble_path}")
+    preamble = open(preamble_path, encoding="utf-8").read()
 
     title = re.search(r"\\newcommand\{\\DocMainTitle\}\{(.*?)\}", tex)
     version = re.search(r"\\newcommand\{\\DocVersion\}\{(.*?)\}", tex)
@@ -216,28 +314,27 @@ def main():
         (len(a) for a in re.findall(r"\\texttt\{([^{}]*)\}", tex)), default=0)
     survey["nonascii"] = "".join(sorted(set(c for c in tex if ord(c) > 127)))
 
-    # TOC shape (rule 9 remediation room) + heading texture (regroup smell).
-    # Both are surveyed and surfaced; regrouping is editorial (howto.md
-    # Stage 2 note) and is never auto-applied here.
-    marks = [(m.start(), m.group(1),
-              re.search(r"\{(.*?)\}", m.group(0)).group(1))
+    # TOC shape (recursive rule 9 blocks, including wrapped-entry estimates) +
+    # heading texture (regroup smell). Both are surveyed and surfaced;
+    # regrouping is editorial (howto.md Stage 2 note), never auto-applied here.
+    marks = [(m.start(), m.group(1), heading_text(m.group(0)))
              for m in re.finditer(
-                 r"^\\(chapter|section|subsection|subsubsection)\{.*\}",
+                 r"^\\(part|chapter|section|subsection|subsubsection)\{.*\}",
                  tex, re.M)]
-    chap_sections = []
-    for i, (pos, kind, _t) in enumerate(marks):
-        if kind == "chapter":
-            n = 0
-            for j in range(i + 1, len(marks)):
-                if marks[j][1] == "chapter":
-                    break
-                n += marks[j][1] == "section"
-            chap_sections.append(n)
-    survey["toc_max_chapter_block"] = max(chap_sections, default=0)
+    toc_depth = configured_toc_depth(preamble)
+    toc = toc_survey(marks, flatten, toc_depth)
+    survey["toc_depth"] = toc_depth
+    survey["toc"] = toc
+    # Kept for buildnote.md compatibility; the recursive data above is the
+    # source of truth and covers parts, chapters, and sections.
+    survey["toc_max_chapter_block"] = \
+        toc["blocks"]["chapter"]["max_direct_children"]
+    survey["toc_patch_levels"] = toc["patch_children"]
     regroup = []
     # (parent level, child level, levels that end the parent's scope)
-    for parent, child, enders in (("chapter", "section", ("chapter",)),
-                                  ("section", "subsection", ("chapter", "section"))):
+    for parent, child, enders in (
+            ("chapter", "section", ("part", "chapter")),
+            ("section", "subsection", ("part", "chapter", "section"))):
         # `head_title`, not `title` — the document title lives in an enclosing
         # local of the same name, and rebinding it here silently set the PDF's
         # `pdftitle` to whatever heading this loop happened to visit last. Every
@@ -299,6 +396,41 @@ def main():
         tex, n = re.subn(r"^\\part\{.*\}\n", "", tex, flags=re.M)
         if n != survey["parts"]:
             die(f"part flattening removed {n}, survey saw {survey['parts']}")
+        survey["toc_part_reservations"] = []
+    elif "part" in toc["levels"]:
+        # Rule 9's least-confining whole-part treatment. `\addtocontents`
+        # places the reservation immediately before this part's generated TOC
+        # entry; `\needspace` remains inert when the complete measured block
+        # already fits. Oversized blocks are left to recursive child penalties.
+        part_blocks = toc["part_blocks"]
+        if len(part_blocks) != survey["parts"]:
+            die(f"TOC survey found {len(part_blocks)} displayed part blocks, "
+                f"source survey found {survey['parts']} parts")
+        part_index = [0]
+        reservations = []
+
+        def reserve_part(m):
+            i = part_index[0]
+            part_index[0] += 1
+            block = part_blocks[i]
+            actual_title = heading_text(m.group(0))
+            if actual_title != block["title"]:
+                die(f"TOC part order changed at {i}: source {actual_title!r}, "
+                    f"survey {block['title']!r}")
+            demand = block["estimated_lines"] + TOC_BLOCK_HEADROOM
+            if demand > TOC_PAGE_BUDGET:
+                return m.group(0)
+            reservations.append({"title": actual_title, "lines": demand})
+            return ("\\addtocontents{toc}{\\protect\\needspace{" +
+                    f"{demand}\\baselineskip}}}}\n" + m.group(0))
+
+        tex, n = re.subn(r"^\\part\{.*\}$", reserve_part, tex, flags=re.M)
+        if n != survey["parts"] or part_index[0] != survey["parts"]:
+            die(f"TOC part reservation pass visited {n}/{part_index[0]}, "
+                f"survey saw {survey['parts']}")
+        survey["toc_part_reservations"] = reservations
+    else:
+        survey["toc_part_reservations"] = []
 
     # 3.2 uniquify duplicate labels (only when nothing references them)
     renamed = []
@@ -472,12 +604,14 @@ def main():
 
     from datetime import datetime, timezone
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+    toc_patches = "\n".join(toc_patch(level)
+                            for level in survey["toc_patch_levels"])
     sty = CUSTOM_STY.replace("@FALLBACKS@", "\n".join(fallbacks)) \
+                    .replace("@TOC_PATCHES@", toc_patches) \
                     .replace("@TITLE@", f"{title} {version} — Documentation") \
                     .replace("@AUTHORS@", authors) \
                     .replace("@BUILDDATE@", stamp)
 
-    import os
     os.makedirs(out_dir, exist_ok=True)
     tex, nfig, nconv = rasterless_figures(tex, src_dir, out_dir)
     survey["figures_copied"] = nfig
@@ -569,15 +703,18 @@ CUSTOM_STY = r"""% custom.sty — written by transform.py (docs/pdf/howto.md Sta
 \copypagestyle{chapter}{ruled} \makeevenhead{chapter}{}{}{}
 \makeoddhead{chapter}{}{}{} \makeheadrule{chapter}{\textwidth}{0pt}
 
-% TOC block integrity (howto.md rule 9): contents-page breaks belong BEFORE
-% chapter entries, never inside a chapter's subentry block — so discourage
-% breaks before section-level TOC lines (penalty 3, not infinite: a block
-% taller than a contents page may still break, per the rule's exception).
+% TOC block integrity (howto.md rule 9): mirror body pagination recursively.
+% A wrapped entry stays whole like a paragraph (the global interline penalty
+% above enforces that). A break belongs before the governing parent, never
+% between it and its first displayed child. The generated, survey-conditional
+% patches below discourage each parent->child break. Penalty 3 is intentionally
+% finite: an oversized run may still break before a complete child-entry block.
 \makeatletter
-% \pretocmd, not \preto: \l@section is parameterized, and \preto would strip
-% its parameter text (the ".toc has an extra }" failure). Loud on failure.
-\pretocmd{\l@section}{\nopagebreak[3]}{}
-  {\PackageError{custom}{l@section TOC rule-9 patch failed to apply}{}}
+% \pretocmd, not \preto: the \l@... macros are parameterized, and \preto would
+% strip their parameter text (the ".toc has an extra }" failure). Every patch
+% has a loud failure branch. The part->chapter patch appears only when parts
+% remain after Stage 3.1; other edges likewise require both displayed levels.
+@TOC_PATCHES@
 \makeatother
 
 % Unicode fallbacks — generated from the survey's coverage check.
