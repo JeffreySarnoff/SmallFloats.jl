@@ -1,17 +1,31 @@
 # Benchmarking SmallFloats.jl
 
-This directory contains the reproducible performance suite for SmallFloats.jl.
-The main entry point, [`benchmarking.jl`](benchmarking.jl), measures scalar
+This directory contains two reproducible performance runners for SmallFloats.jl.
+[`benchmarking.jl`](benchmarking.jl) is the exhaustive suite: it measures scalar
 operations, projection modes, array kernels, table construction, sorting,
-blocks, conversions, and packed storage, then writes a Markdown report.
+blocks, conversions, and packed storage. The deadline-aware
+[`faster_benchmarking.jl`](faster_benchmarking.jl) samples representative work
+from those areas, then spends any remaining budget refining its measurements.
 
 Use this guide to regenerate the report, understand what each number measures,
 and compare runs without accidentally benchmarking Julia's dispatcher or a
 different operand distribution.
 
-[Current report](benchmark_report.md) ·
+[Full report](benchmark_report.md) ·
+[Fast report](faster_benchmarking_report.md) ·
 [Published performance evidence](../docs/src/examples_performance.md) ·
 [Benchmarking methodology](../docs/src/internals_benchmark.md)
+
+## Choose a runner
+
+| Runner | Coverage | Runtime | Use it for |
+|:---|:---|:---|:---|
+| `faster_benchmarking.jl` | Representative cases, broadened as the budget grows | User-supplied approximate budget | Rapid feedback while developing or reviewing a change |
+| `benchmarking.jl` | Every report section and scalar operand class | Several minutes | Exhaustive comparisons and accepted performance baselines |
+
+The fast report is intentionally a different contract, not a shortened claim
+to have completed the full suite. A clean fast result is a reason to proceed to
+the exhaustive runner when the change needs publishable performance evidence.
 
 ## Quick start
 
@@ -24,21 +38,19 @@ Prepare or refresh that environment:
 julia --project=benchmarking -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
 ```
 
-Generate a candidate report without overwriting the checked-in baseline:
+For rapid feedback, request an approximate runtime. With no output argument, the
+runner updates the checked-in `benchmarking/faster_benchmarking_report.md`:
 
 ```sh
-julia --project=benchmarking benchmarking/benchmarking.jl \
-    benchmarking/benchmark_report.candidate.md
+julia --project=benchmarking benchmarking/faster_benchmarking.jl 60s
 ```
 
-The suite is intentionally comprehensive and can take several minutes. Runtime
-depends on the host, Julia version, thread count, and whether compilation caches
-are warm. For rapid feedback, run the deadline-aware companion with an approximate
-wall-clock budget:
+To retain that report and write a candidate instead, pass a filename. A bare
+filename is placed in `benchmarking/` automatically:
 
 ```sh
 julia --project=benchmarking benchmarking/faster_benchmarking.jl 30s \
-    benchmarking/faster_benchmark_report.md
+    faster_benchmarking_report.candidate.md
 ```
 
 The duration accepts bare seconds or `ms`, `s`, `m`, and `h` suffixes. The fast
@@ -50,6 +62,17 @@ compilation or table build cannot be interrupted, so the limit is approximate.
 This representative report is deliberately not a replacement for the full report
 contract when accepting or publishing a baseline.
 
+Generate an exhaustive candidate without overwriting the checked-in full
+baseline:
+
+```sh
+julia --project=benchmarking benchmarking/benchmarking.jl \
+    benchmarking/benchmark_report.candidate.md
+```
+
+The exhaustive suite can take several minutes. Runtime depends on the host,
+Julia version, thread count, and whether compilation caches are warm.
+
 To exercise the threaded ternary-kernel comparison, start Julia with more than
 one thread:
 
@@ -58,16 +81,53 @@ julia --threads=auto --project=benchmarking benchmarking/benchmarking.jl \
     benchmarking/benchmark_report.threaded.md
 ```
 
-The report header records the CPU, logical CPU count, Julia thread count, Julia
-version, Chairmarks version, and whether Float128 paths were enabled. Keep that
-header when sharing results.
+The full report header records the CPU, logical CPU count, Julia thread count,
+Julia version, Chairmarks version, and whether Float128 paths were enabled. The
+fast report instead records its requested and observed runtime, eligible and
+completed cases, refinement passes, seed, Julia version, and thread count. Keep
+the relevant header when sharing either report.
 
-## Output behavior
+## Fast-runner arguments and output
+
+The command-line form is:
+
+```text
+julia --project=benchmarking benchmarking/faster_benchmarking.jl \
+    RUNTIME [OUTPUT] [SEED]
+```
+
+`RUNTIME` accepts a bare number of seconds or an `ms`, `s`, `m`, or `h` suffix.
+For example, `500ms`, `30`, `30s`, `2m`, and `0.5h` are valid.
+
+The default and bare-filename destinations resolve beside the script; explicit
+paths remain relative to the process's working directory:
+
+- with no `OUTPUT`, the report is
+  `benchmarking/faster_benchmarking_report.md`;
+- a bare filename such as `candidate.md` becomes
+  `benchmarking/candidate.md`;
+- a path containing a directory, such as `reports/candidate.md` or
+  `./candidate.md`, is used as written.
+
+The fast runner creates missing parent directories and replaces an existing
+destination. The optional seed defaults to 2026. It makes operand selection
+reproducible but cannot remove scheduler, frequency-scaling, thermal, or
+operating-system noise.
+
+The budget begins at script entry and therefore includes dependency loading,
+JIT compilation, operand preparation, sampling, refinement, and report writing.
+Julia process startup happens before that timer. Work already in progress cannot
+be interrupted, so very short budgets and expensive first compilations may
+overshoot. The scheduler reserves time before launching another case, prioritizes
+one case from each major area, admits additional cases at 12, 30, and 60 seconds,
+and uses spare time for longer refinement passes.
+
+## Full-runner output
 
 The final command-line argument is the Markdown output path. If it is omitted,
-the script writes `benchmark_report.md` in the current working directory. The
-parent directory must already exist, and an existing file at the destination is
-replaced.
+`benchmarking.jl` writes `benchmark_report.md` in the current working directory.
+The parent directory must already exist, and an existing file at the destination
+is replaced.
 
 The generator writes Markdown only. The checked-in `benchmark_report.pdf`,
 `domain_ops.csv`, and `safe_domain_ops.csv` are separate retained artifacts; the
@@ -81,8 +141,7 @@ include("benchmarking/benchmarking.jl")
 generate_report("benchmarking/benchmark_report.candidate.md"; seed=2026)
 ```
 
-The default seed is 2026. It makes operand selection reproducible; it cannot
-remove scheduler, frequency-scaling, thermal, or operating-system noise.
+The full runner's default seed is also 2026.
 
 ## Measurement contract
 
@@ -109,8 +168,9 @@ pattern and the common dynamic-dispatch failure mode.
 
 ## Read the report in this order
 
-1. **Read the header.** Confirm host, Julia version, threads, Float128 setting,
-   and Chairmarks version before comparing with another run.
+1. **Read the header.** For a full report, confirm host, Julia version, threads,
+   Float128 setting, and Chairmarks version. For a fast report, also confirm the
+   requested runtime, completed coverage, and number of refinement passes.
 2. **Choose the relevant section.** Scalar latency, bulk array throughput,
    table construction, sorting, and block operations answer different
    questions.
@@ -138,9 +198,9 @@ other: use minimum to study the kernel and median to judge run-to-run stability.
 
 ## Scalar operand classes
 
-Unary, binary, and ternary operations each appear under four operand classes.
-They are ordered from the most domain-focused view to the uniform-code-point
-view:
+In the full report, unary, binary, and ternary operations each appear under four
+operand classes. They are ordered from the most domain-focused view to the
+uniform-code-point view:
 
 | Order | Report heading | Operand population | Best use |
 |:---|---|---|---|
@@ -167,7 +227,12 @@ does not remove NaN results: for example, a negative finite input to `Sqrt`
 still takes an out-of-domain special row. Comparing all four tables shows how
 much a uniform sweep is influenced by those rows.
 
-## Other report sections
+The fast runner begins with safe arguments for representative scalar operations.
+At budgets of 30 seconds or more it adds selected all-code-point rows so domain
+and special-value sensitivity remain visible. Use the full report when all four
+operand populations matter.
+
+## Full-report sections
 
 - **Core primitives** measures decode, ordering, classification, stepping, and
   projection over all code points.
@@ -188,6 +253,13 @@ Unless its note says otherwise, a non-scalar sampled section uses the complete
 code-point pool, including NaN and infinities. Table construction enumerates its
 input code space rather than sampling it.
 
+The fast report crosses the same broad areas but does not reproduce every row:
+core representation, scalar operations, projection modes, array kernels,
+sorting, blocks, conversions, and function tables form its first breadth pass.
+Longer budgets add operand and format sensitivity, more scalar operations,
+ternary kernels, packed storage, and larger table builds. The report header says
+exactly how many catalog cases were eligible and completed.
+
 ## Compare two runs fairly
 
 Keep these fixed whenever the goal is regression detection:
@@ -205,6 +277,15 @@ the changed rows:
 ```sh
 diff -u benchmarking/benchmark_report.md \
     benchmarking/benchmark_report.candidate.md
+```
+
+For a fast comparison using the same runtime budget as the checked-in report:
+
+```sh
+julia --project=benchmarking benchmarking/faster_benchmarking.jl 60s \
+    faster_benchmarking_report.candidate.md
+diff -u benchmarking/faster_benchmarking_report.md \
+    benchmarking/faster_benchmarking_report.candidate.md
 ```
 
 Do not infer a regression from one noisy median. Look for a coherent shift in
@@ -225,7 +306,9 @@ When a candidate was generated under an intentional, recorded environment:
 
 The performance page is not automatically overwritten by the benchmark script.
 That separation prevents an exploratory run from silently becoming published
-documentation.
+documentation. The checked-in fast report is a rapid-feedback snapshot; updating
+it does not replace regenerating and reviewing the full baseline when publishing
+performance claims.
 
 ## Dyadic carrier microbenchmarks
 
