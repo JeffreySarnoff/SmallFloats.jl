@@ -4,7 +4,7 @@ One continuous session: two values, two ways of adding them, an array through a
 nonlinearity, and a block of quantized values. Every line is explained as it
 happens; the [Mental Model](@ref) page picks up the "why" where this leaves off.
 
-Assumes a [working install](@ref installation). Start Julia and:
+Assumes a [working install](installation.md). Start Julia and:
 
 ```julia-repl
 julia> using SmallFloats

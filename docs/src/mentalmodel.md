@@ -53,7 +53,7 @@ Three consequences fall out immediately:
   significand vs exponent (precision `P`), and whether the set includes
   negatives (`s`/`u`) and infinities (`e`/`f`).
 
-*Now you can read:* [Formats, Aliases & Representations](@ref explain_formats) for why
+*Now you can read:* [Formats, Aliases & Representations](explain_formats.md) for why
 the type `Binary8p4se` is a concrete *representation* of the abstract format
 `Binary{8,4,true,true}` — and why `===` is `false` but `<:` is `true`.
 
@@ -93,7 +93,7 @@ true
 — and that round-trip is the format's identity. A value is its code point;
 everything else is a view.
 
-*Now you can read:* [Values, Code Points & Conversion](@ref tutorial1_values) for the
+*Now you can read:* [Values, Code Points & Conversion](tutorial1_values.md) for the
 four ways in and two ways out, and the carriers `decode` returns at wide
 formats.
 
@@ -124,7 +124,7 @@ Two things follow from "one projection, at the end":
   it. The package can prove this because the value sets are finite — see
   Idea 5.
 
-*Now you can read:* [The Projection Contract](@ref explain_projection_contract) for what "exact"
+*Now you can read:* [The Projection Contract](explain_projection_contract.md) for what "exact"
 means at each carrier width, and the symbolic-sticky trick that lets directed
 modes land exactly on asymptotes.
 
@@ -170,8 +170,8 @@ default — which is exactly why `+`, `exp`, and `T(1.6)` all agree with
     be reproducible names its spec explicitly. The Tutorials teach the safe
     `with_default_projection` form before showing `DefaultProjection!`.
 
-*Now you can read:* [Projection: Rounding & Saturation](@ref tutorial2_projection) for the
-experiments, and [Projection Specifications](@ref ref_projections) for the complete grid.
+*Now you can read:* [Projection: Rounding & Saturation](tutorial2_projection.md) for the
+experiments, and [Projection Specifications](ref_projections.md) for the complete grid.
 
 ## Idea 5 — Approximation is opt-in, named, and measured
 
@@ -203,8 +203,8 @@ formats are easy to implement approximately and hard to implement exactly.
 SmallFloats implements them exactly, and when you choose otherwise, it makes
 the choice explicit and quantified.
 
-*Now you can read:* [Register & Measure an Approximation](@ref howto_register_approx), and
-[Conformance & Approximation Registry](@ref ref_conformance).
+*Now you can read:* [Register & Measure an Approximation](howto_register_approx.md), and
+[Conformance & Approximation Registry](ref_conformance.md).
 
 ## The five ideas, as one picture
 

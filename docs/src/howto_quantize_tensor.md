@@ -109,6 +109,6 @@ quantization code at trivial cost.
 
 ## Where next
 
-[How-To: Choose a Format](@ref howto_choose_format)
-[How-To: Work with Packed Storage](@ref howto_packed_storage)
-[How-To: Use Blocks to Track Dynamic Range](@ref howto_blocks_dynamic_range)
+[How-To: Choose a Format](howto_choose_format.md)
+[How-To: Work with Packed Storage](howto_packed_storage.md)
+[How-To: Use Blocks to Track Dynamic Range](howto_blocks_dynamic_range.md)

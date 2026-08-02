@@ -13,6 +13,6 @@ interval), mirroring the scalar quotient group's rigor arguments.
 
 ## Where next
 
-[The Oracle & Rigor Classes](@ref under_oracle)
-[Tables, Kernels & Sorting](@ref under_tables)
-[How-To: Add an Operation](@ref howto_add_operation)
+[The Oracle & Rigor Classes](under_oracle.md)
+[Tables, Kernels & Sorting](under_tables.md)
+[How-To: Add an Operation](howto_add_operation.md)

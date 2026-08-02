@@ -198,4 +198,4 @@ out = vmap(:Exp, Binary5p2se, ρ, pv)
 Computation unpacks tiles internally; packed arithmetic is deliberately not
 in-place.
 
-Where next: [Cheat Sheet](@ref cheatsheet), [Troubleshooting](@ref troubleshooting).
+Where next: [Cheat Sheet](cheatsheet.md), [Troubleshooting](troubleshooting.md).

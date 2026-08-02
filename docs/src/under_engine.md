@@ -95,6 +95,6 @@ renormalization and the subnormal/normal field split.
 
 ## Where next
 
-[The Oracle & Rigor Classes](@ref under_oracle)
-[Tables, Kernels & Sorting](@ref under_tables)
-[Internals Recipes](@ref under_recipes)
+[The Oracle & Rigor Classes](under_oracle.md)
+[Tables, Kernels & Sorting](under_tables.md)
+[Internals Recipes](under_recipes.md)

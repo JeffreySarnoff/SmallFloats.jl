@@ -179,7 +179,7 @@ over calling `DefaultProjection!` by hand.
 
 </details>
 
-Where next: [Tutorial 3, Operations & Arrays](@ref tutorial3_arrays) builds on the explicit `Op(T, ρ,
+Where next: [Tutorial 3, Operations & Arrays](tutorial3_arrays.md) builds on the explicit `Op(T, ρ,
 ...)` shape from this tutorial and extends it to arrays, table-backed kernels,
 and sorting. For the complete grid of predefined `ProjSpec` constants, see
-[Projection Specifications](@ref ref_projections).
+[Projection Specifications](ref_projections.md).

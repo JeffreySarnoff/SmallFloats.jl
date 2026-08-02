@@ -100,4 +100,4 @@ unregister_approx!(:hardtanh_act)
 
 ## Where next
 
-[How-To: Read & Export the Conformance Declaration](@ref howto_conformance)
+[How-To: Read & Export the Conformance Declaration](howto_conformance.md)

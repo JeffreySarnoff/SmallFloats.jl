@@ -85,5 +85,5 @@ already accounts for all of them.
 
 ## Where next
 
-[How-To: Choose a Format](@ref howto_choose_format)
-[How-To: Read & Export the Conformance Declaration](@ref howto_conformance)
+[How-To: Choose a Format](howto_choose_format.md)
+[How-To: Read & Export the Conformance Declaration](howto_conformance.md)

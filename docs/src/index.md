@@ -50,10 +50,10 @@ for approximation:
 
 ## Where to go
 
-- **Get started** — [Installation & Setup](@ref installation), then the
-  [Quickstart](@ref quickstart): a working session in ten minutes.
-- **Understand the ideas** — the [Mental Model](@ref mentalmodel) (five ideas
-  that carry the whole package), or [P3109 in Fifteen Minutes](@ref fifteenminutes)
+- **Get started** — [Installation & Setup](installation.md), then the
+  [Quickstart](quickstart.md): a working session in ten minutes.
+- **Understand the ideas** — the [Mental Model](mentalmodel.md) (five ideas
+  that carry the whole package), or [P3109 in Fifteen Minutes](fifteenminutes.md)
   if you want the standard itself first.
 - **Look something up** — the Reference section: formats, projection specs, the
-  operation catalog, and the one-page [Cheat Sheet](@ref cheatsheet).
+  operation catalog, and the one-page [Cheat Sheet](cheatsheet.md).

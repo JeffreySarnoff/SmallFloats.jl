@@ -369,13 +369,13 @@ Approximate implementations are never substituted into the default API.
 
 ## Common pitfalls
 
-See [Troubleshooting](@ref troubleshooting) for the full symptom-first list.
+See [Troubleshooting](troubleshooting.md) for the full symptom-first list.
 
 ## Performance checklist
 
-See [Verification & Benchmark Doctrine](@ref under_verification) and the
-[Performance Model](@ref explain_performance) for the full checklist.
+See [Verification & Benchmark Doctrine](under_verification.md) and the
+[Performance Model](explain_performance.md) for the full checklist.
 
-For worked applications, continue to [Examples by Domain](@ref examples_index).
+For worked applications, continue to [Examples by Domain](examples_index.md).
 For correctness and benchmark methodology, continue to
-[Understanding & Extending](@ref under_architecture).
+[Understanding & Extending](under_architecture.md).

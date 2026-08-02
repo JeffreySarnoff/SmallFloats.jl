@@ -165,7 +165,7 @@ pitfall from this tutorial in miniature.
 
 </details>
 
-Where next: [Tutorial 2, Projection: Rounding & Saturation](@ref tutorial2_projection) picks up right where
+Where next: [Tutorial 2, Projection: Rounding & Saturation](tutorial2_projection.md) picks up right where
 `Convert(T, ρ, value)` left off — the full 6×3 grid of rounding and saturation
 modes, and how session defaults change what plain `+` does. For the complete,
-dry listing of format queries and accessors, see [Format Names & Queries](@ref ref_formats).
+dry listing of format queries and accessors, see [Format Names & Queries](ref_formats.md).

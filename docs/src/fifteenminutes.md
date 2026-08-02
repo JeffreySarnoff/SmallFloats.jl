@@ -147,9 +147,9 @@ between them is a conversion, never a reinterpretation.
 
 ## Where to go next
 
-- The [Mental Model](@ref mentalmodel) — the five ideas above recast as how the
+- The [Mental Model](mentalmodel.md) — the five ideas above recast as how the
   *package* thinks, with code.
 - P3109 Draft Notes (The Standard & Design Papers section) — the full concept
   map this page was distilled from, with clause-level links into the draft.
-- The [Quickstart](@ref quickstart) — if you'd rather touch the formats first
+- The [Quickstart](quickstart.md) — if you'd rather touch the formats first
   and read theory second.

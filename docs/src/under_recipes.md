@@ -69,6 +69,6 @@ using SmallFloats: order_key
 
 ## Where next
 
-[The Encoding & Projection Engine](@ref under_engine)
-[Tables, Kernels & Sorting](@ref under_tables)
-[How-To: Verify Custom Code](@ref howto_verify_custom)
+[The Encoding & Projection Engine](under_engine.md)
+[Tables, Kernels & Sorting](under_tables.md)
+[How-To: Verify Custom Code](howto_verify_custom.md)

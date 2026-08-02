@@ -55,6 +55,6 @@ b = bench_add(Binary8p4se)
 
 ## Where next
 
-[Verification & Benchmark Doctrine](@ref under_verification)
-[How-To: Verify Custom Code](@ref howto_verify_custom)
-[Internals Recipes](@ref under_recipes)
+[Verification & Benchmark Doctrine](under_verification.md)
+[How-To: Verify Custom Code](howto_verify_custom.md)
+[Internals Recipes](under_recipes.md)

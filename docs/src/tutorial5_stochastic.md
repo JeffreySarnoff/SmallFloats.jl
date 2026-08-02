@@ -137,6 +137,6 @@ fraction always equals `ν`, whatever binade or format you're in.
 </details>
 
 Where next: this completes the tutorial sequence. Continue with the
-[How-To Guides](@ref howto_choose_format); [Format Names & Queries](@ref ref_formats)
-and [Projection Specifications](@ref ref_projections) hold the complete, dry
+[How-To Guides](howto_choose_format.md); [Format Names & Queries](ref_formats.md)
+and [Projection Specifications](ref_projections.md) hold the complete, dry
 listings this sequence built intuition for.

@@ -170,7 +170,7 @@ same two-element vector, `[1.75, 1.75]` in `Binary8p4se`.
 
 </details>
 
-Where next: [Tutorial 4, Blocks & MX-Style Quantization](@ref tutorial4_blocks) moves from single-format
+Where next: [Tutorial 4, Blocks & MX-Style Quantization](tutorial4_blocks.md) moves from single-format
 arrays to `Block` values, where a shared scale rides alongside narrow elements.
 For the full operation catalog and array-call signatures, see the
-[Operation Catalog](@ref ref_operations) and [Arrays, Blocks & Packed Storage](@ref ref_arrays_blocks).
+[Operation Catalog](ref_operations.md) and [Arrays, Blocks & Packed Storage](ref_arrays_blocks.md).

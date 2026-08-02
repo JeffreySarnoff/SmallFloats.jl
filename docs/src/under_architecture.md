@@ -49,8 +49,8 @@ Source files load in dependency order, each layer speaking only downward:
 
 ## Where next
 
-[The Encoding & Projection Engine](@ref under_engine)
-[The Oracle & Rigor Classes](@ref under_oracle)
-[Tables, Kernels & Sorting](@ref under_tables)
-[Blocks: Exactness without Superaccumulators](@ref under_blocks)
-[Verification & Benchmark Doctrine](@ref under_verification)
+[The Encoding & Projection Engine](under_engine.md)
+[The Oracle & Rigor Classes](under_oracle.md)
+[Tables, Kernels & Sorting](under_tables.md)
+[Blocks: Exactness without Superaccumulators](under_blocks.md)
+[Verification & Benchmark Doctrine](under_verification.md)

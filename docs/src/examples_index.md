@@ -91,5 +91,5 @@ kernel exact against 512-bit big-float truth over random blocks with mixed
 scales and a special-value mix — the pattern to reuse for any custom fused
 kernel. See: Technical Examples, Deep Learning.
 
-Where next: [How-To Guides](@ref howto_choose_format),
-[Architecture Overview](@ref under_architecture), and [Cheat Sheet](@ref cheatsheet).
+Where next: [How-To Guides](howto_choose_format.md),
+[Architecture Overview](under_architecture.md), and [Cheat Sheet](cheatsheet.md).

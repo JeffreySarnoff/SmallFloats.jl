@@ -62,4 +62,4 @@ equivalence is itself part of the test suite; only oracle and build speed change
 
 ## Where next
 
-The [Quickstart](@ref quickstart) — a complete first session in ten minutes.
+The [Quickstart](quickstart.md) — a complete first session in ten minutes.

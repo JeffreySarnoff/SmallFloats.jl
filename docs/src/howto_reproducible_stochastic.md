@@ -110,5 +110,5 @@ call that doesn't name an rng to still be controlled by your seed.
 
 ## Where next
 
-[How-To: Choose a Format](@ref howto_choose_format)
-[How-To: Quantize a Tensor or Model](@ref howto_quantize_tensor)
+[How-To: Choose a Format](howto_choose_format.md)
+[How-To: Quantize a Tensor or Model](howto_quantize_tensor.md)

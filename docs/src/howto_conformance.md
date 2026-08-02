@@ -69,5 +69,5 @@ a session's results, exact and approximate alike.
 
 ## Where next
 
-[How-To: Register & Measure an Approximation (κ)](@ref howto_register_approx)
-[How-To: Choose a Format](@ref howto_choose_format)
+[How-To: Register & Measure an Approximation (κ)](howto_register_approx.md)
+[How-To: Choose a Format](howto_choose_format.md)

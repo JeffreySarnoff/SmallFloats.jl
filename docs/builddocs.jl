@@ -5,7 +5,7 @@
 #   julia builddocs.jl               (from docs/)
 #
 # Activates the docs environment, dev's the package from the parent directory,
-# instantiates, runs make.jl (which builds from docs/resrc/), and reports where
+# instantiates, runs make.jl (which builds from docs/src/), and reports where
 # the site landed. CI should skip this file and run
 # `julia --project=docs docs/make.jl` after its own Pkg setup.
 

@@ -101,5 +101,5 @@ real outcome you want to detect downstream.
 
 ## Where next
 
-[How-To: Quantize a Tensor or Model](@ref howto_quantize_tensor)
-[How-To: Use Blocks to Track Dynamic Range](@ref howto_blocks_dynamic_range)
+[How-To: Quantize a Tensor or Model](howto_quantize_tensor.md)
+[How-To: Use Blocks to Track Dynamic Range](howto_blocks_dynamic_range.md)

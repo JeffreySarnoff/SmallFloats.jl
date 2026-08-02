@@ -158,8 +158,8 @@ the `seg = ntuple(k -> Convert(FST, RNE_SF, ...), ...)` line in the demo above.
 
 </details>
 
-Where next: [Tutorial 5, Stochastic Rounding](@ref tutorial5_stochastic) returns to scalars and to the
+Where next: [Tutorial 5, Stochastic Rounding](tutorial5_stochastic.md) returns to scalars and to the
 `StochasticA`/`B`/`C` families introduced briefly in Tutorial 2, with the full
 unbiasedness and reproducibility story. For the block operation catalog
 (`BlockAdd`, `ScaledOp`, `ConvertToBlock`), see
-[Arrays, Blocks & Packed Storage](@ref ref_arrays_blocks).
+[Arrays, Blocks & Packed Storage](ref_arrays_blocks.md).

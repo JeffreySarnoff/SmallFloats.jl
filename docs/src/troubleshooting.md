@@ -139,6 +139,6 @@ streams desynchronize. Fix: thread one `rng` object through every call in the
 pipeline that needs to agree. Full explanation: Cheat Sheet, Stochastic
 projections.
 
-Where next: [Cheat Sheet](@ref cheatsheet), [Glossary](@ref glossary),
-[Performance Model](@ref explain_performance), and
-[Verification & Benchmark Doctrine](@ref under_verification).
+Where next: [Cheat Sheet](cheatsheet.md), [Glossary](glossary.md),
+[Performance Model](explain_performance.md), and
+[Verification & Benchmark Doctrine](under_verification.md).

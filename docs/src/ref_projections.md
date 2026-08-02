@@ -73,5 +73,5 @@ Add(T, σ, x, y; rng = Xoshiro(1))   # reproducible stream
 Add(T, σ, x, y; R = 17)             # exact draw, ideal for tests
 ```
 
-Where next: [Tutorial 2, Projection: Rounding & Saturation](@ref tutorial2_projection),
-[Session Defaults](@ref ref_defaults).
+Where next: [Tutorial 2, Projection: Rounding & Saturation](tutorial2_projection.md),
+[Session Defaults](ref_defaults.md).

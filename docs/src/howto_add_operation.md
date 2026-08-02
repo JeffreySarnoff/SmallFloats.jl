@@ -476,6 +476,6 @@ single `_finish`, stochastic `R` plumbing — is pattern.
 
 ## Where next
 
-[The Oracle & Rigor Classes](@ref under_oracle)
-[Blocks: Exactness without Superaccumulators](@ref under_blocks)
-[How-To: Verify Custom Code](@ref howto_verify_custom)
+[The Oracle & Rigor Classes](under_oracle.md)
+[Blocks: Exactness without Superaccumulators](under_blocks.md)
+[How-To: Verify Custom Code](howto_verify_custom.md)

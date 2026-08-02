@@ -53,5 +53,5 @@ be produced by measurement alone and must be supplied by the caller of
 Approximate implementations registered through this path are never
 substituted into the default API; the default API is bit-exact, always.
 
-Where next: [Read & Export the Conformance Declaration](@ref howto_conformance),
-[Verification & Benchmark Doctrine](@ref under_verification).
+Where next: [Read & Export the Conformance Declaration](howto_conformance.md),
+[Verification & Benchmark Doctrine](under_verification.md).

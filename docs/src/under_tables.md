@@ -44,6 +44,6 @@ array rather than per element.
 
 ## Where next
 
-[The Encoding & Projection Engine](@ref under_engine)
-[The Oracle & Rigor Classes](@ref under_oracle)
-[Internals Recipes](@ref under_recipes)
+[The Encoding & Projection Engine](under_engine.md)
+[The Oracle & Rigor Classes](under_oracle.md)
+[Internals Recipes](under_recipes.md)

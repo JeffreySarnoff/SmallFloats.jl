@@ -82,5 +82,5 @@ bytes, in general, rounded to whole words.
 
 ## Where next
 
-[How-To: Quantize a Tensor or Model](@ref howto_quantize_tensor)
-[How-To: Choose a Format](@ref howto_choose_format)
+[How-To: Quantize a Tensor or Model](howto_quantize_tensor.md)
+[How-To: Choose a Format](howto_choose_format.md)

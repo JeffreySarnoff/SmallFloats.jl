@@ -57,6 +57,6 @@ it (`SmallFloats_Float128=disable`) is a tested no-op semantically.
 
 ## Where next
 
-[Tables, Kernels & Sorting](@ref under_tables)
-[How-To: Benchmark Correctly](@ref howto_benchmark)
-[How-To: Verify Custom Code](@ref howto_verify_custom)
+[Tables, Kernels & Sorting](under_tables.md)
+[How-To: Benchmark Correctly](howto_benchmark.md)
+[How-To: Verify Custom Code](howto_verify_custom.md)

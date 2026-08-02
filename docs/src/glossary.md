@@ -29,5 +29,5 @@ where the term is defined in full.
 | Table gather | The array-kernel strategy of computing a result by indexing a precomputed, cached lookup table (built once through the scalar path) rather than recomputing per element. | Tables, Kernels & Sorting |
 | Total order | The draft's total ordering over a format's value set, with a single NaN placed at one end deterministically; the basis for `TotalOrder`, `isless`, comparisons, and counting sort. | The Encoding & Projection Engine |
 
-Where next: [Cheat Sheet](@ref cheatsheet), [Troubleshooting](@ref troubleshooting),
-[Architecture Overview](@ref under_architecture).
+Where next: [Cheat Sheet](cheatsheet.md), [Troubleshooting](troubleshooting.md),
+[Architecture Overview](under_architecture.md).

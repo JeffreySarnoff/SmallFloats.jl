@@ -87,6 +87,6 @@ MaxFiniteOf(Binary8p4se)     # Binary8p4se(224.0 ≡ 0x7e)
 MaxFiniteOf(x)               # same result
 ```
 
-Where next: [Mental Model](@ref mentalmodel),
-[Tutorial 1: Values, Code Points & Conversion](@ref tutorial1_values),
-[How-To: Choose a Format](@ref howto_choose_format).
+Where next: [Mental Model](mentalmodel.md),
+[Tutorial 1: Values, Code Points & Conversion](tutorial1_values.md),
+[How-To: Choose a Format](howto_choose_format.md).

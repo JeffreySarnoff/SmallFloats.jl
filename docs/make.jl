@@ -3,25 +3,25 @@
 # Invoked by docs/builddocs.jl for local builds, or directly on CI with the docs
 # environment already instantiated:  julia --project=docs docs/make.jl
 #
-# Source of truth for the site is docs/resrc/ (the restructured documentation).
-# The legacy docs/src/ tree is retained for reference until the v1 cut-over; this
-# file builds from resrc/ only.
+# Source of truth for the site is docs/src/ (the restructured documentation).
+# The legacy pages are retained in docs/oldsrc/ for reference; this file builds
+# from src/ only.
 
 using Documenter
 using SmallFloats
 
 # The Benchmarks page is the generated report from benchmarking/, copied into the
-# resrc source tree at build time so the site always ships the numbers currently
+# src source tree at build time so the site always ships the numbers currently
 # recorded there. Regenerate with:  julia --project=benchmarking \
 #     benchmarking/benchmarking.jl benchmarking/benchmark_report.md
 cp(joinpath(@__DIR__, "..", "benchmarking", "benchmark_report.md"),
-   joinpath(@__DIR__, "resrc", "benchmarks.md"); force = true)
+   joinpath(@__DIR__, "src", "benchmarks.md"); force = true)
 
 makedocs(;
     sitename = "SmallFloats.jl",
     modules = [SmallFloats],
     authors = "Jeffrey Sarnoff",
-    source = "resrc",
+    source = "src",
     build = get(ENV, "DOCS_BUILD_DIR", "build"),
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", nothing) == "true",

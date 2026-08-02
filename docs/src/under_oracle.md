@@ -105,6 +105,6 @@ complete.
 
 ## Where next
 
-[The Encoding & Projection Engine](@ref under_engine)
-[Tables, Kernels & Sorting](@ref under_tables)
-[How-To: Add an Operation](@ref howto_add_operation)
+[The Encoding & Projection Engine](under_engine.md)
+[Tables, Kernels & Sorting](under_tables.md)
+[How-To: Add an Operation](howto_add_operation.md)

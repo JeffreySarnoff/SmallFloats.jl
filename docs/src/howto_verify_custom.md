@@ -183,6 +183,6 @@ at registration rather than promised.
 
 ## Where next
 
-[How-To: Add an Operation](@ref howto_add_operation)
-[How-To: Benchmark Correctly](@ref howto_benchmark)
-[Internals Recipes](@ref under_recipes)
+[How-To: Add an Operation](howto_add_operation.md)
+[How-To: Benchmark Correctly](howto_benchmark.md)
+[Internals Recipes](under_recipes.md)

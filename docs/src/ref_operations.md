@@ -135,6 +135,6 @@ Convenience form, same-format operands, `DefaultProjection()`:
 Op(x...)
 ```
 
-Where next: [Cheat Sheet](@ref cheatsheet),
-[Why No Cross-Format Promotion](@ref explain_no_promotion),
-[Tutorial 1: Values, Code Points & Conversion](@ref tutorial1_values).
+Where next: [Cheat Sheet](cheatsheet.md),
+[Why No Cross-Format Promotion](explain_no_promotion.md),
+[Tutorial 1: Values, Code Points & Conversion](tutorial1_values.md).
