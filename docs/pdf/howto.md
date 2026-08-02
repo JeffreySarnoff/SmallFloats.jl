@@ -64,11 +64,16 @@ satisfy one must record the deliberate exception in the build note.
    of keep-together boxes with nothing breakable between them is one giant
    unbreakable unit, and it will overflow (a real build measured a 4016 pt
    `Overfull \vbox` from stacked docstring boxes before this rule existed).
-9. **Table of contents integrity:** in the rendered TOC, a chapter-level
-   entry and its subentries form one block, breakable only *before* the
-   entry. A block taller than a contents page may break, but never right
-   after the chapter entry, and the continuation must resume with a
-   subentry.
+9. **Table of contents integrity:** apply the body-pagination rule recursively
+   to every displayed TOC level — parts, chapters, sections, and subsections.
+   A wrapped entry is paragraph-like and must remain whole. An entry and the
+   subordinate entries it introduces are heading-like: when their block fits
+   the remaining contents-page budget, a page break belongs *before* the
+   governing entry, never between it and its first subordinate entry. When a
+   descendant block is taller than the remaining page (or an entire contents
+   page), break only before a complete child-entry block and apply the same
+   rule again at that child's level. Thus a continuation begins with a complete
+   entry, never the second line of an entry or a child stranded from its parent.
 
 ---
 
@@ -196,8 +201,9 @@ slash_pairs = len(re.findall(r'\\texttt\{[^}]*\}/\\texttt\{', tex))
 tok_lens = sorted((len(a) for a in re.findall(r'\\texttt\{([^{}]*)\}', tex)),
                   reverse=True)
 
-# TOC shape: subentries per chapter (drives the rule-9 check in Stage 5).
-# Counted from the .tex sectioning commands, chapter by chapter.
+# TOC shape: displayed child-entry blocks beneath every part, chapter, and
+# section (drives the recursive rule-9 check in Stage 5). Count from the .tex
+# sectioning commands at each level, retaining wrapped-title line estimates.
 
 # Heading texture: subsections per section and each subsection's span length
 # (heading to next sectioning command) — many short subsections in one
@@ -226,7 +232,7 @@ the decision table:
 | non-ASCII characters present | fallback-map exactly those absent from the document fonts (Stage 3.7) |
 | longest raw code line at chosen geometry | if wider than the text block: widen margins first, then rely on `breaklines` with a visible continuation marker; landscape only for pathological cases |
 | longest inline `\texttt` token vs the measure | tokens longer than ~25 chars (URLs, qualified names, call chains) get intra-token `\allowbreak` at unambiguous points (`/`, `(`, after `\_`) as a Stage 3.6 transform — `breaklines` only helps *minted*, never inline mono, and `\emergencystretch` cannot absorb a 90 pt token |
-| chapters with many TOC subentries | note the largest block; the rule-9 TOC check in Stage 5 will need remediation room if any block approaches a contents-page height |
+| any displayed TOC parent (part, chapter, or section) with many child entries, or any wrapped entry | estimate each complete recursive block; the rule-9 check in Stage 5 must choose breaks before the highest governing entry whose block fits, just as body pagination moves a section, subsection, or paragraph before splitting what it introduces |
 | a table whose heading→end-of-table extent fits the page budget (any heading level) | keep-together (rule 3): `\needspace{⌈est⌉\baselineskip}` before the governing heading (Stage 3.6); larger extents get the glue fallback — `\nopagebreak` between the table and its introducing paragraph |
 | a fragmented heading, any of: ≳ 6 children with spans under a third of a page; more children than a contents block comfortably holds (≳ 12, rule 9 headroom); or ≥ 3 children whose titles share a prefix and differ only by a variant suffix | **editorial regrouping, at the source level**: demote-first, then cluster under concise group headings — the note below the table gives the procedure; it applies identically at every level. Variant families are the strongest natural-cluster signal: the shared prefix names the group, the suffixes become the demoted headings |
 
@@ -372,20 +378,30 @@ generated files stay pristine. The pagination core is package-independent:
 \copypagestyle{chapter}{ruled} \makeevenhead{chapter}{}{}{}
 \makeoddhead{chapter}{}{}{} \makeheadrule{chapter}{\textwidth}{0pt}
 
-% TOC block integrity (rule 9): contents-page breaks belong BEFORE chapter
-% entries, never inside a chapter's subentry block — discourage breaks before
-% section-level TOC lines. Penalty 3, not infinite: a block taller than a
-% contents page may still break (the rule's tall-block exception).
+% TOC block integrity (rule 9): mirror body pagination at every displayed
+% level. A break belongs before a governing part/chapter/section/subsection,
+% never after it and before the first entry it introduces; a wrapped TOC entry
+% remains whole like a paragraph. Discourage parent→first-child breaks at each
+% hierarchy edge. Penalty 3, not infinite: an oversized descendant run may
+% still break before a complete child-entry block.
 \makeatletter
-% \pretocmd, not \preto or \patchcmd-on-\l@chapter: \l@section is
-% parameterized and \preto would strip its parameter text; patching the
-% chapter entry does not protect the run of subentries. Failure branch
-% errors loudly — the same asserted-edit principle as the Stage 3 regexes.
+% Install the \l@chapter patch only when parts remain in the surveyed TOC; it
+% keeps a part with its first chapter. Chapters are kept with their first
+% section, and sections with their first subsection. \pretocmd, not \preto:
+% these macros are parameterized and \preto would strip their parameter text.
+% Every failure branch errors loudly — the same asserted-edit principle as
+% the Stage 3 regexes.
+%% CONDITIONAL WHEN PARTS REMAIN:
+%% \pretocmd{\l@chapter}{\nopagebreak[3]}{}
+%%   {\PackageError{custom}{l@chapter TOC rule-9 patch failed to apply}{}}
 \pretocmd{\l@section}{\nopagebreak[3]}{}
   {\PackageError{custom}{l@section TOC rule-9 patch failed to apply}{}}
+\pretocmd{\l@subsection}{\nopagebreak[3]}{}
+  {\PackageError{custom}{l@subsection TOC rule-9 patch failed to apply}{}}
 \makeatother
-% Penalties alone cannot guarantee rule 9 for tall blocks — Stage 5 check 8
-% verifies the rendered TOC and remediates any residual split (see there).
+% Penalties alone cannot choose the best recursive boundary for tall blocks —
+% Stage 5 check 8 verifies the rendered TOC and inserts any required explicit
+% break before the governing entry (see there).
 
 % Unicode fallbacks — GENERATED, not hardcoded: check every survey character
 % against the document fonts and map only the misses (coverage script below).
@@ -426,16 +442,19 @@ probe costs seconds. Build the probe from the **real document's preamble**
 (truncate the transformed `main.tex` at `\begin{document}`) — a synthetic
 `\documentclass` stub misses definitions the real preamble carries and fails
 for its own reasons. Append a specimen body exercising everything
-`custom.sty` touches: `\tableofcontents` + a chapter and section (the second
-pass executes the patched TOC macros — this is what catches a broken
-`\l@section`), a long inline mono token, a minted block, a tabulary table,
+`custom.sty` touches: `\tableofcontents` plus the displayed TOC hierarchy (a
+part when parts remain, then chapter, section, and subsection). The second
+pass executes every patched `\l@...` macro and catches a broken hierarchy
+patch. Also include a long inline mono token, a minted block, a tabulary table,
 and one of each fallback-mapped Unicode character:
 
 ```bash
 sed -n '1,/\\begin{document}/p' main.tex > probe.tex
 cat >> probe.tex <<'EOF'
 \tableofcontents
-\chapter{Probe}\section{Section}
+% Omit the next line when the survey flattened or found no parts.
+\part{Probe Part}\chapter{Probe Chapter}
+\section{Probe Section}\subsection{Probe Subsection}
 Prose with \texttt{a\_very/long(token)} and specimen glyphs.
 \begin{minted}{julia}
 f(x) = x
@@ -552,16 +571,25 @@ pdftoppm -png -r 200 main.pdf pages/p
    page numbers match heading pages; `qpdf --check` is clean; text extracts
    on every page with no U+FFFD or private-use glyphs; figures render
    (non-blank image regions where `\includegraphics` was emitted).
-8. **TOC block integrity (rule 9)** — on the rendered contents pages, locate
-   each chapter-level entry and its subentry run; assert no block crosses a
-   page boundary (except the permitted tall-block case, which must break
-   after at least the first subentries and resume with a subentry).
-   *Remediation:* write a `\newpage` into the `.toc` immediately before the
-   chapter entry that begins the split block. Because latexmk regenerates the
-   `.toc`, apply the edit after latexmk reaches its fixpoint and run **one
-   final `xelatex` pass directly** (not latexmk); then re-render and confirm
-   the TOC page count and all subsequent folios are unchanged — if pagination
-   shifted, redo the whole Stage 4 → 5 loop with the edit scripted in.
+8. **TOC block integrity (rule 9)** — inspect the rendered contents pages as a
+   recursive hierarchy, not chapter-sized runs only. For every displayed part,
+   chapter, section, and subsection, keep each wrapped entry whole and ask the
+   same question used for a body heading or paragraph: does the entry plus the
+   first complete block it introduces fit? If yes, they remain together; if
+   not, the legal break is immediately *before* that governing entry. For an
+   oversized descendant run, continue recursively and break before a complete
+   child-entry block — never inside a wrapped entry, immediately after a parent,
+   or between a parent and its first child.
+
+   *Remediation:* write a `\newpage` into the `.toc` before the highest-level
+   part, chapter, section, or subsection entry whose complete block fits on the
+   next contents page. This is the TOC equivalent of moving a body section,
+   subsection, or paragraph to the next page rather than splitting what it
+   introduces. Because latexmk regenerates the `.toc`, apply the edit after
+   latexmk reaches its fixpoint and run **one final `xelatex` pass directly**
+   (not latexmk); then re-render and confirm the TOC page count and all
+   subsequent folios are unchanged — if pagination shifted, redo the whole
+   Stage 4 → 5 loop with the edit scripted in.
 
 9. **Page-fill rhythm (the pleasingness metric).** The pagination rules
    trade bad breaks for short pages — correct, but a *run* of half-empty

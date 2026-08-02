@@ -74,9 +74,10 @@ python3 "$PDFDIR/validate.py" "$BUILD" main.pdf "$PDFDIR/render_manifest.json"
 echo "== Stage 6: package =="
 VERSION=$(grep -m1 '^version' "$ROOT/Project.toml" | sed 's/.*"\(.*\)".*/\1/')
 SITE=$(grep -m1 '\\newcommand{\\DocMainTitle}' main.tex | sed 's/.*{\\DocMainTitle}{\(.*\)}.*/\1/')
-# short package name: version and the UTC build stamp live on the cover page,
-# not in the filename
-OUT="$PDFDIR/${SITE%.jl}.pdf"
+# Stable public artifact: every successful build copies build/main.pdf here.
+# The version and UTC build stamp live on the cover page, not in the filename;
+# do not derive this path from the mutable documentation title.
+OUT="$PDFDIR/SmallFloats.pdf"
 cp main.pdf "$OUT"
 # persist the render manifest: next build's check-10 baseline
 cp render_manifest.json "$PDFDIR/render_manifest.json"
