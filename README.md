@@ -1,119 +1,208 @@
 # SmallFloats.jl
 
-A conforming, performance-oriented Julia implementation of the **IEEE SA P3109
-Working Group** draft standard for arithmetic formats for machine learning —
-every format the draft defines at bitwidths **3 through 16**, every projection
-(rounding × saturation), and the full operation register.
+SmallFloats.jl implements the IEEE P3109 draft's small binary formats for
+Julia. It provides all 504 formats at bitwidths 3 through 16, the draft's
+rounding and saturation policies, scalar and array operations, shared-scale
+blocks, packed storage, stochastic rounding, and measured approximations.
 
-Bit-exact defined results on every default path. Approximate fast paths exist
-only behind an explicit registry, retrieved by name, never substituted silently.
+The central contract is simple: a defined operation computes the
+mathematically exact result and projects it once into the requested format.
+Scalar methods, array kernels, and cached function tables preserve that same
+contract.
 
-```julia
-using SmallFloats
+[Documentation](https://JeffreySarnoff.github.io/SmallFloats.jl) ·
+[First session](docs/src/first_session.md) ·
+[Choose a format](docs/src/workflow_choose_format.md) ·
+[Operation reference](docs/src/reference_operations.md)
 
-x = Binary8p4se(1.5)
-y = Binary8p4se(0.25)
+## Try it
 
-Add(Binary8p4se, RNE_SF, x, y)      # round-nearest-even, saturating
-Multiply(Binary8p4se, RTZ_SN, x, y)   # a different projection, same operands
+SmallFloats.jl requires Julia 1.12 or later. The package is not yet registered,
+so install it from GitHub:
+
+```text
+pkg> add https://github.com/JeffreySarnoff/SmallFloats.jl
 ```
+
+Then construct two values and add them under an explicit projection policy:
+
+```julia-repl
+julia> using SmallFloats
+
+julia> set_show_style!(:typed);
+
+julia> x = Binary8p4se(1.6)
+Binary8p4se(1.625 ≡ 0x45)
+
+julia> y = Binary8p4se(1.75)
+Binary8p4se(1.75 ≡ 0x46)
+
+julia> Add(Binary8p4se, RNE_SN, x, y)
+Binary8p4se(3.5 ≡ 0x4e)
+```
+
+`set_show_style!(:typed)` makes the transcript display both the exact datum and
+its stored code point; omit it when compact value-only output is preferable.
+
+`Binary8p4se` is an 8-bit, precision-4, signed, extended-domain format. It
+cannot represent 1.6, so construction projects that number to the exact datum
+1.625 and stores code point `0x45`.
+
+Read the operation call from left to right:
+
+```text
+operation(result format, projection specification, operands...)
+```
+
+`RNE_SN` means round to nearest with ties to even, followed by the draft's
+`SatNone` boundary behavior. Naming the result format and policy makes the
+operation independent of session defaults. Ordinary Julia operators are also
+available for same-format exploratory work:
+
+```julia-repl
+julia> x + y
+Binary8p4se(3.5 ≡ 0x4e)
+```
+
+## Projection is part of the computation
+
+Rounding and saturation are represented together by a `ProjSpec`. Changing the
+projection can change a boundary result without changing the exact arithmetic:
+
+```julia-repl
+julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);
+
+julia> Multiply(Binary8p4se, RNE_SN, w, two)
+Binary8p4se(Inf ≡ 0x7f)
+
+julia> Multiply(Binary8p4se, RNE_SF, w, two)
+Binary8p4se(224.0 ≡ 0x7e)
+```
+
+Both calls multiply exactly to 400. `RNE_SN` produces infinity in this format;
+`RNE_SF` clamps to its largest finite datum. See
+[Control Rounding and Overflow](docs/src/workflow_rounding_overflow.md) for the
+deterministic and stochastic projection families.
+
+## Values and code points are different inputs
+
+An unsigned constructor argument selects a stored code point. Every other
+`Real` constructor argument is a numeric value to project:
+
+```julia-repl
+julia> Binary8p4se(0x02), Binary8p4se(2)
+(Binary8p4se(0.001953125 ≡ 0x02), Binary8p4se(2.0 ≡ 0x48))
+```
+
+Use `codepoint(x)` when stored identity matters and `decode(x)` when the exact
+datum matters. The distinction is developed in
+[Values, Code Points, and Conversion](docs/src/concept_values_codepoints.md).
 
 ## Formats
 
-A format is `Binary{K,P,Σ,Δ}`: bitwidth `K ∈ 3:16`, precision `P ∈ 1:K`
-(significand bits including the implicit bit), signedness `Σ`, and domain `Δ` —
-extended (with ±Inf) or finite. There are `4K − 2` formats at each `K`, so
-**504** in total.
-
-Each carries its draft §3.2 name. The **120 at K ≤ 8 are exported**; the other
-384 are one opt-in away, and are always reachable by qualification or
-programmatically:
+A format has four parameters:
 
 ```julia
-using SmallFloats                      # Binary8p4se and the other 119
-using SmallFloats.Formats              # …and all 504
-
-SmallFloats.Binary16p6se               # always reachable, no opt-in needed
-format(16, 6, true, true)              # programmatic: runtime K, P, Σ, Δ
+Binary{K, P, SGN, EXT}
 ```
 
-> **`Binary16p11se` is not `Float16`.** The exponent biases differ by one (16 vs
-> 15), so *every code point denotes a different value*. The NaN count, the
-> absence of negative zero, and the domain parameter differ too. Same for
-> `Binary16p8se` and `BFloat16` (biases 128 vs 127). Converting is a conversion,
-> never a reinterpretation — see the User Guide's section on the trap.
+- `K` is the bitwidth, from 3 through 16.
+- `P` is the precision, including the implicit significand bit.
+- `SGN` chooses unsigned or signed values.
+- `EXT` chooses a finite or extended domain.
 
-## What is guaranteed
-
-**One write path.** `project` — `RoundToPrecision → Saturate → Encode` — is the
-only producer of a code point. Every operation, every carrier, every bitwidth
-enters through it.
-
-**A table entry *is* the defined result.** Where the package tabulates an
-operation, every entry came from one trip through the same oracle-backed scalar
-path, so there is no residual correctness reasoning at a use site. Declining to
-build a table means running that scalar path per element — never a different
-answer.
-
-**Nothing approximate is reachable from the default API.** Approximate kernels
-live in their own registry and are retrieved only by explicit name. Every
-declared error bound κ is *verified by exhaustive enumeration at registration
-time*, and where the input space is too large to enumerate, `conformance()`
-reports that it was sampled — in those words.
-
-**The evaluation carrier is chosen by the format, never by the caller.** 432 of
-the 504 formats evaluate in `Float64`; the rest need more exponent range than it
-has, and get `Float128` or an exact dyadic carrier. Which one is a dispatch
-decision derived from the exponent bias. Every carrier is exact for the operands
-it accepts, so the choice buys time and never changes an answer — a property the
-suite gates directly, by forcing a wider carrier and comparing code points.
-
-## Verification
-
-The suite **enumerates rather than samples wherever the input space allows it**,
-and says "sampled" in those words where it does not. Every green run ends with a
-coverage roll-call naming each gate, how much it compared, whether that was
-exhaustive, and — in one place — what is knowingly not covered.
-
-Current totals: **13 gates and tiers, ≈ 35.3 M compared units.** The code lattice
-is swept exhaustively at every K (7 602 160 code points across all 504 formats).
-The projection engine is checked against an independent `Rational{BigInt}`
-reference — the one oracle whose validity does not depend on a carrier being wide
-enough, which is exactly what makes it the right one here.
-
-```
-SMALLFLOATS_G5=full            # release tier of the golden non-regression gate
-SMALLFLOATS_G10=full           # surface totality over all 72 formats above rung 1
-SmallFloats_EXHAUSTIVE=1       # widen every sampled format axis to all 504
-SmallFloats_Float128=disable   # must produce bit-identical results
-```
-
-That last one is a standing invariant, not a convenience: every `Float128` path
-fronts a complete MPFR path with identical semantics. The switch trades speed
-only, never results.
-
-## Installation
+There are 504 legal combinations. `using SmallFloats` exports the 120
+draft-named aliases at `K ≤ 8`. Wider aliases remain available by qualification,
+through the opt-in namespace, or programmatically:
 
 ```julia
-using Pkg; Pkg.add(url="https://github.com/JeffreySarnoff/SmallFloats.jl")
+using SmallFloats                    # Binary8p4se and the other K ≤ 8 aliases
+using SmallFloats.Formats            # opt in to all 504 aliases
+
+SmallFloats.Binary16p6se             # qualification needs no opt-in
+format(16, 6, true, true)            # runtime K, P, SGN, EXT
 ```
 
-Julia 1.12 or later. **The K ≤ 16 extension added zero dependencies** —
-`Quadmath` and `BFloat16s` were already present, the exact dyadic carrier is
-hand-written `Int128` arithmetic, and MPFR is in `Base`.
+Use [Choose a Format](docs/src/workflow_choose_format.md) to compare precision,
+range, signedness, and domain against representative data.
 
-## Documentation
+## P3109 is not IEEE 754 in fewer bits
 
-The [User Guide](docs/src/user_guide.md) is the place to start; the
-[Technical Guide](docs/src/technical_guide.md) covers the projection engine, the
-carrier lattice, and the table policy. `docs/other/` holds the design and
-execution records.
+P3109 formats have one zero and one NaN, use a different exponent-bias rule,
+and make signedness and finite/extended domain explicit format parameters.
+Consequently, `Binary16p11se` is not `Float16`, and `Binary16p8se` is not
+`BFloat16`. Convert between them; do not reinterpret their bits.
 
-## Deliberate limitations
+[P3109 in One Chapter](docs/src/concept_p3109.md) summarizes the differences.
+[Interoperate with Float16 and BFloat16](docs/src/workflow_float16.md) gives the
+safe conversion patterns.
 
-No implicit cross-format arithmetic — promotion is to the format's promotion
-carrier, explicitly. No in-place packed arithmetic. Threading is opt-in and
-narrow. `Irrational` and `Rational` inputs to `Convert` are rejected rather than
-double-rounded silently. Subtyping `Binary` is not a supported extension point:
-package methods assume `codepoint`/`rawvalue` semantics and the representation
-invariant, neither of which an outside subtype can be held to.
+## What the package guarantees
+
+- **Defined results are bit-exact.** Operations project the mathematically exact
+  result once. A cached table is the scalar operation memoized, not a second
+  semantics.
+- **Policy can be explicit.** Draft-named operations accept a result format and
+  `ProjSpec`; Julia operators use the current session default.
+- **Array and block forms preserve scalar semantics.** Optimized execution does
+  not change the result contract.
+- **Approximation is opt-in.** Approximate kernels live in a separate registry;
+  registration measures their code-point deviation κ, and the default API never
+  substitutes them silently.
+- **Carrier choice does not change results.** Formats dispatch to `Float64`,
+  `Float128`, or an exact wider path according to their range. The test suite
+  compares carrier paths at code-point identity.
+
+The implementation architecture and its invariants are described in
+[Architecture and Invariants](docs/src/internals_architecture.md).
+
+## Verification and conformance
+
+The test suite enumerates complete finite spaces where practical and labels
+sampled checks as sampled. It sweeps the full 504-format code lattice and checks
+the projection engine against an independent `Rational{BigInt}` reference.
+
+From a clone, run:
+
+```text
+pkg> test SmallFloats
+```
+
+At runtime, inspect the declaration for the current session with
+`conformance()` or print it with `conformance_report()`. See
+[Read and Export Conformance](docs/src/workflow_conformance.md) and
+[Verification Strategy](docs/src/internals_verification.md) for scope and
+evidence.
+
+## Documentation by goal
+
+- Start with [Install and Verify](docs/src/install_and_verify.md),
+  [First Session](docs/src/first_session.md), and
+  [Core Model](docs/src/core_model.md).
+- Apply the package through the [workflow guides](docs/src/index.md#complete-an-application-task).
+- Understand the semantics through the [concept guides](docs/src/index.md#understand-the-semantics).
+- Look up formats, projections, and operations in the
+  [reference](docs/src/reference_public_api.md).
+- Inspect complete runs in [Examples and Evidence](docs/src/examples_gallery.md).
+- Contribute implementation work from
+  [Architecture and Invariants](docs/src/internals_architecture.md).
+
+The maintained manual lives in [`docs/src`](docs/src/index.md). Design records
+and development notes live in [`docs/other`](docs/other/).
+
+## Deliberate boundaries
+
+- Arithmetic between two different `Binary` formats requires an explicit
+  `Convert`; there is no implicit cross-format widening rule.
+- Combining a `Binary` value with an ordinary Julia number promotes to the
+  format's exact promotion carrier. Project the result back explicitly when
+  that is the intended boundary.
+- Packed storage does not provide in-place packed arithmetic; unpack, compute,
+  and repack.
+- `Irrational` and `Rational` inputs to `Convert` are rejected rather than
+  silently double-rounded.
+- External subtypes of `Binary` are unsupported because package methods rely on
+  its representation and code-point invariants.
+
+SmallFloats.jl is released under the [MIT License](LICENSE). Release changes are
+recorded in the [changelog](CHANGELOG.md).

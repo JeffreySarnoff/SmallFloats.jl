@@ -1,93 +1,227 @@
-# Regenerating and reading the benchmark report
+# Benchmarking SmallFloats.jl
 
-<!-- updated by /doc-it -->
-The runnable suite lives in `benchmarking/` (its own environment, `benchmark/Project.toml`).
-This directory holds the generated artifacts — `benchmark_report.md`/`.pdf`,
-`domain_ops.csv`, `safe_domain_ops.csv` — and this guide. `benchmarking/benchmarking.jl`
-and `benchmarking/simple_benchmarking.jl` are earlier copies kept for reference;
-`benchmarking/benchmarking.jl` is the current script.
+This directory contains the reproducible performance suite for SmallFloats.jl.
+The main entry point, [`benchmarking.jl`](benchmarking.jl), measures scalar
+operations, projection modes, array kernels, table construction, sorting,
+blocks, conversions, and packed storage, then writes a Markdown report.
 
-## Regenerating
+Use this guide to regenerate the report, understand what each number measures,
+and compare runs without accidentally benchmarking Julia's dispatcher or a
+different operand distribution.
 
-From your repository root, it's two commands.
+[Current report](benchmark_report.md) ·
+[Published performance evidence](../docs/src/examples_performance.md) ·
+[Benchmarking methodology](../docs/src/internals_benchmark.md)
 
-One-time environment setup:
+## Quick start
 
-    julia --project=benchmarking -e "using Pkg; Pkg.develop(path=\".\"); Pkg.instantiate()"
+Run commands from the repository root. The benchmark suite has its own Julia
+environment in `benchmarking/Project.toml`.
 
-Then generate the report:
+Prepare or refresh that environment:
 
-    julia --project=benchmarking benchmarking/benchmarking.jl benchmarking/benchmark_report.md
+```sh
+julia --project=benchmarking -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+```
 
-The trailing argument is the output path — omit it and the report lands at
-benchmark_report.md in the current directory; pass benchmarking/benchmark_report.md
-to match the default location (create the benchmarking/ folder first if it does
-not exist — the script does not create directories).
+Generate a candidate report without overwriting the checked-in baseline:
 
-From the REPL:
+```sh
+julia --project=benchmarking benchmarking/benchmarking.jl \
+    benchmarking/benchmark_report.candidate.md
+```
 
-    include("benchmarking/benchmarking.jl");
-    generate_report("benchmarking/benchmark_report.md")
+The suite is intentionally comprehensive and can take several minutes. Runtime
+depends on the host, Julia version, thread count, and whether compilation caches
+are warm. There is no abbreviated mode: a partial run would not produce the same
+report contract.
 
-Expect roughly 8–14 minutes and ~280 measurement rows (add two more with
-`julia -t N`, N > 1 — the threaded-vs-sequential K=8 ternary comparison only
-runs with more than one Julia thread). The table-builds section deliberately
-measures cold builds (up to ~90 ms each, many samples) plus warm cache hits,
-and the scalar-operation tables appear in FOUR variants per arity
-(unary 30, binary 18, ternary 3 — each measured four ways).
+To exercise the threaded ternary-kernel comparison, start Julia with more than
+one thread:
 
-## How to read the scalar tables
+```sh
+julia --threads=auto --project=benchmarking benchmarking/benchmarking.jl \
+    benchmarking/benchmark_report.threaded.md
+```
 
-Each scalar section (unary / binary / ternary) contains four tables, ordered
-most-filtered first. **If you want one number per operation, read the first
-table ("safe args") — it is the honest, fully unmasked cost.** Each later table
-adds back one class of cheap fast-row dilution:
+The report header records the CPU, logical CPU count, Julia thread count, Julia
+version, Chairmarks version, and whether Float128 paths were enabled. Keep that
+header when sharing results.
 
-| order | title suffix       | operands sampled                                      | what it tells you |
-|-------|--------------------|-------------------------------------------------------|-------------------|
-| 1st   | "safe args"        | finite operands inside each op's safe domain          | the true per-op cost — no NaN dilution at all |
-| 2nd   | "no NaN, Inf args" | finite operands only (zeros/subnormals kept)          | cost with ±Inf/NaN operands removed; domain-restricted ops still hit NaN rows on out-of-domain finite operands |
-| 3rd   | "no NaN args"      | everything except the NaN code point (±Inf sampled)   | isolates the effect of the NaN operand alone |
-| 4th   | *(no suffix)*      | ALL code points — NaN and ±Inf sampled                | the historical uniform-sweep view; medians of domain-restricted ops are heavily diluted by instant NaN rows |
+## Output behavior
 
-**Safe-args operand generation.** Eleven argument-restricted operations draw
-their arguments directly from explicit safe domains declared in the
-`_SAFE_DOMAINS` map in benchmarking.jl:
+The final command-line argument is the Markdown output path. If it is omitted,
+the script writes `benchmark_report.md` in the current working directory. The
+parent directory must already exist, and an existing file at the destination is
+replaced.
 
-    Sqrt        0 ≤ x < ∞          ArcSin    −1 ≤ x ≤ 1
-    RSqrt       0 < x < ∞          ArcCos    −1 ≤ x ≤ 1
-    Log, Log2   0 < x < ∞          ArcCosh    1 ≤ x < ∞
-    LogOnePlus −1 < x < ∞          ArcTanh   −1 < x < 1
-    Recip       x ≠ 0              Divide     y ≠ 0 (x unrestricted)
+The generator writes Markdown only. The checked-in `benchmark_report.pdf`,
+`domain_ops.csv`, and `safe_domain_ops.csv` are separate retained artifacts; the
+current Julia generator does not update them. Do not assume their timestamp or
+measurement context matches the Markdown report.
 
-Every operation NOT in that map uses an oracle-derived pool instead: finite
-operand tuples whose defined result is not NaN — so unlisted ops can never
-drift out of sync with the implementation. To adjust a domain or add an op,
-edit `_SAFE_DOMAINS` (one predicate per argument position); the report
-structure follows automatically.
+From a Julia session started at the repository root, the equivalent call is:
 
-## The other sections
+```julia
+include("benchmarking/benchmarking.jl")
+generate_report("benchmarking/benchmark_report.candidate.md"; seed=2026)
+```
 
-The non-scalar sampled tables (core primitives, format sensitivity, projection
-modes, array kernels, sorting, blocks, conversions) all use the all-code-points
-pool — NaN and ±Inf sampled — and each says so in its note. The table-builds
-section enumerates every code point by construction (NaN and ±Inf included) and
-reports both the cold build and the steady-state warm cache hit.
+The default seed is 2026. It makes operand selection reproducible; it cannot
+remove scheduler, frequency-scaling, thermal, or operating-system noise.
 
-## Trusting the numbers
+## Measurement contract
 
-The script runs a specialization preflight first and aborts rather than publish
-numbers if the warm scalar paths allocate — if that trips on your machine,
-something is measuring dispatch, not arithmetic.
+The harness enforces four rules before its numbers are worth reading:
 
-Numbers are machine-specific (my figures came from a single-threaded
-sapphire-rapids container), so expect different absolutes but similar ratios.
+- format types cross function barriers as type parameters, never as unresolved
+  globals;
+- operands are selected in Chairmarks' untimed setup, so generation cost is not
+  charged to the operation;
+- values vary at runtime, preventing constant folding;
+- a specialization preflight aborts when paths that must be allocation-free
+  allocate.
 
-Reading guidance for the middle tables: excluding NaN/±Inf OPERANDS does not
-eliminate NaN RESULTS — domain-restricted ops still take instant NaN fast rows
-on out-of-domain finite operands (e.g. a negative operand to Sqrt), so their
-medians in the "no NaN, Inf args" and "no NaN args" tables remain partially
-diluted; the report's notes state this. That residual dilution is precisely
-what the leading "safe args" table removes, so cross-checking an op's median
-across the four tables shows you exactly how much of its uniform-sweep median
-was NaN fast rows versus real work.
+The last rule is deliberately narrower than “all arithmetic must allocate
+nothing.” Exact selection operations and narrow-spread `Add`/`FMA` calls must be
+allocation-free. Some arithmetic inputs legitimately escalate to MPFR because
+their exponent spread exceeds the hardware carrier; those allocations are real
+work and are reported rather than rejected.
+
+If the preflight fails, fix the specialization or benchmark barrier before
+interpreting any timing. The guide in
+[Benchmark Correctly](../docs/src/internals_benchmark.md) shows the minimal
+pattern and the common dynamic-dispatch failure mode.
+
+## Read the report in this order
+
+1. **Read the header.** Confirm host, Julia version, threads, Float128 setting,
+   and Chairmarks version before comparing with another run.
+2. **Choose the relevant section.** Scalar latency, bulk array throughput,
+   table construction, sorting, and block operations answer different
+   questions.
+3. **Check the operand class.** A scalar operation's timing can change sharply
+   when NaN, infinity, or out-of-domain inputs take short special rows.
+4. **Read minimum, median, and allocations together.** A faster row that changed
+   operand class or began allocating is not the same result.
+5. **Prefer ratios within one run.** Absolute nanoseconds are host-specific;
+   comparisons made under one process and one environment are more portable.
+
+## What the columns mean
+
+- **min** is the least interrupted observed time and the best estimate of the
+  operation's lower-bound cost on that run.
+- **median** shows the center of the measured samples and includes ordinary
+  scheduler and cache variation.
+- **allocs** is the median allocation count. Zero is expected for warm paths
+  whose implementation contract is allocation-free; nonzero can be legitimate
+  for MPFR escalation, table construction, blocks, or container creation.
+- **per element** or **per lane** normalizes a bulk call. Compare it only when
+  the array or block size in the row is the same.
+
+The report prints minimum before median intentionally. Neither replaces the
+other: use minimum to study the kernel and median to judge run-to-run stability.
+
+## Scalar operand classes
+
+Unary, binary, and ternary operations each appear under four operand classes.
+They are ordered from the most domain-focused view to the uniform-code-point
+view:
+
+| Order | Report heading | Operand population | Best use |
+|:---|---|---|---|
+| 1 | Safe args | Finite operands inside the operation's safe domain | Compare the cost of doing in-domain work without NaN fast-row dilution |
+| 2 | No NaN, Inf args | All finite operands, including zeros and subnormals | See the effect of finite but possibly out-of-domain inputs |
+| 3 | No NaN args | Every code point except NaN; infinities remain | Isolate the contribution of the NaN operand row |
+| 4 | All code points | Uniform sampling over the complete code space | Model the historical uniform-code-point workload, including specials |
+
+“Safe args” is the best first table when asking how expensive an operation is
+on inputs where it performs its main computation. It is not universally the
+right workload model. If an application naturally contains special values or
+out-of-domain inputs, compare against the table whose operand population
+matches that application.
+
+Eleven argument-restricted operations use explicit predicates from
+`_SAFE_DOMAINS` in `benchmarking.jl`: `Sqrt`, `RSqrt`, `Log`, `Log2`,
+`LogOnePlus`, `Recip`, `Divide`, `ArcSin`, `ArcCos`, `ArcCosh`, and `ArcTanh`.
+Every other operation uses finite operand tuples whose defined oracle result is
+not NaN. This oracle-derived fallback keeps newly registered operations from
+silently inheriting an unrelated hand-written domain.
+
+The middle classes require care. Removing NaN or infinity from the operands
+does not remove NaN results: for example, a negative finite input to `Sqrt`
+still takes an out-of-domain special row. Comparing all four tables shows how
+much a uniform sweep is influenced by those rows.
+
+## Other report sections
+
+- **Core primitives** measures decode, ordering, classification, stepping, and
+  projection over all code points.
+- **Sensitivity studies** compares selected operations across formats and
+  projection specifications.
+- **Array kernels** measures warm table gathers and scalar compute loops per
+  element.
+- **Ternary bitwidth tiers** exposes eager, adaptive, compute, and threaded
+  policy choices against scalar-loop baselines.
+- **Sorting** compares the package's counting sort with Julia's comparison sort.
+- **Table builds** separates cold construction from a warm cache hit; JIT
+  compilation is pre-warmed while the table cache is evicted per cold sample.
+- **Block and scaled operations** reports both total work and per-lane cost.
+- **Conversions and packed storage** separates scalar conversion from bulk
+  packing and unpacking.
+
+Unless its note says otherwise, a non-scalar sampled section uses the complete
+code-point pool, including NaN and infinities. Table construction enumerates its
+input code space rather than sampling it.
+
+## Compare two runs fairly
+
+Keep these fixed whenever the goal is regression detection:
+
+- package commit and benchmark script;
+- Julia and Chairmarks versions;
+- CPU model, power policy, and thermal conditions;
+- Julia thread count and `SmallFloats_Float128` setting;
+- report seed and operand class;
+- operation, format, projection, and collection size.
+
+Generate the candidate beside the baseline, then inspect both the metadata and
+the changed rows:
+
+```sh
+diff -u benchmarking/benchmark_report.md \
+    benchmarking/benchmark_report.candidate.md
+```
+
+Do not infer a regression from one noisy median. Look for a coherent shift in
+minimum and median, rerun it, and check whether allocations or operand context
+changed. For bulk kernels, compare throughput and total time together.
+
+## Accept and publish a new baseline
+
+When a candidate was generated under an intentional, recorded environment:
+
+1. verify the report header and preflight outcome;
+2. inspect every changed section, not only the expected row;
+3. rerun surprising changes before accepting them;
+4. replace `benchmarking/benchmark_report.md` with the accepted candidate;
+5. update `docs/src/examples_performance.md` deliberately if the new evidence
+   should appear in the maintained manual;
+6. rebuild the documentation and PDF, then review their generated diffs.
+
+The performance page is not automatically overwritten by the benchmark script.
+That separation prevents an exploratory run from silently becoming published
+documentation.
+
+## Dyadic carrier microbenchmarks
+
+[`benchmark_dyadics.jl`](benchmark_dyadics.jl) is a separate focused suite for
+the exact dyadic carrier. It prints results to standard output and does not
+participate in `generate_report`:
+
+```sh
+julia --project=benchmarking -O3 benchmarking/benchmark_dyadics.jl
+```
+
+Use it when changing dyadic layout or arithmetic kernels; use
+`benchmarking.jl` for package-level performance evidence.
