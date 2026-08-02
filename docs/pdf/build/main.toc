@@ -20,11 +20,11 @@
 \contentsline {section}{\numberline {3.4}Create a block of quantized values}{9}{section.3.4}%
 \contentsline {section}{\numberline {3.5}What just happened}{9}{section.3.5}%
 \contentsline {chapter}{\chapternumberline {4}Mental Model}{10}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Idea 1 — A format is a finite set of datums}{10}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Idea 2 — A value is a wrapper around a code point; decode is exact}{11}{section.4.2}%
-\contentsline {section}{\numberline {4.3}Idea 3 — Every computation is exact math, then one projection}{11}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Idea 4 — Projection = rounding mode × saturation mode}{12}{section.4.4}%
-\contentsline {section}{\numberline {4.5}Idea 5 — Approximation is opt-in, named, and measured}{12}{section.4.5}%
+\contentsline {section}{\numberline {4.1}A format is a finite set of datums}{10}{section.4.1}%
+\contentsline {section}{\numberline {4.2}A value is a wrapper around a code point; decode is exact}{11}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Every computation is exact math, then one projection}{11}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Projection = rounding mode × saturation mode}{12}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Approximation is opt-in, named, and measured}{12}{section.4.5}%
 \contentsline {section}{\numberline {4.6}The five ideas, as one picture}{13}{section.4.6}%
 \contentsline {chapter}{\chapternumberline {5}Introducing P3109}{14}{chapter.5}%
 \contentsline {section}{\numberline {5.1}The one law everything hangs on}{14}{section.5.1}%
@@ -80,7 +80,7 @@
 \contentsline {subsection}{The payoff: swamping and stall}{30}{section*.36}%
 \contentsline {subsection}{Try it}{30}{section*.37}%
 \contentsline {subsection}{see also}{30}{section*.38}%
-\contentsline {chapter}{\chapternumberline {7}How-To Guides}{31}{chapter.7}%
+\contentsline {chapter}{\chapternumberline {7}How-Tos}{31}{chapter.7}%
 \contentsline {section}{\numberline {7.1}Choose a Format}{31}{section.7.1}%
 \contentsline {subsection}{Ingredients}{31}{section*.39}%
 \contentsline {subsection}{Recipe}{31}{section*.40}%
@@ -121,7 +121,7 @@
 \contentsline {subsection}{Recipe}{43}{section*.68}%
 \contentsline {subsection}{What can go wrong}{44}{section*.69}%
 \contentsline {subsection}{see also}{44}{section*.70}%
-\contentsline {chapter}{\chapternumberline {8}Explanation}{45}{chapter.8}%
+\contentsline {chapter}{\chapternumberline {8}Explanations}{45}{chapter.8}%
 \contentsline {section}{\numberline {8.1}Formats, Aliases \& Representations}{45}{section.8.1}%
 \contentsline {subsection}{The parametric type}{45}{section*.71}%
 \contentsline {subsection}{\texttt {<:}, not \texttt {===}}{46}{section*.72}%
@@ -181,15 +181,15 @@
 \contentsline {subsection}{Sorting: O(n) counting sort}{62}{section*.120}%
 \contentsline {subsection}{Do not use \texttt {@fastmath}}{62}{section*.121}%
 \contentsline {subsection}{Go deeper}{63}{section*.122}%
-\contentsline {chapter}{\chapternumberline {9}Reference}{64}{chapter.9}%
-\contentsline {section}{\numberline {9.1}Reference: Format Names \& Queries}{64}{section.9.1}%
+\contentsline {chapter}{\chapternumberline {9}Specifics}{64}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Format Names \& Queries}{64}{section.9.1}%
 \contentsline {subsection}{Naming grammar}{65}{section*.123}%
 \contentsline {subsection}{\texttt {<:} versus \texttt {===}}{65}{section*.124}%
 \contentsline {subsection}{\texttt {format()} and opt-in access}{65}{section*.125}%
 \contentsline {subsection}{Format query table}{66}{section*.126}%
 \contentsline {subsection}{Value-and-type call forms}{66}{section*.127}%
 \contentsline {subsection}{see also}{66}{section*.128}%
-\contentsline {section}{\numberline {9.2}Reference: Projection Specifications}{66}{section.9.2}%
+\contentsline {section}{\numberline {9.2}Projection Specifications}{66}{section.9.2}%
 \contentsline {subsection}{\texttt {ProjSpec} constructor}{66}{section*.129}%
 \contentsline {subsection}{Deterministic predefined specs (6 × 3)}{67}{section*.130}%
 \contentsline {subsection}{Stochastic families}{67}{section*.131}%
@@ -197,7 +197,7 @@
 \contentsline {subsection}{Saturation-mode meaning}{67}{section*.133}%
 \contentsline {subsection}{Explicit \texttt {R} range rule}{67}{section*.134}%
 \contentsline {subsection}{see also}{68}{section*.135}%
-\contentsline {section}{\numberline {9.3}Reference: Operation Catalog}{68}{section.9.3}%
+\contentsline {section}{\numberline {9.3}Operation Catalog}{68}{section.9.3}%
 \contentsline {subsection}{Unary (30)}{69}{section*.136}%
 \contentsline {subsection}{Binary (18)}{70}{section*.137}%
 \contentsline {subsection}{Ternary (3)}{70}{section*.138}%
@@ -206,13 +206,13 @@
 \contentsline {subsection}{Deliberately unmapped draft operations}{71}{section*.141}%
 \contentsline {subsection}{Call shapes}{71}{section*.142}%
 \contentsline {subsection}{see also}{71}{section*.143}%
-\contentsline {section}{\numberline {9.4}Reference: Session Defaults}{71}{section.9.4}%
+\contentsline {section}{\numberline {9.4}Session Defaults}{71}{section.9.4}%
 \contentsline {subsection}{Getter / setter table}{72}{section*.144}%
 \contentsline {subsection}{Coherence invariant}{72}{section*.145}%
 \contentsline {subsection}{\texttt {with\_\allowbreak {}default\_\allowbreak {}*} combinators}{73}{section*.146}%
 \contentsline {subsection}{Cost model}{73}{section*.147}%
 \contentsline {subsection}{see also}{73}{section*.148}%
-\contentsline {section}{\numberline {9.5}Reference: Arrays, Blocks \& Packed Storage}{73}{section.9.5}%
+\contentsline {section}{\numberline {9.5}Arrays, Blocks \& Packed Storage}{73}{section.9.5}%
 \contentsline {subsection}{Array operation forms}{74}{section*.149}%
 \contentsline {subsection}{Table cache introspection}{74}{section*.150}%
 \contentsline {subsection}{Block functions}{74}{section*.151}%
@@ -220,7 +220,7 @@
 \contentsline {subsection}{\texttt {BlockVector}}{75}{section*.153}%
 \contentsline {subsection}{\texttt {PackedVector}}{75}{section*.154}%
 \contentsline {subsection}{see also}{75}{section*.155}%
-\contentsline {section}{\numberline {9.6}Reference: Conformance \& Approximation Registry}{75}{section.9.6}%
+\contentsline {section}{\numberline {9.6}Conformance \& Approximation Registry}{75}{section.9.6}%
 \contentsline {subsection}{Conformance functions}{76}{section*.156}%
 \contentsline {subsection}{κ registry}{76}{section*.157}%
 \contentsline {subsection}{Understatement-rejection rule}{76}{section*.158}%
@@ -243,8 +243,8 @@
 \contentsline {section}{\numberline {12.3}The interval protocol}{105}{section.12.3}%
 \contentsline {section}{\numberline {12.4}see also}{105}{section.12.4}%
 \contentsline {chapter}{\chapternumberline {13}Tables, Kernels \& Sorting}{106}{chapter.13}%
-\contentsline {section}{\numberline {13.1}Order keys and counting sort}{106}{section.13.1}%
-\contentsline {section}{\numberline {13.2}Tables and kernels}{106}{section.13.2}%
+\contentsline {section}{\numberline {13.1}Function Tables}{106}{section.13.1}%
+\contentsline {section}{\numberline {13.2}Sorting}{106}{section.13.2}%
 \contentsline {section}{\numberline {13.3}see also}{106}{section.13.3}%
 \contentsline {chapter}{\chapternumberline {14}Blocks: Exactness without Superaccumulators}{107}{chapter.14}%
 \contentsline {section}{\numberline {14.1}see also}{107}{section.14.1}%
@@ -254,7 +254,7 @@
 \contentsline {section}{\numberline {15.3}Deliberate limitations}{109}{section.15.3}%
 \contentsline {section}{\numberline {15.4}see also}{109}{section.15.4}%
 \contentsline {chapter}{\chapternumberline {16}Add an Operation}{110}{chapter.16}%
-\contentsline {section}{\numberline {16.1}Universal duties (every new operation)}{110}{section.16.1}%
+\contentsline {section}{\numberline {16.1}Every new operation}{110}{section.16.1}%
 \contentsline {section}{\numberline {16.2}Scalar operations}{111}{section.16.2}%
 \contentsline {subsection}{Adding a unary operation}{111}{section*.162}%
 \contentsline {subsection}{Adding a binary operation}{112}{section*.163}%
@@ -264,23 +264,23 @@
 \contentsline {subsection}{Adding a scaled block operation}{115}{section*.166}%
 \contentsline {subsection}{Adding an elementwise block operation}{116}{section*.167}%
 \contentsline {subsection}{Adding a reductive block operation}{116}{section*.168}%
-\contentsline {section}{\numberline {16.4}After any addition: the closing checklist}{117}{section.16.4}%
+\contentsline {section}{\numberline {16.4}Checklist}{117}{section.16.4}%
 \contentsline {section}{\numberline {16.5}see also}{118}{section.16.5}%
 \contentsline {chapter}{\chapternumberline {17}Verify Custom Code}{119}{chapter.17}%
-\contentsline {section}{\numberline {17.1}Verifying a quantizer exhaustively against an independent reference}{119}{section.17.1}%
-\contentsline {section}{\numberline {17.2}Proving your fused kernel exact: BlockDotProduct vs 512-bit truth}{120}{section.17.2}%
-\contentsline {section}{\numberline {17.3}Stochastic rounding, audited: the full-R sweep}{120}{section.17.3}%
-\contentsline {section}{\numberline {17.4}Ranking safety: an exhaustive monotonicity audit of score conversion}{121}{section.17.4}%
-\contentsline {section}{\numberline {17.5}The κ-margin decision-rule audit}{122}{section.17.5}%
+\contentsline {section}{\numberline {17.1}Verify a quantizer}{119}{section.17.1}%
+\contentsline {section}{\numberline {17.2}Prove a fused kernel}{120}{section.17.2}%
+\contentsline {section}{\numberline {17.3}Audit stochastic rounding}{120}{section.17.3}%
+\contentsline {section}{\numberline {17.4}Applying monotonicity}{121}{section.17.4}%
+\contentsline {section}{\numberline {17.5}Measuring Approximation}{122}{section.17.5}%
 \contentsline {section}{\numberline {17.6}see also}{122}{section.17.6}%
 \contentsline {chapter}{\chapternumberline {18}Benchmark Correctly}{123}{chapter.18}%
 \contentsline {section}{\numberline {18.1}The rules}{123}{section.18.1}%
 \contentsline {section}{\numberline {18.2}Benchmarking without measuring the dispatcher}{123}{section.18.2}%
 \contentsline {section}{\numberline {18.3}see also}{124}{section.18.3}%
 \contentsline {chapter}{\chapternumberline {19}Internals Recipes}{125}{chapter.19}%
-\contentsline {section}{\numberline {19.1}Watching RoundToPrecision work}{125}{section.19.1}%
-\contentsline {section}{\numberline {19.2}Symbolic sticky: projecting {\textquotedbl }just below{\textquotedbl } a number}{125}{section.19.2}%
-\contentsline {section}{\numberline {19.3}Tables are the scalar path, memoized}{125}{section.19.3}%
+\contentsline {section}{\numberline {19.1}Watch RoundToPrecision work}{125}{section.19.1}%
+\contentsline {section}{\numberline {19.2}Symbolic sticky projecting}{125}{section.19.2}%
+\contentsline {section}{\numberline {19.3}Tables are scalar function paths}{125}{section.19.3}%
 \contentsline {section}{\numberline {19.4}Order keys}{126}{section.19.4}%
 \contentsline {section}{\numberline {19.5}see also}{126}{section.19.5}%
 \contentsline {part}{\partnumberline {V}Support}{127}{part.5}%
@@ -342,7 +342,7 @@
 \contentsline {subsection}{Conversions and packed storage}{154}{section*.194}%
 \contentsline {part}{\partnumberline {VI}Standard \& Design Papers}{155}{part.6}%
 \contentsline {chapter}{\chapternumberline {25}The Standard \& Design Papers}{156}{chapter.25}%
-\contentsline {section}{\numberline {25.1}The standard}{156}{section.25.1}%
+\contentsline {section}{\numberline {25.1}Deigning to the Draft Standard}{156}{section.25.1}%
 \contentsline {section}{\numberline {25.2}Design Rationales}{156}{section.25.2}%
-\contentsline {section}{\numberline {25.3}Extension Working Papers}{156}{section.25.3}%
+\contentsline {section}{\numberline {25.3}Development notes}{156}{section.25.3}%
 \contentsline {section}{\numberline {25.4}see also}{157}{section.25.4}%

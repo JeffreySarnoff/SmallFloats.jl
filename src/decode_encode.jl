@@ -156,53 +156,66 @@ is in the datum set of `T` (guaranteed by RoundToPrecision ∘ Saturate).
 end
 
 # ---- Total-order key (design §3.1): sign–magnitude → monotone unsigned key.
-# NaN (at the −0 slot for signed formats / top code for unsigned) sorts ABOVE +Inf
-# [interpretation; draft §4.12.1 text unavailable in upload — see checkpoint].
+# NaN (at the −0 slot for signed formats / top code for unsigned) sorts BELOW
+# −Inf and every finite — draft §4.12.1. The first implementation put it ABOVE
+# +Inf, from an interpretation made while the draft text was unavailable; that
+# was a defect, corrected 2026-08-01, and the golden oracle was recaptured with
+# the correction (the sec_lattice/sec_order digests pin order semantics, so the
+# pre-correction capture pinned the wrong ones).
 
 """
     nan_order_key(F)
 
-The order key reserved for the single NaN — above every finite key and ±Inf.
+The order key reserved for the single NaN — **below** every finite key and ±Inf.
+
+Key `0` is free by construction: every datum's key is at least 1 (`order_key`
+adds 1 above the code arithmetic on both the signed and unsigned paths), so
+`zero(orderkeytype(F))` sits strictly under the whole datum lattice without
+shifting any other key.
 
 Per format, not a constant, and the key type is `orderkeytype(F)` rather than
 `UInt16`. The reason is arithmetic, not tidiness: a format has `2^K` code points
 mapping to keys `1 … 2^K`, so `UInt16` runs out at exactly K = 16 — `UInt16(c) +
-UInt16(1)` for `c = 0xffff` wraps **silently to 0**, putting the largest datum
-below the smallest. `orderkeytype` returns `UInt32` for `Code16`, which has room
-for the keys and for a sentinel strictly above all of them.
+UInt16(1)` for `c = 0xffff` wraps **silently to 0**, which is now precisely the
+NaN key: the largest datum would compare below NaN and below every other datum.
+`orderkeytype` returns `UInt32` for `Code16`, which has room for keys `1 … 2^16`
+above the NaN sentinel.
 
 *(§4 Stage 4 item 3, pulled forward into Stage 3 — §11 M16. The rest of Stage 3
 makes wide formats fail loudly; a wraparound in the total order is the one
 K ≥ 9 defect that would have been silent, so it is closed here rather than
 carried for a commit.)*
 """
-@inline nan_order_key(::Type{F}) where {F<:Binary} = typemax(orderkeytype(F))
+@inline nan_order_key(::Type{F}) where {F<:Binary} = zero(orderkeytype(F))
 @inline nan_order_key(v::Binary) = nan_order_key(typeof(v))
 
 @inline function order_key(v::Binary{K,P,SGN,EXT}) where {K,P,SGN,EXT}
     T = typeof(v)
     O = orderkeytype(T)
     c = codepoint(v)
-    isnan(v) && return typemax(O)
+    isnan(v) && return nan_order_key(T)          # 0 — below every datum key
     SGN || return O(c) + O(1)
     sm = signmask(T)
     neg = c >= sm
     neg ? O(sm) - O(c - sm) : O(sm) + O(c) + O(1)
 end
 
-"""TotalOrder⟨fx,fy⟩ (draft §4.12.1): x ≤ y in the total order (single NaN largest).
-Same-format comparisons run on the integer order key (bitops plan K1) — proven
-equivalent to the decode order exhaustively over all pairs; cross-format keys are
-not comparable, so mixed formats keep the decode path."""
+"""TotalOrder⟨fx,fy⟩ (draft §4.12.1): x ≤ y in the total order (single NaN
+smallest — NaN ≼ −Inf ≼ … ≼ +Inf). Same-format comparisons run on the integer
+order key (bitops plan K1) — proven equivalent to the decode order exhaustively
+over all pairs; cross-format keys are not comparable, so mixed formats keep the
+decode path."""
 @inline TotalOrder(x::T, y::T) where {T<:Binary} = order_key(x) <= order_key(y)
 function TotalOrder(x::Binary, y::Binary)
     dx, dy = decode(x), decode(y)
-    isnan(dx) && return isnan(dy) ? true : false
-    isnan(dy) && return true
+    isnan(dx) && return true                     # NaN ≼ everything, itself included
+    isnan(dy) && return false                    # non-NaN ⋠ NaN
     dx <= dy
 end
-# key strict-< reproduces the old TotalOrder-derived isless exactly, including
-# NaN-last (key(NaN) = typemax): isless(x, NaN) = true, isless(NaN, NaN) = false.
+# Key strict-< gives the TotalOrder-derived isless, including NaN-FIRST
+# (key(NaN) = 0): isless(NaN, x) = true for every non-NaN x, isless(NaN, NaN) =
+# false. `sort` therefore places NaN at the FRONT — the draft's order, and a
+# deliberate divergence from Base's float convention of NaN-last.
 Base.isless(x::T, y::T) where {T<:Binary} = order_key(x) < order_key(y)
 
 # Numeric comparisons (NaN unordered; keys are order-isomorphic to datums off NaN)
@@ -236,11 +249,13 @@ function Base.sort!(v::AbstractVector{T}, lo::Int, hi::Int, ::CodeCountingSort,
     # (§4 Stage 4 item 4, pulled forward with the key retyping — §11 M16.)
     n = hi - lo + 1
     n < (1 << K) && return sort!(v, lo, hi, Base.Sort.DEFAULT_UNSTABLE, o)
-    nk = (1 << K) + 1                              # keys 1..2^K plus NaN sentinel bucket
-    counts = zeros(Int, nk + 1)
-    key2code = Vector{U}(undef, nk + 1)
-    nan_key = nan_order_key(T)
-    bucket(k) = k == nan_key ? nk + 1 : Int(k)     # sentinel folds to the top bucket
+    # Keys are 0..2^K with 0 the NaN sentinel (below every datum), so the key
+    # space maps to buckets by a plain shift — the previous typemax sentinel
+    # needed a fold onto a synthetic top bucket; the bottom sentinel does not.
+    nk = (1 << K) + 1                              # buckets: NaN, then keys 1..2^K
+    counts = zeros(Int, nk)
+    key2code = Vector{U}(undef, nk)
+    bucket(k) = Int(k) + 1                         # key 0 (NaN) → bucket 1
     for c in zero(U):U((1 << K) - 1)               # key ↔ code inversion, 2^K iterations
         key2code[bucket(order_key(rawvalue(T, c)))] = c
     end
@@ -250,11 +265,11 @@ function Base.sort!(v::AbstractVector{T}, lo::Int, hi::Int, ::CodeCountingSort,
     rev = o isa Base.Order.ReverseOrdering
     i = rev ? hi : lo
     step = rev ? -1 : 1
-    @inbounds for b in 1:nk + 1
+    @inbounds for b in 1:nk
         c = counts[b]
         c == 0 && continue
         # ascending buckets emitted backward under Reverse puts the NaN bucket
-        # (largest key) at the front — exactly Base's rev=true isless semantics
+        # (smallest key) at the BACK — exactly Base's rev=true isless semantics
         val = rawvalue(T, key2code[b])
         for _ in 1:c
             v[i] = val

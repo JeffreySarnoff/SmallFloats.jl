@@ -1,16 +1,6 @@
 # Tables, Kernels & Sorting
 
-## Order keys and counting sort
-
-Ordering runs on **integer order keys**: a sign-magnitude fold into an unsigned
-type wide enough for the format's `2^K + 1` keys (`UInt16` at K ≤ 8, wider above),
-monotone with the total order, NaN mapped to `typemax`. Same-format `TotalOrder`,
-`isless`, and the numeric comparisons are key comparisons (~1 ns); since a format has
-at most `2^K + 1` distinct keys, vectors sort with an **O(n) counting sort**
-installed via `Base.Sort.defalg` (forward and reverse orderings; anything exotic
-falls back to the stock algorithm).
-
-## Tables and kernels
+## Function Tables
 
 For pure specs, unary and binary operations are **finite functions** — 256 or 65 536
 entries — so the kernel layer materializes them once per `(op, formats, ρ)` into a
@@ -41,6 +31,16 @@ Every ternary table entry, eager or adaptive, is still built *through the scalar
 path* — the tiering changes when/whether the cache exists, never what it contains.
 Stochastic calls of any arity always take Shape-B, with the RNG resolved once per
 array rather than per element.
+
+## Sorting
+
+Ordering runs on **integer order keys**: a sign-magnitude fold into an unsigned
+type wide enough for the format's `2^K + 1` keys (`UInt16` at K ≤ 8, wider above),
+monotone with the total order. NaN (which has the msb set) orders less than other
+values. Same-format `TotalOrder`, `isless`, and the numeric comparisons are key
+comparisons (~1 ns); since a format has at most `2^K + 1` distinct keys, vectors
+sort with an **O(n) counting sort** installed via `Base.Sort.defalg` (forward and
+reverse orderings; anything exotic falls back to the stock algorithm).
 
 ## see also
 

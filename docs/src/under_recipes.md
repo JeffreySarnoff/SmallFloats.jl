@@ -5,7 +5,7 @@ internals (`SmallFloats.round_to_precision`, `SmallFloats.project`, `SmallFloats
 `SmallFloats.order_key`, …); those are stable enough to learn from but are not
 covered by semantic-versioning guarantees.
 
-## Watching RoundToPrecision work
+## Watch RoundToPrecision work
 
 `round_to_precision` returns the draft's exact `(sign, S, Q)` decomposition before
 saturation ever sees it:
@@ -22,7 +22,7 @@ r = round_to_precision(4, 8, NearestTiesToEven(), 2.30078125, 0, 0)   # P=4, bia
 (1, 9, -2, 2.25)          # S·2^Q = 9/4: the nearest P=4 value
 ```
 
-## Symbolic sticky: projecting "just below" a number
+## Symbolic sticky projecting
 
 The engine accepts `sticky ∈ {-1, 0, +1}` meaning "the true value is the carrier
 plus an infinitesimal of this sign". This is how enclosure endpoints and asymptotes
@@ -37,7 +37,7 @@ project(Binary8p4se, ProjSpec(TowardNegative(), SatNone()), 1.0; sticky=-1)
 Binary8p4se(0.9375 ≡ 0x3f)     # == NextLessThan(1.0): the engine crossed the binade
 ```
 
-## Tables are the scalar path, memoized
+## Tables are scalar function paths
 
 ```julia
 using SmallFloats: get_table
@@ -55,7 +55,7 @@ tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN)
 ## Order keys
 
 Ordering is integer arithmetic: a sign-magnitude fold, monotone with the total
-order, NaN at the top. This is what comparisons and the O(n) counting sort run on:
+order, NaN at the bottom. This is what comparisons and the O(n) counting sort run on:
 
 ```julia
 using SmallFloats: order_key

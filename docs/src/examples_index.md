@@ -93,6 +93,6 @@ kernel. Source: [Technical Examples — Deep Learning](https://github.com/Jeffre
 
 ## see also
 
-[How-To Guides](howto_choose_format.md),
+[How-Tos](howto_choose_format.md),
 [Architecture Overview](under_architecture.md),
 [Cheat Sheet](cheatsheet.md).

@@ -150,9 +150,9 @@ let nchecked = 0
             U = SmallFloats.codeunit_type(T)
             top = (UInt64(1) << bitwidth(T)) - 1
             keys_ = [SmallFloats.order_key(rawvalue(T, U(i))) for i in UInt64(0):top]
-            # Every code has a distinct key, and NaN's is the largest.
+            # Every code has a distinct key, and NaN's is the smallest (§4.12.1).
             @test (nm, length(unique(keys_))) == (nm, Int(top) + 1)
-            @test (nm, maximum(keys_)) == (nm, SmallFloats.nan_order_key(T))
+            @test (nm, minimum(keys_)) == (nm, SmallFloats.nan_order_key(T))
             @test (nm, eltype(keys_)) == (nm, SmallFloats.orderkeytype(T))
             # The key order is the datum order off NaN — the whole reason the key
             # exists. This is where a wraparound would show as a false `isless`.

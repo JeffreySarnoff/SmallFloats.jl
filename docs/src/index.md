@@ -55,5 +55,5 @@ for approximation:
 - **Understand the ideas** — the [Mental Model](mentalmodel.md) (five ideas
   that carry the whole package), or [Introducing P3109](fifteenminutes.md)
   if you want the standard itself first.
-- **Look something up** — the Reference section: formats, projection specs, the
+- **Look something up** — the Specifics section: formats, projection specs, the
   operation catalog, and the one-page [Cheat Sheet](cheatsheet.md).

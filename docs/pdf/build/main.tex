@@ -97,7 +97,7 @@ Nor is \texttt{Binary16p8se} a \texttt{BFloat16}. The exponent biases differ by 
 \item \textbf{Understand the ideas} — the \href{mentalmodel.md}{Mental Model} (five ideas that carry the whole package), or \href{fifteenminutes.md}{Introducing P3109} if you want the standard itself first.
 
 
-\item \textbf{Look something up} — the Reference section: formats, projection specs, the operation catalog, and the one-page \href{cheatsheet.md}{Cheat Sheet}.
+\item \textbf{Look something up} — the Specifics section: formats, projection specs, the operation catalog, and the one-page \href{cheatsheet.md}{Cheat Sheet}.
 
 \end{itemize}
 
@@ -529,11 +529,11 @@ Five ideas. Everything else in SmallFloats.jl — every page of the User Guide, 
 
 
 
-\section{Idea 1 — A format is a finite set of datums}
+\section{A format is a finite set of datums}
 
 
 
-\label{7753368820005915228}{}
+\label{5472462564696178089}{}
 
 
 A SmallFloats \emph{format} is not a floating-point type in the IEEE-754 sense of a continuum sampled at machine precision. It is a \textbf{finite, enumerated set of exact values} — the \emph{datums} — each with a name, its \emph{code point}. The format \texttt{Binary4p2se} (4 bits, precision 2, signed, extended) has 16 code points and they are all of them:
@@ -589,11 +589,11 @@ Three consequences fall out immediately:
 
 
 
-\section{Idea 2 — A value is a wrapper around a code point; decode is exact}
+\section{A value is a wrapper around a code point; decode is exact}
 
 
 
-\label{561648171242528358}{}
+\label{2573172402139875102}{}
 
 
 Construct a value and you hold the code point; ask what it means and you get the datum back, exactly:
@@ -643,11 +643,11 @@ true
 
 
 
-\section{Idea 3 — Every computation is exact math, then one projection}
+\section{Every computation is exact math, then one projection}
 
 
 
-\label{15574776794132898440}{}
+\label{1660382460976176104}{}
 
 
 When you compute, SmallFloats does not simulate low-precision arithmetic step by step. It computes the \textbf{mathematically exact result} of the operation on the decoded datums, then applies \textbf{one projection} — one rounding plus one saturation decision — to land on a code point:
@@ -674,7 +674,7 @@ Two things follow from {\textquotedbl}one projection, at the end{\textquotedbl}:
 \item \textbf{There is no accumulated rounding error inside an operation.} A fused \texttt{FMA(x, y, z)} rounds once, not twice. A \texttt{BlockDotProduct} accumulates all 32 lane products exactly and projects once at the end. Intermediate roundings are not {\textquotedbl}small{\textquotedbl} — they are \emph{absent}.
 
 
-\item \textbf{The default path is bit-exact.} Because the exact math is carried far enough (Float64, Float128, or MPFR enclosures, escalating automatically), the code point you get is \emph{the} defined answer, not a good approximation of it. The package can prove this because the value sets are finite — see Idea 5.
+\item \textbf{The default path is bit-exact.} Because the exact math is carried far enough (Float64, Float128, or MPFR enclosures, escalating automatically), the code point you get is \emph{the} defined answer, not a good approximation of it. The package can prove this because the value sets are finite — see the fifth idea.
 
 \end{itemize}
 
@@ -684,11 +684,11 @@ Two things follow from {\textquotedbl}one projection, at the end{\textquotedbl}:
 
 
 \needspace{17\baselineskip}
-\section{Idea 4 — Projection = rounding mode × saturation mode}
+\section{Projection = rounding mode × saturation mode}
 
 
 
-\label{11791101062988838207}{}
+\label{17571958099282935615}{}
 
 
 A projection specification is the pair of two independent choices:
@@ -750,14 +750,14 @@ The full deterministic grid is 6 rounding modes × 3 saturation modes = 18 prede
 
 
 
-\section{Idea 5 — Approximation is opt-in, named, and measured}
+\section{Approximation is opt-in, named, and measured}
 
 
 
-\label{2713166630189569727}{}
+\label{894732549624983631}{}
 
 
-The package{\textquotesingle}s speed comes from the finiteness of Idea 1: an 8-bit unary operation is a function with 256 inputs, so its \emph{entire} behavior is a 256-byte table, built once through the exact scalar path and then gathered per element (0.27 ns). The exactness is inherited: table and scalar are the same function by construction.
+The package{\textquotesingle}s speed comes from the first idea{\textquotesingle}s finiteness: an 8-bit unary operation is a function with 256 inputs, so its \emph{entire} behavior is a 256-byte table, built once through the exact scalar path and then gathered per element (0.27 ns). The exactness is inherited: table and scalar are the same function by construction.
 
 
 
@@ -798,13 +798,13 @@ This is the package{\textquotesingle}s answer to the problem stated in the Intro
 
 
 \begin{minted}{text}
-            Idea 1                    Idea 2                 Idea 3
+          finite set             value = code point       project once
    ┌──────────────────────┐   name   ┌──────────┐   exact    ┌────────────┐
    │  finite set of       │  ⇄       │  value = │   math     │  project   │
    │  datums (code points)│─────────→│ code pt. │───────────→│  once      │
    └──────────────────────┘  decode  └──────────┘            └────────────┘
                                                                   │
-                          Idea 4                    Idea 5        ▼
+                    projection choices          exactness        ▼
                   projection = rounding × saturation      exact by default;
                                                           κ-measured if not
 \end{minted}
@@ -815,7 +815,7 @@ Read left to right: a value is a name in a finite set (1–2); computing is exac
 
 
 
-\textbf{Where to go from here.} To build the ideas into skills: Values, Code Points \& Conversion. To look something up: the Reference pages. To understand \emph{why} the package is built this way: The Projection Contract and the rest of the Explanation section.
+\textbf{Where to go from here.} To build the ideas into skills: Values, Code Points \& Conversion. To look something up: the Specifics pages. To understand \emph{why} the package is built this way: The Projection Contract and the rest of the Explanations section.
 
 
 
@@ -2268,11 +2268,11 @@ By the same exhaustive logic as the \texttt{ν = 3/16} sweep above, a value sitt
 \label{9115667341246479961-dup6}{}
 
 
-\href{howto\_\allowbreak{}choose\_\allowbreak{}format.md}{How-To Guides}, \href{ref\_\allowbreak{}formats.md}{Format Names \& Queries}, \href{ref\_\allowbreak{}projections.md}{Projection Specifications}.
+\href{howto\_\allowbreak{}choose\_\allowbreak{}format.md}{How-Tos}, \href{ref\_\allowbreak{}formats.md}{Format Names \& Queries}, \href{ref\_\allowbreak{}projections.md}{Projection Specifications}.
 
 
 
-\chapter{How-To Guides}
+\chapter{How-Tos}
 
 
 \section{Choose a Format}
@@ -3473,7 +3473,7 @@ If you registered an approximation in one session and load results from it in a 
 
 
 
-\chapter{Explanation}
+\chapter{Explanations}
 
 
 \section{Formats, Aliases \& Representations}
@@ -4691,14 +4691,14 @@ Continue with \textbf{Benchmarking Without Fooling Yourself} (Understanding trac
 \end{quote}
 
 
-\chapter{Reference}
+\chapter{Specifics}
 
 
-\section{Reference: Format Names \& Queries}
+\section{Format Names \& Queries}
 
 
 
-\label{10754142039234372555}{}
+\label{7338399722403808079}{}
 
 
 Dry listing of the format naming grammar, the alias/type distinction, and every format-query accessor. For narrative explanation, see the Mental Model page; for a worked introduction, see the Quickstart and Values, Code Points \& Conversion.
@@ -4883,11 +4883,11 @@ MaxFiniteOf(x)               # same result
 
 
 
-\section{Reference: Projection Specifications}
+\section{Projection Specifications}
 
 
 
-\label{6573491883575706896}{}
+\label{6111242834475380465}{}
 
 
 Dry listing of \texttt{ProjSpec}, the predefined deterministic grid, the stochastic constructor families, and their accessors. For narrative explanation, see Projection: Rounding \& Saturation.
@@ -5067,11 +5067,11 @@ Add(T, σ, x, y; R = 17)             # exact draw, ideal for tests
 
 
 
-\section{Reference: Operation Catalog}
+\section{Operation Catalog}
 
 
 
-\label{17973223157804438522}{}
+\label{14958459449732521328}{}
 
 
 The canonical operation table. 52 operations total: 30 unary, 18 binary, 3 ternary, 1 conversion. Source: the scalar operation catalog in the Cheat Sheet, cross-checked against Julia Compatibility. For semantics and worked examples, see the User Guide and Julia Compatibility pages.
@@ -5346,11 +5346,11 @@ Op(x...)
 
 
 
-\section{Reference: Session Defaults}
+\section{Session Defaults}
 
 
 
-\label{17183561231861118727}{}
+\label{11293141629967711570}{}
 
 
 Dry listing of the seven process-global session defaults, their coherence invariant, the \texttt{with\_\allowbreak{}default\_\allowbreak{}*} combinators, and the cost model. For the hazards of process-global state, see the User Guide{\textquotesingle}s session-defaults section and Julia Compatibility.
@@ -5514,11 +5514,11 @@ Each combinator restores nothing itself — it only \emph{reads} the default at 
 
 
 
-\section{Reference: Arrays, Blocks \& Packed Storage}
+\section{Arrays, Blocks \& Packed Storage}
 
 
 
-\label{789702907541812790}{}
+\label{6261291168643383015}{}
 
 
 Signatures only. For narrative treatment, see the User Guide{\textquotesingle}s Arrays, kernels, and sorting section, and the Blocks and scaled operations section.
@@ -5718,11 +5718,11 @@ Collect & \texttt{collect(pv)} & materializes a \texttt{Vector\{F\}} \\
 
 
 
-\section{Reference: Conformance \& Approximation Registry}
+\section{Conformance \& Approximation Registry}
 
 
 
-\label{6802684063430148207}{}
+\label{16001945251449732739}{}
 
 
 Dry listing of the conformance-declaration functions and the κ-approximation registry. For narrative explanation, see the User Guide{\textquotesingle}s Conformance and κ-approximate implementations section.
@@ -8588,7 +8588,7 @@ The suite checks it against an independent big-float transliteration of the draf
 
 
 
-Ordering runs on \textbf{integer order keys}: a sign-magnitude fold into an unsigned type wide enough for the format{\textquotesingle}s \texttt{2{\textasciicircum}K + 1} keys (\texttt{UInt16} at K ≤ 8, wider above), monotone with the total order, NaN mapped to \texttt{typemax}. Same-format \texttt{TotalOrder}, \texttt{isless}, and the numeric comparisons are key comparisons ({\textasciitilde}1 ns); since a format has at most \texttt{2{\textasciicircum}K + 1} distinct keys, vectors sort with an \textbf{O(n) counting sort} installed via \texttt{Base.Sort.defalg} (forward and reverse orderings; anything exotic falls back to the stock algorithm).
+Ordering runs on \textbf{integer order keys}: a sign-magnitude fold into an unsigned type wide enough for the format{\textquotesingle}s \texttt{2{\textasciicircum}K + 1} keys (\texttt{UInt16} at K ≤ 8, wider above), monotone with the total order. NaN (which has the msb set) orders less than other values. Same-format \texttt{TotalOrder}, \texttt{isless}, and the numeric comparisons are key comparisons ({\textasciitilde}1 ns); since a format has at most \texttt{2{\textasciicircum}K + 1} distinct keys, vectors sort with an \textbf{O(n) counting sort} installed via \texttt{Base.Sort.defalg} (forward and reverse orderings; anything exotic falls back to the stock algorithm).
 
 
 
@@ -8795,22 +8795,11 @@ In both stages, if the sticky-projected endpoints agree, that code point is the 
 \label{1013018278037228102}{}
 
 
-\section{Order keys and counting sort}
+\section{Function Tables}
 
 
 
-\label{9176360583931610048}{}
-
-
-Ordering runs on \textbf{integer order keys}: a sign-magnitude fold into an unsigned type wide enough for the format{\textquotesingle}s \texttt{2{\textasciicircum}K + 1} keys (\texttt{UInt16} at K ≤ 8, wider above), monotone with the total order, NaN mapped to \texttt{typemax}. Same-format \texttt{TotalOrder}, \texttt{isless}, and the numeric comparisons are key comparisons ({\textasciitilde}1 ns); since a format has at most \texttt{2{\textasciicircum}K + 1} distinct keys, vectors sort with an \textbf{O(n) counting sort} installed via \texttt{Base.Sort.defalg} (forward and reverse orderings; anything exotic falls back to the stock algorithm).
-
-
-
-\section{Tables and kernels}
-
-
-
-\label{17163678065643276217}{}
+\label{5962693725618524284}{}
 
 
 For pure specs, unary and binary operations are \textbf{finite functions} — 256 or 65 536 entries — so the kernel layer materializes them once per \texttt{(op, formats, ρ)} into a locked cache (\texttt{Dict\{TableKey, Memory\{UInt8\}\}}, double-checked locking, builds outside the lock) and serves every later array call as a gather: Shape-A, one load per element, measured 0.27 ns/elem unary and 0.5 ns/elem binary. Tables are built \emph{through the scalar path}, so they inherit its bit-exactness; the suite asserts table ≡ scalar over every entry.
@@ -8834,6 +8823,17 @@ Ternary (\texttt{FMA}, \texttt{FAA}, \texttt{Clamp}) is a finite function too �
 
 
 Every ternary table entry, eager or adaptive, is still built \emph{through the scalar path} — the tiering changes when/whether the cache exists, never what it contains. Stochastic calls of any arity always take Shape-B, with the RNG resolved once per array rather than per element.
+
+
+
+\section{Sorting}
+
+
+
+\label{12368189431511364825-dup1}{}
+
+
+Ordering runs on \textbf{integer order keys}: a sign-magnitude fold into an unsigned type wide enough for the format{\textquotesingle}s \texttt{2{\textasciicircum}K + 1} keys (\texttt{UInt16} at K ≤ 8, wider above), monotone with the total order. NaN (which has the msb set) orders less than other values. Same-format \texttt{TotalOrder}, \texttt{isless}, and the numeric comparisons are key comparisons ({\textasciitilde}1 ns); since a format has at most \texttt{2{\textasciicircum}K + 1} distinct keys, vectors sort with an \textbf{O(n) counting sort} installed via \texttt{Base.Sort.defalg} (forward and reverse orderings; anything exotic falls back to the stock algorithm).
 
 
 
@@ -9004,11 +9004,11 @@ The architecture is registry-driven: for the supported arities, \textbf{most of 
 
 
 
-\section{Universal duties (every new operation)}
+\section{Every new operation}
 
 
 
-\label{15376602000632183864}{}
+\label{17182734479202268885}{}
 
 
 \begin{itemize}
@@ -9466,11 +9466,11 @@ The two lines that demand your care in any new reduction are the \textbf{fold al
 
 
 
-\section{After any addition: the closing checklist}
+\section{Checklist}
 
 
 
-\label{16308398306918412518}{}
+\label{12063979991204939893}{}
 
 
 \begin{itemize}
@@ -9513,11 +9513,11 @@ Trust, then verify — these patterns turn {\textquotedbl}is my code exact?{\tex
 
 
 
-\section{Verifying a quantizer exhaustively against an independent reference}
+\section{Verify a quantizer}
 
 
 
-\label{15080892262823953367}{}
+\label{18302297634694141278}{}
 
 
 Here every in-range datum of \texttt{Binary8p3se} is projected into \texttt{Binary8p4se} and checked against a brute-force nearest search under 256-bit arithmetic (distance agreement; the draft{\textquotesingle}s tie rule is the projection engine{\textquotesingle}s job and is pinned elsewhere in the suite):
@@ -9564,11 +9564,11 @@ This pattern — enumerate the inputs, compare against an independently written 
 
 
 
-\section{Proving your fused kernel exact: BlockDotProduct vs 512-bit truth}
+\section{Prove a fused kernel}
 
 
 
-\label{13954472669056568806}{}
+\label{10368602136233814758}{}
 
 
 The block layer promises \emph{one} projection with exact lane arithmetic. Trust, then verify — against big-float truth, over random blocks with mixed scales and an honest special-value mix:
@@ -9617,11 +9617,11 @@ The same shape verifies any custom fused kernel you write: compose the truth in 
 
 
 
-\section{Stochastic rounding, audited: the full-R sweep}
+\section{Audit stochastic rounding}
 
 
 
-\label{6013932738708787830}{}
+\label{14939961818204036216}{}
 
 
 Every stochastic projection is a deterministic function of the draw \texttt{R}, so its \emph{distribution} is checkable exactly. For \texttt{x = 2 + 3/64} in \texttt{Binary8p4se} the fraction is ν = 3/16 of an ulp, so \texttt{StochasticA\{4\}} must round up for exactly 3 of the 16 draws:
@@ -9652,11 +9652,11 @@ Sweeping \texttt{R} like this turns {\textquotedbl}is my stochastic pipeline unb
 
 
 
-\section{Ranking safety: an exhaustive monotonicity audit of score conversion}
+\section{Applying monotonicity}
 
 
 
-\label{8732453457535267162}{}
+\label{3081226660012937909}{}
 
 
 Decision and ranking systems consume scores through \emph{order}. If scores are produced in one format and compared in another, the conversion must be monotone — and formats are small enough to prove it by enumeration rather than trust it. Walk every \texttt{Binary8p3se} datum in total order and check that its \texttt{Binary8p4se} image never goes backward on the integer order keys:
@@ -9698,11 +9698,11 @@ Run this for every \texttt{(From, To, ρ)} triple your system actually uses; it 
 
 
 
-\section{The κ-margin decision-rule audit}
+\section{Measuring Approximation}
 
 
 
-\label{3192217673468291530}{}
+\label{13020953006300866863}{}
 
 
 Search under a compute budget often wants a cheap, approximate evaluation function. The κ registry turns {\textquotedbl}how approximate?{\textquotedbl} into a \emph{measured} code-point bound — and code-point bounds compose into a decision rule: \textbf{if two defined evaluations differ by more than 2κ code points along the total order, the approximate evaluator cannot invert their comparison.} Verify the rule exhaustively for a κ = 2 evaluator:
@@ -9868,11 +9868,11 @@ Outputs below are captured from real sessions. These examples use unexported int
 
 
 
-\section{Watching RoundToPrecision work}
+\section{Watch RoundToPrecision work}
 
 
 
-\label{2755073532632396567}{}
+\label{7285362548043127585}{}
 
 
 \texttt{round\_\allowbreak{}to\_\allowbreak{}precision} returns the draft{\textquotesingle}s exact \texttt{(sign, S, Q)} decomposition before saturation ever sees it:
@@ -9901,11 +9901,11 @@ r = round_to_precision(4, 8, NearestTiesToEven(), 2.30078125, 0, 0)   # P=4, bia
 
 
 
-\section{Symbolic sticky: projecting {\textquotedbl}just below{\textquotedbl} a number}
+\section{Symbolic sticky projecting}
 
 
 
-\label{1121493031502271068-dup1}{}
+\label{13272694550445455563}{}
 
 
 The engine accepts \texttt{sticky ∈ \{-1, 0, +1\}} meaning {\textquotedbl}the true value is the carrier plus an infinitesimal of this sign{\textquotedbl}. This is how enclosure endpoints and asymptotes (\texttt{tanh → 1⁻}) are projected exactly:
@@ -9931,11 +9931,11 @@ Binary8p4se(0.9375 ≡ 0x3f)     # == NextLessThan(1.0): the engine crossed the 
 
 
 
-\section{Tables are the scalar path, memoized}
+\section{Tables are scalar function paths}
 
 
 
-\label{17860062526638989794}{}
+\label{224285728400918145}{}
 
 
 
@@ -9967,7 +9967,7 @@ tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN)
 \label{11135872524320346846}{}
 
 
-Ordering is integer arithmetic: a sign-magnitude fold, monotone with the total order, NaN at the top. This is what comparisons and the O(n) counting sort run on:
+Ordering is integer arithmetic: a sign-magnitude fold, monotone with the total order, NaN at the bottom. This is what comparisons and the O(n) counting sort run on:
 
 
 
@@ -10282,7 +10282,7 @@ A map of the worked examples. Each is identified in boldface and briefly describ
 \label{9115667341246479961-dup33}{}
 
 
-\href{howto\_\allowbreak{}choose\_\allowbreak{}format.md}{How-To Guides}, \href{under\_\allowbreak{}architecture.md}{Architecture Overview}, \href{cheatsheet.md}{Cheat Sheet}.
+\href{howto\_\allowbreak{}choose\_\allowbreak{}format.md}{How-Tos}, \href{under\_\allowbreak{}architecture.md}{Architecture Overview}, \href{cheatsheet.md}{Cheat Sheet}.
 
 
 
@@ -11832,11 +11832,11 @@ An index to the curated \texttt{docs/other/} collection: the standard{\textquote
 
 
 
-\section{The standard}
+\section{Deigning to the Draft Standard}
 
 
 
-\label{15833458192391556191}{}
+\label{13956872479192544617}{}
 
 
 \textbf{P3109 Draft Notes} — \href{https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/other/IEEE_D1_concepts.md}{\texttt{IEEE\_\allowbreak{}D1\_\allowbreak{}concepts.md}}. A concept map of the whole IEEE P3109/D1 draft (July 2026): format-defining parameters, value space, operation machinery, and projection, with every node linked back to the draft{\textquotesingle}s line numbers. Status: normative-description.
@@ -11870,11 +11870,11 @@ The full draft transliteration, \texttt{IEEE\_\allowbreak{}D1.md}, is repo-only 
 
 
 
-\section{Extension Working Papers}
+\section{Development notes}
 
 
 
-\label{17585610141340629196}{}
+\label{6634534081148595407}{}
 
 
 Four documents plan and re-plan the extension of the format grid from \texttt{K ≤ 8} (120 at K ≤ 8, retained as the default exports) to \texttt{3 ≤ K ≤ 16} (504 formats). Read in this order; each says explicitly where it overrides its predecessor.

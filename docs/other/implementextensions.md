@@ -1016,8 +1016,12 @@ both JET passes green with no new filter. Warm scalar paths allocate zero.
    reached.
 2. **`encode`** returns `codeunit_type(T)`; its interior arithmetic is already
    `Int64` and needs no change (`Eb ≤ 2^16`, `S ≤ 2^16`).
-3. **Order keys**: `orderkeytype` (R-A), `nan_order_key(F) = typemax(orderkeytype(F))`
-   replacing the `NAN_ORDER_KEY` const, `codedistance` follows.
+3. **Order keys**: `orderkeytype` (R-A), `nan_order_key(F)` replacing the
+   `NAN_ORDER_KEY` const, `codedistance` follows. *(As staged this was
+   `typemax(orderkeytype(F))` — NaN above +Inf, an interpretation made while
+   the §4.12.1 text was unavailable. Corrected 2026-08-01 to
+   `zero(orderkeytype(F))`: the draft places NaN below −Inf, and key 0 is free
+   since every datum key is ≥ 1.)*
    **→ landed in Stage 3 (§11 M16):** a `UInt16` key wraps silently to 0 at
    K = 16, and Stage 3's whole discipline is that wide formats fail *loudly*.
 4. **Counting sort**: `key2code::Vector{codeunit_type(T)}`, and the length
@@ -1896,8 +1900,11 @@ Two of Stage 4's items are the second kind:
   code is `0xffff`, so the largest datum's key **wraps to 0** and sorts below
   the smallest — no exception, no warning, a total order that is not one.
   `orderkeytype` already returned `UInt32` for `Code16`; the key function simply
-  was not reading it. Now `nan_order_key(F) = typemax(orderkeytype(F))` per
-  format, replacing the `NAN_ORDER_KEY` constant.
+  was not reading it. Now `nan_order_key(F)` per format, replacing the
+  `NAN_ORDER_KEY` constant. *(Then `typemax(orderkeytype(F))`; corrected
+  2026-08-01 to `zero(orderkeytype(F))` — §4.12.1 places NaN below −Inf, not
+  above +Inf. The wraparound argument survives unchanged: at K = 16 a `UInt16`
+  key for the top code wraps to 0, which is now exactly the NaN key.)*
 * *Counting sort.* It reads `NAN_ORDER_KEY` and builds `Vector{UInt8}`, so it had
   to move with the key type regardless; the `n < 2^K` length gate came with it
   rather than leaving a sort that works while allocating 512 KiB of buckets to

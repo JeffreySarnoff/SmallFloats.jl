@@ -5,7 +5,7 @@ the design rationales behind specific implementation choices, and the working
 papers that planned the K > 8 extension. Each entry carries a status label —
 read it before treating a document as current.
 
-## The standard
+## Deigning to the Draft Standard
 
 **P3109 Draft Notes** — [`IEEE_D1_concepts.md`](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/other/IEEE_D1_concepts.md).
 A concept map of the whole IEEE P3109/D1 draft (July 2026): format-defining
@@ -45,7 +45,7 @@ implementation plan for the Float32/BFloat16 surface, the exactness-gated
 compute path, and κ-registered Float32 kernels, with measured pass/fail
 counts per milestone. Status: exploratory.
 
-## Extension Working Papers
+## Development notes
 
 Four documents plan and re-plan the extension of the format grid from `K ≤ 8`
 (120 at K ≤ 8, retained as the default exports) to `3 ≤ K ≤ 16` (504 formats).

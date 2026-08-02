@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="960" viewBox="0 0 1800 960" role="img" aria-labelledby="title desc">
+  <title id="title">A Whole of Five Parts</title>
+  <desc id="desc">Five connected panels show a finite set of datums, values as code points, exact computation, one controlled projection, and exact or measured results.</desc>
+  <defs>
+    <style>
+      .title { font: 700 46px 'DejaVu Sans', sans-serif; fill: #12233f; }
+      .card-title { font: 700 22px 'DejaVu Sans', sans-serif; fill: #12233f; }
+      .card-copy { font: 400 17px 'DejaVu Sans', sans-serif; fill: #33465f; }
+      .small { font: 400 15px 'DejaVu Sans', sans-serif; fill: #526379; }
+      .label { font: 700 16px 'DejaVu Sans', sans-serif; fill: #0c7277; letter-spacing: .3px; }
+      .mono { font: 600 18px 'DejaVu Sans Mono', monospace; fill: #12233f; }
+      .number { font: 700 24px 'DejaVu Sans', sans-serif; fill: #ffffff; }
+      .equation { font: 600 20px 'DejaVu Sans', sans-serif; fill: #12233f; }
+      .invariant { font: 700 27px 'DejaVu Sans', sans-serif; fill: #12233f; }
+      .card { fill: #ffffff; stroke: #b8c7d9; stroke-width: 2; }
+      .soft { fill: #f3f7fb; stroke: #c9d5e3; stroke-width: 1.5; }
+      .teal-soft { fill: #edf8f7; stroke: #65aeb0; stroke-width: 1.8; }
+      .gold-soft { fill: #fff8e8; stroke: #d2a23f; stroke-width: 1.8; }
+      .navy-soft { fill: #eef3fb; stroke: #5079ae; stroke-width: 1.8; }
+      .flow { fill: none; stroke: #315b88; stroke-width: 3; marker-end: url(#arrow); }
+      .flow-teal { fill: none; stroke: #0c7277; stroke-width: 3; marker-end: url(#arrow-teal); }
+      .control { fill: none; stroke: #b47b08; stroke-width: 2.5; marker-end: url(#arrow-gold); }
+    </style>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#19324f" flood-opacity=".12"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path id="element-001" d="M 0 0 L 10 5 L 0 10 z" fill="#315b88"/>
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path id="element-002" d="M 0 0 L 10 5 L 0 10 z" fill="#0c7277"/>
+    </marker>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path id="element-003" d="M 0 0 L 10 5 L 0 10 z" fill="#b47b08"/>
+    </marker>
+  </defs>
+  <g id="layer-title" transform="matrix(1, 0, 0, 1, 1.199219, -1.796875)">
+    <text id="graphic-title" x="900" y="78" text-anchor="middle" class="title" style="white-space: pre;">A Whole of Five Parts</text>
+  </g>
+  <g id="layer-connectors">
+    <path id="panel-connector-spine" d="M 337 430 H 382 M 682 430 H 727 M 1027 430 H 1072 M 1372 430 H 1417" class="flow"/>
+  </g>
+  <g id="idea-1-card" filter="url(#shadow)">
+    <rect id="element-004" x="32" y="132" width="305" height="620" rx="22" class="card"/>
+    <rect id="element-005" x="32" y="132" width="305" height="98" rx="22" fill="#eef3fb"/>
+    <path id="element-006" d="M32 208 H337" stroke="#c9d5e3"/>
+  </g>
+  <text id="element-009" class="card-title" style="font-size: 21px; white-space: pre;" x="79.199" y="171.199">A format is a finite</text>
+  <text id="element-010" class="card-title" style="font-size: 21px; white-space: pre;" x="73.598" y="199">set of exact datums</text>
+  <rect id="element-011" x="58" y="255" width="253" height="64" rx="12" class="navy-soft"/>
+  <text id="element-012" x="184" y="281" text-anchor="middle" class="mono" style="white-space: pre;">Binary{K,P,SGN,EXT}</text>
+  <text id="element-013" x="184" y="305" text-anchor="middle" class="small" style="white-space: pre;">chooses one finite universe</text>
+  <line id="element-014" x1="66" y1="390" x2="303" y2="390" stroke="#315b88" stroke-width="3"/>
+  <path id="element-015" d="M303 384 l11 6 -11 6 z" fill="#315b88"/>
+  <g id="idea-1-datum-dots" fill="#173e72">
+    <circle id="element-016" cx="80" cy="390" r="8"/>
+    <circle id="element-017" cx="125" cy="390" r="8"/>
+    <circle id="element-018" cx="170" cy="390" r="8"/>
+    <circle id="element-019" cx="215" cy="390" r="8"/>
+    <circle id="element-020" cx="260" cy="390" r="8"/>
+  </g>
+  <g id="idea-1-codepoint-labels" class="small" text-anchor="middle">
+    <text id="element-021" x="80" y="424" style="white-space: pre;">c₀</text>
+    <text id="element-022" x="125" y="424" style="white-space: pre;">c₁</text>
+    <text id="element-023" x="170" y="424" style="white-space: pre;">c₂</text>
+    <text id="element-024" x="215" y="424" style="white-space: pre;">…</text>
+    <text id="element-025" x="260" y="424" style="white-space: pre;">cₙ</text>
+  </g>
+  <rect id="element-026" x="58" y="463" width="253" height="160" rx="14" class="soft"/>
+  <text id="element-027" x="80" y="493" class="label" style="white-space: pre;">CODE POINT</text>
+  <text id="element-028" x="273" y="493" text-anchor="end" class="label" style="white-space: pre;">DATUM</text>
+  <path id="element-029" d="M75 510 H294" stroke="#c9d5e3"/>
+  <text id="element-030" x="80" y="540" class="mono" style="white-space: pre;">0x00</text>
+  <text id="element-031" x="273" y="540" text-anchor="end" class="mono" style="white-space: pre;">0.0</text>
+  <text id="element-032" x="80" y="573" class="mono" style="white-space: pre;">0x45</text>
+  <text id="element-033" x="273" y="573" text-anchor="end" class="mono" style="white-space: pre;">1.625</text>
+  <text id="element-034" x="80" y="606" class="mono" style="white-space: pre;">0x80</text>
+  <text id="element-035" x="273" y="606" text-anchor="end" class="mono" style="white-space: pre;">NaN</text>
+  <text id="element-036" x="184" y="674" text-anchor="middle" class="card-copy" style="white-space: pre;">Every code point names</text>
+  <text id="element-037" x="184" y="699" text-anchor="middle" class="card-copy" style="white-space: pre;">exactly one datum.</text>
+  <rect id="element-038" x="377" y="132.602" width="305" height="620" rx="22" class="card" filter="url(#shadow)" style="stroke-width: 2;"/>
+  <rect id="element-039" x="377" y="132.602" width="305" height="98" rx="22" fill="#edf8f7" filter="url(#shadow)" style="stroke-width: 1;"/>
+  <path id="element-040" d="M 377 208.602 L 682 208.602" stroke="#c9d5e3" style="transform-box: fill-box; transform-origin: 50% 50%; stroke-width: 1;" filter="url(#shadow)"/>
+  <text id="element-043" x="431" y="170.602" class="card-title" style="white-space: pre; stroke-width: 1; font-size: 22px;">A value wraps a</text>
+  <text id="element-044" x="454" y="199.602" class="card-title" style="white-space: pre; stroke-width: 1; font-size: 22px;">code point</text>
+  <rect id="element-045" x="429" y="276.602" width="201" height="105" rx="16" class="teal-soft" style="stroke-width: 1.8;"/>
+  <text id="element-046" x="529" y="310.602" text-anchor="middle" class="label" style="white-space: pre; stroke-width: 1; font-size: 16px;">VALUE</text>
+  <text id="element-047" x="529" y="349.602" text-anchor="middle" class="mono" style="white-space: pre; stroke-width: 1; font-size: 18px;">0x45</text>
+  <rect id="element-048" x="429" y="507.602" width="201" height="105" rx="16" class="soft" style="stroke-width: 1.5;"/>
+  <text id="element-049" x="529" y="541.602" text-anchor="middle" class="label" style="white-space: pre; stroke-width: 1; font-size: 16px;">EXACT DATUM</text>
+  <text id="element-050" x="529" y="580.602" text-anchor="middle" class="mono" style="white-space: pre; stroke-width: 1; font-size: 18px;">1.625</text>
+  <path id="element-051" d="M 488 494.601 L 488 398.601" class="flow-teal" style="transform-box: fill-box; transform-origin: 50% 50%; stroke-width: 3;" transform="matrix(0.999998, -0.000001, 0.000001, 1, 0.001164, 0)"/>
+  <path id="element-052" d="M 570 395.601 L 570 491.601" class="flow-teal" style="transform-box: fill-box; transform-origin: 50% 50%; stroke-width: 3;" transform="matrix(0.999997, -0.000001, 0.000001, 1, 0.001552, 0)"/>
+  <text id="element-053" x="453" y="449.602" text-anchor="end" class="small" style="white-space: pre; stroke-width: 1; font-size: 15px;">name</text>
+  <text id="element-054" x="605" y="449.602" class="small" style="white-space: pre; stroke-width: 1; font-size: 15px;">decode</text>
+  <text id="element-055" x="529" y="657.602" text-anchor="middle" class="card-copy" style="white-space: pre; stroke-width: 1; font-size: 17px;">Storage is compact.</text>
+  <text id="element-056" x="529" y="682.602" text-anchor="middle" class="card-copy" style="white-space: pre; stroke-width: 1; font-size: 17px;">Decoding is exact.</text>
+  <rect id="element-057" x="723.199" y="132.598" width="305" height="620" rx="22" class="card" filter="url(#shadow)"/>
+  <rect id="element-058" x="723.199" y="132.598" width="305" height="98" rx="22" fill="#eef3fb" filter="url(#shadow)"/>
+  <path id="element-059" d="M 723.199 208.598 L 1028.2 208.598" stroke="#c9d5e3" filter="url(#shadow)"/>
+  <text id="element-061" x="763.199" y="187.598" text-anchor="middle" class="number" style="white-space: pre; font-size: 24px;">3</text>
+  <text id="element-062" x="756.199" y="170.598" class="card-title" style="white-space: pre; font-size: 22px;">Compute exact math</text>
+  <text id="element-063" x="783.199" y="199.598" class="card-title" style="white-space: pre; font-size: 22px;">before rounding</text>
+  <rect id="element-064" x="751.199" y="270.598" width="112" height="76" rx="12" class="soft"/>
+  <rect id="element-065" x="888.199" y="270.598" width="112" height="76" rx="12" class="soft"/>
+  <text id="element-066" x="807.199" y="301.598" text-anchor="middle" class="label" style="white-space: pre; font-size: 16px;">DATUM x</text>
+  <text id="element-067" x="807.199" y="329.598" text-anchor="middle" class="mono" style="white-space: pre; font-size: 18px;">1.625</text>
+  <text id="element-068" x="944.199" y="301.598" text-anchor="middle" class="label" style="white-space: pre; font-size: 16px;">DATUM y</text>
+  <text id="element-069" x="944.199" y="329.598" text-anchor="middle" class="mono" style="white-space: pre; font-size: 18px;">1.75</text>
+  <path id="element-070" d="M 807.199 347.598 L 807.199 394.598 M 944.199 347.598 L 944.199 394.598" class="flow"/>
+  <rect id="element-071" x="771.199" y="404.598" width="209" height="117" rx="16" class="navy-soft"/>
+  <text id="element-072" x="875.199" y="439.598" text-anchor="middle" class="label" style="white-space: pre; font-size: 16px;">EXACT OPERATION</text>
+  <text id="element-073" x="875.199" y="477.598" text-anchor="middle" class="equation" style="white-space: pre; font-size: 20px;">x + y = 3.375</text>
+  <text id="element-074" x="875.199" y="505.598" text-anchor="middle" class="small" style="white-space: pre; font-size: 15px;">no intermediate rounding</text>
+  <path id="element-075" d="M 875.199 522.598 L 875.199 562.598" class="flow"/>
+  <rect id="element-076" x="786.199" y="572.598" width="179" height="68" rx="12" class="soft"/>
+  <text id="element-077" x="875.199" y="600.598" text-anchor="middle" class="label" style="white-space: pre; font-size: 16px;">EXACT RESULT</text>
+  <text id="element-078" x="875.199" y="627.598" text-anchor="middle" class="mono" style="white-space: pre; font-size: 18px;">3.375</text>
+  <text id="element-079" x="875.199" y="682.598" text-anchor="middle" class="card-copy" style="white-space: pre; font-size: 17px;">Exact first.</text>
+  <text id="element-080" x="875.199" y="707.598" text-anchor="middle" class="card-copy" style="white-space: pre; font-size: 17px;">Project once.</text>
+  <rect id="element-081" x="1067" y="132" width="305" height="620" rx="22" class="card" filter="url(#shadow)"/>
+  <rect id="element-082" x="1067" y="132" width="305" height="98" rx="22" fill="#fff8e8" filter="url(#shadow)"/>
+  <path id="element-083" d="M1067 208 H1372" stroke="#d9c79f" filter="url(#shadow)"/>
+  <text id="element-085" x="1107" y="187" text-anchor="middle" class="number" style="white-space: pre;">4</text>
+  <text id="element-086" x="1123" y="170" class="card-title" style="white-space: pre; font-size: 22px;">Projection is two</text>
+  <text id="element-087" x="1131" y="199" class="card-title" style="white-space: pre; font-size: 22px;">explicit choices</text>
+  <rect id="element-088" x="1091" y="278" width="116" height="92" rx="13" class="gold-soft"/>
+  <rect id="element-089" x="1232" y="278" width="116" height="92" rx="13" class="gold-soft"/>
+  <text id="element-090" x="1149" y="313" text-anchor="middle" class="label" style="white-space: pre;">ROUNDING</text>
+  <text id="element-091" x="1149" y="340" text-anchor="middle" class="small" style="white-space: pre;">which neighbor?</text>
+  <text id="element-092" x="1290" y="313" text-anchor="middle" class="label" style="white-space: pre;">SATURATION</text>
+  <text id="element-093" x="1290" y="340" text-anchor="middle" class="small" style="white-space: pre;">which boundary?</text>
+  <path id="element-094" d="M1149 371 L1193 431" class="control"/>
+  <path id="element-095" d="M1290 371 L1246 431" class="control"/>
+  <rect id="element-096" x="1137" y="438" width="165" height="103" rx="18" class="gold-soft"/>
+  <text id="element-097" x="1219" y="474" text-anchor="middle" class="label" style="white-space: pre;">ONE PROJECTION</text>
+  <text id="element-098" x="1219" y="510" text-anchor="middle" class="equation" style="white-space: pre;">round × saturate</text>
+  <path id="element-099" d="M1219 542 V584" class="control"/>
+  <rect id="element-100" x="1144" y="594" width="151" height="68" rx="12" class="soft"/>
+  <text id="element-101" x="1219" y="622" text-anchor="middle" class="label" style="white-space: pre;">CODE POINT</text>
+  <text id="element-102" x="1219" y="649" text-anchor="middle" class="mono" style="white-space: pre;">0x4e = 3.5</text>
+  <text id="element-103" x="1219" y="699" text-anchor="middle" class="card-copy" style="white-space: pre;">Policy is named, visible,</text>
+  <text id="element-104" x="1219" y="724" text-anchor="middle" class="card-copy" style="white-space: pre;">and reproducible.</text>
+  <g id="idea-5-card" filter="url(#shadow)">
+    <rect id="element-105" x="1412" y="132" width="356" height="620" rx="22" class="card"/>
+    <rect id="element-106" x="1412" y="132" width="356" height="98" rx="22" fill="#edf8f7"/>
+    <path id="element-107" d="M1412 208 H1768" stroke="#c9d5e3"/>
+  </g>
+  <text id="element-110" x="1489" y="170" class="card-title" style="white-space: pre;">Exact by default;</text>
+  <text id="element-111" x="1489" y="199" class="card-title" style="white-space: pre;">κ measured if not</text>
+  <rect id="element-112" x="1504" y="270" width="173" height="72" rx="13" class="teal-soft"/>
+  <text id="element-113" x="1590" y="298" text-anchor="middle" class="label" style="white-space: pre;">RESULT</text>
+  <text id="element-114" x="1590" y="326" text-anchor="middle" class="mono" style="white-space: pre;">code point cₖ</text>
+  <path id="element-115" d="M1590 343 V389 M1590 389 L1501 436 M1590 389 L1679 436" fill="none" stroke="#0c7277" stroke-width="3"/>
+  <rect id="element-116" x="1438" y="441" width="147" height="174" rx="15" class="teal-soft"/>
+  <circle id="element-117" cx="1511" cy="478" r="18" fill="#0c7277"/>
+  <path id="element-118" d="M1502 478 l7 7 13 -16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text id="element-119" x="1511" y="521" text-anchor="middle" class="label" style="white-space: pre;">DEFINED PATH</text>
+  <text id="element-120" x="1511" y="552" text-anchor="middle" class="card-copy" style="white-space: pre;">bit-exact</text>
+  <text id="element-121" x="1511" y="577" text-anchor="middle" class="card-copy" style="white-space: pre;">by default</text>
+  <rect id="element-122" x="1596" y="441" width="146" height="174" rx="15" fill="#fff" stroke="#0c7277" stroke-width="1.8" stroke-dasharray="7 5"/>
+  <text id="element-123" x="1669" y="484" text-anchor="middle" font-family="DejaVu Sans,sans-serif" font-size="31" font-weight="700" fill="#0c7277" style="white-space: pre;">κ</text>
+  <text id="element-124" x="1669" y="521" text-anchor="middle" class="label" style="white-space: pre;">OPT-IN PATH</text>
+  <text id="element-125" x="1669" y="546" text-anchor="middle" class="card-copy" style="white-space: pre;">worst error</text>
+  <text id="element-126" x="1669" y="572" text-anchor="middle" class="card-copy" style="white-space: pre;">measured</text>
+  <text id="element-127" x="1669" y="598" text-anchor="middle" class="card-copy" style="white-space: pre;">in code points</text>
+  <text id="element-128" x="1590" y="670" text-anchor="middle" class="card-copy" style="white-space: pre;">Approximation is named,</text>
+  <text id="element-129" x="1590" y="695" text-anchor="middle" class="card-copy" style="white-space: pre;">bounded, and auditable.</text>
+  <rect id="element-130" x="32" y="789.398" width="1736" height="125" rx="22" fill="#ffffff" stroke="#173e72" stroke-width="2.5" filter="url(#shadow)"/>
+  <text id="element-131" x="91" y="829.398" class="label" style="white-space: pre; font-size: 16px;">THE INVARIANT</text>
+  <rect id="element-132" x="90" y="852.398" width="210" height="42" rx="10" class="navy-soft" style="stroke-width: 1.8;"/>
+  <text id="element-133" x="195" y="880.398" text-anchor="middle" class="equation" style="white-space: pre; stroke-width: 1; font-size: 20px;">decoded datums</text>
+  <path id="element-134" d="M 308 873.398 L 376 873.398" class="flow" style="stroke-width: 3;"/>
+  <rect id="element-135" x="388" y="852.398" width="210" height="42" rx="10" class="navy-soft" style="stroke-width: 1.8;"/>
+  <text id="element-136" x="493" y="880.398" text-anchor="middle" class="equation" style="white-space: pre; stroke-width: 1; font-size: 20px;">exact math</text>
+  <path id="element-137" d="M 606 873.398 L 674 873.398" class="flow" style="stroke-width: 3;"/>
+  <rect id="element-138" x="686" y="852.398" width="210" height="42" rx="10" class="gold-soft" style="stroke-width: 1.8;"/>
+  <text id="element-139" x="791" y="880.398" text-anchor="middle" class="equation" style="white-space: pre; stroke-width: 1; font-size: 20px;">one projection</text>
+  <path id="element-140" d="M 904 873.398 L 972 873.398" class="flow" style="stroke-width: 3;"/>
+  <rect id="element-141" x="984" y="852.398" width="190" height="42" rx="10" class="teal-soft" style="stroke-width: 1.8;"/>
+  <text id="element-142" x="1079" y="880.398" text-anchor="middle" class="equation" style="white-space: pre; stroke-width: 1; font-size: 20px;">code point</text>
+  <text id="text-1" x="91" y="829.398" class="label" style="white-space: pre; font-size: 16px;">THE INVARIANT</text>
+</svg>

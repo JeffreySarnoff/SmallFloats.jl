@@ -102,8 +102,9 @@ Some results are visible only in the pattern tables, and they surprise:
 - `Divide(x, 0) = NaN` for every `x` — including ±Inf (§4.10.5 NOTE 2). There
   is no IEEE-style ±Inf quotient.
 - `Recip(±Inf) = 0` and `Recip(0) = NaN` (§4.10.8).
-- `TotalOrder` puts NaN at an end — deterministic tie-breaking for search and
-  sort (§4.12.1).
+- `TotalOrder` puts NaN first, below −Inf — deterministic tie-breaking for
+  search and sort (§4.12.1), and the opposite end from Julia's float-sorting
+  convention.
 - `NextGreaterThan(+Inf) = NaN`, unlike IEEE-754 `nextUp` (§4.16 NOTE 2).
 - `FAA` is associative by construction: `Add(Add(X,Y),Z) = Add(X,Add(Y,Z))`
   computed exactly (§4.10.7).

@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.7.24)  1 AUG 2026 22:17
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.7.24)  1 AUG 2026 23:05
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1828,11 +1828,11 @@ LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
 \pydata@fh@0=\write7
 \openout7 = `_FAD58DE7366495DB4650CFEFAC2FCD61.data.minted'.
 
-runsystem(latexminted config  --timestamp 20260801221708 FAD58DE7366495DB4650CF
+runsystem(latexminted config  --timestamp 20260801230504 FAD58DE7366495DB4650CF
 EFAC2FCD61)...executed.
 
 (./_FAD58DE7366495DB4650CFEFAC2FCD61.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20260801221708 FAD58DE7366495DB4
+runsystem(latexminted cleanconfig  --timestamp 20260801230504 FAD58DE7366495DB4
 650CFEFAC2FCD61)...executed.
 
 
@@ -1910,7 +1910,7 @@ LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/n' will be
 
 (./_minted/ED5695E79FD860212A92800159A332AB.highlight.minted)
 (./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [12]
-(./_minted/BCD6D3AF18CB7732CFF77C60BAC46C27.highlight.minted) [13]
+(./_minted/7F5B3992E33B0B9622171D3E6BDFD949.highlight.minted) [13]
 Chapter 5.
 (./_minted/D1E811343CC4F867BDC8B7C8529B9927.highlight.minted)
 (./_minted/84C6C7B2D324FED5946ED90801F6765E.highlight.minted)
@@ -2380,15 +2380,15 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2020/03/25>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 071F4CB26441043DC4454FD3DB865934;30793.
+(rerunfilecheck)             Checksum: 26997D203E29A4A3E0506B2D0990A67C;28687.
  ) 
 Here is how much of TeX's memory you used:
  36251 strings out of 469223
  821491 string characters out of 5454114
- 1354748 words of memory out of 6000000
+ 1352262 words of memory out of 6000000
  63846 multiletter control sequences out of 15000+600000
  635593 words of font info for 120 fonts, out of 8000000 for 9000
  430 hyphenation exceptions out of 8191
  114i,13n,133p,1281b,1095s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (162 pages, 3923968 bytes).
+Output written on main.xdv (162 pages, 3917752 bytes).

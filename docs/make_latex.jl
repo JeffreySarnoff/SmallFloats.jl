@@ -46,7 +46,7 @@ makedocs(;
                 "tutorial4_blocks.md",
                 "tutorial5_stochastic.md",
             ],
-            "How-To Guides" => [
+            "How-Tos" => [
                 "howto_choose_format.md",
                 "howto_quantize_tensor.md",
                 "howto_blocks_dynamic_range.md",
@@ -56,7 +56,7 @@ makedocs(;
                 "howto_float16_interop.md",
                 "howto_conformance.md",
             ],
-            "Explanation" => [
+            "Explanations" => [
                 "explain_formats.md",
                 "explain_projection_contract.md",
                 "explain_session_defaults.md",
@@ -65,7 +65,7 @@ makedocs(;
                 "explain_no_promotion.md",
                 "explain_performance.md",
             ],
-            "Reference" => [
+            "Specifics" => [
                 "ref_formats.md",
                 "ref_projections.md",
                 "ref_operations.md",

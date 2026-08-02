@@ -470,7 +470,7 @@ function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
     T = Binary8p4se
     preflight(T)
     open(path, "w") do io
-        println(io, "# SmallFloats.jl benchmark report")
+        println(io, "# Benchmark report")
         println(io, "\nGenerated: ", string(Dates_now()), "  ·  Julia ", VERSION,
                 "  ·  ", Sys.CPU_NAME, " (", Sys.CPU_THREADS, " logical CPUs, ",
                 Threads.nthreads(), " Julia thread", Threads.nthreads() == 1 ? "" : "s", ")",

@@ -27,7 +27,7 @@ where the term is defined in full.
 | Span filter | An integer pre-pass over lane exponents in a block reduction that proves a narrower carrier already covers every value the reduction can produce, licensing a faster accumulation path without loss of exactness. | Blocks: Exactness without Superaccumulators |
 | Sticky (symbolic) | A `sticky ∈ {-1, 0, +1}` argument to the projection engine meaning "the true value is the carrier value plus an infinitesimal of this sign" — how enclosure endpoints and asymptotes (`tanh → 1⁻`) project exactly without inventing a fake carrier value. | The Encoding & Projection Engine |
 | Table gather | The array-kernel strategy of computing a result by indexing a precomputed, cached lookup table (built once through the scalar path) rather than recomputing per element. | Tables, Kernels & Sorting |
-| Total order | The draft's total ordering over a format's value set, with a single NaN placed at one end deterministically; the basis for `TotalOrder`, `isless`, comparisons, and counting sort. | The Encoding & Projection Engine |
+| Total order | The draft's total ordering over a format's value set, with the single NaN placed first, below −Inf (§4.12.1); the basis for `TotalOrder`, `isless`, comparisons, and counting sort. | The Encoding & Projection Engine |
 
 ## see also
 

@@ -1,4 +1,4 @@
-# Reference: Conformance & Approximation Registry
+# Conformance & Approximation Registry
 
 Dry listing of the conformance-declaration functions and the κ-approximation
 registry. For narrative explanation, see the User Guide's Conformance and

@@ -12,7 +12,7 @@ validation: pdftoppm/pdfplumber/pypdf/qpdf.
 - parts flattened: False (6 one-chapter parts)
 - duplicate labels uniquified: 13 (none were link targets — asserted)
 - regrouping candidates (editorial, howto.md Stage 2 — not auto-applied):
-  chapter 'How-To Guides' (8 sections; avg 4 est lines; short spans), chapter 'Explanation' (7 sections; avg 8 est lines; short spans), section 'Values, Code Points \\& Conversion' (9 subsections; avg 14 est lines; short spans), section 'Binary16p11se Is Not Float16' (9 subsections; avg 13 est lines; short spans), section 'Performance Model' (8 subsections; avg 14 est lines; short spans), section 'Reference: Projection Specifications' (7 subsections; avg 15 est lines; short spans)
+  chapter 'How-Tos' (8 sections; avg 4 est lines; short spans), chapter 'Explanations' (7 sections; avg 8 est lines; short spans), section 'Values, Code Points \\& Conversion' (9 subsections; avg 14 est lines; short spans), section 'Binary16p11se Is Not Float16' (9 subsections; avg 13 est lines; short spans), section 'Performance Model' (8 subsections; avg 14 est lines; short spans), section 'Projection Specifications' (7 subsections; avg 15 est lines; short spans)
 
 ## Special handling
 - 245 code blocks (longest 35 lines, all wrapped unbreakable);

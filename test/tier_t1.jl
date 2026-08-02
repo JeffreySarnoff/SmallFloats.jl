@@ -29,7 +29,7 @@
 #   * `NextGreaterThan`/`NextLessThan`/`nextfloat`/`prevfloat` against a sorted
 #     enumeration of the datum set
 #   * `order_key` is injective, and its induced order IS the numeric order with
-#     NaN at the top
+#     NaN at the bottom (draft §4.12.1: NaN ≼ −Inf ≼ … ≼ +Inf)
 #   * `show` round-trips through `parse`-equivalent reconstruction
 #
 # NOT exhaustive above K = 8, and this is the honest part:
@@ -141,15 +141,15 @@ function t1_sweep(::Type{T}) where {T<:Binary}
                       (keys[perm[i - 1]], keys[perm[i]]))
     end
 
-    # (5) the induced order IS the numeric order with NaN at the top, and
+    # (5) the induced order IS the numeric order with NaN at the bottom, and
     # (6) `TotalOrder` agrees with the key on every consecutive pair.
     ordered = vals[perm]
-    nan_seen = false
+    nonnan_seen = false
     for i in 1:n
         v = ordered[i]; d = decode(v)
-        isnan(d) && (nan_seen = true)
-        # once a NaN appears, everything after it must be NaN
-        nan_seen && !isnan(d) && push_bad!(:nan_not_top, codepoint(v), i)
+        isnan(d) || (nonnan_seen = true)
+        # NaN keys form a prefix: once a non-NaN appears, no NaN may follow
+        nonnan_seen && isnan(d) && push_bad!(:nan_not_bottom, codepoint(v), i)
         if i > 1
             p = ordered[i - 1]; dp = decode(p)
             # numeric: non-decreasing among the non-NaNs

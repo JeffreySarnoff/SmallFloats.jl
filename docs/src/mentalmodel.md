@@ -5,7 +5,7 @@ every tutorial, every recipe — is an elaboration of one of them. Read this
 page once, slowly, and the rest of the documentation becomes reference
 material you consult, not prose you wade through.
 
-## Idea 1 — A format is a finite set of datums
+## A format is a finite set of datums
 
 A SmallFloats *format* is not a floating-point type in the IEEE-754 sense of
 a continuum sampled at machine precision. It is a **finite, enumerated set of
@@ -16,6 +16,7 @@ they are all of them:
 ```julia-repl
 julia> decode.(sort(Binary4p2se.(0x00:0x0f)))
 16-element Vector{Float64}:
+ NaN
  -Inf
   -2.0
   -1.5
@@ -31,7 +32,6 @@ julia> decode.(sort(Binary4p2se.(0x00:0x0f)))
    1.5
    2.0
   Inf
- NaN
 ```
 
 That listing *is* the format. There is nothing between the grid points, no
@@ -40,9 +40,10 @@ hidden state, no approximation in the set itself — the spacing you see
 
 Three consequences fall out immediately:
 
-- **One NaN, no negative zero.** The last code point is the format's single
-  NaN; the value `0.0` appears exactly once. IEEE-754 spends thousands of
-  code points on NaN payloads and two on zeros; P3109 spends them on datums.
+- **One NaN, no negative zero.** The first entry — NaN sorts below −Inf in the
+  draft's total order (§4.12.1) — is the format's single NaN; the value `0.0`
+  appears exactly once. IEEE-754 spends thousands of code points on NaN
+  payloads and two on zeros; P3109 spends them on datums.
 - **The set has edges.** `-Inf`, `Inf`, and `NaN` occupy three of the sixteen
   names, which is why the largest *finite* value is 2.0 and not something
   larger. Finite formats (suffix `f` instead of `e`) spend those two infinity
@@ -57,7 +58,7 @@ Three consequences fall out immediately:
 the type `Binary8p4se` is a concrete *representation* of the abstract format
 `Binary{8,4,true,true}` — and why `===` is `false` but `<:` is `true`.
 
-## Idea 2 — A value is a wrapper around a code point; decode is exact
+## A value is a wrapper around a code point; decode is exact
 
 Construct a value and you hold the code point; ask what it means and you get
 the datum back, exactly:
@@ -97,7 +98,7 @@ everything else is a view.
 four ways in and two ways out, and the carriers `decode` returns at wide
 formats.
 
-## Idea 3 — Every computation is exact math, then one projection
+## Every computation is exact math, then one projection
 
 When you compute, SmallFloats does not simulate low-precision arithmetic
 step by step. It computes the **mathematically exact result** of the
@@ -122,13 +123,13 @@ Two things follow from "one projection, at the end":
   enough (Float64, Float128, or MPFR enclosures, escalating automatically),
   the code point you get is *the* defined answer, not a good approximation of
   it. The package can prove this because the value sets are finite — see
-  Idea 5.
+  the fifth idea.
 
 *Now you can read:* [The Projection Contract](explain_projection_contract.md) for what "exact"
 means at each carrier width, and the symbolic-sticky trick that lets directed
 modes land exactly on asymptotes.
 
-## Idea 4 — Projection = rounding mode × saturation mode
+## Projection = rounding mode × saturation mode
 
 A projection specification is the pair of two independent choices:
 
@@ -173,9 +174,9 @@ default — which is exactly why `+`, `exp`, and `T(1.6)` all agree with
 *Now you can read:* [Projection: Rounding & Saturation](tutorial2_projection.md) for the
 experiments, and [Projection Specifications](ref_projections.md) for the complete grid.
 
-## Idea 5 — Approximation is opt-in, named, and measured
+## Approximation is opt-in, named, and measured
 
-The package's speed comes from the finiteness of Idea 1: an 8-bit unary
+The package's speed comes from the first idea's finiteness: an 8-bit unary
 operation is a function with 256 inputs, so its *entire* behavior is a
 256-byte table, built once through the exact scalar path and then gathered
 per element (0.27 ns). The exactness is inherited: table and scalar are the
@@ -210,17 +211,9 @@ the choice explicit and quantified.
 
 ## The five ideas, as one picture
 
-```
-            Idea 1                    Idea 2                 Idea 3
-   ┌──────────────────────┐   name   ┌──────────┐   exact    ┌────────────┐
-   │  finite set of       │  ⇄       │  value = │   math     │  project   │
-   │  datums (code points)│─────────→│ code pt. │───────────→│  once      │
-   └──────────────────────┘  decode  └──────────┘            └────────────┘
-                                                                  │
-                          Idea 4                    Idea 5        ▼
-                  projection = rounding × saturation      exact by default;
-                                                          κ-measured if not
-```
+![The five ideas behind SmallFloats: a finite set of datums, values as code
+points, exact computation, one controlled projection, and exact or measured
+results.](assets/fiveideas.png)
 
 Read left to right: a value is a name in a finite set (1–2); computing is
 exact math followed by one projection (3); the projection is your choice of
@@ -228,6 +221,6 @@ rounding and saturation (4); and the result is exact unless you explicitly
 register otherwise (5).
 
 **Where to go from here.** To build the ideas into skills: Values, Code Points &
-Conversion. To look something up: the Reference pages.
+Conversion. To look something up: the Specifics pages.
 To understand *why* the package is built this way: The Projection Contract
-and the rest of the Explanation section.
+and the rest of the Explanations section.

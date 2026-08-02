@@ -355,13 +355,15 @@ for T in allfmts
     K = bitwidth(T)
     vals = [rawvalue(T, c) for c in UInt8.(0:(1<<K)-1)]
 
-    # --- order_key ⟺ TotalOrder ⟺ numeric-with-NaN-top, over ALL pairs
+    # --- order_key ⟺ TotalOrder ⟺ numeric-with-NaN-bottom, over ALL pairs
+    # (draft §4.12.1: NaN ≼ −Inf ≼ … ≼ +Inf; corrected 2026-08-01 from the
+    # NaN-top interpretation made while the draft text was unavailable)
     for x in vals, y in vals
         npair[] += 1
         to = TotalOrder(x, y)
         @test to == (order_key(x) <= order_key(y))
         dx, dy = decode(x), decode(y)
-        ref = isnan(dx) ? isnan(dy) : (isnan(dy) ? true : dx <= dy)
+        ref = isnan(dx) ? true : (isnan(dy) ? false : dx <= dy)
         @test to == ref
         # numeric comparisons: NaN unordered
         if isnan(dx) || isnan(dy)
@@ -1284,7 +1286,7 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         vals = [rawvalue(T, UInt8(c)) for c in 0:(1 << bitwidth(T)) - 1]
         for x in vals, y in vals
             dx, dy = decode(x), decode(y)
-            refto = isnan(dx) ? isnan(dy) : (isnan(dy) ? true : dx <= dy)
+            refto = isnan(dx) ? true : (isnan(dy) ? false : dx <= dy)   # NaN smallest, §4.12.1
             @test TotalOrder(x, y) == refto
             if isnan(dx) || isnan(dy)
                 @test !(x == y) && !(x < y) && !(x <= y)
@@ -1308,8 +1310,8 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         @test decode.(byp[.!isnan.(decode.(byp))]) |> issorted
     end
     nanheavy = [Binary8p4se(1.0), rawvalue(Binary8p4se, nan_code(Binary8p4se)), Binary8p4se(0.5)]
-    @test isnan(decode(sort(nanheavy)[end]))           # NaN last, Base convention
-    @test isnan(decode(sort(nanheavy; rev=true)[1]))   # NaN first under rev
+    @test isnan(decode(sort(nanheavy)[1]))             # NaN first — draft §4.12.1 order,
+    @test isnan(decode(sort(nanheavy; rev=true)[end])) # deliberately NOT Base's NaN-last
 
     # ---- Phase 0: dispatch/kwarg semantics preserved incl explicit rng
     σ = ProjSpec(StochasticA{2}(), SatNone())
