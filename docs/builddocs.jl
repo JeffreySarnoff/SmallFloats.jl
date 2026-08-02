@@ -28,14 +28,17 @@ else
     @warn "make.jl completed but no index.html found — check the build log" dir = joinpath(DOCS, BUILD)
 end
 
-# ---- PDF stage (docs/pdf pipeline; set DOCS_PDF=skip to omit) ----
-if get(ENV, "DOCS_PDF", "") != "skip"
-    missing_tools = filter(t -> Sys.which(t) === nothing,
-                           ["xelatex", "latexmk", "pygmentize", "pdftoppm", "qpdf"])
-    if !isempty(missing_tools)
-        @warn "PDF stage skipped: TeX/validation toolchain incomplete" missing = missing_tools
-    else
-        @info "Building PDF (docs/pdf/buildpdf.sh)"
-        run(`bash $(joinpath(DOCS, "pdf", "buildpdf.sh"))`)
-    end
-end
+# ---- PDF stage (mandatory): every complete docs build regenerates the PDF
+# from the same docs/src sources as the HTML site. Missing tools are a build
+# failure, not permission to leave a stale tracked artifact behind.
+missing_tools = filter(t -> Sys.which(t) === nothing,
+                       ["xelatex", "latexmk", "pygmentize", "pdftoppm", "qpdf"])
+isempty(missing_tools) ||
+    error("PDF toolchain incomplete; missing: $(join(missing_tools, ", "))")
+
+@info "Building PDF from docs/src (docs/pdf/buildpdf.sh)"
+run(`bash $(joinpath(DOCS, "pdf", "buildpdf.sh"))`)
+
+const PDF = joinpath(DOCS, "pdf", "SmallFloats.pdf")
+isfile(PDF) || error("PDF build completed without producing $PDF")
+@info "PDF built successfully" pdf = PDF

@@ -1,4 +1,4 @@
-# How-To: Benchmark Correctly
+# Benchmark Correctly
 
 Recorded after two measurement post-mortems: a benchmark closure over any
 non-`const` global measures Julia's dispatch machinery, not the code under
@@ -53,8 +53,8 @@ b = bench_add(Binary8p4se)
     specialization (zero warm-path allocation) before it believes any number, and
     so should yours.
 
-## Where next
+## see also
 
-[Verification & Benchmark Doctrine](under_verification.md)
-[How-To: Verify Custom Code](howto_verify_custom.md)
-[Internals Recipes](under_recipes.md)
+[Verification & Benchmark Doctrine](under_verification.md),
+[Verify Custom Code](howto_verify_custom.md),
+[Internals Recipes](under_recipes.md).

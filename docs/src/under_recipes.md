@@ -67,8 +67,8 @@ using SmallFloats: order_key
 -1.0 → 64      0.0 → 129      1.0 → 193      NaN → 65535
 ```
 
-## Where next
+## see also
 
-[The Encoding & Projection Engine](under_engine.md)
-[Tables, Kernels & Sorting](under_tables.md)
-[How-To: Verify Custom Code](howto_verify_custom.md)
+[The Encoding & Projection Engine](under_engine.md),
+[Tables, Kernels & Sorting](under_tables.md),
+[Verify Custom Code](howto_verify_custom.md).

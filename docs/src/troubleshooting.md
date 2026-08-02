@@ -49,7 +49,7 @@ Cause: P3109 defines `x / 0 → NaN` (and `Recip(±Inf) = 0`), which is not IEEE
 division-by-zero semantics. Fix: do not port IEEE-754 zero-division
 assumptions across; check for zero divisors explicitly if your algorithm
 depends on signed infinities from division. Full explanation: Cheat Sheet,
-Values and code points; Fifteen Minutes.
+Values and code points; Introducing P3109.
 
 ## Arithmetic & Semantics
 
@@ -127,7 +127,7 @@ Cause: stochastic projections (`RSA`, `RSB`, `RSC`) consume random bits from
 an RNG (or an explicit draw), and without a fixed source that draw changes
 every run. Fix: supply a seeded `rng` (for example `Xoshiro(1)`), or pass an
 explicit `R` in `0:(2^N - 1)` for exact, reproducible draws — ideal in tests.
-Full explanation: Cheat Sheet, Stochastic projections; How-To: Reproducible
+Full explanation: Cheat Sheet, Stochastic projections; Reproducible
 Stochastic Rounding.
 
 **Symptom: you passed a seed but two calls in the same pipeline still
@@ -139,6 +139,9 @@ streams desynchronize. Fix: thread one `rng` object through every call in the
 pipeline that needs to agree. Full explanation: Cheat Sheet, Stochastic
 projections.
 
-Where next: [Cheat Sheet](cheatsheet.md), [Glossary](glossary.md),
-[Performance Model](explain_performance.md), and
+## see also
+
+[Cheat Sheet](cheatsheet.md),
+[Glossary](glossary.md),
+[Performance Model](explain_performance.md),
 [Verification & Benchmark Doctrine](under_verification.md).

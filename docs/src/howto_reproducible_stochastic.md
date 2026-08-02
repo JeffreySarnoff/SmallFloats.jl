@@ -1,4 +1,4 @@
-# How-To: Get Reproducible Stochastic Results
+# Get Reproducible Stochastic Results
 
 Make stochastic-rounding code reproducible — across runs, and inside test
 suites — by fixing the entropy source.
@@ -108,7 +108,7 @@ call that doesn't name an rng to still be controlled by your seed.
     return exactly `1.0` (mass near the top rounds up) — only opt out of the
     default if your code can tolerate that.
 
-## Where next
+## see also
 
-[How-To: Choose a Format](howto_choose_format.md)
-[How-To: Quantize a Tensor or Model](howto_quantize_tensor.md)
+[Choose a Format](howto_choose_format.md),
+[Quantize a Tensor or Model](howto_quantize_tensor.md).

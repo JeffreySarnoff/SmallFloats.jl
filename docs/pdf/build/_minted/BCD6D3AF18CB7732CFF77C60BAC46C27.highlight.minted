@@ -1,0 +1,11 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+            Idea 1                    Idea 2                 Idea 3
+   ┌──────────────────────┐   name   ┌──────────┐   exact    ┌────────────┐
+   │  finite set of       │  ⇄       │  value = │   math     │  project   │
+   │  datums (code points)│─────────→│ code pt. │───────────→│  once      │
+   └──────────────────────┘  decode  └──────────┘            └────────────┘
+                                                                  │
+                          Idea 4                    Idea 5        ▼
+                  projection = rounding × saturation      exact by default;
+                                                          κ\PYGZhy{}measured if not
+\end{MintedVerbatim}

@@ -1,4 +1,4 @@
-# How-To: Add an Operation
+# Add an Operation
 
 How to add a new operation to SmallFloats.jl so that it inherits everything the
 existing catalog has: bit-exact defined results, the full projection-mode
@@ -474,8 +474,8 @@ single `_finish`, stochastic `R` plumbing — is pattern.
 - `conformance_report()` shows the op (automatic for registry ops; manual
   block additions extend `blocknames`).
 
-## Where next
+## see also
 
-[The Oracle & Rigor Classes](under_oracle.md)
-[Blocks: Exactness without Superaccumulators](under_blocks.md)
-[How-To: Verify Custom Code](howto_verify_custom.md)
+[The Oracle & Rigor Classes](under_oracle.md),
+[Blocks: Exactness without Superaccumulators](under_blocks.md),
+[Verify Custom Code](howto_verify_custom.md).

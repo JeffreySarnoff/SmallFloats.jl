@@ -142,7 +142,7 @@ the tools that answer that question honestly instead of assuming it.
 
 ## Go deeper
 
-> Continue with **Values, Code Points & Conversion** (Understanding track)
+> Continue with **Values, Code Points & Conversion** (Insights track)
 > for the general rule this page is a special case of: `UInt8` means code
 > point, every other numeric type means value, and `Convert` is how you move
 > a value between any two supported representations. That page also covers

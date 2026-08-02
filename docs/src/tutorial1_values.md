@@ -1,4 +1,4 @@
-# Tutorial 1: Values, Code Points & Conversion
+# Values, Code Points & Conversion
 
 This tutorial assumes the Quickstart: you've seen `Binary8p4se(1.6)` project onto
 `1.625 ≡ 0x45`, you've seen an `Unsigned` argument mean code point rather than
@@ -165,7 +165,7 @@ pitfall from this tutorial in miniature.
 
 </details>
 
-Where next: [Tutorial 2, Projection: Rounding & Saturation](tutorial2_projection.md) picks up right where
-`Convert(T, ρ, value)` left off — the full 6×3 grid of rounding and saturation
-modes, and how session defaults change what plain `+` does. For the complete,
-dry listing of format queries and accessors, see [Format Names & Queries](ref_formats.md).
+## see also
+
+[Projection: Rounding & Saturation](tutorial2_projection.md),
+[Format Names & Queries](ref_formats.md).

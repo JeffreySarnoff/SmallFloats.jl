@@ -376,6 +376,6 @@ See [Troubleshooting](troubleshooting.md) for the full symptom-first list.
 See [Verification & Benchmark Doctrine](under_verification.md) and the
 [Performance Model](explain_performance.md) for the full checklist.
 
-For worked applications, continue to [Examples by Domain](examples_index.md).
+For worked applications, continue to [Examples from AI](examples_index.md).
 For correctness and benchmark methodology, continue to
-[Understanding & Extending](under_architecture.md).
+[Insights](under_architecture.md).

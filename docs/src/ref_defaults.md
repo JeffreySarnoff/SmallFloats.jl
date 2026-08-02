@@ -85,5 +85,8 @@ the body throws.
   depend on the default, the call is zero-allocation with a concretely
   inferred result.
 
-Where next: [Quickstart](quickstart.md), [Why No Cross-Format Promotion](explain_no_promotion.md),
+## see also
+
+[Quickstart](quickstart.md),
+[Why No Cross-Format Promotion](explain_no_promotion.md),
 [Projection Specifications](ref_projections.md).

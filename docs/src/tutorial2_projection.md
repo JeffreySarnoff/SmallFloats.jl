@@ -1,6 +1,6 @@
-# Tutorial 2: Projection: Rounding & Saturation
+# Projection: Rounding & Saturation
 
-Tutorial 1 covered how a value gets made — `T(x)` projects, `T(c::Unsigned)`
+Values, Code Points & Conversion covered how a value gets made — `T(x)` projects, `T(c::Unsigned)`
 reads a code point, `decode`/`codepoint` round-trip exactly. This tutorial is
 about the projection step itself: what the six rounding modes and three
 saturation modes do, and how to choose one without leaving a footgun for the
@@ -179,7 +179,7 @@ over calling `DefaultProjection!` by hand.
 
 </details>
 
-Where next: [Tutorial 3, Operations & Arrays](tutorial3_arrays.md) builds on the explicit `Op(T, ρ,
-...)` shape from this tutorial and extends it to arrays, table-backed kernels,
-and sorting. For the complete grid of predefined `ProjSpec` constants, see
+## see also
+
+[Operations & Arrays](tutorial3_arrays.md),
 [Projection Specifications](ref_projections.md).

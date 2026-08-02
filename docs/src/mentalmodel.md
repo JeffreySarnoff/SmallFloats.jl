@@ -17,21 +17,21 @@ they are all of them:
 julia> decode.(sort(Binary4p2se.(0x00:0x0f)))
 16-element Vector{Float64}:
  -Inf
- -2.0
- -1.5
- -1.0
- -0.75
- -0.5
- -0.25
-  0.0
-  0.25
-  0.5
-  0.75
-  1.0
-  1.5
-  2.0
+  -2.0
+  -1.5
+  -1.0
+  -0.75
+  -0.5
+  -0.25
+   0.0
+   0.25
+   0.5
+   0.75
+   1.0
+   1.5
+   2.0
   Inf
-  NaN
+ NaN
 ```
 
 That listing *is* the format. There is nothing between the grid points, no
@@ -108,9 +108,9 @@ rounding plus one saturation decision — to land on a code point:
 exact result  →  RoundToPrecision  →  Saturate  →  code point
 ```
 
-`x + y` from the Quickstart: exact sum 3.375 (representable, projection is
-the identity). `200 × 2`: exact product 400 (not representable — projection
-decides between `Inf`, `224`, or `NaN`, and the spec says which).
+`x + y` from the Quickstart: exact sum 3.375, projected once to 3.5. `200 × 2`:
+exact product 400 (not representable — projection decides between `Inf`, `224`,
+or `NaN`, and the spec says which).
 
 Two things follow from "one projection, at the end":
 
@@ -187,8 +187,10 @@ does not take your word for its accuracy. It **measures** the worst-case
 deviation, exhaustively over every input, as a distance in code points:
 
 ```julia-repl
-julia> κ, exhaustive = measure_kappa(hardtanh, :Tanh, Binary8p4se,
-                                     (Binary8p4se,), RNE_SN)
+julia> κ, exhaustive = measure_kappa(
+           x -> Clamp(Binary8p4se, RNE_SN, x,
+                      Negate(one(Binary8p4se)), one(Binary8p4se)),
+           :Tanh, Binary8p4se, (Binary8p4se,), RNE_SN)
 (4.0, true)
 ```
 
@@ -225,7 +227,7 @@ exact math followed by one projection (3); the projection is your choice of
 rounding and saturation (4); and the result is exact unless you explicitly
 register otherwise (5).
 
-**Where to go from here.** To build the ideas into skills: Tutorial 1,
-Values, Code Points & Conversion. To look something up: the Reference pages.
+**Where to go from here.** To build the ideas into skills: Values, Code Points &
+Conversion. To look something up: the Reference pages.
 To understand *why* the package is built this way: The Projection Contract
 and the rest of the Explanation section.

@@ -1,7 +1,7 @@
 # Architecture Overview
 
 The internals of SmallFloats.jl organize along two axes, and every page in this
-Understanding & Extending track is an elaboration of one or the other.
+Insights track is an elaboration of one or the other.
 
 The first axis is the **carrier rung** a format's datums decode to, chosen by
 the format's exponent bias: `Float64` for the 432 formats whose full dynamic
@@ -47,10 +47,10 @@ Source files load in dependency order, each layer speaking only downward:
 | approx | `approx.jl` | κ measurement/registry, conformance declaration |
 | rand | `rand.jl` | Random-API hooks: uniform-[0,1) floor projection, clamped normal |
 
-## Where next
+## see also
 
-[The Encoding & Projection Engine](under_engine.md)
-[The Oracle & Rigor Classes](under_oracle.md)
-[Tables, Kernels & Sorting](under_tables.md)
-[Blocks: Exactness without Superaccumulators](under_blocks.md)
-[Verification & Benchmark Doctrine](under_verification.md)
+[The Encoding & Projection Engine](under_engine.md),
+[The Oracle & Rigor Classes](under_oracle.md),
+[Tables, Kernels & Sorting](under_tables.md),
+[Blocks: Exactness without Superaccumulators](under_blocks.md),
+[Verification & Benchmark Doctrine](under_verification.md).

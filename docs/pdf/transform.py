@@ -249,15 +249,18 @@ def main():
         if refs:
             die(f"duplicate label {lab} has {refs} references — needs "
                 "source-position disambiguation, not a blind rename")
-        occ = [m.start() for m in re.finditer(
-            r"\\label\{" + re.escape(lab) + r"\}", tex)]
-        for k, pos in enumerate(occ[1:], start=1):
-            old = f"\\label{{{lab}}}"
-            new = f"\\label{{{lab}-dup{k}}}"
-            tex = tex[:pos] + new + tex[pos + len(old):]
-            # positions after pos shift; recompute for the (rare) 3rd copy
-            occ = [m.start() for m in re.finditer(
-                r"\\label\{" + re.escape(lab) + r"\}", tex)]
+        pattern = re.compile(r"\\label\{" + re.escape(lab) + r"\}")
+        seen = [0]
+
+        def unique_label(m):
+            k = seen[0]
+            seen[0] += 1
+            return m.group(0) if k == 0 else f"\\label{{{lab}-dup{k}}}"
+
+        tex, n_lab = pattern.subn(unique_label, tex)
+        expected = labels.count(lab)
+        if n_lab != expected:
+            die(f"duplicate label {lab}: rewrote {n_lab}, survey saw {expected}")
         renamed.append(lab)
     survey["labels_uniquified"] = len(renamed)
 
@@ -388,11 +391,12 @@ def main():
             kept_titles.append(gov[2])
         elif gov[1] != "chapter" or est > PAGE_BUDGET:
             glue_pos.append(m.start())
-    for pos in sorted(glue_pos, reverse=True):
-        tex = tex[:pos] + "\\nopagebreak[3]\n" + tex[pos:]
-    for pos in sorted(needs, reverse=True):
-        tex = (tex[:pos] + f"\\needspace{{{needs[pos]}\\baselineskip}}\n"
-               + tex[pos:])
+    insertions = [(pos, "\\nopagebreak[3]\n") for pos in glue_pos]
+    insertions.extend(
+        (pos, f"\\needspace{{{need}\\baselineskip}}\n")
+        for pos, need in needs.items())
+    for pos, insertion in sorted(insertions, key=lambda item: item[0], reverse=True):
+        tex = tex[:pos] + insertion + tex[pos:]
     survey["table_units_kept_together"] = len(needs)
     survey["tables_glued_to_paragraph"] = len(glue_pos)
     survey["kept_unit_headings"] = sorted(set(kept_titles))

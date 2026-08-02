@@ -149,6 +149,6 @@ of returning a runtime-chosen type.
 
 ## Go deeper
 
-> Continue with **Projection: Rounding & Saturation** (Understanding track)
+> Continue with **Projection: Rounding & Saturation** (Insights track)
 > to see the default projection interact with explicit rounding and
 > saturation choices across a full set of worked overflow examples.

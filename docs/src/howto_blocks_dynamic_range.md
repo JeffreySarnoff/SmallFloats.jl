@@ -1,4 +1,4 @@
-# How-To: Use Blocks to Track Dynamic Range
+# Use Blocks to Track Dynamic Range
 
 Keep a bare element format from clamping data whose dynamic range exceeds one
 binade, by sharing a per-group scale (the MX-style scheme).
@@ -80,7 +80,7 @@ dynamic range the bare format cannot.
     the canonical MX scale shape: precision 1, unsigned, extended for maximal
     dynamic range at minimal bits.
 
-## Where next
+## see also
 
-[How-To: Choose a Format](howto_choose_format.md)
-[How-To: Quantize a Tensor or Model](howto_quantize_tensor.md)
+[Choose a Format](howto_choose_format.md),
+[Quantize a Tensor or Model](howto_quantize_tensor.md).

@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{κ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{exhaustive}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{measure\PYGZus{}kappa}\PYG{p}{(}\PYG{n}{fn}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{T}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{)}
+\PYG{n}{register\PYGZus{}approx!}\PYG{p}{(}\PYG{l+s+ss}{:fast\PYGZus{}exp}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{T}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{fn}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{κ}\PYG{p}{)}
+\PYG{n}{impl}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{approx}\PYG{p}{(}\PYG{l+s+ss}{:fast\PYGZus{}exp}\PYG{p}{)}
+\PYG{n}{kappa}\PYG{p}{(}\PYG{n}{impl}\PYG{p}{)}
+\PYG{n}{kappa\PYGZus{}measured}\PYG{p}{(}\PYG{n}{impl}\PYG{p}{)}
+\PYG{n}{list\PYGZus{}approx}\PYG{p}{()}
+\PYG{n}{unregister\PYGZus{}approx!}\PYG{p}{(}\PYG{l+s+ss}{:fast\PYGZus{}exp}\PYG{p}{)}
+\end{MintedVerbatim}

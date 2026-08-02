@@ -1,4 +1,4 @@
-# How-To: Choose a Format
+# Choose a Format
 
 Pick a `Binary{K,P,SGN,EXT}` format that fits a specific tensor, signal, or quantity.
 
@@ -96,10 +96,10 @@ real outcome you want to detect downstream.
 !!! note "RMSE alone hides overflow"
     A format can have a low RMSE on the bulk of your data and still overflow
     its tails to `Inf`. Always check `count(isinf, back) / length(back)`
-    alongside RMSE and max error — see How-To: Quantize a Tensor or Model for
+    alongside RMSE and max error — see Quantize a Tensor or Model for
     the full three-number check.
 
-## Where next
+## see also
 
-[How-To: Quantize a Tensor or Model](howto_quantize_tensor.md)
-[How-To: Use Blocks to Track Dynamic Range](howto_blocks_dynamic_range.md)
+[Quantize a Tensor or Model](howto_quantize_tensor.md),
+[Use Blocks to Track Dynamic Range](howto_blocks_dynamic_range.md).

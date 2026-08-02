@@ -1,4 +1,4 @@
-# How-To: Register & Measure an Approximation (κ)
+# Register & Measure an Approximation (κ)
 
 Register a faster, inexact kernel in place of the bit-exact default, with an
 honest, measured error bound.
@@ -98,6 +98,6 @@ unregister_approx!(:hardtanh_act)
     registered, and `conformance_report()` lists them alongside the exact
     catalog.
 
-## Where next
+## see also
 
-[How-To: Read & Export the Conformance Declaration](howto_conformance.md)
+[Read & Export the Conformance Declaration](howto_conformance.md).

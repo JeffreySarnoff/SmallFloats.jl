@@ -79,7 +79,7 @@ makedocs(;
             ],
         ],
 
-        "Understanding & Extending" => [
+        "Insights" => [
             "under_architecture.md",
             "under_engine.md",
             "under_oracle.md",
@@ -97,7 +97,6 @@ makedocs(;
             "glossary.md",
             "examples_index.md",
             "cheatsheet.md",
-            "cheat_cards.md",
             "benchmarks.md",
         ],
 

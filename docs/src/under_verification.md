@@ -55,8 +55,8 @@ ternary (`K = 8`) compute kernel threads, and only above a size cutoff and when
 double-rounded silently. The `Float128` machinery never changes results — disabling
 it (`SmallFloats_Float128=disable`) is a tested no-op semantically.
 
-## Where next
+## see also
 
-[Tables, Kernels & Sorting](under_tables.md)
-[How-To: Benchmark Correctly](howto_benchmark.md)
-[How-To: Verify Custom Code](howto_verify_custom.md)
+[Tables, Kernels & Sorting](under_tables.md),
+[Benchmark Correctly](howto_benchmark.md),
+[Verify Custom Code](howto_verify_custom.md).

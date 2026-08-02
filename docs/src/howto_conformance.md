@@ -1,4 +1,4 @@
-# How-To: Read & Export the Conformance Declaration
+# Read & Export the Conformance Declaration
 
 Produce a machine-readable statement of exactly which formats, operations,
 and approximations a session used, and attach it to an experiment's
@@ -67,7 +67,7 @@ a session's results, exact and approximate alike.
     project already depends on — the dict is deliberately unopinionated
     about the output format.
 
-## Where next
+## see also
 
-[How-To: Register & Measure an Approximation (κ)](howto_register_approx.md)
-[How-To: Choose a Format](howto_choose_format.md)
+[Register & Measure an Approximation (κ)](howto_register_approx.md),
+[Choose a Format](howto_choose_format.md).

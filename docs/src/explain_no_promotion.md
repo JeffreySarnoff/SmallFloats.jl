@@ -14,6 +14,8 @@ wide enough to hold both and round into it. It fails, with an error that
 names the problem:
 
 ```julia-repl
+julia> x = Binary8p4se(1.5);
+
 julia> x + Convert(Binary8p4se, RNE_SN, Binary5p3sf(1.0))
 Binary8p4se(2.5 ≡ 0x4a)
 ```
@@ -35,7 +37,7 @@ and the result is that ordinary float:
 
 ```julia-repl
 julia> x + 2.0
-3.625
+3.5
 ```
 
 For 432 of the 504 formats — the ones whose exponent range and precision fit
@@ -147,6 +149,6 @@ that could not serve it honestly.
 
 ## Go deeper
 
-> Continue with **Values, Code Points & Conversion** (Understanding track)
+> Continue with **Values, Code Points & Conversion** (Insights track)
 > for the full set of `Convert` argument types and the constructor rules
 > that make explicit conversion the answer to every cross-format situation.

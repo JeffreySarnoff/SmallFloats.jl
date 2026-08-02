@@ -93,8 +93,8 @@ side, then maps the classification through the draft's twenty saturation rows to
 **Encode** is pure integer bit assembly, including the significand-carry
 renormalization and the subnormal/normal field split.
 
-## Where next
+## see also
 
-[The Oracle & Rigor Classes](under_oracle.md)
-[Tables, Kernels & Sorting](under_tables.md)
-[Internals Recipes](under_recipes.md)
+[The Oracle & Rigor Classes](under_oracle.md),
+[Tables, Kernels & Sorting](under_tables.md),
+[Internals Recipes](under_recipes.md).

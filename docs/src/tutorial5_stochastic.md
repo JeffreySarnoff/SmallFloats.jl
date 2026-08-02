@@ -1,6 +1,6 @@
-# Tutorial 5: Stochastic Rounding
+# Stochastic Rounding
 
-Tutorial 2 introduced the stochastic families — `StochasticA{N}`,
+Projection: Rounding & Saturation introduced the stochastic families — `StochasticA{N}`,
 `StochasticB{N}`, `StochasticC{N}` — and showed one projection pinned exactly
 with `R = 0` and `R = 255`. This tutorial builds the full picture: why
 stochastic rounding is unbiased in expectation, how to audit that exhaustively
@@ -59,7 +59,7 @@ the shipped test suite uses to verify every stochastic mode.
 A stochastic projection needs random bits from somewhere, and you control the
 source the same three ways as any other random draw in the package: implicitly
 from the task-local RNG, from an explicit `rng` you pass in, or by fixing the
-draw `R` itself (as in the sweep above and in Tutorial 2). For a reproducible
+draw `R` itself (as in the sweep above and in Projection: Rounding & Saturation). For a reproducible
 *stream* rather than one pinned draw, pass a seeded `rng`:
 
 ```julia-repl
@@ -136,7 +136,8 @@ fraction always equals `ν`, whatever binade or format you're in.
 
 </details>
 
-Where next: this completes the tutorial sequence. Continue with the
-[How-To Guides](howto_choose_format.md); [Format Names & Queries](ref_formats.md)
-and [Projection Specifications](ref_projections.md) hold the complete, dry
-listings this sequence built intuition for.
+## see also
+
+[How-To Guides](howto_choose_format.md),
+[Format Names & Queries](ref_formats.md),
+[Projection Specifications](ref_projections.md).

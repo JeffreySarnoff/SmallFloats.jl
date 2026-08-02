@@ -60,6 +60,6 @@ using SmallFloats
 This selects the pure-MPFR configuration. Results are **bit-identical** — that
 equivalence is itself part of the test suite; only oracle and build speed change.
 
-## Where next
+## see also
 
-The [Quickstart](quickstart.md) — a complete first session in ten minutes.
+[Quickstart](quickstart.md).

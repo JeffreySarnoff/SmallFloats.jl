@@ -53,8 +53,9 @@ julia> Binary16p6se
 Binary16p6se
 ```
 
-`Binary8p4se === Binary{8,4,true,true}` is **false**. The distinction is not
-an implementation accident; it comes from the draft's own vocabulary. A
+`Binary8p4se` is a concrete subtype of `Binary{8,4,true,true}`, but the two type
+objects are distinct. The distinction is not an implementation accident; it
+comes from the draft's own vocabulary. A
 *format* is a datum set and an encoding — an abstract description of which
 values exist and how they are named. A *representation* is a specific choice
 of machine word that carries a code point: how many bits, what storage unit,
@@ -148,10 +149,10 @@ kind of format it lives in.
     constructor and entry point it can see. What you silently lose is the
     entire performance story: table gathers, zero-allocation scalar calls,
     specialized dispatch — all of it depends on the element type being
-    concrete. This is the sharper edge of the `===` distinction from above:
-    the type comparison `Binary8p4se === Binary{8,4,true,true}` is visibly
-    `false` and tells you something is off, while the abstract-array mistake
-    costs you real performance and says nothing at all.
+    concrete. This is the sharper edge of the type distinction above: comparing
+    the concrete alias with the abstract format makes their different roles
+    visible, while the abstract-array mistake costs you real performance and
+    says nothing at all.
 
     `similar(a, T)` normalizes the request for you, but `Vector{T}(undef,
     n)` cannot be intercepted at the call site. Always spell the alias, or
@@ -159,6 +160,6 @@ kind of format it lives in.
 
 ## Go deeper
 
-> Continue with **Values, Code Points & Conversion** (Understanding track)
+> Continue with **Values, Code Points & Conversion** (Insights track)
 > for how a `Binary` value stores a code point, how `decode` recovers the
 > exact datum, and the four ways to construct one.

@@ -88,5 +88,8 @@ same-shape `Block`s.
 Computation unpacks tiles internally; packed arithmetic is deliberately not
 in-place — store packed, compute unpacked.
 
-Where next: [Cheat Sheet](cheatsheet.md), [Tutorial 3: Operations & Arrays](tutorial3_arrays.md),
-[How-To: Use Blocks to Track Dynamic Range](howto_blocks_dynamic_range.md).
+## see also
+
+[Cheat Sheet](cheatsheet.md),
+[Operations & Arrays](tutorial3_arrays.md),
+[Use Blocks to Track Dynamic Range](howto_blocks_dynamic_range.md).

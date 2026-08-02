@@ -11,8 +11,8 @@ element result by the scale through its own cheapest-first CR-bracket / enclosur
 cascade (exact Float64 quotient → CR Float128 → bracket/pre-filter → MPFR
 interval), mirroring the scalar quotient group's rigor arguments.
 
-## Where next
+## see also
 
-[The Oracle & Rigor Classes](under_oracle.md)
-[Tables, Kernels & Sorting](under_tables.md)
-[How-To: Add an Operation](howto_add_operation.md)
+[The Oracle & Rigor Classes](under_oracle.md),
+[Tables, Kernels & Sorting](under_tables.md),
+[Add an Operation](howto_add_operation.md).

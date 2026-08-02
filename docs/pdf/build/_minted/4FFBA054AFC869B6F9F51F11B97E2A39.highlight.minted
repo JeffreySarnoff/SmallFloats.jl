@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n+nb}{ENV}\PYG{p}{[}\PYG{l+s}{\PYGZdq{}SmallFloats\PYGZus{}Float128\PYGZdq{}}\PYG{p}{]}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}disable\PYGZdq{}}
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}
+\end{MintedVerbatim}

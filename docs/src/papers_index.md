@@ -48,7 +48,8 @@ counts per milestone. Status: exploratory.
 ## Extension Working Papers
 
 Four documents plan and re-plan the extension of the format grid from `K ≤ 8`
-(120 formats, shipped) to `3 ≤ K ≤ 16` (504 formats). Read in this order; each
+(120 at K ≤ 8, retained as the default exports) to `3 ≤ K ≤ 16` (504 formats).
+Read in this order; each
 says explicitly where it overrides its predecessor.
 
 **extendingK.md** — [`extendingK.md`](https://github.com/JeffreySarnoff/SmallFloats.jl/blob/main/docs/other/extendingK.md).
@@ -73,5 +74,8 @@ idiomatic Julia — ranked by user impact rather than by extension stage —
 covering broken `AbstractFloat` contract methods and deliberate departures
 alike. Status: exploratory/historical.
 
-Where next: [Cheat Sheet](cheatsheet.md), [Glossary](glossary.md),
+## see also
+
+[Cheat Sheet](cheatsheet.md),
+[Glossary](glossary.md),
 [Architecture Overview](under_architecture.md).

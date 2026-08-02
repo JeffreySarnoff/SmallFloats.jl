@@ -2,7 +2,7 @@
 
 Dry listing of `ProjSpec`, the predefined deterministic grid, the stochastic
 constructor families, and their accessors. For narrative explanation, see
-Tutorial 2, Projection: Rounding & Saturation.
+Projection: Rounding & Saturation.
 
 ## `ProjSpec` constructor
 
@@ -20,12 +20,12 @@ Named `R<mode>_Sat<mode>`. Every cell below is an exported constant.
 
 | Rounding | `SatFinite` | `SatPropagate` | `SatNone` | Teaching page |
 |---|---|---|---|---|
-| `NearestTiesToEven` | `RNE_SF` | `RNE_SP` | `RNE_SN` | Tutorial 2, Projection: Rounding & Saturation |
-| `NearestTiesToAway` | `RNA_SF` | `RNA_SP` | `RNA_SN` | Tutorial 2, Projection: Rounding & Saturation |
-| `TowardPositive` | `RTP_SF` | `RTP_SP` | `RTP_SN` | Tutorial 2, Projection: Rounding & Saturation |
-| `TowardNegative` | `RTN_SF` | `RTN_SP` | `RTN_SN` | Tutorial 2, Projection: Rounding & Saturation |
-| `TowardZero` | `RTZ_SF` | `RTZ_SP` | `RTZ_SN` | Tutorial 2, Projection: Rounding & Saturation |
-| `ToOdd` | `RTO_SF` | `RTO_SP` | `RTO_SN` | Tutorial 2, Projection: Rounding & Saturation |
+| `NearestTiesToEven` | `RNE_SF` | `RNE_SP` | `RNE_SN` | Projection: Rounding & Saturation |
+| `NearestTiesToAway` | `RNA_SF` | `RNA_SP` | `RNA_SN` | Projection: Rounding & Saturation |
+| `TowardPositive` | `RTP_SF` | `RTP_SP` | `RTP_SN` | Projection: Rounding & Saturation |
+| `TowardNegative` | `RTN_SF` | `RTN_SP` | `RTN_SN` | Projection: Rounding & Saturation |
+| `TowardZero` | `RTZ_SF` | `RTZ_SP` | `RTZ_SN` | Projection: Rounding & Saturation |
+| `ToOdd` | `RTO_SF` | `RTO_SP` | `RTO_SN` | Projection: Rounding & Saturation |
 
 `RNE_SN` is the package-wide initial default (`DefaultProjection()`).
 
@@ -36,9 +36,9 @@ Constructors, not constants — the random-bit budget `N` is a type parameter.
 
 | Variant | `SatFinite` | `SatPropagate` | `SatNone` | Teaching page |
 |---|---|---|---|---|
-| `StochasticA` | `RSA_SF(N)` | `RSA_SP(N)` | `RSA_SN(N)` | Tutorial 2, Projection: Rounding & Saturation |
-| `StochasticB` | `RSB_SF(N)` | `RSB_SP(N)` | `RSB_SN(N)` | Tutorial 2, Projection: Rounding & Saturation |
-| `StochasticC` | `RSC_SF(N)` | `RSC_SP(N)` | `RSC_SN(N)` | Tutorial 2, Projection: Rounding & Saturation |
+| `StochasticA` | `RSA_SF(N)` | `RSA_SP(N)` | `RSA_SN(N)` | Projection: Rounding & Saturation |
+| `StochasticB` | `RSB_SF(N)` | `RSB_SP(N)` | `RSB_SN(N)` | Projection: Rounding & Saturation |
+| `StochasticC` | `RSC_SF(N)` | `RSC_SP(N)` | `RSC_SN(N)` | Projection: Rounding & Saturation |
 
 ```julia
 RSA_SN()      # StochasticA, N = 8, SatNone — the default form
@@ -50,10 +50,10 @@ RSC_SF(16) === ProjSpec(StochasticC{16}(), SatFinite())   # true
 
 | Accessor | Returns | Teaching page |
 |---|---|---|
-| `roundingmode(ρ)` | the rounding-mode instance | Tutorial 2, Projection: Rounding & Saturation |
-| `saturationmode(ρ)` | the saturation-mode instance | Tutorial 2, Projection: Rounding & Saturation |
-| `isstochastic(ρ)` | `Bool` | Tutorial 2, Projection: Rounding & Saturation |
-| `nrandbits(ρ)` | `N` for a stochastic spec | Tutorial 2, Projection: Rounding & Saturation |
+| `roundingmode(ρ)` | the rounding-mode instance | Projection: Rounding & Saturation |
+| `saturationmode(ρ)` | the saturation-mode instance | Projection: Rounding & Saturation |
+| `isstochastic(ρ)` | `Bool` | Projection: Rounding & Saturation |
+| `nrandbits(ρ)` | `N` for a stochastic spec | Projection: Rounding & Saturation |
 
 ## Saturation-mode meaning
 
@@ -73,5 +73,7 @@ Add(T, σ, x, y; rng = Xoshiro(1))   # reproducible stream
 Add(T, σ, x, y; R = 17)             # exact draw, ideal for tests
 ```
 
-Where next: [Tutorial 2, Projection: Rounding & Saturation](tutorial2_projection.md),
+## see also
+
+[Projection: Rounding & Saturation](tutorial2_projection.md),
 [Session Defaults](ref_defaults.md).

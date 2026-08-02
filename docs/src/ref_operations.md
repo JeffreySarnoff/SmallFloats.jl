@@ -81,7 +81,7 @@ Trig of ±Inf is NaN for all rows above.
 
 | Operation | Arity | Base spelling | Notes | Teaching page |
 |---|---|---|---|---|
-| `Convert` | conversion | — | the one operation accepting non-`Binary` operands: `Binary` (any format), `Float16/32/64`, `Float128`, `Integer`, `BigFloat` | Tutorial 1: Values, Code Points & Conversion |
+| `Convert` | conversion | — | the one operation accepting non-`Binary` operands: `Binary` (any format), `Float16/32/64`, `Float128`, `Integer`, `BigFloat` | Values, Code Points & Conversion |
 
 Catalog total: 30 unary + 18 binary + 3 ternary + 1 conversion = 52.
 
@@ -135,6 +135,8 @@ Convenience form, same-format operands, `DefaultProjection()`:
 Op(x...)
 ```
 
-Where next: [Cheat Sheet](cheatsheet.md),
+## see also
+
+[Cheat Sheet](cheatsheet.md),
 [Why No Cross-Format Promotion](explain_no_promotion.md),
-[Tutorial 1: Values, Code Points & Conversion](tutorial1_values.md).
+[Values, Code Points & Conversion](tutorial1_values.md).

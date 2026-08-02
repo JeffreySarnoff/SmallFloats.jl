@@ -158,6 +158,6 @@ non-finite values it did not ask for.
 
 ## Go deeper
 
-> Continue with **Random Draws & Reproducibility** (Understanding track) for
+> Continue with **Random Draws & Reproducibility** (Insights track) for
 > the worked K = 3 tail-clamp comparison and the full set of seeded-stream
 > experiments.

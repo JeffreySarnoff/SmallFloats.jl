@@ -1,7 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{)}\PYG{+w}{           }\PYG{c}{\PYGZsh{} default: nearest + SatFinite}
-\PYG{g+go}{Binary8p4se(\PYGZhy{}2.0 ≡ 0xc8)}
-
-\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{projection}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RTZ\PYGZus{}SF}\PYG{p}{)}\PYG{+w}{  }\PYG{c}{\PYGZsh{} toward zero}
-\PYG{g+go}{Binary8p4se(\PYGZhy{}1.875 ≡ 0xc7)}
-\end{MintedVerbatim}

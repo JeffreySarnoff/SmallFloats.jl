@@ -1,4 +1,4 @@
-# How-To: Convert To/From Float16 & BFloat16 Safely
+# Convert To/From Float16 & BFloat16 Safely
 
 Move data between SmallFloats formats and IEEE `Float16`/`BFloat16` without
 silently changing its value by a factor of two.
@@ -83,7 +83,7 @@ already accounts for all of them.
     patterns, keep the data in `Float16`/`BFloat16` and convert only at the
     SmallFloats boundary.
 
-## Where next
+## see also
 
-[How-To: Choose a Format](howto_choose_format.md)
-[How-To: Read & Export the Conformance Declaration](howto_conformance.md)
+[Choose a Format](howto_choose_format.md),
+[Read & Export the Conformance Declaration](howto_conformance.md).

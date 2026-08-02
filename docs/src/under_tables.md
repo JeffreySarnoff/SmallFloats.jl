@@ -42,8 +42,8 @@ path* — the tiering changes when/whether the cache exists, never what it conta
 Stochastic calls of any arity always take Shape-B, with the RNG resolved once per
 array rather than per element.
 
-## Where next
+## see also
 
-[The Encoding & Projection Engine](under_engine.md)
-[The Oracle & Rigor Classes](under_oracle.md)
-[Internals Recipes](under_recipes.md)
+[The Encoding & Projection Engine](under_engine.md),
+[The Oracle & Rigor Classes](under_oracle.md),
+[Internals Recipes](under_recipes.md).

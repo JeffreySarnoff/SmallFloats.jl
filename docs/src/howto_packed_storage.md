@@ -1,4 +1,4 @@
-# How-To: Work with Packed Storage
+# Work with Packed Storage
 
 Store a vector of small-format values at its true bit width instead of one
 byte (or two) per element.
@@ -80,7 +80,7 @@ bytes, in general, rounded to whole words.
     computing, not storing, an ordinary `Vector{F}` (one byte per element at
     `K ≤ 8`) is simpler and does not pay any unpacking cost.
 
-## Where next
+## see also
 
-[How-To: Quantize a Tensor or Model](howto_quantize_tensor.md)
-[How-To: Choose a Format](howto_choose_format.md)
+[Quantize a Tensor or Model](howto_quantize_tensor.md),
+[Choose a Format](howto_choose_format.md).

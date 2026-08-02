@@ -1,4 +1,4 @@
-# P3109 in Fifteen Minutes
+# Introducing P3109
 
 The IEEE P3109 draft — *Arithmetic Formats for Machine Learning* — as this
 package sees it. Fifteen minutes here buys you the vocabulary every other page
@@ -145,11 +145,8 @@ denotes a value a factor of two away from its IEEE look-alike**. The same bits
 read as the other type silently halve or double every value. Converting
 between them is a conversion, never a reinterpretation.
 
-## Where to go next
+## see also
 
-- The [Mental Model](mentalmodel.md) — the five ideas above recast as how the
-  *package* thinks, with code.
-- P3109 Draft Notes (The Standard & Design Papers section) — the full concept
-  map this page was distilled from, with clause-level links into the draft.
-- The [Quickstart](quickstart.md) — if you'd rather touch the formats first
-  and read theory second.
+[Mental Model](mentalmodel.md),
+[The Standard & Design Papers](papers_index.md),
+[Quickstart](quickstart.md).

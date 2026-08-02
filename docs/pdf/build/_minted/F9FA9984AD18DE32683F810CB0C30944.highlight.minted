@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+Op(result\PYGZus{}format, projection\PYGZus{}spec, operands...)
+\end{MintedVerbatim}

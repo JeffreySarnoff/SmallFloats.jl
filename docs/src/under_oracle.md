@@ -103,8 +103,8 @@ dyadic arguments, `tan(πr)` takes rational values only at the quarter-integers
 exactly before any enclosure is built, and Niven's theorem proves the peel set
 complete.
 
-## Where next
+## see also
 
-[The Encoding & Projection Engine](under_engine.md)
-[Tables, Kernels & Sorting](under_tables.md)
-[How-To: Add an Operation](howto_add_operation.md)
+[The Encoding & Projection Engine](under_engine.md),
+[Tables, Kernels & Sorting](under_tables.md),
+[Add an Operation](howto_add_operation.md).

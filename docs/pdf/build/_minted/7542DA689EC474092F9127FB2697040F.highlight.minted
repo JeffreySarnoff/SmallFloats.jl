@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{DyadicNumbers}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{dyadic\PYGZus{}to\PYGZus{}rational}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rational\PYGZus{}to\PYGZus{}dyadic}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{isdyadic}
+
+\PYG{n}{dyadic\PYGZus{}to\PYGZus{}rational}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{          }\PYG{c}{\PYGZsh{} Rational\PYGZob{}BigInt\PYGZcb{}, exact — a Dyadic IS S·2\PYGZca{}Q}
+\PYG{n}{rational\PYGZus{}to\PYGZus{}dyadic}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{+w}{ }\PYG{o}{//}\PYG{+w}{ }\PYG{l+m+mi}{4}\PYG{p}{)}\PYG{+w}{     }\PYG{c}{\PYGZsh{} exact, or throws}
+\PYG{n}{isdyadic}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{//}\PYG{+w}{ }\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{+w}{               }\PYG{c}{\PYGZsh{} false — no Dyadic represents it}
+\end{MintedVerbatim}

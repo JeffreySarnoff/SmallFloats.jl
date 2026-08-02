@@ -1,4 +1,4 @@
-# How-To: Verify Custom Code
+# Verify Custom Code
 
 Trust, then verify — these patterns turn "is my code exact?" into an
 enumeration. Formats are small enough that "test on a few points" is never
@@ -181,8 +181,8 @@ treat sub-margin comparisons as ties to expand, or escalate those few nodes to
 the exact evaluator. Either way the pruning is *provably* sound, with κ measured
 at registration rather than promised.
 
-## Where next
+## see also
 
-[How-To: Add an Operation](howto_add_operation.md)
-[How-To: Benchmark Correctly](howto_benchmark.md)
-[Internals Recipes](under_recipes.md)
+[Add an Operation](howto_add_operation.md),
+[Benchmark Correctly](howto_benchmark.md),
+[Internals Recipes](under_recipes.md).

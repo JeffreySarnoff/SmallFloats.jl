@@ -53,7 +53,7 @@ for approximation:
 - **Get started** — [Installation & Setup](installation.md), then the
   [Quickstart](quickstart.md): a working session in ten minutes.
 - **Understand the ideas** — the [Mental Model](mentalmodel.md) (five ideas
-  that carry the whole package), or [P3109 in Fifteen Minutes](fifteenminutes.md)
+  that carry the whole package), or [Introducing P3109](fifteenminutes.md)
   if you want the standard itself first.
 - **Look something up** — the Reference section: formats, projection specs, the
   operation catalog, and the one-page [Cheat Sheet](cheatsheet.md).

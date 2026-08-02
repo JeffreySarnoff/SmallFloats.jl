@@ -1,6 +1,6 @@
-# Tutorial 4: Blocks & MX-Style Quantization
+# Blocks & MX-Style Quantization
 
-Tutorial 3 covered arrays of a single format. This tutorial covers `Block`
+Operations & Arrays covered arrays of a single format. This tutorial covers `Block`
 values, which pair one shared scale with a group of narrow elements — the
 MX-style scheme for buying dynamic range that a single narrow format cannot
 hold on its own.
@@ -149,17 +149,17 @@ mistake to avoid, and the one-line fix.
 <details>
 <summary>Answer</summary>
 
-The mistake is converting straight to `Binary8p4se` (the narrow element
-format) before calling `ConvertToBlockMaxAbsFinite` — `SatFinite` clamps large
-rows before the block scale can absorb them. The fix is to stage through a
-wide-range format first, e.g. `Convert(Binary8p2se, RNE_SF, w)` for each raw
-value, and pass those staged elements into `ConvertToBlockMaxAbsFinite` — exactly
-the `seg = ntuple(k -> Convert(FST, RNE_SF, ...), ...)` line in the demo above.
+The mistake is converting straight to `Binary8p4se`, the narrow element format.
+
+Passing those narrowed elements to `ConvertToBlockMaxAbsFinite` lets `SatFinite`
+clamp large rows before the block scale can absorb them. Stage through a
+wide-range format first, such as `Convert(Binary8p2se, RNE_SF, w)`, and pass
+those staged elements onward—the `seg = ntuple(k -> Convert(FST, RNE_SF, ...),
+...)` line in the demo above.
 
 </details>
 
-Where next: [Tutorial 5, Stochastic Rounding](tutorial5_stochastic.md) returns to scalars and to the
-`StochasticA`/`B`/`C` families introduced briefly in Tutorial 2, with the full
-unbiasedness and reproducibility story. For the block operation catalog
-(`BlockAdd`, `ScaledOp`, `ConvertToBlock`), see
+## see also
+
+[Stochastic Rounding](tutorial5_stochastic.md),
 [Arrays, Blocks & Packed Storage](ref_arrays_blocks.md).

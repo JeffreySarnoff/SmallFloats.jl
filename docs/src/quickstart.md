@@ -1,4 +1,4 @@
-# Quickstart: ten minutes
+# Quickstart
 
 One continuous session: two values, two ways of adding them, an array through a
 nonlinearity, and a block of quantized values. Every line is explained as it
@@ -10,7 +10,7 @@ Assumes a [working install](installation.md). Start Julia and:
 julia> using SmallFloats
 ```
 
-## Step 1 — make two values
+## Make two values
 
 ```julia-repl
 julia> x = Binary8p4se(1.6)
@@ -49,21 +49,21 @@ numeric value two, projected.
     rule holds for `UInt8`, `UInt16` and any other `Unsigned`. Use `Convert`
     when intent should be unmistakable.
 
-## Step 2 — add them, two ways
+## Add them, two ways
 
 ```julia-repl
 julia> x + y
-Binary8p4se(3.375 ≡ 0x4d)
+Binary8p4se(3.5 ≡ 0x4e)
 ```
 
 Ordinary Julia arithmetic works. Under the hood, `+` computed the exact sum
-(1.625 + 1.75 = 3.375, which happens to be representable) and projected once.
+(1.625 + 1.75 = 3.375) and projected it once to the nearest datum, 3.5.
 
 The same operation, written out in full:
 
 ```julia-repl
 julia> Add(Binary8p4se, RNE_SN, x, y)
-Binary8p4se(3.375 ≡ 0x4d)
+Binary8p4se(3.5 ≡ 0x4e)
 ```
 
 Every operation in the package has this explicit shape:
@@ -95,7 +95,7 @@ Binary8p4se(224.0 ≡ 0x7e)
 Same operands, same exact product (400), different landing — the projection
 spec is part of the operation, not an afterthought.
 
-## Step 3 — an array through a nonlinearity
+## Send an array through a nonlinearity
 
 ```julia-repl
 julia> A = Binary8p4se.([-1.0, 0.5, 2.0])
@@ -125,7 +125,7 @@ julia> table_bytes()
 One 256-byte table, cached. The Base spelling `exp.(A)` rides the same
 machinery under the default projection.
 
-## Step 4 — a block of quantized values
+## Create a block of quantized values
 
 Small formats have small ranges. *Block* formats (the MX-style scheme) fight
 that by sharing one scale across a group of narrow elements: each represented
@@ -156,7 +156,7 @@ Read the block back as plain values:
 
 ```julia-repl
 julia> ConvertFromBlock(Binary8p3se, RNE_SN, b)
-(Binary8p3se(6.0 ≡ 0x4a), Binary8p3se(-3.0 ≡ 0xc6), Binary8p3se(8.0 ≡ 0x4c), Binary8p3se(2.0 ≡ 0x44))
+(Binary8p3se(96.0 ≡ 0x5a), Binary8p3se(-12.0 ≡ 0xce), Binary8p3se(0.5 ≡ 0x3c), Binary8p3se(3.0 ≡ 0x46))
 ```
 
 Each `scale × element` was decoded exactly and projected once into the format
@@ -165,8 +165,11 @@ every lane product and the accumulation *exact* until a single final rounding:
 
 ```julia-repl
 julia> BlockDotProduct(Binary8p4se, RNE_SN, b, b)
-Binary8p4se(10240.0 ≡ 0x6d)
+Binary8p4se(Inf ≡ 0x7f)
 ```
+
+The exact accumulated value exceeds `Binary8p4se`'s finite range, so the one
+final projection produces `Inf` under `RNE_SN`.
 
 ## What just happened
 

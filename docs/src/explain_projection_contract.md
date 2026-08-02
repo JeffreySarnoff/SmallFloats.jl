@@ -148,6 +148,6 @@ describes.
 
 ## Go deeper
 
-> Continue with **Projection: Rounding & Saturation** (Understanding track)
+> Continue with **Projection: Rounding & Saturation** (Insights track)
 > for the hands-on experiments — every rounding mode and saturation mode
 > combination worked through on real overflow and midpoint cases.

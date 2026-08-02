@@ -1,6 +1,7 @@
-# Tutorial 3: Operations & Arrays
+# Operations & Arrays
 
-Tutorials 1 and 2 worked entirely with scalars: `T(x)` to construct,
+Values, Code Points & Conversion and Projection: Rounding & Saturation worked
+entirely with scalars: `T(x)` to construct,
 `Convert`/`Op(T, ρ, ...)` to project explicitly, and `+`/`exp`/... as the
 same-format, default-projection convenience forms. This tutorial scales that
 up to arrays, and introduces the machinery — table gathers, `vmap`, the `Op`
@@ -8,12 +9,12 @@ callable, counting sort — that makes bulk work fast.
 
 ## The two registers, again
 
-Every scalar operation you used in Tutorials 1–2 came from one of two
+Every scalar operation used on those pages came from one of two
 registers, and the same split carries over to arrays:
 
 - **The spec-named register** exposes every draft operation under its draft
   name with an explicit result format and spec: `Op(fr, ρ, operands...)`. This
-  is `Add`, `Multiply`, `Exp`, and the rest of the catalog from Tutorial 2,
+  is `Add`, `Multiply`, `Exp`, and the rest of the catalog from Projection: Rounding & Saturation,
   where you name `ρ` yourself.
 - **The Base register** makes each format an ordinary Julia number under its
   *default* spec (`RNE_SN` unless you changed it): `+ - * /`, `exp`, `sqrt`,
@@ -170,7 +171,8 @@ same two-element vector, `[1.75, 1.75]` in `Binary8p4se`.
 
 </details>
 
-Where next: [Tutorial 4, Blocks & MX-Style Quantization](tutorial4_blocks.md) moves from single-format
-arrays to `Block` values, where a shared scale rides alongside narrow elements.
-For the full operation catalog and array-call signatures, see the
-[Operation Catalog](ref_operations.md) and [Arrays, Blocks & Packed Storage](ref_arrays_blocks.md).
+## see also
+
+[Blocks & MX-Style Quantization](tutorial4_blocks.md),
+[Operation Catalog](ref_operations.md),
+[Arrays, Blocks & Packed Storage](ref_arrays_blocks.md).

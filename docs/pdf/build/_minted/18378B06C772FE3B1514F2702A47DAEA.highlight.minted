@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{ConvertFromBlock}\PYG{p}{(}\PYG{n}{Binary8p3se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} decode scale×elem, project}
+\PYG{g+go}{(Binary8p3se(6.0 ≡ 0x4a), Binary8p3se(\PYGZhy{}3.0 ≡ 0xc6), Binary8p3se(8.0 ≡ 0x4c), Binary8p3se(2.0 ≡ 0x44))}
+\end{MintedVerbatim}

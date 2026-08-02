@@ -2,8 +2,8 @@
 
 Dry listing of the format naming grammar, the alias/type distinction, and every
 format-query accessor. For narrative explanation, see the Mental Model page;
-for a worked introduction, see the Quickstart and Tutorial 1: Values, Code
-Points & Conversion.
+for a worked introduction, see the Quickstart and Values, Code Points &
+Conversion.
 
 ## Naming grammar
 
@@ -39,8 +39,8 @@ alias. 120 aliases at `K ≤ 8` are exported by `using SmallFloats`.
 - `Binary` is abstract; `Binary8p4se` is its concrete representation.
 - `Binary8p4se <: Binary{8,4,true,true}` is `true`.
 - `Binary8p4se === Binary{8,4,true,true}` is `false`. Use the alias, or
-  `format(K, P, Σ, Δ)` for runtime parameters. See Tutorial 1: Values, Code
-  Points & Conversion.
+  `format(K, P, Σ, Δ)` for runtime parameters. See Values, Code Points &
+  Conversion.
 
 ## `format()` and opt-in access
 
@@ -87,6 +87,8 @@ MaxFiniteOf(Binary8p4se)     # Binary8p4se(224.0 ≡ 0x7e)
 MaxFiniteOf(x)               # same result
 ```
 
-Where next: [Mental Model](mentalmodel.md),
-[Tutorial 1: Values, Code Points & Conversion](tutorial1_values.md),
-[How-To: Choose a Format](howto_choose_format.md).
+## see also
+
+[Mental Model](mentalmodel.md),
+[Values, Code Points & Conversion](tutorial1_values.md),
+[Choose a Format](howto_choose_format.md).
