@@ -476,7 +476,7 @@
 \contentsline {subsection}{Blocks and scaled operations}{186}{section*.364}%
 \contentsline {subsection}{Packed storage}{186}{section*.365}%
 \contentsline {subsection}{Conformance and approximations}{187}{section*.366}%
-\contentsline {subsection}{Common traps}{187}{section*.367}%
+\contentsline {subsection}{Common missteps}{187}{section*.367}%
 \contentsline {subsection}{Performance checklist}{187}{section*.368}%
 \contentsline {chapter}{\chapternumberline {50}Glossary}{188}{chapter.50}%
 \contentsline {section}{\numberline {50.1}Glossary}{188}{section.50.1}%

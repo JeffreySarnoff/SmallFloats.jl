@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.7.24)  2 AUG 2026 15:37
+This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.7.24)  2 AUG 2026 15:45
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1611,11 +1611,11 @@ Chapter 1.
 \pydata@fh@0=\write7
 \openout7 = `_FAD58DE7366495DB4650CFEFAC2FCD61.data.minted'.
 
-runsystem(latexminted config  --timestamp 20260802153749 FAD58DE7366495DB4650CF
+runsystem(latexminted config  --timestamp 20260802154507 FAD58DE7366495DB4650CF
 EFAC2FCD61)...executed.
 
 (./_FAD58DE7366495DB4650CFEFAC2FCD61.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20260802153749 FAD58DE7366495DB4
+runsystem(latexminted cleanconfig  --timestamp 20260802154507 FAD58DE7366495DB4
 650CFEFAC2FCD61)...executed.
 
 
@@ -2356,11 +2356,11 @@ Package rerunfilecheck Info: File `main.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  36714 strings out of 469223
- 840970 string characters out of 5454114
- 1382716 words of memory out of 6000000
+ 840972 string characters out of 5454114
+ 1382719 words of memory out of 6000000
  64159 multiletter control sequences out of 15000+600000
  635601 words of font info for 121 fonts, out of 8000000 for 9000
  430 hyphenation exceptions out of 8191
  114i,13n,133p,1288b,1095s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (195 pages, 4330124 bytes).
+Output written on main.xdv (195 pages, 4330460 bytes).

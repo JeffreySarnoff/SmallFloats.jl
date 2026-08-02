@@ -7,7 +7,7 @@ default operation API never substitutes a registered approximation.
 ## Conformance functions
 
 | Function | Signature | Returns | Related guide |
-|---|---|---|---|
+|:---|---|---|---|
 | `conformance` | `conformance()` | the live declaration: formats, operations, mode vocabulary, table specializations instantiated this session, registered approximations | [Read and Export Conformance](workflow_conformance.md) |
 | `conformance_dict` | `conformance_dict()` | a plain nested `Dict`, for JSON/TOML serialization | [Read and Export Conformance](workflow_conformance.md) |
 | `conformance_report` | `conformance_report()` | prints the declaration | [Read and Export Conformance](workflow_conformance.md) |
@@ -16,7 +16,7 @@ default operation API never substitutes a registered approximation.
 ## κ registry
 
 | Function | Signature | Returns | Related guide |
-|---|---|---|---|
+|:---|---|---|---|
 | `measure_kappa` | `measure_kappa(fn, op, fr, (argformats...), ρ)` | `(κ, exhaustive)` — measured max code-point deviation and whether the measurement was exhaustive | [Register an Approximation](workflow_approximation.md) |
 | `register_approx!` | `register_approx!(name, op, fr, args, ρ, fn; κ)` | registers `fn` as approximation `name` for `op`, declaring bound `κ` | [Register an Approximation](workflow_approximation.md) |
 | `approx` | `approx(name)` | the registered implementation object | [Register an Approximation](workflow_approximation.md) |

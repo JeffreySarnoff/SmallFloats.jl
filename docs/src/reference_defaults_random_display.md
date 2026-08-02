@@ -9,7 +9,7 @@ display policy. For their scope and concurrency consequences, read
 Read with `DefaultX()`, set with `DefaultX!(v)`.
 
 | Default | Initial value | Setter accepts | Related guide |
-|---|---|---|---|
+|:---|---|---|---|
 | `DefaultType` | `Binary8p2se` | any fully-parameterized `Binary` type | Cheat Sheet |
 | `DefaultReturnType` | `Binary8p2se` | any fully-parameterized `Binary` type | Cheat Sheet |
 | `DefaultRoundingMode` | `NearestTiesToEven()` | mode instance or type | Cheat Sheet |
@@ -37,7 +37,7 @@ DefaultProjection() === ProjSpec(DefaultRoundingMode(), DefaultSaturationMode())
 This holds at all times, in both directions:
 
 | Action | Effect |
-|---|---|
+|:---|---|
 | `DefaultRoundingMode!(mode)` | rebuilds `DefaultProjection` around the new mode, holding saturation fixed |
 | `DefaultSaturationMode!(mode)` | rebuilds `DefaultProjection` around the new mode, holding rounding fixed |
 | `DefaultProjection!(ρ)` | decomposes `ρ` back into both components |
@@ -49,7 +49,7 @@ operands), not by a session preference.
 ## `with_default_*` combinators
 
 | Combinator | Signature | Related guide |
-|---|---|---|
+|:---|---|---|
 | `with_default_type` | `with_default_type(f, args...)` calls `f(DefaultType(), args...)` | Cheat Sheet |
 | `with_default_returntype` | `with_default_returntype(f, args...)` calls `f(DefaultReturnType(), args...)` | Cheat Sheet |
 | `with_default_projection` | `with_default_projection(f, args...)` calls `f(DefaultProjection(), args...)` | Cheat Sheet |
@@ -87,7 +87,7 @@ the body throws.
 ## Randomness
 
 | Form | Entropy source | Projection control |
-|---|---|---|
+|:---|---|---|
 | `rand(T)` | task-local RNG | default uniform projection |
 | `rand(rng, T)` | explicit `rng` | default uniform projection |
 | `rand(rng, T; projection = ρ)` | explicit `rng` | explicit `ρ` |
@@ -105,7 +105,7 @@ scalar calls when each element must use another explicit projection.
 sets it. `VALID_SHOW_STYLES` contains four values:
 
 | Style | Example rendering |
-|---|---|
+|:---|---|
 | `:value` | `1.625` |
 | `:codepoint` | `0x45` |
 | `:datum` | `(1.625 ≡ 0x45)` |

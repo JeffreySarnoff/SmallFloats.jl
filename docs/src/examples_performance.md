@@ -9,7 +9,7 @@ Reference format for per-operation tables: `Binary8p4se` under `(NearestTiesToEv
 The decode/compare/step/classify layer plus the projection engine. Operands: all code points — NaN and ±Inf sampled.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `decode` | 1.6 ns | 1.6 ns | 0 |
 | `order_key` | 1.6 ns | 1.8 ns | 0 |
 | `x < y` | 1.8 ns | 1.8 ns | 0 |
@@ -34,7 +34,7 @@ Each arity is measured under four operand classes — safe args, no NaN/Inf, no 
 Finite operands within each operation's safe domain — the fully unmasked per-operation scalar cost. The argument-restricted ops (Sqrt, RSqrt, Log, Log2, LogOnePlus, Recip, Divide, ArcSin, ArcCos, ArcCosh, ArcTanh) draw from explicit per-argument safe-domain predicates; every other op uses finite operand tuples whose defined result is not NaN (oracle-derived). Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Abs` | 4.9 ns | 6.7 ns | 0 |
 | `Negate` | 4.8 ns | 6.9 ns | 0 |
 | `Recip` | 7.9 ns | 18.0 ns | 0 |
@@ -71,7 +71,7 @@ Finite operands within each operation's safe domain — the fully unmasked per-o
 Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). Domain-restricted ops still take NaN fast rows on out-of-domain finite operands. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Sqrt` | 1.9 ns | 2.1 ns | 0 |
 | `ArcCosh` | 2.1 ns | 2.1 ns | 0 |
 | `ArcSinPi` | 1.9 ns | 2.2 ns | 0 |
@@ -108,7 +108,7 @@ Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). 
 Operands exclude the NaN code point; ±Inf and every finite datum are sampled. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `ArcCosh` | 2.1 ns | 2.1 ns | 0 |
 | `RSqrt` | 2.1 ns | 2.2 ns | 0 |
 | `Log` | 2.3 ns | 2.5 ns | 0 |
@@ -145,7 +145,7 @@ Operands exclude the NaN code point; ±Inf and every finite datum are sampled. S
 Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; medians of domain-restricted ops are diluted by instant NaN rows. Sorted by median. Transcendental rows mix special-row fast returns with enclosure-path evaluations, so these are *scalar-path* costs; bulk unary work routes through 256-byte tables (see Array kernels).
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Sqrt` | 1.9 ns | 2.0 ns | 0 |
 | `ArcCosh` | 2.1 ns | 2.1 ns | 0 |
 | `ArcSinPi` | 1.9 ns | 2.1 ns | 0 |
@@ -188,7 +188,7 @@ Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; med
 Finite operands within each operation's safe domain — the fully unmasked per-operation scalar cost. The argument-restricted ops (Sqrt, RSqrt, Log, Log2, LogOnePlus, Recip, Divide, ArcSin, ArcCos, ArcCosh, ArcTanh) draw from explicit per-argument safe-domain predicates; every other op uses finite operand tuples whose defined result is not NaN (oracle-derived). Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `MinimumMagnitude` | 4.9 ns | 7.1 ns | 0 |
 | `MaximumMagnitude` | 6.9 ns | 7.1 ns | 0 |
 | `CopySign` | 4.8 ns | 7.2 ns | 0 |
@@ -213,7 +213,7 @@ Finite operands within each operation's safe domain — the fully unmasked per-o
 Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). Domain-restricted ops still take NaN fast rows on out-of-domain finite operands. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `MinimumMagnitude` | 4.8 ns | 7.1 ns | 0 |
 | `MaximumMagnitude` | 6.9 ns | 7.1 ns | 0 |
 | `Minimum` | 4.7 ns | 7.2 ns | 0 |
@@ -238,7 +238,7 @@ Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). 
 Operands exclude the NaN code point; ±Inf and every finite datum are sampled. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `MinimumMagnitude` | 4.6 ns | 7.1 ns | 0 |
 | `MaximumMagnitude` | 5.0 ns | 7.1 ns | 0 |
 | `CopySign` | 5.0 ns | 7.2 ns | 0 |
@@ -263,7 +263,7 @@ Operands exclude the NaN code point; ±Inf and every finite datum are sampled. S
 Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; medians of domain-restricted ops are diluted by instant NaN rows. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `MinimumMagnitude` | 2.1 ns | 7.1 ns | 0 |
 | `MaximumMagnitude` | 1.9 ns | 7.1 ns | 0 |
 | `CopySign` | 2.1 ns | 7.2 ns | 0 |
@@ -290,7 +290,7 @@ Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; med
 Finite operands within each operation's safe domain — the fully unmasked per-operation scalar cost. The argument-restricted ops (Sqrt, RSqrt, Log, Log2, LogOnePlus, Recip, Divide, ArcSin, ArcCos, ArcCosh, ArcTanh) draw from explicit per-argument safe-domain predicates; every other op uses finite operand tuples whose defined result is not NaN (oracle-derived). Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Clamp` | 5.1 ns | 8.0 ns | 0 |
 | `FMA` | 8.1 ns | 9.6 ns | 0 |
 | `FAA` | 8.3 ns | 9.9 ns | 0 |
@@ -300,7 +300,7 @@ Finite operands within each operation's safe domain — the fully unmasked per-o
 Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). Domain-restricted ops still take NaN fast rows on out-of-domain finite operands. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Clamp` | 5.5 ns | 8.0 ns | 0 |
 | `FMA` | 8.3 ns | 9.7 ns | 0 |
 | `FAA` | 8.1 ns | 9.7 ns | 0 |
@@ -310,7 +310,7 @@ Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). 
 Operands exclude the NaN code point; ±Inf and every finite datum are sampled. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Clamp` | 5.2 ns | 8.0 ns | 0 |
 | `FMA` | 6.9 ns | 9.7 ns | 0 |
 | `FAA` | 7.1 ns | 9.7 ns | 0 |
@@ -320,7 +320,7 @@ Operands exclude the NaN code point; ±Inf and every finite datum are sampled. S
 Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; medians of domain-restricted ops are diluted by instant NaN rows. Sorted by median.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Clamp` | 2.1 ns | 8.0 ns | 0 |
 | `FMA` | 3.7 ns | 9.7 ns | 0 |
 | `FAA` | 4.1 ns | 9.7 ns | 0 |
@@ -334,7 +334,7 @@ How the scalar costs move with the format and with the projection specification.
 Same three binary ops across formats; `Binary8p1uf` exercises the wide-exponent-spread escalations, small-K formats the tiny-table regime. Operands: all code points — NaN and ±Inf sampled.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `Add⟨Binary8p4se⟩` | 3.7 ns | 9.0 ns | 0 |
 | `Divide⟨Binary8p4se⟩` | 2.5 ns | 18.3 ns | 0 |
 | `Multiply⟨Binary8p4se⟩` | 2.1 ns | 7.4 ns | 0 |
@@ -356,7 +356,7 @@ Same three binary ops across formats; `Binary8p1uf` exercises the wide-exponent-
 `project(Binary8p4se, ρ, x)` over the mode vocabulary (stochastic budgets N = 8). Operands: all code points — NaN and ±Inf sampled.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `NearestTiesToEven` | 2.0 ns | 6.7 ns | 0 |
 | `NearestTiesToAway` | 2.8 ns | 7.7 ns | 0 |
 | `TowardPositive` | 3.0 ns | 6.0 ns | 0 |
@@ -378,7 +378,7 @@ Array-shaped work: the table-gather and compute kernels, the ternary bitwidth po
 Warm caches: table specializations prebuilt, so table rows measure the gather; scalar-loop rows measure the full compute pipeline per element. The ternary row here is `Binary8p4se` (K=8, always the compute path); see the next section for how the ternary bitwidth policy behaves across K. Operands: all code points — NaN and ±Inf sampled.
 
 | operation | min | median | allocs | per element |
-|---|---|---|---|---|
+|:---|---|---|---|---|
 | `vmap unary (table gather), n=65536` | 8.56 μs | 8.71 μs | 0 | 0.13 ns/elem — 7.52 Gelem/s |
 | `vmap binary (table gather), n=65536` | 16.45 μs | 16.81 μs | 0 | 0.26 ns/elem — 3.9 Gelem/s |
 | `vmap ternary (scalar loop), n=65536` | 1.01 ms | 1.02 ms | 0 | 15.54 ns/elem — 0.06 Gelem/s |
@@ -390,7 +390,7 @@ Warm caches: table specializations prebuilt, so table rows measure the gather; s
 `FMA`/`FAA`/`Clamp` are total functions on `2^(K1+K2+K3)` code points, but that count spans 512 B (K=3) to 16 MiB (K=8), so the array kernel tables small operand formats eagerly, tables mid-size ones adaptively (after enough elements amortize the build; not shown here — see the adaptive-cache gate in `test/ternary_opt.jl`), and always runs the scalar compute kernel at K=8, threaded above a size cutoff when `Threads.nthreads() > 1`. Each tier's optimized row is paired with a scalar-loop baseline (policy Refs forced off around the measurement, restored after) so the win is visible per tier; this process has 1 Julia thread. No threaded/sequential comparison below — rerun with `julia -t N` (N > 1) to see it. Same reference format, ρ, and operand pool discipline as Array kernels above.
 
 | operation | min | median | allocs | per element |
-|---|---|---|---|---|
+|:---|---|---|---|---|
 | `FMA K=4 (eager table), n=65536` | 19.58 μs | 20.46 μs | 0 | 0.31 ns/elem — 3.2 Gelem/s |
 | `FMA K=4 (eager table), scalar-loop baseline, n=65536` | 967.88 μs | 974.03 μs | 0 | 14.86 ns/elem — 0.07 Gelem/s |
 | `FMA K=6 (eager table), n=65536` | 24.03 μs | 24.34 μs | 0 | 0.37 ns/elem — 2.69 Gelem/s |
@@ -403,7 +403,7 @@ Warm caches: table specializations prebuilt, so table rows measure the gather; s
 Counting sort is installed as the default algorithm for `Binary` vectors. Operands: all code points — NaN and ±Inf sampled.
 
 | operation | min | median | allocs |
-|---|---|---|---|
+|:---|---|---|---|
 | `sort! (counting sort via defalg), n=65536` | 155.36 μs | 157.4 μs | 2 |
 | `sort! (stock comparison sort), n=65536` | 1.36 ms | 1.37 ms | 3 |
 | `sort! rev=true (counting sort), n=65536` | 155.48 μs | 157.95 μs | 2 |
@@ -413,7 +413,7 @@ Counting sort is installed as the default algorithm for `Binary` vectors. Operan
 Cold cache per sample (`empty_tables!` in untimed setup); JIT pre-warmed. The warm-hit column is the steady-state cost of `get_table` when the specialization is already cached (min / median). Table entries enumerate every code point by construction (NaN and ±Inf included).
 
 | operation | min | median | allocs | warm hit |
-|---|---|---|---|---|
+|:---|---|---|---|---|
 | `Exp⟨8p4se⟩ (256 entries)` | 30.31 μs | 31.16 μs | 257 | 65.8 ns / 67.4 ns |
 | `Tanh⟨8p4se⟩ (256 entries)` | 29.49 μs | 30.93 μs | 257 | 65.4 ns / 67.5 ns |
 | `Add⟨8p4se×8p4se⟩ (64 K entries)` | 13.77 ms | 13.93 ms | 458754 | 65.0 ns / 66.6 ns |
@@ -425,7 +425,7 @@ Cold cache per sample (`empty_tables!` in untimed setup); JIT pre-warmed. The wa
 Elements `Binary8p4se`, scales `Binary8p1uf`, B = 32. Operands: all code points — NaN and ±Inf sampled.
 
 | operation | min | median | allocs | per lane |
-|---|---|---|---|---|
+|:---|---|---|---|---|
 | `BlockAdd (B=32)` | 963.7 ns | 1.17 μs | 35 | 36.65 ns/lane |
 | `BlockDotProduct → 8p4se (B=32)` | 211.3 ns | 265.3 ns | 3 | 8.29 ns/lane |
 | `BlockReduceAdd → 8p4se (B=32)` | 43.5 ns | 489.4 ns | 0 | 15.29 ns/lane |
@@ -436,7 +436,7 @@ Elements `Binary8p4se`, scales `Binary8p1uf`, B = 32. Operands: all code points 
 Operands: all code points — NaN and ±Inf sampled.
 
 | operation | min | median | allocs | per element |
-|---|---|---|---|---|
+|:---|---|---|---|---|
 | `T(::UInt8) code-point constructor` | 1.8 ns | 1.8 ns | 0 |  |
 | `rawvalue (unchecked kernel route)` | 1.8 ns | 1.8 ns | 0 |  |
 | `T(::Float64) numeric constructor (projects)` | 3.2 ns | 7.7 ns | 0 |  |

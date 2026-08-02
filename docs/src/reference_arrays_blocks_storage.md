@@ -9,7 +9,7 @@ values, and packed storage. For procedures, use
 ## Array operation forms
 
 | Form | Signature | Related guide |
-|---|---|---|
+|:---|---|---|
 | Unary array | `Op(fr, ρ, A)` | [Cheat Sheet](help_cheat_sheet.md) |
 | Binary array | `Op(fr, ρ, A, B)` | [Cheat Sheet](help_cheat_sheet.md) |
 | Ternary array | `Op(fr, ρ, A, B, C)` | [Cheat Sheet](help_cheat_sheet.md) |
@@ -22,7 +22,7 @@ Operands and destination must have matching axes.
 ## Table cache introspection
 
 | Function | Signature | Notes | Related guide |
-|---|---|---|---|
+|:---|---|---|---|
 | `table_bytes` | `table_bytes()` | current cache footprint, bytes | [Cheat Sheet](help_cheat_sheet.md) |
 | `empty_tables!` | `empty_tables!()` | reset the table cache | [Cheat Sheet](help_cheat_sheet.md) |
 
@@ -35,7 +35,7 @@ consume one draw per projection.
 ## Block functions
 
 | Function | Signature | Related guide |
-|---|---|---|
+|:---|---|---|
 | `blocksize` | `blocksize(b)` | [Cheat Sheet](help_cheat_sheet.md) |
 | `scaleformat` | `scaleformat(b)` | [Cheat Sheet](help_cheat_sheet.md) |
 | `elemformat` | `elemformat(b)` | [Cheat Sheet](help_cheat_sheet.md) |
@@ -56,7 +56,7 @@ Every scalar operation except `Convert` has a generated block form and a
 generated scaled form.
 
 | Pattern | Signature |
-|---|---|
+|:---|---|
 | `BlockOp` | `BlockOp(fr, ρ, b1, b2, result_scale)` (arity follows the underlying `Op`) |
 | `ScaledOp` | `ScaledOp(fr, ρ, scale1, x1, scale2, x2, ...)` (block size 1; arity follows the underlying `Op`) |
 
@@ -79,7 +79,7 @@ same-shape `Block`s.
 ## `PackedVector`
 
 | Operation | Signature | Notes |
-|---|---|---|
+|:---|---|---|
 | Construct | `PackedVector(v)` | `v::AbstractVector{F}` |
 | Index (read) | `pv[i]` | returns an `F` |
 | Index (write) | `pv[i] = x` | `x::F` |

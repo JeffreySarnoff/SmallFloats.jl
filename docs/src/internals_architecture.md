@@ -34,7 +34,7 @@ honest.
 Source files load in dependency order, each layer speaking only downward:
 
 | layer | file | provides |
-|---|---|---|
+|:---|---|---|
 | formats | `formats.jl` | `Binary{K,P,SGN,EXT}`, the 504 named aliases, Group M queries |
 | specs | `projspec.jl` | rounding/saturation singletons, `ProjSpec{R,S}`, the predefined spec grid |
 | defaults | `defaults.jl` | settable session defaults (`DefaultType`, `DefaultProjection`, …) behind `Ref`s; consumed via the speculation guard |

@@ -4,7 +4,7 @@ Every operation's defined result is computed by `ωeval`, which returns one of f
 result kinds; `apply_op` fast-splits the common one and finishes the rest:
 
 | kind | meaning | finished by |
-|---|---|---|
+|:---|---|---|
 | `Float64` | exact (specials; representable arithmetic) | direct `project` |
 | `Dyadic` | exact at rung 3: an `Int128` significand and an `Int64` exponent, `isbits` | direct `project` (dyadic carrier) |
 | `Float128` | exact by **width analysis** | direct `project` (Float128 carrier) |

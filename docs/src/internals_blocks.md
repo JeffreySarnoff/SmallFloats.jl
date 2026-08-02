@@ -51,10 +51,10 @@ accumulate in.
 `blockdecode` produces `ωMultiply(decode(s), decode(xᵢ))` per lane, exactly, on
 a carrier chosen from **both** formats.
 
-That last point is the whole content of the function, and it is a trap worth
-naming. A block's scale and element formats are independent, and what has to fit
-is their *product*. The carrier rule is `ΣBᵢ ≤ emax`, so two formats that are
-each comfortable alone can compose into a lane product that is not: a
+That last point is the whole content of the function, and it prevents a subtle
+misapplication. A block's scale and element formats are independent, and what
+has to fit is their *product*. The carrier rule is `ΣBᵢ ≤ emax`, so two formats
+that are each comfortable alone can compose into a lane product that is not: a
 `Binary16p1uf` scale reaches `2^32768`. Selecting the carrier from either
 format's own rung would overflow to `±Inf` — a plausible-looking special value
 rather than an error, which is the worst available failure mode. The carrier is

@@ -10346,7 +10346,7 @@ On the host recorded in the \href{examples\_\allowbreak{}performance.md}{benchma
 
 
 
-\begin{tcolorbox}[toptitle=-1mm,bottomtitle=1mm,colback=admonition-warning!50!white,colframe=admonition-warning,title=\textbf{The 60× trap}]
+\begin{tcolorbox}[toptitle=-1mm,bottomtitle=1mm,colback=admonition-warning!50!white,colframe=admonition-warning,title=\textbf{The 60× misapplication}]
 The same call with \texttt{T} read from a non-\texttt{const} global measures {\textasciitilde}1 µs — Julia{\textquotesingle}s dynamic keyword dispatch, not this package. Two project post-mortems trace to exactly this mistake; the shipped \texttt{benchmarking/\allowbreak{}benchmarking.jl} asserts specialization (zero warm-path allocation) before it believes any number, and so should yours.
 
 \end{tcolorbox}
@@ -12025,7 +12025,7 @@ So the reduction must be exact before it is projected. The question is what to a
 
 
 
-That last point is the whole content of the function, and it is a trap worth naming. A block{\textquotesingle}s scale and element formats are independent, and what has to fit is their \emph{product}. The carrier rule is \texttt{ΣBᵢ ≤ emax}, so two formats that are each comfortable alone can compose into a lane product that is not: a \texttt{Binary16p1uf} scale reaches \texttt{2{\textasciicircum}32768}. Selecting the carrier from either format{\textquotesingle}s own rung would overflow to \texttt{±Inf} — a plausible-looking special value rather than an error, which is the worst available failure mode. The carrier is therefore keyed on \texttt{rung(\allowbreak{}Val(\allowbreak{}:Multiply), FS, FE)}.
+That last point is the whole content of the function, and it prevents a subtle misapplication. A block{\textquotesingle}s scale and element formats are independent, and what has to fit is their \emph{product}. The carrier rule is \texttt{ΣBᵢ ≤ emax}, so two formats that are each comfortable alone can compose into a lane product that is not: a \texttt{Binary16p1uf} scale reaches \texttt{2{\textasciicircum}32768}. Selecting the carrier from either format{\textquotesingle}s own rung would overflow to \texttt{±Inf} — a plausible-looking special value rather than an error, which is the worst available failure mode. The carrier is therefore keyed on \texttt{rung(\allowbreak{}Val(\allowbreak{}:Multiply), FS, FE)}.
 
 
 
@@ -13958,11 +13958,11 @@ Approximate implementations are never substituted into the default API.
 
 
 \needspace{31\baselineskip}
-\subsection{Common traps}
+\subsection{Common missteps}
 
 
 
-\label{455411289700343066}{}
+\label{17066561505140199306}{}
 
 
 
@@ -13970,7 +13970,7 @@ Approximate implementations are never substituted into the default API.
 \centering
 \begin{tabulary}{\linewidth}{L L}
 \toprule
-Trap & Correct pattern \\
+Misapplication & Correct pattern \\
 \toprule
 Treating an \texttt{Unsigned} as a number & \texttt{T(Int(c))} for a numeric integer; \texttt{T(c::Unsigned)} for a code point — at every width \\
 \texttt{Vector\{Binary\{K,P,Σ,Δ\}\}(undef, n)} & \textbf{Silently boxes every element} — the abstract format is not \texttt{isbits}. Use \texttt{Vector\{Binary8p4se\}} or \texttt{Vector\{format(K,P,Σ,Δ)\}}. \texttt{similar} normalizes; \texttt{Vector\{…\}(undef, n)} cannot be intercepted \\

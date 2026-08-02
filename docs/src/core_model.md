@@ -134,7 +134,7 @@ modes land exactly on asymptotes.
 A projection specification is the pair of two independent choices:
 
 | | what it decides | examples |
-|---|---|---|
+|:---|---|---|
 | **rounding mode** | which neighbor a between-grid value lands on | nearest-ties-even, toward zero, toward ±∞, stochastic |
 | **saturation mode** | what an out-of-range result becomes | clamp to finite (`SF`), propagate infinities (`SP`), draft rows (`SN`) |
 

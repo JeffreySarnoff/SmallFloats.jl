@@ -358,7 +358,7 @@ row has a 9.0 ns median and zero allocations. Treat that as a check on the
 methodology, not a portable expected value: the tuple printed by this snippet
 depends on your CPU, Julia build, and benchmark environment.
 
-!!! warning "The 60× trap"
+!!! warning "The 60× misapplication"
     The same call with `T` read from a non-`const` global measures ~1 µs — Julia's
     dynamic keyword dispatch, not this package. Two project post-mortems trace to
     exactly this mistake; the shipped `benchmarking/benchmarking.jl` asserts
