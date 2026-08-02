@@ -5,7 +5,7 @@
 
 Run a representative, deadline-aware subset of `benchmarking.jl`. `RUNTIME` is a
 positive duration such as `30`, `30s`, `2m`, or `0.5h`; a bare number means
-seconds. The default output is `benchmarking/faster_benchmark_report.md`.
+seconds. The default output is `benchmarking/faster_benchmarking_report.md`.
 
 The budget starts before dependencies are loaded, so it includes package loading,
 JIT compilation, operand preparation, measurements, and report generation. It
@@ -16,7 +16,7 @@ progress cannot be interrupted, so the limit is necessarily approximate.
 const FAST_START_NS = time_ns()
 include(joinpath(@__DIR__, "benchmarking.jl"))
 
-const FAST_DEFAULT_OUTPUT = joinpath(@__DIR__, "faster_benchmark_report.md")
+const FAST_DEFAULT_OUTPUT = joinpath(@__DIR__, "faster_benchmarking_report.md")
 const FAST_DEFAULT_SEED = 2026
 const FAST_POOL_SIZE = 512
 const FAST_ARRAY_SIZE = 16_384
@@ -52,6 +52,10 @@ end
 
 elapsed_seconds() = (time_ns() - FAST_START_NS) / 1.0e9
 
+"""Resolve a bare output filename beside this script; preserve explicit paths."""
+resolve_output_path(path::AbstractString) =
+    basename(path) == path ? joinpath(@__DIR__, path) : path
+
 function parse_duration(text::AbstractString)
     m = match(r"^\s*(\d+(?:\.\d*)?|\.\d+)\s*(ms|s|m|h)?\s*$"i, text)
     m === nothing && throw(ArgumentError("invalid runtime '$text'"))
@@ -69,7 +73,8 @@ function usage(io::IO=stdout)
     println(io, "Usage: julia --project=benchmarking benchmarking/faster_benchmarking.jl ",
             "RUNTIME [OUTPUT] [SEED]")
     println(io, "  RUNTIME  positive duration: 30, 30s, 2m, or 0.5h")
-    println(io, "  OUTPUT   Markdown report (default: benchmarking/faster_benchmark_report.md)")
+    println(io, "  OUTPUT   Markdown report; bare filenames are written under benchmarking/")
+    println(io, "           (default: benchmarking/faster_benchmarking_report.md)")
     println(io, "  SEED     random seed (default: $FAST_DEFAULT_SEED)")
 end
 
@@ -280,7 +285,8 @@ function write_report(path, target, actual, seed, slice, passes, measurements,
                 "compilation or table build cannot be interrupted and can cause an overshoot.\n")
 
         sections = unique(r.section for r in results)
-        for section in sections
+        for (section_index, section) in enumerate(sections)
+            section_index > 1 && println(io)
             println(io, "## $section\n")
             println(io, "| benchmark | min | median | allocs | samples | context |")
             println(io, "|:---|---:|---:|---:|---:|:---|")
@@ -290,9 +296,9 @@ function write_report(path, target, actual, seed, slice, passes, measurements,
                         "$(fmt_time(r.median)) | $(fmt_alloc(r.allocations)) | $(r.samples) | ",
                         "$(markdown_escape(r.context)) |")
             end
-            println(io)
         end
         if !isempty(failures)
+            isempty(sections) || println(io)
             println(io, "## Cases that failed\n")
             println(io, "| benchmark | error |")
             println(io, "|:---|:---|")
@@ -400,7 +406,7 @@ function main(args=ARGS)
     end
     1 <= length(args) <= 3 || throw(ArgumentError("expected RUNTIME [OUTPUT] [SEED]"))
     target = parse_duration(args[1])
-    output = length(args) >= 2 ? args[2] : FAST_DEFAULT_OUTPUT
+    output = length(args) >= 2 ? resolve_output_path(args[2]) : FAST_DEFAULT_OUTPUT
     seed = length(args) >= 3 ? parse(Int, args[3]) : FAST_DEFAULT_SEED
     run_fast_benchmarks(target, output; seed) ? 0 : 1
 end
