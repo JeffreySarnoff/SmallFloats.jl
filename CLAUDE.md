@@ -5,7 +5,8 @@
 the original doctrine file was not carried over by the rename from
 `ByteFloats.jl`, so invariants 1–7 are restored from the statements in
 `src/` and from [docs/other/extendingK.md §10](docs/other/extendingK.md).
-Invariants 8–10 are new and belong to the extension.*
+Invariants 8–10 are new and belong to the extension. Reviewed against the
+source 2026-08-02; §"What review found" records what was wrong.*
 
 A conforming, performance-oriented implementation of the IEEE P3109 draft
 standard. Bit-exact defined results on every default path; approximate fast
@@ -67,7 +68,13 @@ format type or a value uses *that* type; it never re-forms `Binary{K,P,S,E}`
 from destructured parameters. Rebuilding yields the abstract format, which is
 not a valid array element type and not a valid constructor target — and, in a
 `Ref{Type{<:Binary}}`, it stores silently. `Binary{K` appearing in a method
-**body** (as opposed to a signature) is a defect; grep enforces it.
+**body** (as opposed to a signature) is a defect, and `stage_gates.jl` enforces
+it by scanning `src/` with docstrings and comments stripped. The gate is
+textual, which is the right strength here — the defect *is* a spelling. Two
+exemptions, both type-position: `reptype(Binary{…})`, the documented route from
+the abstract format to its concrete representation, and `reptype`/`_rep`'s own
+definitions, which exist to consume it. Until 2026-08-02 this paragraph claimed
+a grep that had never been written.
 
 **9. Policy is dispatch, never a branch.** The evaluation carrier, the storage
 unit, the decode policy, the order-key type, and the table cache are singleton
@@ -94,12 +101,25 @@ comment at the top of `src/SmallFloats.jl`. **Changing the order means changing
 that comment in the same commit.**
 
 ```
-formats → projspec → defaults → decode_encode → project → ops_scalar
-        → juliacompat → oracle → tables → kernels → blocks → packed
-        → approx → rand
+formats → show → carriers → projspec → defaults → decode_encode → project
+        → ops_scalar → juliacompat → oracle → tables → kernels → blocks
+        → packed → approx → rand
 ```
 
-(`fma128.jl` and `faa128.jl` are vendored `Float128` modules and load first.)
+Three files load before that chain, in this order:
+
+1. `dyadic.jl` — **first, and with zero SmallFloats dependencies.** The rung-3
+   exact carrier must be checkable on its own terms, reaching for no format, no
+   trait and no projection.
+2. `fma128.jl`, `faa128.jl` — vendored `Float128` modules.
+
+`show.jl` follows `formats.jl` because it needs `formatname`, `codeunit_type`
+and `_shortdatum` and nothing later; loading the display layer early keeps it
+available to every subsequent file's error paths.
+
+*This block was itself stale until 2026-08-02: it omitted `show` and `carriers`,
+and credited `fma128.jl` with loading first. The rule above is only worth having
+if it is obeyed for this file too.*
 
 ---
 
@@ -117,6 +137,14 @@ formats → projspec → defaults → decode_encode → project → ops_scalar
   or global loads per element.
 - Warm scalar paths allocate zero. This is pinned as a deterministic
   regression, not asserted by timing.
+- **`@boundscheck` elides only under an `@inbounds` caller.** A precondition
+  guarded that way is *not* free by default: `mul_dy` carried its width check
+  under `@boundscheck` while no `oracle.jl` call site was `@inbounds`, so the
+  check ran on every rung-3 multiply at **3.3×** the cost of the multiply
+  (5.17 → 1.55 µs / 4096 pairs). Where a checked and an unchecked form are both
+  wanted, give them **two names** — `mul_dy` / `mul_dy_checked` — so the
+  contract is visible at the call site instead of depending on an annotation
+  nobody wrote.
 - Cold, per-signature code (table builders, conformance reporting, κ
   measurement) is left to specialize. Do not reach for `@nospecialize` there —
   its whole value is specialization; compile latency is managed through the
@@ -127,18 +155,31 @@ formats → projspec → defaults → decode_encode → project → ops_scalar
 ## Verification doctrine
 
 The suite **enumerates rather than samples** wherever the input space allows
-it — ≈ 8.9 M assertions today. Read precisely, that is a theorem with a
+it — **35 332 465 compared units** at the default tier, the figure the roll-call
+prints at the end of every run. (This said "≈ 8.9 M" until 2026-08-02; that was
+the K ≤ 8 number, left behind by the extension.) Read precisely, that is a theorem with a
 hypothesis (`K ≤ 8` ⇒ every specialization's input space is ≤ 2^24 points), so
 under the K ≤ 16 extension it is restated rather than stretched: see
 [docs/other/implementextensions.md §6](docs/other/implementextensions.md).
 The rule that does not change: **where enumeration is affordable it is
 mandatory, and where it is not, the output says "sampled" in so many words.**
 
-Standing gates: G1 `_DE_*` thresholds · G2 `bigprec` sufficiency ·
-G3 `_rtp_f64` bit ≡ generic · G4 rung-selection equivalence · G5 K ≤ 8 golden
-non-regression · G6 carrier-lift exactness · G7 `HeadExact` carrier swap ·
-G8 representation invariant at every K · G9 trait folding ·
+**The roll-call requires fourteen entries, not ten**, and `gatelog.jl`'s
+`REQUIRED_GATES` is the list that must not go missing — named there rather than
+derived, because a list derived from what ran cannot detect what did not run.
+
+Gates: G1 `_DE_*` thresholds · G2 `bigprec` sufficiency · G3 `_rtp_f64` bit ≡
+generic · G4 rung-selection equivalence · G5 K ≤ 8 golden non-regression ·
+G6 carrier-lift exactness · G7 `HeadExact` carrier swap · G9 trait folding ·
 G10 surface totality at every rung.
+
+Tiers: T1 (every code point of all 504 formats) · T2a · T2b · Tρ (stochastic) ·
+D↔Q (`Dyadic` ↔ `Rational`).
+
+**G8 has no file, and that is deliberate.** The representation invariant is
+asserted inside every constructor and swept by T1's encode round-trip at every
+K, so it is absent from `REQUIRED_GATES` by design. Naming it here — and in the
+roll-call's printed note — keeps the gap from reading as an omission.
 
 **G10 is the one gate that is broad rather than deep, and it exists because the
 other nine are deep rather than broad.** Every one of them compares two answers,
@@ -189,9 +230,26 @@ proving the real path is clean. A filter without one hides a defect.
 
 ## Benchmark doctrine
 
-Recorded after two measurement post-mortems: a benchmark closure over any
-non-`const` global measures Julia's dispatch machinery, not the code under
-test — and it distorts *ratios*, not just absolutes.
+Recorded after **four** measurement post-mortems. The first two: a benchmark
+closure over any non-`const` global measures Julia's dispatch machinery, not the
+code under test — and it distorts *ratios*, not just absolutes.
+
+The third and fourth were found on 2026-08-01 and are about the *harness*, not
+the closure:
+
+- **One variant per process, alternating, or nothing.** A harness that compiles
+  several variants in one process is not a measurement. It reported an
+  `add_sticky_dy` rewrite as a 1.87× *win*; alternating single-variant processes
+  reversed the same comparison into a 31% *loss*, and the shipped code kept the
+  slower spelling on the strength of the first number until the second was run.
+  A related form: timing two kernels sequentially in one process let the first
+  perturb the second into a 39% phantom regression on code that had not changed.
+- **A loop that overwrites its accumulator measures dead-code elimination.**
+  `z = f(xs[i])` leaves every iteration but the last dead, and whether the loop
+  survives depends on whether the compiler can prove the body pure — so it
+  compares *elimination* between implementations rather than work. Measured: a
+  pure kernel under that loop reported 8 ns for 4096 elements. Reduce into an
+  accumulator and end with `Base.donotdelete`.
 
 - Format types enter as type parameters, never as globals.
 - Operands come from untimed setup.
@@ -211,6 +269,69 @@ test — and it distorts *ratios*, not just absolutes.
 
 Vary one binding per variant; verify specialization before believing a number.
 
+
+---
+
+## Semantics that diverge from Julia's, deliberately
+
+Two places where following Julia's convention would be *wrong*, so the package
+does not — and where a well-meaning "fix" would be a regression.
+
+**The total order puts NaN FIRST, below −Inf** (draft §4.12.1), which is the
+opposite end from `Float64` sorting. `order_key` reserves key `0` for the single
+NaN; every datum key is ≥ 1, so no finite key moves. This reaches further than
+`sort`: `isless`, `isunordered`, `max`/`min`/`minmax` (which propagate NaN as
+the floats do) and the O(n) counting sort all follow from it. The engine's own
+`Max`/`Min` registry operations carry the *draft's* semantics and are separate
+from Julia's `max`/`min` — do not unify them.
+
+*The implementation said the opposite until 2026-08-02: `nan_order_key` was
+`typemax(orderkeytype(F))`, from an interpretation made while the §4.12.1 text
+was unavailable, and `under_engine.md` had been documenting the correct
+behaviour against an implementation that did not do it.*
+
+**`Binary <: Real`, but `Dyadic <: Real` and NOT `<: AbstractFloat`.** Methods
+throughout the package spell `::AbstractFloat` to mean "a float carrier", and
+`Dyadic` implements roughly ten operations rather than the whole `AbstractFloat`
+obligation. Subtyping `Real` is what keeps `promote_rule` honest: `promotecarrier`
+targets `BigFloat`, never `Dyadic`, so a value escaping to a caller carries a
+complete interface. `float(::Dyadic)` is deliberately **not** defined — defining
+it silently re-opens a path this carrier exists to avoid.
+
+---
+
+## Display is a view, never a semantic
+
+`show.jl` provides four styles — `:value` (the default: a `Binary` prints as the
+number it denotes), `:codepoint`, `:datum`, `:typed` — selected process-wide by
+`set_show_style!` or per-stream by an `:binary_show_style` `IOContext` property,
+and queried by `get_show_style()` / `get_show_style(io)`.
+
+Three rules:
+
+- **No style may change a result.** The style is consumed by `show` and by
+  nothing else; no kernel, trait or projection reads it.
+- **`show` must never be the thing that throws.** A failing testset has to be
+  able to print the values it is comparing, at every carrier.
+  `stage_gates.jl` pins the exact rendering of all four styles and sweeps every
+  format for "does not throw".
+- **The documentation renders `:typed`, and the harness establishes that** —
+  `docs_examples.jl` sets it per file exactly as it restores the other
+  process-global session defaults. The convention therefore cannot silently
+  disagree with the package default, which is `:value`.
+
+*Prior art in the same file, all fixed 2026-08-02: a duplicate `Base.show`
+shadowed the style dispatcher, so every two-argument `show` ignored the setting;
+`get_show_style()` read an undefined `io` and threw on every call; and a
+duplicate `_fully_instantiated` made method overwriting during precompilation an
+**error**, so the package silently ran unprecompiled.*
+
+---
+
+## What review found important
+
+The 2026-08-02 review checked every falsifiable claim in this file against the source. Six were wrong, The lesson worth keeping: **a doctrine file is code that nothing executes.** Every claim in it that can be checked should be checked by something, and the ones that cannot should say so.
+
 ---
 
 ## Deliberate limitations
@@ -224,10 +345,20 @@ representation invariant, neither of which an outside subtype can be held to.
 
 ---
 
-## Work in progress
+## Where the design record lives
 
-The K ≤ 16 extension is staged in
-[docs/other/implementextensions.md](docs/other/implementextensions.md) §4.
-Read §1 (findings) before touching `formats.jl`, `oracle.jl`, or `defaults.jl`.
+**The K ≤ 16 extension is executed — Stages 0–9 complete.** The package ships
+the 504-format lattice, wide decode/encode and block paths, cost-gated tables,
+the three carrier heads, the exact `Dyadic` rung, and the quick/default/release
+test tiers. (This section read "work in progress" until 2026-08-02.)
+
+[docs/other/implementextensions.md](docs/other/implementextensions.md) is now an
+**executed plan and gate ledger**: §4 is the dependency-ordered specification,
+§11 is what actually happened, and **where they differ, §11 and the current
+source win**. Read §1 (findings) before touching `formats.jl`, `oracle.jl`, or
+`defaults.jl` — the findings are still live even though the stages are done.
+
+The live map: representation in `formats.jl`, carriers in `carriers.jl`, exact
+arithmetic in `dyadic.jl`, display in `show.jl`, gates in `test/`.
 
 

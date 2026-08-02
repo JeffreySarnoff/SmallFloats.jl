@@ -33,8 +33,22 @@ julia --project=benchmarking benchmarking/benchmarking.jl \
 
 The suite is intentionally comprehensive and can take several minutes. Runtime
 depends on the host, Julia version, thread count, and whether compilation caches
-are warm. There is no abbreviated mode: a partial run would not produce the same
-report contract.
+are warm. For rapid feedback, run the deadline-aware companion with an approximate
+wall-clock budget:
+
+```sh
+julia --project=benchmarking benchmarking/faster_benchmarking.jl 30s \
+    benchmarking/faster_benchmark_report.md
+```
+
+The duration accepts bare seconds or `ms`, `s`, `m`, and `h` suffixes. The fast
+runner includes dependency loading, compilation, setup, sampling, and report
+generation in its budget; only Julia process startup precedes its timer. It first
+samples one case from every major area, adds broader coverage at 12, 30, and 60
+seconds, and uses remaining time to refine completed measurements. An in-progress
+compilation or table build cannot be interrupted, so the limit is approximate.
+This representative report is deliberately not a replacement for the full report
+contract when accepting or publishing a baseline.
 
 To exercise the threaded ternary-kernel comparison, start Julia with more than
 one thread:

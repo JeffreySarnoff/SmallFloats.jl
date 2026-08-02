@@ -46,9 +46,15 @@ using .Float128FMA          # on Windows this installs Base.fma
 include("faa128.jl")
 using .Float128FAA          
 
-# Include order: formats → carriers → projspec → defaults → decode_encode →
-# project → ops_scalar → juliacompat → oracle → tables → kernels → blocks →
-# packed → approx → rand.
+# Include order: formats → show → carriers → projspec → defaults →
+# decode_encode → project → ops_scalar → juliacompat → oracle → tables →
+# kernels → blocks → packed → approx → rand.
+#
+# `show.jl` sits directly after `formats.jl` because it needs `formatname`,
+# `codeunit_type` and `_shortdatum` and nothing later; putting the display layer
+# early also keeps it available to every subsequent file's error paths, which is
+# the property `stage_gates.jl` pins ("`show` must never be the thing that
+# throws").
 # (One deliberate delta from the architecture §11 listing: the evaluation-protocol
 # structs BigExactF/EncloseF live in ops_scalar.jl per §6, so ops_scalar precedes
 # oracle; oracle's references to them are function-body-late-bound either way, but

@@ -202,3 +202,72 @@ using SmallFloats: _NAMED, KMIN, KMAX, KSPLIT, rung, HeadF64, HeadF128, HeadExac
     end
 
 end
+
+# ---------------------------------------------------------------------------
+# Invariant 8, enforced rather than asserted (CLAUDE.md "Format types are
+# propagated, never rebuilt").
+#
+# The doctrine said "`Binary{K` appearing in a method body is a defect; grep
+# enforces it." No such gate existed — the claim had been true only as an
+# intention. It is written here so the sentence stops being aspirational.
+#
+# Why the invariant matters: `Binary{K,P,S,E}` is the ABSTRACT format. Rebuilt
+# from destructured parameters it is not a valid array element type and not a
+# valid constructor target, and stored into a `Ref{Type{<:Binary}}` it goes in
+# silently. The concrete representation is what code must carry.
+#
+# What this gate can and cannot see: it is textual. It strips comments and
+# docstrings, then looks at what remains, so it catches the spelling rather than
+# the semantics. That is the right strength for this invariant — the defect IS a
+# spelling, and a type-level check would need the abstract type to be
+# unconstructible, which it cannot be while `reptype` must accept it.
+#
+# Legitimate appearances, all in TYPE position or in the one function whose job
+# is to resolve the abstract spelling:
+#   * signatures — `::Type{Binary{K,P,S,E}}`, `<:Binary{...}`, `where` clauses
+#   * `reptype(Binary{...})` — the documented conversion to the concrete type
+#   * `reptype`/`_rep`'s own definitions, which exist to consume it
+@testset "invariant 8 — the abstract format is never rebuilt in a method body" begin
+    srcdir = joinpath(@__DIR__, "..", "src")
+    files = sort!(filter(f -> endswith(f, ".jl"), readdir(srcdir)))
+    @test !isempty(files)
+
+    # Strip docstrings and comments; keep line numbers so a hit can be located.
+    function codelines(path)
+        out = Tuple{Int,String}[]
+        indoc = false
+        for (i, raw) in enumerate(eachline(path))
+            n = count(_ -> true, eachmatch(r"\"\"\"", raw))
+            if indoc
+                indoc = isodd(n) ? false : true
+                continue
+            elseif isodd(n)
+                indoc = true
+                continue
+            end
+            code = first(split(raw, '#'))            # drop trailing comments
+            code = replace(code, r"\"[^\"]*\"" => "\"\"")   # drop string literals
+            isempty(strip(code)) || push!(out, (i, code))
+        end
+        out
+    end
+
+    allowed(code) =
+        occursin("reptype(", code)      ||   # the documented resolution route
+        occursin("::Type{", code)       ||   # signature
+        occursin("<:Binary{", code)     ||   # signature
+        occursin("where", code)         ||   # signature
+        occursin("struct", code)        ||
+        occursin("abstract", code)      ||
+        occursin("_rep(", code)              # reptype's own dispatch pair
+
+    offenders = String[]
+    for f in files
+        for (i, code) in codelines(joinpath(srcdir, f))
+            occursin("Binary{", code) || continue
+            allowed(code) || push!(offenders, "$f:$i: $(strip(code))")
+        end
+    end
+    @test offenders == String[]
+    isempty(offenders) || foreach(o -> println("  invariant 8 violation: ", o), offenders)
+end
