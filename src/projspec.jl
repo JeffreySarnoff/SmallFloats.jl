@@ -7,19 +7,21 @@
 # pure-vs-stochastic dispatch is static (pure ⇒ tabulable, stochastic ⇒ never).
 
 abstract type RoundingMode3109 end
+abstract type DeterministicRoundingMode <: RoundingMode3109 end
+abstract type StochasticRoundingMode <: RoundingMode3109 end
 
 "Round to nearest; ties to the even code point (IEEE default; draft §4.7.1)."
-struct NearestTiesToEven <: RoundingMode3109 end
+struct NearestTiesToEven <: DeterministicRoundingMode end
 "Round to nearest; ties away from zero (draft §4.7.1)."
-struct NearestTiesToAway <: RoundingMode3109 end
+struct NearestTiesToAway <: DeterministicRoundingMode end
 "Directed rounding toward +∞ (draft §4.7.2)."
-struct TowardPositive    <: RoundingMode3109 end
+struct TowardPositive    <: DeterministicRoundingMode end
 "Directed rounding toward −∞ (draft §4.7.2)."
-struct TowardNegative    <: RoundingMode3109 end
+struct TowardNegative    <: DeterministicRoundingMode end
 "Directed rounding toward zero — truncation (draft §4.7.2)."
-struct TowardZero        <: RoundingMode3109 end
+struct TowardZero        <: DeterministicRoundingMode end
 "Round inexact results to the nearest *odd* code point (draft §4.7.3; sticky-friendly)."
-struct ToOdd             <: RoundingMode3109 end
+struct ToOdd             <: DeterministicRoundingMode end
 
 # Stochastic variants (draft §4.7.4): R random bits with 0 ≤ R < 2^N are supplied
 # per projected element. N is capped at 60 so every predicate stays in Int64
@@ -30,15 +32,15 @@ struct ToOdd             <: RoundingMode3109 end
     nothing
 end
 """Stochastic rounding, variant A of draft §4.7.4: RoundAway ⟺ ⌊ν·2^N⌋ + R ≥ 2^N."""
-struct StochasticA{N} <: RoundingMode3109
+struct StochasticA{N} <: StochasticRoundingMode
     StochasticA{N}() where {N} = (_check_nrandbits(N); new{N}())
 end
 """Stochastic rounding, variant B: RoundAway ⟺ ⌊ν·2^(N+1)⌋ + (2R+1) ≥ 2^(N+1)."""
-struct StochasticB{N} <: RoundingMode3109
+struct StochasticB{N} <: StochasticRoundingMode
     StochasticB{N}() where {N} = (_check_nrandbits(N); new{N}())
 end
 """Stochastic rounding, variant C: RoundAway ⟺ RNITE(ν·2^N) + R ≥ 2^N."""
-struct StochasticC{N} <: RoundingMode3109
+struct StochasticC{N} <: StochasticRoundingMode
     StochasticC{N}() where {N} = (_check_nrandbits(N); new{N}())
 end
 

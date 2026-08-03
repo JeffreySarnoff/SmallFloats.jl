@@ -172,8 +172,11 @@ export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,
        RSA_SF, RSA_SP, RSA_SN,
        RSB_SF, RSB_SP, RSB_SN,
        RSC_SF, RSC_SP, RSC_SN,
-       default_projspec, projmode
-
+       default_projspec, projmode,
+       DeterministicRoundingMode, DirectedRoundingMode, 
+       StochasticRoundingMode, FaithfulRoundingMode,
+       SaturationMode
+       
 # session defaults (defaults.jl)
 export DefaultType, DefaultType!,
        DefaultReturnType, DefaultReturnType!,

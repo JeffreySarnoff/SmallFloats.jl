@@ -1,5 +1,94 @@
 # Changelog
 
+## 0.3.0 — Julia integration and semantic corrections
+
+### Added
+
+* **A fuller `AbstractFloat` interface.** `Binary` values now support exact
+  `decompose`, `hash`, `widen`, `exponent`, `significand` and `frexp`, together
+  with `round`, `floor`, `ceil` and `trunc`. This makes format values usable as
+  `Dict` keys and `Set` elements and improves compatibility with generic Julia
+  code. Deliberately unsupported operations now fail with package-specific
+  explanations instead of incidental `MethodError`s.
+* **Callable operation-register entries.** `Op(:Add, T, ρ)` captures an
+  operation, result format and projection as a zero-allocation callable for
+  `map`, broadcast and other higher-order interfaces.
+* **Four display styles.** `set_show_style!`, `get_show_style`,
+  `VALID_SHOW_STYLES` and the `:binary_show_style` `IOContext` property select
+  value-only, code-point-only, datum or typed output.
+* **Exact Dyadic–Rational bridges.** `DyadicNumbers` now provides
+  `dyadic_to_rational`, `rational_to_dyadic` and `isdyadic`, with corresponding
+  `Rational{T}(::Dyadic)` and `Dyadic(::Rational)` conversions. Non-dyadic
+  rationals are rejected rather than rounded outside `project`.
+* **Deadline-aware benchmarking.** `benchmarking/faster_benchmarking.jl` covers
+  representative scalar, projection, array, table, block, conversion and packed
+  storage work within a configurable time budget, with a checked-in report.
+
+### Changed — read this before upgrading
+
+* **Projection constants use short saturation suffixes.** The 27 deterministic
+  and stochastic families were renamed from spellings such as
+  `RNE_SatFinite`, `RNE_SatPropagate` and `RNE_SatNone` to `RNE_SF`, `RNE_SP`
+  and `RNE_SN` (and likewise for `RNA`, `RTP`, `RTN`, `RTZ`, `RTO`, `RSA`,
+  `RSB` and `RSC`).
+
+  **Migration:** replace `_SatFinite` with `_SF`, `_SatPropagate` with `_SP`
+  and `_SatNone` with `_SN`.
+
+* **NaN is first in the P3109 total order.** `TotalOrder`, `isless`, sorting and
+  the integer order key now place the format's single NaN below negative
+  infinity, as required by draft §4.12.1. The earlier implementation placed it
+  above positive infinity. Ordinary numeric comparisons remain unordered for
+  NaN.
+* **The default display is now `:value`.** A `Binary` prints as the number it
+  denotes in ordinary output. Use `set_show_style!(:typed)` for the former
+  `Binary8p4se(1.625 ≡ 0x45)` presentation, or an `IOContext` override when
+  the choice must be local to one stream.
+* **`similar` keeps array element types concrete.** Arrays whose element type is
+  an abstract `Binary{K,P,Σ,Δ}` format now produce `similar` arrays using its
+  concrete representation, avoiding boxed elements.
+* **`reinterpret(T, u::Unsigned)` validates representation invariants.** The
+  source and target must have equal storage size and bits above the format's
+  `K`-bit code point must be zero.
+
+### Fixed
+
+* `get_show_style()` no longer throws from an undefined variable, and all
+  two-argument `show` paths now honor the selected style. Removing a duplicate
+  method also restores clean package precompilation.
+* Corrected four silent wrong-answer cases in the exact `Dyadic` carrier:
+  negation/absolute value at `typemin(Int128)`, integer rounding at
+  `typemin(Int64)` exponent, negative infinity converted to an unsigned
+  rational, and an invalid `0//0` rational converted as negative infinity.
+* Dyadic multiplication no longer pays an always-active bounds check, and the
+  finite addition path avoids unnecessary special-value dispatch.
+* `Rational{BigInt}(::Dyadic)` now follows Julia's convention for infinities
+  (`±1//0`) and rejects only NaN; `Base.isunordered(::Dyadic)` is defined for
+  sorting and extrema operations.
+* Stochastic short-name constructors such as `RSA_SN` are now actually defined;
+  they had been exported but missed by the generated constructor rename.
+* Documentation examples no longer leak process-global projection defaults into
+  later examples, and every `julia-repl` block is now executed and checked.
+* The PDF pipeline now detects partial font coverage, parses nested markup in
+  headings, reads the package version from `Project.toml`, preserves part-level
+  table-of-contents pagination and packages its artifacts consistently.
+
+### Documentation and verification
+
+* The manual was consolidated under `docs/src`, reorganized by user goal and
+  expanded with the recovered Julia-compatibility guide, worked examples, trap
+  tables, code-point algebra and implementation guidance. The README now serves
+  as a compact runnable introduction.
+* The suite has one `SMALLFLOATS_TIER` dial (`quick`, `default`, `release`) and
+  asserts that requested coverage is not silently reduced. The release tier
+  sweeps every applicable format axis, including all 504 formats and all
+  7,602,160 code points; boundary-targeted and otherwise sampled gates identify
+  themselves in the final roll-call.
+* A fourteenth gate checks the Dyadic–Rational laws, while new gates exercise the
+  Julia surface, all display styles, documentation examples and the rule that an
+  abstract format is never rebuilt as a concrete representation in method
+  bodies.
+
 ## 0.2.0 — the K ≤ 16 extension
 
 The format grid goes from **120 formats at K ∈ 3:8** to **504 at K ∈ 3:16**.
