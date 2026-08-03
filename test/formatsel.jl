@@ -174,6 +174,23 @@ const SUITE_TIER = let t = lowercase(get(ENV, "SMALLFLOATS_TIER", "default"))
     t
 end
 
+"""
+Divisor applied to every sampling loop count in `runtests.jl`.
+
+The full literals there are the source of truth; this is the only thing that
+shrinks them, and it moves with `SMALLFLOATS_TIER` so **a tier runs what its
+name says**. `release` is 1 by definition — the doctrine's "a tier the caller
+asks for is honoured, never downgraded" is exactly this constant not exceeding 1
+there.
+
+Before this existed the counts were divided unconditionally (`div(5000, 5)`,
+`div(4096, 4)`, …) and the `FastTest` switch that once selected between the two
+sets had been commented out, so the undivided counts were unreachable at every
+tier — including `release`. That is the shape of defect this constant exists to
+make impossible: a narrowing the tier dial cannot see.
+"""
+const LOOP_SCALE = SUITE_TIER == "release" ? 1 : SUITE_TIER == "quick" ? 8 : 4
+
 """`true` when the caller asked for every format. Set by `SMALLFLOATS_TIER=release`
 or by `SmallFloats_EXHAUSTIVE=1` directly; the explicit switch wins so a caller
 can widen one axis without moving the whole tier."""

@@ -460,26 +460,11 @@ _fully_instantiated(T) =
     T.parameters[1] isa Int && T.parameters[2] isa Int &&
     T.parameters[3] isa Bool && T.parameters[4] isa Bool
 
-#=
-function Base.show(io::IO, T::Type{<:Binary})
-    if _fully_instantiated(T)
-        print(io, formatname(T))
-        # The format and its representation must not print identically:
-        # the difference between them is exactly what an error about 
-        # `similar`, `eltype` or a failed `===` needs to communicate.
-        isabstracttype(T) && print(io, "{format}")
-    else # this case was found in testing
-        invoke(show, Tuple{IO,Type}, io, T)
-    end
-end
-function Base.show(io::IO, v::Binary)
-    T = typeof(v)
-    d = decode(v)
-    print(io, formatname(T), "(")
-    isnan(d) ? print(io, "NaN") : print(io, _shortdatum(T, d))
-    print(io, " ≡ 0x", string(codepoint(v); base=16, pad=2 * sizeof(codeunit_type(T))), ")")
-end
-=#
+# The two `Base.show` methods that once lived here are now in `show.jl`, and
+# they are NOT commented out here as a spare copy — a duplicate definition is a
+# method overwrite, which is an *error* during precompilation and silently ran
+# the package unprecompiled until it was found. `show.jl:121-122` records that;
+# the changelog records the fix. There is nothing to restore from.
 
 # A datum has at most `P ≤ 16` significant bits, but a `BigFloat` carries its own
 # precision — and `ldexp` returns one at the MPFR *default*, 256 bits — so the

@@ -191,6 +191,68 @@ end
 
 Base.frexp(v::T) where {T<:Binary} = (significand(v) / T(2), exponent(v) + 1)
 
+# ---- ldexp: exact on every carrier, one projection.
+#
+# Scaling by a power of two moves the exponent and nothing else, so this is
+# `significand`'s construction above with a different exponent — and, like it,
+# the projection is only reachable at the range boundary. Saturation comes from
+# the session default so this agrees with floor/ceil/round about the top of the
+# range; the rounding mode is immaterial, because the scaling is exact wherever
+# the result is a datum at all.
+#
+# `Base.ldexp(x::T, e::Integer) where T<:IEEEFloat` is disjoint from this, so
+# there is no ambiguity to disambiguate — `detect_ambiguities` is the standing
+# check.
+function Base.ldexp(v::T, n::Integer) where {T<:Binary}
+    d = decode(v)
+    isfinite(d) || return v                        # NaN and ±Inf are fixed points
+    project(T, ProjSpec(NearestTiesToEven(), saturationmode(default_projspec(T))),
+            ldexp(d, Int(n)))
+end
+
+# ---- eps(x): the ulp at x, taken from the engine's own normalization.
+#
+# `Base.eps(::Type{<:Binary})` has existed since the beginning; the VALUE form
+# had not, and Julia's fallback for it is
+#
+#     eps(x::AbstractFloat) = isfinite(x) ? abs(x) >= floatmin(x) ?
+#         ldexp(eps(typeof(x)), exponent(x)) : nextfloat(zero(x)) : oftype(x, NaN)
+#
+# which reaches `ldexp(::Binary, ::Int)` for every finite value at or above
+# floatmin — the common case — and raised a bare `MethodError` at the caller's
+# site. That is the class docs/other/morejulian.md calls Tier 1: a method
+# generic Julia code reaches for without asking.
+#
+# It is written directly rather than inherited. `round_to_precision` on an exact
+# datum is pure extraction, not rounding — the identity `Base.decompose` above
+# relies on — and its `Q` IS the binary exponent of the ulp:
+#
+#   normal datum : Q = e − P + 1, and NextGreaterThan(x) − x = 2^(e−P+1);
+#   subnormal    : Q = 2 − B − P, the constant subnormal step — where Base's
+#                  formula needs its floatmin guard to be right at all.
+#
+# Reusing the engine also beats the two obvious alternatives. Walking the
+# lattice (`decode(NextGreaterThan(v)) - decode(v)`) needs a special case at the
+# top binade, where `NextGreaterThan` returns NaN by design, and at rung 3 it
+# routes a subtraction through `add_sticky_dy`'s alignment band for no reason.
+#
+# The result is always exactly a datum, so the projection below cannot round and
+# the mode is immaterial: the ulp is 2^Q with 2−P−B ≤ Q ≤ e_max−P+1, and every
+# power of two in a format's range is a datum for every P ≥ 1.
+#
+# The non-finite row is `rawvalue`, NOT `T(NaN)`: the latter routes through
+# `_convert_default` → `with_default_projection`, which would make `eps` read
+# the session projection default and go dynamic once it is changed. `eps` is a
+# property of the format, not of the session.
+function Base.eps(v::T) where {T<:Binary}
+    d = decode(v)
+    isfinite(d) || return rawvalue(T, nan_code(T))   # Base's `oftype(x, NaN)` row
+    iszero(d) && return MinPositiveOf(T)             # Base's `nextfloat(zero(x))` row
+    r = round_to_precision(precision(T), expbias(T), NearestTiesToEven(), d, 0, 0)
+    project(T, ProjSpec(NearestTiesToEven(), saturationmode(default_projspec(T))),
+            ldexp(one(datumcarrier(T)), Int(r.Q)))
+end
+
 # ---- round / floor / ceil / trunc
 #
 # One rounding, not two: the integer-valued result is formed **exactly on the

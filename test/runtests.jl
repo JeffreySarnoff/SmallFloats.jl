@@ -41,38 +41,36 @@ using SmallFloats: project, project_interval, round_to_precision, encode, order_
     KMIN, KMAX, KSPLIT, codemask, codeunit_type, reptype, nan_order_key, rung,
     Code8, Code16, HeadF64, HeadF128, HeadExact
 
-# Main.FastTest = true
+# The sampling loop counts. The literals below are the SOURCE OF TRUTH and
+# `LOOP_SCALE` (formatsel.jl) is the only thing that shrinks them — 1 at the
+# `release` tier, 4 at `default`, 8 at `quick`.
 #
-# if isdefined(Main, :FastTest)
+# They were previously divided unconditionally (`div(5000, 5)`, `div(4096, 4)`,
+# …) with the undivided set inside a block comment and the `FastTest` switch
+# that once chose between them commented out. The undivided counts were
+# therefore unreachable at every tier, including `release` — a narrowing the
+# tier dial could not see, which is precisely what the verification doctrine's
+# "a tier the caller asks for is honoured, never downgraded" forbids.
+#
+# `cld` rather than `div`: at the quick tier `div(10, 8)` is 1, and a loop of
+# one iteration is a different test, not a cheaper one.
+isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
 
-const K5  = div(5000, 5)
-const K4B = div(4096, 4)
-const K4  = div(4000, 4)
-const K2  = div(2000, 4)
-const K1  = div(1000, 4)
-const H2  = div(200,  4)
-const H1  = div(100, 4)
-const TEN5 = div(50, 5)
-const TEN1 = div(10, 2)
+const K5   = cld(5000, LOOP_SCALE)
+const K4B  = cld(4096, LOOP_SCALE)
+const K4   = cld(4000, LOOP_SCALE)
+const K2   = cld(2000, LOOP_SCALE)
+const K1   = cld(1000, LOOP_SCALE)
+const H2   = cld( 200, LOOP_SCALE)
+const H1   = cld( 100, LOOP_SCALE)
+const TEN5 = cld(  50, LOOP_SCALE)
+# `TEN1` was here and had no consumer in `test/` or `src/` — a loop count that
+# scaled nothing. Removed rather than rescaled.
 
 # No `T5`/`T1` loop counts: `T5` collides with the format binding
 # `T5 = Binary5p2se` (line ~653, 65 uses), and the only `T1` sites are the
 # BlockVector layout test, whose siblings hardcode `10`, `blocks[7]` and
 # `(4, 10)` — it is a fixed-size layout check, not a scaling loop.
-
-#else
-#=
-const K5  = 5000
-const K4B = 4096
-const K4  = 4000
-const K2  = 2000
-const K1  = 1000
-const H2  = 200
-const H1  = 100
-const TEN5  = 50
-const TEN1  = 10
-=#
-#end
 
 const UN = collect(_UNARY_OPS)
 
@@ -1326,8 +1324,9 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         r2 = sort(A; alg=Base.Sort.DEFAULT_UNSTABLE, rev=true)
         @test codepoint.(r1) == codepoint.(r2)
         @test issorted(s1)
-        # interior slice, derived from K5 so it tracks the FastTest scaling.
-        # Fixed point at the original literals: K5 = 5000 ⇒ 100:4000.
+        # interior slice, derived from K5 so it tracks `LOOP_SCALE`.
+        # Fixed point at the undivided literal: K5 = 5000 ⇒ 100:4000, which is
+        # what the `release` tier now actually runs.
         sv = sort!(view(copy(A), max(1, K5 ÷ 50):(4 * K5) ÷ 5))
         @test issorted(sv)
         byp = sort(A; by=decode)                       # non-default ordering falls back safely
@@ -1552,6 +1551,88 @@ end
         x = rawvalue(T, c)
         @test sincos(x) === (Sin(x), Cos(x))
         @test sincospi(x) === (SinPi(x), CosPi(x))
+    end
+end
+
+# ==========================================================================
+# eps(x) and ldexp(x, n) — the ulp query and the exact power-of-two scaling
+# ==========================================================================
+# `Base.eps(::Type)` has always existed; the VALUE form had not, and Julia's
+# fallback for it reaches `ldexp(::Binary, ::Int)` — also absent — so `eps(x)`
+# raised a bare `MethodError` for every finite value at or above floatmin.
+#
+# Three properties, and the first is the one that makes the definition legal
+# under invariant 1: the ulp is `2^Q` with `2−P−B ≤ Q ≤ e_max−P+1`, and every
+# power of two in a format's range is a datum for every `P ≥ 1`, so `eps`
+# projects EXACTLY and never rounds.
+@testset "eps(x) and ldexp(x, n)" begin
+    for T in (Binary8p4se, Binary8p1uf, Binary5p2se, Binary3p1se,
+              Binary16p8se, Binary16p5se, Binary16p1uf)
+        K = bitwidth(T)
+        U = codeunit_type(T)
+        step = max(1, (1 << K) ÷ 64)                     # sample wide formats
+        for c in 0:step:((1 << K) - 1)
+            v = rawvalue(T, U(c))
+            d = decode(v)
+            e = eps(v)
+            # 1. the answer is a datum: the round trip through the carrier
+            #    changed nothing. Spelled the way a user writes it — the ulp is
+            #    `2^Q` with `2−P−B ≤ Q ≤ e_max−P+1`, and every power of two in a
+            #    format's range is a datum for every `P ≥ 1`, so the projection
+            #    inside the constructor cannot round.
+            @test (formatname(T), c, T(decode(e)) === e) == (formatname(T), c, true)
+            if !isfinite(d)
+                @test isnan(decode(e))
+                continue
+            end
+            if iszero(d)
+                @test e === MinPositiveOf(T)
+                continue
+            end
+            # 2. independent witness. `eps` is built on `round_to_precision`,
+            #    so the reference must not be: the ulp of a datum is the step to
+            #    its lattice neighbour, and `NextGreaterThan` is the lattice's
+            #    own answer. The arithmetic runs in `BigFloat` — exact for every
+            #    carrier, since a datum carries ≤ 16 significand bits and MPFR's
+            #    exponent range covers every B — rather than on the carrier,
+            #    where a rung-3 subtraction would re-enter the engine under test.
+            g = NextGreaterThan(v)
+            if !signbit(d) && isfinite(decode(g))
+                @test (formatname(T), c, BigFloat(d) + BigFloat(decode(e))) ==
+                      (formatname(T), c, BigFloat(decode(g)))
+            end
+            # 3. `ldexp` is the exponent-field move, not a rounding, so scaling
+            #    up and back is the identity ON THE CODE POINT wherever the
+            #    round trip stays in range.
+            up = ldexp(v, 1)
+            isfinite(decode(up)) &&
+                @test (formatname(T), c, ldexp(up, -1)) == (formatname(T), c, v)
+        end
+    end
+
+    # 4. `eps` does not read session state — it is a property of the format.
+    #
+    #    This is what the `rawvalue(T, nan_code(T))` spelling of the non-finite
+    #    row buys: `T(NaN)` would route through `_convert_default` →
+    #    `with_default_projection` and make the answer depend on the session
+    #    projection. Compared on CODE POINTS, because `==` on `Binary` is IEEE
+    #    unordered comparison and every format's NaN would compare unequal to
+    #    itself.
+    #
+    #    `ldexp` is deliberately NOT held to this. Its saturation comes from the
+    #    session default, exactly as `floor`/`ceil`/`round`/`trunc` do
+    #    (juliacompat.jl), so that the Base verbs agree with one another about
+    #    what happens at the top of the range. Only the overflow row can differ.
+    let T = Binary8p4se, saved = DefaultProjection()
+        try
+            before = [codepoint(eps(rawvalue(T, UInt8(c)))) for c in 0x00:0xff]
+            DefaultProjection!(RTZ_SF)
+            @test [codepoint(eps(rawvalue(T, UInt8(c)))) for c in 0x00:0xff] == before
+            DefaultProjection!(ProjSpec(TowardPositive(), SatPropagate()))
+            @test [codepoint(eps(rawvalue(T, UInt8(c)))) for c in 0x00:0xff] == before
+        finally
+            DefaultProjection!(saved)
+        end
     end
 end
 

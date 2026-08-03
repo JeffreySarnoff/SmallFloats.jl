@@ -29,7 +29,12 @@ isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
 
     io = IOBuffer()
     println(io, "\n", "="^78)
-    println(io, "COVERAGE ROLL-CALL — tier=", SUITE_TIER, " — ",
+    # `LOOP_SCALE` belongs beside the tier for the same reason the tier belongs
+    # at the top: a reader given "total compared: N" without knowing the divisor
+    # applied to every sampling loop has been told a number, not a coverage
+    # claim. It reads 1 only at the release tier.
+    println(io, "COVERAGE ROLL-CALL — tier=", SUITE_TIER,
+                " — loop scale 1/", LOOP_SCALE, " — ",
                 length(GATE_LOG), " gates and tiers, ",
                 n_exh, " exhaustive, ", length(GATE_LOG) - n_exh, " sampled")
     println(io, "="^78)
@@ -72,7 +77,12 @@ KNOWINGLY NOT COVERED (plan §6.4) — stated here so it is not rediscovered:
     "(kappa sampled - not exhaustive)". No mechanism change: invariant 5 holds
     under wide K because kappa was designed as a measurement, not an assertion.
 
-  * `f32_exact`'s enumeration at K >= 12, per its section 9 disposition.
+  * `f32_exact` for signatures over `F32_EXACT_MAX_PAIRS[]` operand pairs
+    (2^20 by default, so K1 + K2 > 20). Those raise a cost refusal naming the
+    budget rather than answering; raising the Ref asks for the answer. Formats
+    whose datums leave Float32's range are answered `false` without
+    enumerating, at every K. This line previously said "enumeration at K >= 12",
+    which implied K = 9, 10, 11 were covered — they threw `InexactError`.
 
   * G8 (the representation invariant) has no file: it is asserted in every
     constructor and swept by T1's encode round-trip at every K. Absent from
@@ -95,6 +105,11 @@ KNOWINGLY NOT COVERED (plan §6.4) — stated here so it is not rediscovered:
     if SUITE_TIER == "quick"
         @test n_exh < length(GATE_LOG)
     elseif SUITE_TIER == "release"
+        # The sampling loops run at their undivided counts, or this is not the
+        # release gate. `LOOP_SCALE` was unconditionally > 1 at every tier until
+        # the counts were put under the dial, so the assertion is the thing that
+        # keeps a downgrade from becoming permanent again.
+        @test LOOP_SCALE == 1
         # Conversely, at `release` every tier that CAN be exhaustive must be.
         # G2, G4 and G7 are boundary-targeted by design and are named here so
         # the exception is a list rather than a shrug.

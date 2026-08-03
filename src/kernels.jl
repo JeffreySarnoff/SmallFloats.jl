@@ -166,9 +166,16 @@ for op in OP_REGISTRY
 end
 # Convert has no ω-semantics (registry group :conv) so the loop above skips it;
 # its array form still rides the Shape-A gather — the :Convert table is built by
-# _scalar_code's bare-projection branch. Pure ρ only (stochastic Convert is per-R).
-Convert(fr::Type{<:Binary}, ρ::ProjSpec, A::AbstractArray{<:Binary}) =
-    vmap(:Convert, fr, ρ, A)
+# _scalar_code's bare-projection branch. Under stochastic ρ `vmap` takes the
+# per-element scalar path instead, drawing one R per element.
+#
+# `rng` is threaded like every other array operation's. Without it this was the
+# one bulk surface that could not be given an owned stream — which is exactly
+# what `defaults.jl`'s entropy decision tells callers to do, having removed the
+# session-wide RNG for being a global that stochastic results should not depend
+# on. It is forwarded, not defaulted differently: pure ρ never resolves it.
+Convert(fr::Type{<:Binary}, ρ::ProjSpec, A::AbstractArray{<:Binary};
+        rng::MaybeRNG=nothing) = vmap(:Convert, fr, ρ, A; rng)
 
 # ---- Float32/Float64 surface: bulk exact ωDecode and external-array ingestion
 
