@@ -22,7 +22,11 @@ using Aqua
 using JET
 
 @testset "Aqua" begin
-    Aqua.test_all(SmallFloats)
+    # Aqua is intentionally a direct project dependency so `using Aqua` works
+    # in an ordinary `--project=.` development session. It is a quality tool,
+    # not a runtime import of SmallFloats, so exclude only that deliberate entry
+    # from Aqua's stale-runtime-dependency check.
+    Aqua.test_all(SmallFloats; stale_deps=(ignore=[:Aqua],))
 end
 
 # `_vmap_packed` builds `Vector{fr}` from its `::Type{fr}` argument and views it

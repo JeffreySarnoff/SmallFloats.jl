@@ -296,7 +296,11 @@ function conformance()
     cached = table_keys()
     apx = lock(() -> [(name=a.name, op=a.op, kappa=a.kappa_declared, exhaustive=a.exhaustive)
                       for a in values(APPROX_REGISTRY)], APPROX_LOCK)
-    version = Base.pkgversion(@__MODULE__)
+    # `pkgversion` is `nothing` when the module is loaded outside Pkg (for
+    # example by directly including the source during development). Keep that
+    # case representable and give inference the concrete field type required by
+    # `ConformanceDeclaration`.
+    version = something(Base.pkgversion(@__MODULE__), v"0.0.0-DEV")
     ConformanceDeclaration(
         "SmallFloats.jl $version", version, DRAFT_REVISION, DRAFT_IDENTITY, Symbol[],
         sort!(collect(keys(_NAMED))),
