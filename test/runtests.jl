@@ -213,6 +213,9 @@ include("stage_gates.jl")
     σ = ProjSpec(StochasticB{4}(), SatFinite())
     @test isstochastic(σ) && nrandbits(σ) == 4
     @test isstochastic(StochasticA{1}) && !isstochastic(ToOdd)
+    @test ToOdd <: FaithfulRoundingMode && !(ToOdd <: DirectedRoundingMode)
+    @test NearestTiesToEven <: NearestRoundingMode
+    @test StochasticC{8} <: StochasticRoundingMode
     @test_throws ArgumentError StochasticA{0}()
     @test_throws ArgumentError StochasticC{61}()
     @test_throws ArgumentError StochasticB{1.5}()
@@ -242,8 +245,6 @@ end
     @test DefaultRoundingMode() === NearestTiesToEven()
     @test DefaultSaturationMode() === SatNone()
     @test DefaultProjection() === RNE_SN
-    @test DefaultRNG() === Random.Xoshiro
-    @test DefaultRbits() == 8
 
     coherent() = DefaultProjection() ===
                  ProjSpec(DefaultRoundingMode(), DefaultSaturationMode())
@@ -277,7 +278,7 @@ end
     @test DefaultSaturationMode() === SatFinite()
     @test coherent()
 
-    # remaining setters, validation, and the RNG instance form
+    # remaining setters and validation
     @test DefaultType!(Binary5p3sf) === Binary5p3sf
     @test DefaultType() === Binary5p3sf
     @test_throws ArgumentError DefaultType!(Binary{8,8,true,true})   # invalid params
@@ -285,20 +286,10 @@ end
     @test DefaultReturnType() === Binary8p4se
     @test DefaultType() === Binary5p3sf                  # independent of the return type
     @test_throws ArgumentError DefaultReturnType!(Binary{8,8,true,true})
-    @test DefaultRbits!(16) == 16
-    @test_throws ArgumentError DefaultRbits!(0)
-    @test_throws ArgumentError DefaultRbits!(61)
-    @test DefaultRbits() == 16                           # failed sets don't stick
-    rng = Random.Xoshiro(42)
-    @test DefaultRNG!(rng) === rng
-    @test DefaultRNG() === rng
-
     # restore initial state for any later consumer
     DefaultType!(Binary8p2se)
     DefaultReturnType!(Binary8p2se)
     DefaultProjection!(RNE_SN)
-    DefaultRNG!(Random.Xoshiro)
-    DefaultRbits!(8)
     @test coherent()
 
     # ---- consumption combinators: speculative fast path over a barrier
@@ -326,6 +317,27 @@ end
     @test with_default_projection(addρ, a4, b4) === Add(Binary8p4se, RTZ_SF, a4, b4)
     DefaultType!(Binary8p2se); DefaultProjection!(RNE_SN)
     @test coherent()
+end
+
+@testset "stochastic configuration is explicit" begin
+    @test RSA_SN() === RSA_SN(8)
+    @test nrandbits(RSA_SN(16)) == 16
+    @test_throws ArgumentError RSA_SN(0)
+    @test_throws ArgumentError RSA_SN(61)
+
+    T = Binary8p4se
+    x, y = T(2.0), T(0.03125)
+    σ = RSA_SN(8)
+    r1, r2 = Random.Xoshiro(42), Random.Xoshiro(42)
+    @test [Add(T, σ, x, y; rng=r1) for _ in 1:32] ==
+          [Add(T, σ, x, y; rng=r2) for _ in 1:32]
+    @test Add(T, σ, x, y; R=0) === T(2.0)
+    @test Add(T, σ, x, y; R=255) === T(2.25)
+
+    # Pure projection must not consume entropy even when an RNG is supplied.
+    r3, control = Random.Xoshiro(7), Random.Xoshiro(7)
+    Add(T, RNE_SN, x, y; rng=r3)
+    @test rand(r3, UInt64) == rand(control, UInt64)
 end
 
 # ==========================================================================
@@ -575,13 +587,19 @@ codes8 = [rawvalue(T8, UInt8(c)) for c in 0:255]
         @test val(:ArcCosPi, -1) == 1 && val(:ArcCosPi, 0) == 0.5
         @test val2(:Hypot, 3, 4) == 5 && val2(:Hypot, Inf, NaN) == Inf
         @test isnan(val2(:Divide, 1, 0)) && isnan(val2(:Divide, 0, 0)) && val2(:Divide, 1, Inf) == 0
-        # ArcTan2 single-zero branch cuts: (0, x<0) → π-nearest; (y>0, 0) → π/2-nearest
+        # D1 ArcTan2 special rows: the sole zero paired with itself and every
+        # (±Inf, ±Inf) pair are indeterminate; single-zero branch cuts remain.
         piT = decode(project(T8, ρ0, BigFloat(π)))
         @test val2(:ArcTan2, 0, -3) == piT
-        @test val2(:ArcTan2, 0, 3) == 0 && val2(:ArcTan2, 0, 0) == 0
+        @test val2(:ArcTan2, 0, 3) == 0 && isnan(val2(:ArcTan2, 0, 0))
         halfpiT = decode(project(T8, ρ0, BigFloat(π) / 2))
         @test val2(:ArcTan2, 5, 0) == halfpiT
         @test val2(:ArcTan2Pi, 3, -Inf) == 1 && val2(:ArcTan2Pi, -3, 0) == -0.5
+        @test isnan(val2(:ArcTan2Pi, 0, 0))
+        for y in (-Inf, Inf), x in (-Inf, Inf)
+            @test isnan(val2(:ArcTan2, y, x))
+            @test isnan(val2(:ArcTan2Pi, y, x))
+        end
         # extremum family vectors (semantics, not formulas)
         @test isnan(val2(:Maximum, NaN, 3)) && val2(:MaximumNumber, NaN, 3) == 3
         @test val2(:MinimumMagnitude, -0.5, 4) == -0.5
@@ -1050,8 +1068,14 @@ T8 = Binary8p4se; T5 = Binary5p2se
     @test length(c.block_surface) == 51 * 2 + 6
     @test any(a -> a.name === :exp_ftz_8p4 && a.kappa == κf && a.exhaustive, c.approximate)
     d = conformance_dict(c)
-    @test d["package"] == "SmallFloats.jl 0.1.0" &&
+    @test c.package_version == Base.pkgversion(SmallFloats)
+    @test d["package"] == "SmallFloats.jl $(Base.pkgversion(SmallFloats))" &&
+          d["package_version"] == string(Base.pkgversion(SmallFloats)) &&
           length(d["formats"]) == sum(4K - 2 for K in KMIN:KMAX)
+    @test d["draft_identity"]["designation"] == "IEEE P3109/D1"
+    @test d["draft_identity"]["transliteration_sha256"] ==
+          "820cb5009cd6fe9032f5bdfb661bc639e33296f716a552eafc81f899411bb5f2"
+    @test isempty(d["interpretations"])
     @test any(s -> s["op"] == "Add" && s["saturation"] == "SatNone", d["cached_specializations"])
     buf = IOBuffer(); conformance_report(buf, c); rep = String(take!(buf))
     @test occursin("κ verified exhaustively", rep) && occursin("Exp⟨", rep)

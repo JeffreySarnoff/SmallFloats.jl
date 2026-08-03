@@ -35,7 +35,7 @@ two orders of magnitude for the identical computation:
     using Statistics: median
 
     function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
-        pool = [rawvalue(T, rand(UInt8)) for _ in 1:4096]
+        pool = [SmallFloats.rawvalue(T, rand(UInt8)) for _ in 1:4096]
         @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
     end
 

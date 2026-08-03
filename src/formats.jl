@@ -38,10 +38,10 @@ Consequently `Binary8p4se === Binary{8,4,true,true}` is **`false`** and
 type, a `similar`, a constructor target.
 
 The code point occupies the low `K` bits of the storage unit; the high bits are
-maintained zero as a representation invariant. Construct raw code points with
-`T(c::Unsigned)` (validated code-point construction), `rawvalue(T, c)`
-(unchecked kernel route), or `Code8{...}(Val(:code), x)`; construct from numeric
-values with `T(x::Real)` (default projection spec) or `Convert`. `Unsigned` is
+maintained zero as a representation invariant. Construct code points with
+`T(c::Unsigned)` (validated code-point construction); the implementation uses
+an unexported unchecked primitive only after establishing the invariant.
+Construct from numeric values with `T(x::Real)` (default projection spec) or `Convert`. `Unsigned` is
 the one argument-type class meaning *code point*, at **every** width — `T(0x02)`
 is code point 2 whether `T`'s unit is a `UInt8` or a `UInt16`; all other `Real`s
 mean *value*.

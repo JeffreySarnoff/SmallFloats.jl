@@ -161,10 +161,8 @@ end
     # keeps the statement true — a page whose examples were captured in one
     # style and checked in another would fail loudly rather than drift.
     pristine = (type = DefaultType(), proj = DefaultProjection(),
-                rng = DefaultRNG(), rbits = DefaultRbits(),
                 show = get_show_style())
     reset!() = (DefaultType!(pristine.type); DefaultProjection!(pristine.proj);
-                DefaultRNG!(pristine.rng); DefaultRbits!(pristine.rbits);
                 set_show_style!(:typed); nothing)
 
     ncases = ncmp = nskip = nblocks = 0

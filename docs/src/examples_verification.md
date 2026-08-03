@@ -49,7 +49,7 @@ using SmallFloats: get_table
 empty_tables!()
 tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN)
 (tbl[Int(0x45) + 1],
- codepoint(Exp(Binary8p4se, RNE_SN, rawvalue(Binary8p4se, 0x45))),
+ codepoint(Exp(Binary8p4se, RNE_SN, SmallFloats.rawvalue(Binary8p4se, 0x45))),
  table_bytes())
 ```
 
@@ -90,7 +90,7 @@ using SmallFloats: order_key
 function monotone_conversion(::Type{From}, ::Type{To}) where {From,To}
     prev = nothing
     U = codeunit_type(From)
-    values = [rawvalue(From, U(c))
+    values = [SmallFloats.rawvalue(From, U(c))
               for c in UInt64(0):((UInt64(1) << bitwidth(From)) - 1)]
     for v in sort(values)
         isnan(decode(v)) && continue
@@ -129,7 +129,7 @@ fast(x) = (r = Exp(Binary8p4se, RNE_SN, x);
 κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 
 function margin_audit(fast, κ)
-    codes = [rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
+    codes = [SmallFloats.rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
     safe = violations = 0
     for a in codes, b in codes
         da, db = Exp(Binary8p4se, RNE_SN, a), Exp(Binary8p4se, RNE_SN, b)
@@ -170,7 +170,7 @@ using SmallFloats
 function ref_nearest_distance(::Type{T}, x) where {T}
     U = codeunit_type(T)
     last = (UInt64(1) << bitwidth(T)) - 1
-    fins = [v for v in (rawvalue(T, U(c)) for c in UInt64(0):last)
+    fins = [v for v in (SmallFloats.rawvalue(T, U(c)) for c in UInt64(0):last)
             if isfinite(decode(v))]
     minimum(abs(setprecision(() -> BigFloat(decode(v)) - BigFloat(x), BigFloat, 256))
             for v in fins)
@@ -179,7 +179,7 @@ end
 function verify_quantizer()
     ok = true
     for c in 0x00:0xff
-        x = decode(rawvalue(Binary8p3se, c))
+        x = decode(SmallFloats.rawvalue(Binary8p3se, c))
         (isfinite(x) && abs(x) <= decode(MaxFiniteOf(Binary8p4se))) || continue
         got = Convert(Binary8p4se, RNE_SN, x)
         ok &= abs(decode(got) - x) == Float64(ref_nearest_distance(Binary8p4se, x))
@@ -245,7 +245,7 @@ using SmallFloats, Random
 
 rng = Xoshiro(5)
 mk() = Block(Binary8p1uf(2.0^rand(rng, -3:3)),
-             ntuple(_ -> rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
+             ntuple(_ -> SmallFloats.rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
 
 function verify_dots(trials)
     for _ in 1:trials
@@ -345,7 +345,7 @@ using Statistics: median
 function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
     U = codeunit_type(T)
     last = (UInt64(1) << bitwidth(T)) - 1
-    pool = [rawvalue(T, U(rand(UInt64(0):last))) for _ in 1:4096]
+    pool = [SmallFloats.rawvalue(T, U(rand(UInt64(0):last))) for _ in 1:4096]
     @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
 end
 
@@ -400,7 +400,7 @@ for (nm, T) in sort(collect(_NAMED); by = first)
 
     setprecision(BigFloat, 256) do
         for c in 1:M                             # every positive finite code
-            v = decode(rawvalue(T, codeunit_type(T)(c)))
+            v = decode(SmallFloats.rawvalue(T, codeunit_type(T)(c)))
             want = c < L ? ldexp(BigFloat(c), 2 - P - B) :
                            ldexp(BigFloat(L + (c % L)), (c ÷ L) - 1 + 2 - P - B)
             BigFloat(v) == want || (bad += 1)

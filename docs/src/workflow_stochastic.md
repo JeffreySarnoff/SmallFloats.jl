@@ -8,8 +8,7 @@ suites — by fixing the entropy source.
 - An explicit `AbstractRNG` (e.g. `Xoshiro(seed)`) passed as `rng`.
 - An explicit `R` (the raw stochastic draw) for tests that must be
   bit-exact.
-- `DefaultRNG!` if you want the implicit (no-`rng`-argument) forms to be
-  reproducible too.
+- `Random.seed!` when intentionally using Julia's task-local default RNG.
 - The `projection` keyword on scalar `rand`/`randn` forms.
 
 ## Recipe
@@ -83,10 +82,10 @@ julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); R = 255)
 Binary8p4se(2.25 ≡ 0x49)     # largest draw: rounds up
 ```
 
-**4. Set `DefaultRNG!` if you want implicit calls to be reproducible too.**
-`DefaultRNG` is one of the six session defaults (initial value: the `Xoshiro`
-type); set it once at the top of a script or test file if you want every
-call that doesn't name an rng to still be controlled by your seed.
+**4. Omitted RNGs follow Julia.** SmallFloats does not keep a second package-wide
+RNG. An operation with no `rng` argument uses `Random.default_rng()`, so
+`Random.seed!` controls that task-local stream. Prefer an explicit RNG in
+library code and tests so ownership of the stream remains visible.
 
 ## What can go wrong
 

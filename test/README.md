@@ -1,15 +1,68 @@
-Correctness has two pillars here: the analytical soundness argument and empirical falsification stronger than the shipped suite (runtests.jl). 
+# SmallFloats.jl verification guide
 
-runtests.jl (63,662 checks) covers one format × 4 modes exhaustively; my changes touch all formats and all modes, and rest on libm-faithfulness claims that deserve direct measurement. I'll build an independent validation harness with three parts: (A) measure the actual libm error against MPFR truth for every instrumented function, versus the 2⁻⁴⁵ envelope; 
-(B) exhaustively compare apply_op (yd → fq → ladder) against a reference that skips both filters and uses only the rigorous MPFR ladder — across 5 formats, 12 mode/R combinations, all 16 touched ops, plus exhaustive Divide pairs; 
-(C) adversarial edge cases the pools can't reach.
+`test/runtests.jl` is the package test entry point. It combines numerical
+references, representation and carrier gates, golden digests, documentation
+examples, Aqua, JET, and a final coverage roll-call.
 
-Verdict: yes — correctness is maintained, on three independent grounds, each stronger than the last. The validation harness is presented above so you can rerun it.
+## Run a tier
 
-1. Analytical. Every fast path terminates in the same two-sided sticky gate: return only when project(lo, sticky=+1) and project(hi, sticky=−1) agree. Projection is monotone in the value at fixed R, so agreement plus containment (true value ∈ [yd−E, yd+E]) implies the returned codepoint equals the true value's projection — under every rounding mode, saturation mode, and R. Correctness therefore reduces entirely to containment, which rests on: IEEE-mandated correct rounding for Recip/Divide's q (≤ 0.5 ulp, the strongest case); libm faithfulness (≤ ~1 ulp ≈ 2⁻⁵²) for the single-call ops; and ≲ 3 ulp for Softplus's benign two-op composition — all against a 2⁻⁴⁵ envelope. Guards skip non-finite, zero, and near-subnormal estimates where the relative-error model breaks; any gate disagreement falls through to the byte-identical pre-existing fq/ladder machinery. The one true semantic change — Recip/Divide no longer returning Float128/Enclose128F — deletes provably dead branches (a dyadic quotient exact at ≤113 bits is exact at ≤53 bits).
+From the repository root:
 
-2. Empirical, Part A — the envelope claim measured directly. The libm bounds are the only assumed inputs to the analytical argument, so I measured them: 20,000 samples per function against 256-bit MPFR truth across each op's domain (including the full |x| ≤ 10¹⁵ trig window). Worst observed error across all fourteen functions: 2⁻⁵¹·⁶ (tanh); everything else 2⁻⁵²·¹ to 2⁻⁵³. That's ≥ 97× slack under the envelope — the assumption holds with two orders of magnitude to spare.
+```sh
+SMALLFLOATS_TIER=quick julia --project=. -e 'using Pkg; Pkg.test()'
+SMALLFLOATS_TIER=default julia --project=. -e 'using Pkg; Pkg.test()'
+SMALLFLOATS_TIER=release julia --project=. -e 'using Pkg; Pkg.test()'
+```
 
-3. Empirical, Parts B & C — differential falsification. This goes well beyond the shipped suite (one format × 4 modes): a reference path that bypasses both the yd and fq filters and consults only the rigorous MPFR ladder, compared against apply_op exhaustively over 5 formats × 12 mode/R combinations (all six deterministic modes, three saturation regimes, stochastic A/C with explicit R) × all codes × all 16 touched ops, plus exhaustive 256×256 Divide pairs under 4 modes and wide-spread-format sampling: 421,376 comparisons, zero mismatches. Part C confirms the edges no pool reaches: Recip(5e-324) and over/underflowing divisions route through yd=NaN to the ladder and agree with it; the trig window boundary at 10¹⁵ cleanly separates filtered from unfiltered paths; the classic hard argument-reduction points (Float64 neighbors of π, 2π, π/2, and 10¹⁵−π/4) and the exp overflow boundary (±708) all agree with the ladder; the Log2 dyadic screen is intact.
+| Tier | Purpose | Coverage shape |
+|:---|:---|:---|
+| `quick` | edit/compile/test loop and pull requests | narrowest representative format axes; fast golden sections |
+| `default` | main-branch confidence | derived representative format sets; lazy golden sections |
+| `release` | release evidence | every format axis that can be exhaustive; full golden sections |
 
-Honest caveats on scope: the envelope measurement is sampling, not proof — libm faithfulness for Base Julia is a well-supported published claim, but if some exotic input had, say, 2⁻⁴⁴ error, only the analytical layer's fall-through (which requires gate disagreement to matter, a further coincidence) would catch it; the 97× measured margin makes this remote. And the differential grid covers five representative formats, not all 120 in the decode/encode matrix — though the gate argument is format-independent, so nothing in the mechanism distinguishes them. Within those bounds, all three pillars agree: the enhancements are behavior-preserving.
+Runtime depends strongly on compilation caches and hardware. Treat the final
+roll-call—not a fixed duration or assertion total—as the record of what ran.
+
+## Read the roll-call
+
+`test/rollcall.jl` runs last. Every required gate registers:
+
+- assertion count;
+- units actually compared;
+- whether its stated finite domain was exhaustive;
+- a note describing every sampled axis.
+
+A quick run is required to identify itself as quick. A release run fails if a
+gate that should be exhaustive silently remained sampled. Some gates are
+cell-complete or representative by design at every tier; the roll-call names
+those exceptions.
+
+## Focused gate controls
+
+The suite-wide tier normally selects all gate levels. Maintainers can override
+individual expensive gates while diagnosing them, including
+`SMALLFLOATS_G5=off|fast|lazy|full` and
+`SMALLFLOATS_G10=quick|rep|full`. An explicit override always wins and is shown
+in output. Do not use a narrowed override as release evidence.
+
+## Golden digests
+
+`test/golden/k8.sha256` records defined K <= 8 results by named section. A digest
+change is a semantic change, not a snapshot update. Identify the affected
+operation and draft row first, update independent expectations and the
+changelog, then recapture only as part of a reviewed intentional change using
+`test/golden/capture.jl`.
+
+## Failure triage
+
+1. Read the first failing named gate, not only the aggregate summary.
+2. Compare its reported domain and tier with the intended run.
+3. For numerical mismatches, compare code points and follow the scalar
+   exact-result-to-`project` path before inspecting tables or kernels.
+4. For table/kernel failures, establish whether scalar semantics changed or the
+   execution shapes diverged.
+5. For documentation failures, edit `docs/src`; generated HTML/PDF trees are
+   outputs.
+
+Benchmarking is separate from correctness verification. Its runners and
+measurement contract live under `benchmarking/`.

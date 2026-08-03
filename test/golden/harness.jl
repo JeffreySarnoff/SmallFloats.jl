@@ -17,6 +17,7 @@
 # pattern so a payload difference cannot masquerade as a value difference.
 
 using SHA
+using SmallFloats: rawvalue
 
 const GOLDEN_FILE = joinpath(@__DIR__, "k8.sha256")
 

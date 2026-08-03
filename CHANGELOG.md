@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.4.0 — Conformance identity and explicit stochastic configuration
+
+### Changed
+
+* **Stochastic entropy is explicit or task-local.** Removed the inert
+  `DefaultRNG` and `DefaultRbits` controls. Omitted RNGs use Julia's
+  `Random.default_rng()`; pass `rng=` for an owned stream and construct
+  `RSA_*`, `RSB_*`, or `RSC_*` with an explicit bit count when it is not 8.
+* **Rounding classification has one source of truth.** Internal behavior now
+  dispatches on the exported nearest, directed, faithful, deterministic, and
+  stochastic abstract mode hierarchy instead of conflicting legacy unions.
+* **Conformance identity is structured.** `conformance()` derives version 0.4.0
+  from package metadata and reports the retained P3109/D1 transliteration and
+  its SHA-256 digest. `draft_identity()` exposes the same facts directly.
+
+### Fixed
+
+* Corrected the D1 special rows for `ArcTan2` and `ArcTan2Pi`: `(0, 0)` and
+  every `(±Inf, ±Inf)` pair now produce NaN. The previous implementation and
+  its tests pinned host-style zero and quadrant results rather than the retained
+  P3109/D1 definitions.
+* Corrected documentation that described nonexistent scoped
+  `with_default_*` mutation. These functions consume the current process-wide
+  defaults; explicit `T` and `ρ` are the local-policy interface.
+
 ## 0.3.0 — Julia integration and semantic corrections
 
 ### Added

@@ -683,7 +683,7 @@ end
 ωeval(::Val{:Negate}, x::C) where {C<:CarrierValue} =
     isnan(x) ? _cnan(C) : (iszero(x) ? _czero(C) : -x)
 function ωeval(::Val{:CopySign}, x::C, y::C) where {C<:CarrierValue}
-    (isnan(x) | isnan(y)) && return _cnan(C)                # [interp]: NaN sign source → NaN
+    (isnan(x) | isnan(y)) && return _cnan(C)                # D1 §4.9.2: NaN in either operand
     v = copysign(x, y)
     iszero(v) ? _czero(C) : v                               # single zero
 end
@@ -1099,15 +1099,15 @@ function ωeval(::Val{:Hypot}, x::AbstractFloat, y::AbstractFloat)
     iszero(x) && return abs(y)
     _encl2f(hypot, x, y, () -> hypot(Float128(x), Float128(y)), hypot(x, y))
 end
-function ωeval(::Val{:ArcTan2}, y::AbstractFloat, x::AbstractFloat)      # [interp]: single-zero branch cuts
+function ωeval(::Val{:ArcTan2}, y::AbstractFloat, x::AbstractFloat)
     (isnan(y) | isnan(x)) && return NaN
+    (iszero(y) & iszero(x)) && return NaN                    # D1 §4.10.15
+    (isinf(y) & isinf(x)) && return NaN                      # D1: every (±∞, ±∞) pair
     if iszero(y)
-        (x > 0.0 || iszero(x)) && return 0.0                 # atan2(0, x≥0) = 0
+        x > 0.0 && return 0.0                                # atan2(0, x>0) = 0
         return _encl_piscale(1, 0)                           # atan2(0, x<0 or −∞) = π
     end
     if isinf(y)
-        x == Inf && return _encl_piscale(y > 0 ? 1 : -1, 2)      # ±π/4
-        x == -Inf && return _encl_piscale(y > 0 ? 3 : -3, 2)     # ±3π/4
         return _encl_piscale(y > 0 ? 1 : -1, 1)                  # ±π/2
     end
     x == Inf && return 0.0
@@ -1117,13 +1117,13 @@ function ωeval(::Val{:ArcTan2}, y::AbstractFloat, x::AbstractFloat)      # [int
 end
 function ωeval(::Val{:ArcTan2Pi}, y::AbstractFloat, x::AbstractFloat)
     (isnan(y) | isnan(x)) && return NaN
+    (iszero(y) & iszero(x)) && return NaN
+    (isinf(y) & isinf(x)) && return NaN
     if iszero(y)
-        (x > 0.0 || iszero(x)) && return 0.0
+        x > 0.0 && return 0.0
         return 1.0
     end
     if isinf(y)
-        x == Inf && return y > 0 ? 0.25 : -0.25
-        x == -Inf && return y > 0 ? 0.75 : -0.75
         return y > 0 ? 0.5 : -0.5
     end
     x == Inf && return 0.0

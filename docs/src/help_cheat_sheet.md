@@ -101,7 +101,7 @@ x = Convert(T, ρ, 1.6)       # explicit projection
 
 c = codepoint(x)              # the code point, in the format's storage unit
 x = T(c)                      # an Unsigned means validated CODE POINT
-x = rawvalue(T, c)            # unchecked code-point construction
+x = T(c)                      # checked code-point construction (`c::Unsigned`)
 
 d = decode(x)                 # the exact datum, on the format's own carrier
 ```
@@ -208,8 +208,6 @@ DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
 DefaultProjection()      # RNE_SN
-DefaultRNG()             # Xoshiro         DefaultRNG!(Xoshiro(42))
-DefaultRbits()           # 8               DefaultRbits!(16)
 ```
 
 Setting a rounding/saturation component rebuilds `DefaultProjection`; setting
@@ -355,6 +353,7 @@ conformance()
 conformance_dict()
 conformance_report()
 draft_revision()
+draft_identity()
 
 κ, exhaustive = measure_kappa(fn, :Exp, T, (T,), ρ)
 register_approx!(:fast_exp, :Exp, T, (T,), ρ, fn; κ)
@@ -380,7 +379,7 @@ Approximate implementations are never substituted into the default API.
 | Expecting `sort` to put NaN last | The draft's total order puts the single NaN **first**, below −Inf (§4.12.1) — the opposite end from `Float64` |
 | Passing a `Rational` | Convert explicitly to an exact supported carrier or knowingly to `Float64` |
 | Reproducibility with stochastic rounding | Supply a seeded `rng`, or an explicit `R` in tests |
-| Using `rawvalue` on unchecked input | Prefer validated `T(c::Unsigned)` outside kernels |
+| Using the internal unchecked constructor | Prefer validated `T(c::Unsigned)` outside kernels |
 
 Symptom-first versions of these, with the error text you would actually see, are
 in [Troubleshooting](help_troubleshooting.md).

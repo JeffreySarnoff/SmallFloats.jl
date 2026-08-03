@@ -9,8 +9,7 @@
 #      rejected. κ is therefore a measured property, not a promise.
 #
 # κ semantics implemented here (per the draft's Annex worked example — the
-# subnormal-flushing Exp with "κ = 4" — and flagged as an interpretation where
-# the normative text was unavailable, see checkpoint.md):
+# subnormal-flushing Exp with "κ = 4"):
 #   κ = the maximum distance, in result-format code-point steps along the total
 #       order, between the implementation's result and the defined result, over
 #       all inputs whose defined result is finite.
@@ -18,8 +17,17 @@
 #       is NaN or ±Inf, or returns a non-finite value where the defined result is
 #       finite — such deviation is unbounded/unclassifiable in the code-point metric.
 
-const DRAFT_REVISION = "IEEE P3109 working draft, uploaded 2026-07-17"
+const DRAFT_IDENTITY = (
+    designation = "IEEE P3109/D1",
+    uploaded = "2026-07-17",
+    retained_source = "docs/other/IEEE_D1.md",
+    transliteration_sha256 = "820cb5009cd6fe9032f5bdfb661bc639e33296f716a552eafc81f899411bb5f2",
+)
+const DRAFT_REVISION = "$(DRAFT_IDENTITY.designation), uploaded $(DRAFT_IDENTITY.uploaded)"
+"""Human-readable designation of the retained P3109 draft implemented by this release."""
 draft_revision() = DRAFT_REVISION
+"""Structured identity and SHA-256 digest of the retained P3109 draft transliteration."""
+draft_identity() = DRAFT_IDENTITY
 
 @inline _mixed_radix_codes(lin::Int, ::Tuple{}) = ()
 @inline function _mixed_radix_codes(lin::Int, Ks::Tuple{Int,Vararg{Int}})
@@ -193,7 +201,7 @@ The decode32 → guarded-op32 → project kernel for `op⟨… → fr, ρ⟩`, s
 Float32 compute measure κ ≥ 1 (and κ = NaN at saturation boundaries), and
 stochastic ρ is rejected by κ measurement itself."""
 function f32_impl(op::Symbol, fr::Type{<:Binary}, ρ::ProjSpec)
-    roundingmode(ρ) isa RoundingModes_Ties ||
+    roundingmode(ρ) isa NearestRoundingMode ||
         throw(ArgumentError("Float32 kernels are registered for nearest-ties rounding modes only"))
     g = _f32_base(op)
     (xs::Binary...) -> begin
@@ -251,7 +259,10 @@ end
 # ---------------------------------------------------------------------------
 struct ConformanceDeclaration
     package::String
+    package_version::VersionNumber
     draft::String
+    draft_identity::typeof(DRAFT_IDENTITY)
+    interpretations::Vector{Symbol}
     formats::Vector{Symbol}
     operations::Vector{NamedTuple{(:name, :arity, :group),Tuple{Symbol,Int,Symbol}}}
     rounding_modes::Vector{String}
@@ -285,12 +296,12 @@ function conformance()
     cached = table_keys()
     apx = lock(() -> [(name=a.name, op=a.op, kappa=a.kappa_declared, exhaustive=a.exhaustive)
                       for a in values(APPROX_REGISTRY)], APPROX_LOCK)
+    version = Base.pkgversion(@__MODULE__)
     ConformanceDeclaration(
-        "SmallFloats.jl 0.1.0", DRAFT_REVISION,
+        "SmallFloats.jl $version", version, DRAFT_REVISION, DRAFT_IDENTITY, Symbol[],
         sort!(collect(keys(_NAMED))),
         ops,
-        ["NearestTiesToEven", "NearestTiesToAway", "TowardPositive", "TowardNegative",
-         "TowardZero", "ToOdd", "StochasticA[N], 1 ≤ N ≤ 60", "StochasticB[N]", "StochasticC[N]"],
+        String[last(d) for d in _ROUNDING_MODE_DECLARATIONS],
         [:SatFinite, :SatPropagate, :SatNone],
         sort!(blocknames),
         cached, sort!(apx; by=a -> a.name))
@@ -300,7 +311,15 @@ end
 function conformance_dict(c::ConformanceDeclaration=conformance())
     Dict{String,Any}(
         "package" => c.package,
+        "package_version" => string(c.package_version),
         "draft" => c.draft,
+        "draft_identity" => Dict(
+            "designation" => c.draft_identity.designation,
+            "uploaded" => c.draft_identity.uploaded,
+            "retained_source" => c.draft_identity.retained_source,
+            "transliteration_sha256" => c.draft_identity.transliteration_sha256,
+        ),
+        "interpretations" => String.(c.interpretations),
         "formats" => String.(c.formats),
         "operations" => [Dict("name" => String(o.name), "arity" => o.arity,
                               "group" => String(o.group)) for o in c.operations],
@@ -320,6 +339,9 @@ end
 function conformance_report(io::IO=stdout, c::ConformanceDeclaration=conformance())
     println(io, "Conformance declaration — ", c.package)
     println(io, "Implements: ", c.draft)
+    println(io, "Retained source: ", c.draft_identity.retained_source,
+            " (sha256 ", c.draft_identity.transliteration_sha256, ")")
+    println(io, "Interpretations: ", isempty(c.interpretations) ? "none" : join(c.interpretations, ", "))
     # The range is READ FROM THE CONSTANTS, never spelled: a conformance
     # declaration that can go stale is worse than no declaration.
     println(io, "\nFormats (", length(c.formats), "): all Binary{K,P,Σ,Δ}, K ∈ $KMIN:$KMAX, ",

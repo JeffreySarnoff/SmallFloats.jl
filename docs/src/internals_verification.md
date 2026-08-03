@@ -2,13 +2,15 @@
 
 ## What Is Verified
 
-The value sets are small enough that sampling is never necessary, so the suite
-enumerates — ≈ 8.9 M assertions in all:
+The suite combines exhaustive finite-domain gates with explicitly sampled axes.
+The final roll-call is the authoritative record for a run: it names the selected
+`quick`, `default`, or `release` tier, the units compared by every gate, and
+whether each gate was exhaustive or sampled. Major coverage includes:
 
 - formats against an independent draft transliteration (14 679);
 - ordering over all 2.5 M same-format pairs plus Next-op edge tables (7.6 M);
-- every unary operation on every input against a 3072-bit protocol run; divide
-  and the ternaries exhaustively;
+- unary, divide, and ternary operations against high-precision reference paths,
+  with the exact format/input coverage reported by their gates;
 - stochastic R-sweeps with directed-asymptote pins;
 - table ≡ scalar over every entry, including the ternary tiers (eager and
   adaptive) against the scalar path;
@@ -28,9 +30,7 @@ public entry points, zero warm-path allocation) stand in for timing assertions.
 
 Recorded after two measurement post-mortems: a benchmark closure over any non-`const`
 global measures Julia's dispatch machinery, not the code under test — and it distorts
-*ratios*, not just absolutes, because dispatch cost varies with call shape (a dynamic
-keyword call costs ~1 µs; a dynamic positional call far less; six unresolved interior
-sites cost six times one).
+*ratios*, not just absolutes, because dispatch cost varies with call shape.
 
 The rules the shipped `benchmarking/benchmarking.jl` enforces structurally:
 

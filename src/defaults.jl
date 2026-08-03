@@ -45,8 +45,6 @@
 # infers `Any`, so the value boxes once at escape even on the fast path: the
 # irreducible cost of a runtime-chosen type. Only `@eval` method redefinition
 # (world age) could remove that box; these combinators deliberately don't.
-# `DefaultRNG`/`DefaultRbits` need no combinator: their reads don't steer
-# dispatch (`Ref{Int}` is concrete; an rng is passed through as a value).
 
 # Speculation guards: the shipped initial values, `===`-tested on every
 # combinator call. Changing an initial value means changing its guard — they
@@ -60,8 +58,6 @@ const _DEFAULT_RETURN     = Ref{Type{<:Binary}}(_GUARD_RETURN)
 const _DEFAULT_ROUNDING   = Ref{RoundingMode3109}(roundingmode(_GUARD_PROJECTION))
 const _DEFAULT_SATURATION = Ref{SaturationMode}(saturationmode(_GUARD_PROJECTION))
 const _DEFAULT_PROJECTION = Ref{ProjSpec}(_GUARD_PROJECTION)
-const _DEFAULT_RNG        = Ref{Union{Type{<:AbstractRNG},AbstractRNG}}(Random.Xoshiro)
-const _DEFAULT_RBITS      = Ref{Int}(DEFAULT_RBITS)   # one source for the budget "8"
 
 """
     DefaultType() -> Type{<:Binary}
@@ -168,28 +164,6 @@ function DefaultProjection!(ρ::ProjSpec)
     ρ
 end
 DefaultProjection!(m, s) = DefaultProjection!(ProjSpec(projmode(m), s isa Type ? s() : s))
-
-"""
-    DefaultRNG() -> Type{<:AbstractRNG} | AbstractRNG
-    DefaultRNG!(rng) -> rng
-
-The session's default random-number generator for stochastic rounding.
-Initialized to the `Xoshiro` *type* (a fresh generator per use); may be set to
-an `AbstractRNG` instance for a reproducible stream.
-"""
-DefaultRNG() = _DEFAULT_RNG[]
-DefaultRNG!(rng::Union{Type{<:AbstractRNG},AbstractRNG}) = (_DEFAULT_RNG[] = rng; rng)
-
-"""
-    DefaultRbits() -> Int
-    DefaultRbits!(n::Int) -> n
-
-The session's default random-bit budget N for the stochastic rounding families
-(`StochasticA{N}`, `StochasticB{N}`, `StochasticC{N}`). Initialized to 8;
-must satisfy 1 ≤ N ≤ 60.
-"""
-DefaultRbits() = _DEFAULT_RBITS[]
-DefaultRbits!(n::Int) = (_check_nrandbits(n); _DEFAULT_RBITS[] = n; n)
 
 # ---------------------------------------------------------------------------
 # Consumption combinators: speculative fast path over a function barrier

@@ -12,6 +12,7 @@ default operation API never substitutes a registered approximation.
 | `conformance_dict` | `conformance_dict()` | a plain nested `Dict`, for JSON/TOML serialization | [Read and Export Conformance](workflow_conformance.md) |
 | `conformance_report` | `conformance_report()` | prints the declaration | [Read and Export Conformance](workflow_conformance.md) |
 | `draft_revision` | `draft_revision()` | the P3109 draft revision this package conforms to | [Read and Export Conformance](workflow_conformance.md) |
+| `draft_identity` | `draft_identity()` | structured designation, upload date, retained source, and SHA-256 digest | [Read and Export Conformance](workflow_conformance.md) |
 
 ## κ registry
 

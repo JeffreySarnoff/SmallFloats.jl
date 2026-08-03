@@ -1,0 +1,60 @@
+name: Release evidence
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release-test:
+    name: Release verification tier
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SMALLFLOATS_TIER: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - uses: julia-actions/cache@v2
+      - name: Instantiate
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
+      - name: Run release verification tier
+        run: julia --project=. -e 'using Pkg; Pkg.test()' | tee release-rollcall.log
+      - name: Write conformance report
+        run: julia --project=. -e 'using SmallFloats; conformance_report()' > conformance.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verification-and-conformance
+          path: |
+            release-rollcall.log
+            conformance.txt
+
+  release-docs:
+    name: HTML and PDF documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - uses: julia-actions/cache@v2
+      - name: Install PDF toolchain
+        run: sudo apt-get update && sudo apt-get install -y latexmk texlive-xetex texlive-latex-extra fonts-dejavu python3-pygments poppler-utils qpdf
+      - name: Install PDF validation modules
+        run: python3 -m pip install --user pdfplumber pypdf
+      - name: Instantiate documentation environment
+        run: julia --project=docs -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+      - name: Build documentation
+        run: julia --project=docs docs/make.jl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smallfloats-manual
+          path: |
+            docs/pdf/SmallFloats.pdf
+            docs/pdf/buildnote.md

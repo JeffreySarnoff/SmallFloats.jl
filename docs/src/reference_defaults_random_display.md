@@ -15,8 +15,6 @@ Read with `DefaultX()`, set with `DefaultX!(v)`.
 | `DefaultRoundingMode` | `NearestTiesToEven()` | mode instance or type | Cheat Sheet |
 | `DefaultSaturationMode` | `SatNone()` | mode instance or type | Cheat Sheet |
 | `DefaultProjection` | `RNE_SN` | a `ProjSpec`, or `(mode, sat)` | Cheat Sheet |
-| `DefaultRNG` | the `Xoshiro` type | RNG type or instance | Cheat Sheet |
-| `DefaultRbits` | `8` | `Int` in `1:60` | Cheat Sheet |
 
 ```julia
 DefaultType()            # Binary8p2se     DefaultType!(Binary8p4se)
@@ -24,8 +22,6 @@ DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
 DefaultProjection()      # RNE_SN
-DefaultRNG()             # Xoshiro         DefaultRNG!(Xoshiro(42))
-DefaultRbits()           # 8               DefaultRbits!(16)
 ```
 
 ## Coherence invariant
@@ -60,10 +56,10 @@ with_default_projection((ρ, x, y) -> Add(T, ρ, x, y), x, y)
 with_default_returntype(f, args...)              # f(DefaultReturnType(), args...)
 ```
 
-Each combinator restores nothing itself — it only *reads* the default at call
-time via `f(default, args...)`. For scoped mutate-and-restore, the same names
-also support a do-block form that restores the prior value on exit, even if
-the body throws.
+Each combinator restores nothing and changes nothing — it only *reads* the
+default at call time via `f(default, args...)`. There is no scoped
+mutate-and-restore form because the underlying state is process-global. Code
+that needs local numerical policy should pass `T` and `ρ` explicitly.
 
 ## Cost model
 
@@ -94,6 +90,10 @@ the body throws.
 | `randn(rng, T)` | explicit `rng` | default normal projection |
 | stochastic operation with `rng = rng` | explicit stream | selected stochastic `ProjSpec` |
 | stochastic operation with `R = r` | exact raw draw | selected stochastic `ProjSpec` |
+
+An omitted RNG uses Julia's task-local `Random.default_rng()`. The no-argument
+stochastic constructors use a compile-time bit budget of 8; select another
+budget explicitly, for example `RSA_SN(16)`.
 
 An explicit `R` must lie in `0:(2^N - 1)` for an `N`-bit stochastic mode.
 Array `rand`/`randn` forms use their documented defaults; construct arrays from

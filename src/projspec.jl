@@ -47,12 +47,21 @@ struct StochasticC{N} <: StochasticRoundingMode
     StochasticC{N}() where {N} = (_check_nrandbits(N); new{N}())
 end
 
-const RoundingModes_Ties = Union{NearestTiesToEven,NearestTiesToAway}
-const RoundingModes_Directed = Union{TowardPositive,TowardNegative,TowardZero,ToOdd}
-const RoundingModes_Stochastic = Union{StochasticA,StochasticB,StochasticC}
-
-const RoundingModes_Deterministic = Union{RoundingModes_Ties,RoundingModes_Directed}
-const RoundingModes = Union{RoundingModes_Deterministic,RoundingModes_Stochastic}
+# The supported vocabulary, declared once for conformance reporting. The type
+# hierarchy owns classification; this descriptor owns stable external names.
+# Do not discover these with `subtypes`: loaded third-party subtypes are not
+# supported modes and must not silently enter the package's conformance claim.
+const _ROUNDING_MODE_DECLARATIONS = (
+    NearestTiesToEven => "NearestTiesToEven",
+    NearestTiesToAway => "NearestTiesToAway",
+    TowardPositive => "TowardPositive",
+    TowardNegative => "TowardNegative",
+    TowardZero => "TowardZero",
+    ToOdd => "ToOdd",
+    StochasticA => "StochasticA[N], 1 ≤ N ≤ 60",
+    StochasticB => "StochasticB[N]",
+    StochasticC => "StochasticC[N]",
+)
 
 abstract type SaturationMode end
 
@@ -87,7 +96,7 @@ const SatOf = saturationmode
 
 # ---- queries
 isstochastic(::Type{<:RoundingMode3109}) = false
-isstochastic(::Type{<:RoundingModes_Stochastic}) = true
+isstochastic(::Type{<:StochasticRoundingMode}) = true
 isstochastic(m::RoundingMode3109) = isstochastic(typeof(m))
 isstochastic(::ProjSpec{R,S}) where {R,S} = isstochastic(R)
 

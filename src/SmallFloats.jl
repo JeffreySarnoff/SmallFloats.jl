@@ -15,10 +15,10 @@ the implemented draft.
 # Performance note
 Pass format types through `const` bindings, type parameters, or function
 arguments. All exported entry points fully specialize when the format type is
-statically known (measured: a complete scalar `Add` ≈ 26 ns, `project` ≈ 13 ns,
-zero allocations). Calling through a **non-`const` global** format type forces
-dynamic dispatch on every call — measured at ~1 µs per scalar keyword call —
-which is Julia semantics, not package overhead; a single function barrier
+statically known; the checked-in benchmark report records current timings and
+allocations. Calling through a **non-`const` global** format type forces
+dynamic dispatch on every call; this is Julia semantics, not package overhead.
+A single function barrier
 (`f(::Type{T}, args...) where {T}`) restores full speed. The test suite pins
 the specialization properties (concrete return types, zero warm-path
 allocation) as deterministic regressions.
@@ -152,11 +152,11 @@ export Binary,
        BitwidthOf, PrecisionOf, SignednessOf, DomainOf, ExponentBiasOf,
        ExponentBitwidthOf, TrailingSignificandBitwidthOf,
        MaxFiniteOf, MinFiniteOf, MinPositiveOf, MaxSubnormalOf, MinNormalOf,
-       maxfinite_datum, minfinite_datum, formatname, rawvalue, decode, decode!,  # codepoint extends Base
+       maxfinite_datum, minfinite_datum, formatname, decode, decode!,  # codepoint extends Base
        format, reptype, codeunit_type
 
 # control the display of Binary datum
-export VALID_SHOW_STYLES, DEFAULT_SHOW_STYLE, set_show_style!, get_show_style
+export VALID_SHOW_STYLES, set_show_style!, get_show_style
 
 # projection specifications
 export RoundingMode3109, NearestTiesToEven, NearestTiesToAway, TowardPositive,
@@ -184,8 +184,6 @@ export DefaultType, DefaultType!,
        DefaultRoundingMode, DefaultRoundingMode!,
        DefaultSaturationMode, DefaultSaturationMode!,
        DefaultProjection, DefaultProjection!,
-       DefaultRNG, DefaultRNG!,
-       DefaultRbits, DefaultRbits!,
        with_default_type, with_default_returntype, with_default_projection
 
 # comparison, classification, stepping (Groups D/M)
@@ -217,7 +215,7 @@ export BlockReduceAdd, BlockReduceMultiply, BlockDotProduct,
        ConvertFromBlock, ConvertToBlock, ConvertToBlockMaxAbsFinite
 
 # conformance and κ-approximation
-export conformance, conformance_dict, conformance_report, draft_revision,
+export conformance, conformance_dict, conformance_report, draft_revision, draft_identity,
        ConformanceDeclaration, ApproxImpl,
        measure_kappa, codedistance, register_approx!, unregister_approx!,
        approx, kappa, kappa_measured, list_approx, ftz_variant,

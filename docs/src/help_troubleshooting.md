@@ -36,12 +36,11 @@ distinguish. Fix: stop testing for negative zero; if you need "approached from
 below," use the projection engine's `sticky` argument instead of relying on a
 stored sign. Full explanation: [Core Model](core_model.md), [Encoding and Decoding](internals_encoding_decoding.md).
 
-**Symptom: a value built with `rawvalue` decodes to garbage or a non-existent datum.**
-Cause: `rawvalue(T, c)` is unchecked code-point construction — it skips the
+**Symptom: a value built with `SmallFloats.rawvalue` decodes to garbage or a non-existent datum.**
+Cause: `SmallFloats.rawvalue(T, c)` is an internal unchecked constructor — it skips the
 range validation that `T(c::Unsigned)` performs, so an out-of-range integer
 produces a bit pattern with no corresponding intent-checked datum. Fix:
-prefer validated `T(c::Unsigned)` outside performance kernels; reserve
-`rawvalue` for hot loops where the caller has already proven `c` is in range.
+use validated `T(c::Unsigned)` outside package implementation code.
 Full explanation: [Cheat Sheet](help_cheat_sheet.md), Values and code points.
 
 **Symptom: dividing by zero gives `NaN`, not `Inf` as IEEE-754 code expects.**

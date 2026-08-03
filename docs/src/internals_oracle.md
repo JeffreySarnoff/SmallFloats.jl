@@ -106,8 +106,8 @@ complete.
 ## Source and gates
 
 The operation registry and ω evaluation live in `src/oracle.jl`; exact dyadic
-carriers and their rational bridge live in `src/dyadic.jl` and
-`src/dyadic3.jl`. Changes here must preserve enclosure containment,
+carriers and their rational bridge live in `src/dyadic.jl`, with carrier-rung
+selection in `src/carriers.jl`. Changes here must preserve enclosure containment,
 termination, and agreement with a wider independent path. The gate and tier
 files under `test/` record whether each check is exhaustive or sampled.
 

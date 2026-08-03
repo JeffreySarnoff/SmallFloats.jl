@@ -10,10 +10,10 @@ never meaning.
 For every valid code point `c` of a concrete representation `T`:
 
 ```julia
-codepoint(rawvalue(T, c)) == c
+codepoint(SmallFloats.rawvalue(T, c)) == c
 ```
 
-and `decode(rawvalue(T, c))` equals the P3109 datum assigned to `c`. For every
+and `decode(SmallFloats.rawvalue(T, c))` equals the P3109 datum assigned to `c`. For every
 non-NaN datum, encoding the exact decoded value returns the corresponding code
 point under an exact-grid projection.
 
@@ -70,7 +70,7 @@ decoding floating values.
 - format parameters, representations, masks, and carrier traits:
   `src/formats.jl`;
 - computational decoding and order keys: `src/decode_encode.jl`;
-- wide exact datum carriers: `src/dyadic.jl`, `src/dyadic3.jl`, and carrier
+- wide exact datum carriers: `src/dyadic.jl` and carrier
   support files;
 - constructor normalization and representation aliases: format and conversion
   entry points in `src/`.

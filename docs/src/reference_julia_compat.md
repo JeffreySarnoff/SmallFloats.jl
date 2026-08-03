@@ -51,9 +51,10 @@ Code that must be insensitive to the session default names its projection:
 !!! warning "Restore what you set"
     `DefaultProjection!` mutates state shared by every module in the process, and
     nothing scopes it for you — it changes `T(x::Real)` construction too, so a
-    later `Binary8p4se(1.1)` would truncate rather than round to nearest. Prefer
-    [`with_default_projection`](@ref), which restores on exit even if the body
-    throws. Every example after this point assumes the pristine
+    later `Binary8p4se(1.1)` would truncate rather than round to nearest. The
+    `with_default_projection` combinator reads the configured projection; it
+    does not scope mutation. Prefer explicit forms such as
+    `Convert(T, ρ, x)` in library code. Every example after this point assumes the pristine
     `(NearestTiesToEven, SatNone)`, which is why the demonstration above puts it
     back.
 

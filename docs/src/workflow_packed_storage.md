@@ -53,7 +53,7 @@ formats). At a million elements of a 5-bit format:
 
 ```julia
 n = 1_000_000
-model = [rawvalue(Binary5p2se, UInt8(rand(0:31))) for _ in 1:n]
+model = [Binary5p2se(UInt8(rand(0:31))) for _ in 1:n]
 pv = PackedVector(model)
 (sizeof(model), sizeof(pv.data))
 ```

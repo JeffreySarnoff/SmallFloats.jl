@@ -4,9 +4,9 @@ This page develops the identity of a `Binary` value: how it is constructed,
 read, stepped, classified, and converted. Read [First Session](first_session.md)
 first if the distinction between datum and code point is new.
 
-## Four ways in, two ways out
+## Three ways in, two ways out
 
-A `Binary` value is an immutable wrapper around a code point. There are four
+A `Binary` value is an immutable wrapper around a code point. There are three
 constructors and two accessors:
 
 ```julia-repl
@@ -14,9 +14,6 @@ julia> x = Binary8p4se(1.6)              # construct from a Real: projects (roun
 Binary8p4se(1.625 ≡ 0x45)
 
 julia> Binary8p4se(0x45)                 # construct from a UInt8 CODE POINT (validated)
-Binary8p4se(1.625 ≡ 0x45)
-
-julia> rawvalue(Binary8p4se, 0x45)       # same, unchecked — the kernel-internal route
 Binary8p4se(1.625 ≡ 0x45)
 
 julia> Convert(Binary8p4se, RNE_SN, 3)   # explicit conversion, any mode
@@ -52,9 +49,9 @@ julia> Binary8p4se(0x02), Binary8p4se(2)
     is code point 2, not the value 2.0. Use `Convert` when intent should be
     unmistakable.
 
-    Out-of-range codes throw for K < 8 (`Binary5p3sf(0x20)` is an error); the range
-    check costs nothing measurable — 2.1 ns, identical to unchecked `rawvalue`.
-    Round-tripping is `T(codepoint(x)) === x`.
+    Out-of-range codes throw for K < 8 (`Binary5p3sf(0x20)` is an error).
+    Round-tripping is `T(codepoint(x)) === x`. The unchecked constructor is an
+    internal kernel primitive rather than part of the exported interface.
 
 ## `Convert` versus `convert`
 

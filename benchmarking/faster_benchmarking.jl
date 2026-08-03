@@ -268,6 +268,7 @@ markdown_escape(text) = replace(string(text), "|" => "\\|", '\n' => ' ')
 function write_report(path, target, actual, seed, slice, passes, measurements,
                       eligible_count, catalog_count, results, failures, stop_reason)
     mkpath(dirname(abspath(path)))
+    repo = repository_state()
     open(path, "w") do io
         println(io, "# SmallFloats fast benchmark report\n")
         println(io, "This deadline-aware run samples representative work from the full suite. ",
@@ -279,6 +280,7 @@ function write_report(path, target, actual, seed, slice, passes, measurements,
         println(io, "- Measurement passes: `$passes` (`$measurements` total case measurements)")
         println(io, "- Initial per-case Chairmarks sampling slice: `$(round(slice * 1e3; digits=2)) ms`")
         println(io, "- Seed: `$seed`; Julia: `$(VERSION)`; threads: `$(Threads.nthreads())`")
+        println(io, "- Source: SmallFloats.jl `$(Base.pkgversion(SmallFloats))`; commit `$(repo.commit)`; tree `$(repo.dirty)`")
         println(io, "- Stop condition: $(markdown_escape(stop_reason))\n")
         println(io, "The runtime is approximate: Julia process startup precedes the timer, while package ",
                 "loading, compilation, data preparation, and measurement are included. An in-progress ",

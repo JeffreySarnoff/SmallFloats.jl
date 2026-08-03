@@ -11,6 +11,7 @@ artifacts.
 - `conformance_dict()` — a plain nested `Dict{String,Any}` for JSON/TOML
   serialization.
 - `draft_revision()` — the P3109 draft revision the package implements.
+- `draft_identity()` — the retained draft source and its reproducibility digest.
 - Any JSON/TOML writer your project already depends on.
 
 ## Recipe
@@ -38,6 +39,10 @@ session.
 which revision of the P3109 draft this package implements — include it next
 to the conformance dict so an artifact remains interpretable even if the
 draft itself changes in a later package version.
+
+`conformance_dict()` now includes this structured identity directly. Use
+`draft_identity()` when an experiment manifest needs the same facts without
+the session-dependent cache and approximation entries.
 
 **4. Confirm registered approximations show up.** Any approximation
 registered with `register_approx!` appears in the conformance declaration

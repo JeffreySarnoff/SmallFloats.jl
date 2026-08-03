@@ -36,6 +36,8 @@ Source files load in dependency order, each layer speaking only downward:
 | layer | file | provides |
 |:---|---|---|
 | formats | `formats.jl` | `Binary{K,P,SGN,EXT}`, the 504 named aliases, Group M queries |
+| display | `show.jl` | value/code-point rendering and `IOContext` display policy |
+| carriers | `carriers.jl` | exact in-flight carrier rungs selected from format range |
 | specs | `projspec.jl` | rounding/saturation singletons, `ProjSpec{R,S}`, the predefined spec grid |
 | defaults | `defaults.jl` | settable session defaults (`DefaultType`, `DefaultProjection`, …) behind `Ref`s; consumed via the speculation guard |
 | codec | `decode_encode.jl` | decode (generated tables + bit-composed compute), encode, order keys, counting sort, `Class`, Next ops |

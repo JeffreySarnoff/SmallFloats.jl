@@ -17,6 +17,7 @@ using Chairmarks
 using Statistics: median
 using Random
 using SmallFloats
+using SmallFloats.Formats
 using SmallFloats: project, order_key, get_table, empty_tables!, _f128, opinfo, OP_REGISTRY,
              _UNARY_OPS, _BINARY_OPS, _TERNARY_OPS, rawvalue, decode, apply_op,
              TERNARY_EAGER_BITS, TERNARY_ADAPTIVE_BITS, THREAD_MIN_ELEMS, THREADED_KERNELS
@@ -126,8 +127,9 @@ const _SAFE_DOMAINS = Dict{Symbol,Tuple}(
 # otherwise rejection-sample finite tuples whose defined result the oracle says
 # is not NaN. Never empty for any registry op at K ≥ 3.
 function indomain_pool(op::Symbol, ::Type{T}, arity::Int, n) where {T<:Binary}
-    finite = [rawvalue(T, UInt8(c)) for c in 0:(1 << bitwidth(T)) - 1
-              if isfinite(decode(rawvalue(T, UInt8(c))))]
+    U = codeunit_type(T)
+    finite = [rawvalue(T, U(c)) for c in 0:(1 << bitwidth(T)) - 1
+              if isfinite(decode(rawvalue(T, U(c))))]
     if haskey(_SAFE_DOMAINS, op)
         preds = _SAFE_DOMAINS[op]
         length(preds) == arity ||
@@ -149,7 +151,8 @@ function indomain_pool(op::Symbol, ::Type{T}, arity::Int, n) where {T<:Binary}
     tuples
 end
 function codes_pool(::Type{T}, n; class::Symbol=:all) where {T<:Binary}
-    codes = [rawvalue(T, UInt8(c)) for c in 0:(1 << bitwidth(T)) - 1]
+    U = codeunit_type(T)
+    codes = [rawvalue(T, U(c)) for c in 0:(1 << bitwidth(T)) - 1]
     class === :nonan  && filter!(v -> !isnan(decode(v)), codes)
     class === :finite && filter!(v -> isfinite(decode(v)), codes)
     class in (:all, :nonan, :finite) || throw(ArgumentError("unknown operand class $class"))
@@ -293,7 +296,12 @@ end
 
 function bench_format_sensitivity(ops)
     rows = Row[]
-    for F in (Binary8p4se, Binary8p3sf, Binary8p1uf, Binary5p2se, Binary3p1se), op in ops
+    # Representation width and carrier rung are independent axes. Keep one
+    # explicit representative of Code8/rung 1, Code16/rung 1, rung 2, and rung
+    # 3, plus the smallest format. This is evidence for the architecture rather
+    # than a collection of only the formats that fit one-byte tables.
+    for F in (Binary8p4se, Binary16p8se, Binary16p5se, Binary16p1uf,
+              Binary3p1se), op in ops
         pool = codes_pool(F, 4096)
         b = _bench_op(getfield(SmallFloats, op), F, pool, Val(2))
         push!(rows, Row("$(op)⟨$(SmallFloats.formatname(F))⟩", b))
@@ -465,10 +473,26 @@ end
 # ---------------------------------------------------------------------------
 # report
 # ---------------------------------------------------------------------------
+function repository_state()
+    root = normpath(joinpath(@__DIR__, ".."))
+    commit = try
+        readchomp(`git -C $root rev-parse HEAD`)
+    catch
+        "unavailable"
+    end
+    dirty = try
+        isempty(readchomp(`git -C $root status --porcelain`)) ? "clean" : "dirty"
+    catch
+        "unavailable"
+    end
+    (; commit, dirty)
+end
+
 function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
     Random.seed!(seed)
     T = Binary8p4se
     preflight(T)
+    repo = repository_state()
     open(path, "w") do io
         println(io, "# Benchmark report")
         println(io, "\nGenerated: ", string(Dates_now()), "  ·  Julia ", VERSION,
@@ -476,6 +500,9 @@ function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
                 Threads.nthreads(), " Julia thread", Threads.nthreads() == 1 ? "" : "s", ")",
                 "  ·  Float128 paths: ", _f128() ? "enabled" : "disabled",
                 "  ·  Chairmarks ", pkgversion(Chairmarks))
+        println(io, "\nSource: SmallFloats.jl ", Base.pkgversion(SmallFloats),
+                "  ·  commit `", repo.commit, "`  ·  tree ", repo.dirty,
+                "  ·  seed ", seed)
         println(io, "\nReference format for per-operation tables: `Binary8p4se` under ",
                 "`(NearestTiesToEven, SatNone)`. Every table names its operand class: ",
                 "the scalar-operation tables appear in four variants — all code points ",

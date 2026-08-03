@@ -21,6 +21,7 @@
 # the bitwidth range, the format count, and the size of the export surface.
 
 using Test, SmallFloats
+using SHA: sha256
 using SmallFloats: KMIN, KMAX, KSPLIT, _NAMED, bitwidth
 
 # ---- what is scanned, and why it is more than `docs/src/`.
@@ -129,6 +130,34 @@ end
     alltext = join(read.(_DOC_FILES, String), "\n")
     @test occursin("504", alltext)
     @test occursin("SmallFloats.Formats", alltext)
+
+    # Volatile package/draft identity is checked at the same seam that renders
+    # it. The digest names the retained transliteration, not an unavailable
+    # original document.
+    @test Base.pkgversion(SmallFloats) == v"0.4.0"
+    draft = draft_identity()
+    retained = joinpath(@__DIR__, "..", draft.retained_source)
+    @test isfile(retained)
+    @test bytes2hex(sha256(read(retained))) == draft.transliteration_sha256
+
+    # Implementation pages may name source files, but cannot keep links to a
+    # layer that has been removed. Check every backticked src/*.jl reference.
+    srcroot = normpath(joinpath(@__DIR__, ".."))
+    source_refs = String[]
+    for f in _DOC_FILES, m in eachmatch(r"`(src/[^`]+\.jl)`", read(f, String))
+        push!(source_refs, m.captures[1])
+    end
+    @test !isempty(source_refs)
+    @test all(p -> isfile(joinpath(srcroot, p)), source_refs)
+
+    # Removed controls and nonexistent scoped-setter forms must not return to
+    # the live manual. Historical records under docs/other are intentionally
+    # excluded from this interface check.
+    livetext = join(read.(filter(f -> occursin(joinpath("docs", "src"), f),
+                                _DOC_FILES), String), "\n")
+    @test !occursin(r"Default(RNG|Rbits)!?", livetext)
+    @test !occursin(r"with_default_(type|returntype|projection)\([^,\n]+\)\s+do", livetext)
+    @test !occursin("restores on exit", livetext)
 
     @info "docs: $(length(_DOC_FILES)) files checked against the package — " *
           "$n_all formats ($n_exported exported at K ≤ $KSPLIT, $n_optin opt-in " *

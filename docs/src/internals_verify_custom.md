@@ -20,7 +20,7 @@ is pinned elsewhere in the suite):
 using SmallFloats
 
 function ref_nearest_distance(::Type{T}, x) where {T}
-    fins = [v for v in (rawvalue(T, UInt8(c)) for c in 0:255) if isfinite(decode(v))]
+    fins = [v for v in (SmallFloats.rawvalue(T, UInt8(c)) for c in 0:255) if isfinite(decode(v))]
     minimum(abs(setprecision(() -> BigFloat(decode(v)) - BigFloat(x), BigFloat, 256))
             for v in fins)
 end
@@ -28,7 +28,7 @@ end
 function verify_quantizer()
     ok = true
     for c in 0x00:0xff
-        x = decode(rawvalue(Binary8p3se, c))
+        x = decode(SmallFloats.rawvalue(Binary8p3se, c))
         (isfinite(x) && abs(x) <= decode(MaxFiniteOf(Binary8p4se))) || continue
         got = Convert(Binary8p4se, RNE_SN, x)
         ok &= abs(decode(got) - x) == Float64(ref_nearest_distance(Binary8p4se, x))
@@ -57,7 +57,7 @@ using SmallFloats, Random
 
 rng = Xoshiro(5)
 mk() = Block(Binary8p1uf(2.0^rand(rng, -3:3)),
-             ntuple(_ -> rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
+             ntuple(_ -> SmallFloats.rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
 
 function verify_dots(trials)
     for _ in 1:trials
@@ -155,7 +155,7 @@ fast(x) = (r = Exp(Binary8p4se, RNE_SN, x);
 κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 
 function margin_audit(fast, κ)
-    codes = [rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
+    codes = [SmallFloats.rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
     safe = violations = 0
     for a in codes, b in codes
         da, db = Exp(Binary8p4se, RNE_SN, a), Exp(Binary8p4se, RNE_SN, b)

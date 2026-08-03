@@ -1,14 +1,14 @@
 # Session State and Reproducibility
 
-Six values control what "the default" means for any convenience call in
+Five values control what "the default" means for any convenience call in
 SmallFloats.jl — the format `T(2.1)` produces, the projection `x + y`
-follows, the RNG `rand(T)` draws from. This page explains what those six
+follows, and the result format an omitted result type selects. This page explains what those five
 defaults are, how they stay consistent with each other, why they are
 dangerous to set casually, and the safe pattern for consuming them.
 
-## The six defaults
+## The five defaults
 
-Six session-wide defaults are readable as `DefaultX()` and settable as
+Five session-wide defaults are readable as `DefaultX()` and settable as
 `DefaultX!(v)`:
 
 | default | initial value | setter accepts |
@@ -18,8 +18,6 @@ Six session-wide defaults are readable as `DefaultX()` and settable as
 | `DefaultRoundingMode` | `NearestTiesToEven()` | mode instance or type |
 | `DefaultSaturationMode` | `SatNone()` | mode instance or type |
 | `DefaultProjection` | `RNE_SN` | a `ProjSpec`, or `(mode, sat)` |
-| `DefaultRNG` | the `Xoshiro` type | RNG type or instance |
-| `DefaultRbits` | `8` | `Int` in `1:60` |
 
 ## Coherence in both directions
 
@@ -57,15 +55,9 @@ julia> DefaultProjection!(RNE_SN)        # restore: these setters are PROCESS-wi
     `T(x::Real)`, `a + b`, and `Exp(x)` follows it until something sets it
     back.
 
-    Prefer `with_default_projection` (and `with_default_type`,
-    `with_default_returntype`), which restore on exit even if the body
-    throws:
-
-    ```julia
-    with_default_projection(RTZ_SF) do
-        Binary8p4se(1e9)          # clamps, inside this block only
-    end
-    ```
+    The `with_default_*` combinators consume the current value efficiently;
+    they do not scope or restore mutation. Code needing a local policy should
+    call an explicit form such as `Convert(Binary8p4se, RTZ_SF, 1e9)`.
 
     Every example in the manual assumes the pristine
     `(NearestTiesToEven, SatNone)`, which is why each demonstration that
