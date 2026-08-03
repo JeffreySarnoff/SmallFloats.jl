@@ -147,7 +147,8 @@ end
 export binary64, binary32, binary16
 
 # Group M and format introspection
-export bitwidth, issigned, isextended, expbias, expbitwidth, trailingsigbits,
+export Binary,
+       bitwidth, issigned, isextended, expbias, expbitwidth, trailingsigbits,
        BitwidthOf, PrecisionOf, SignednessOf, DomainOf, ExponentBiasOf,
        ExponentBitwidthOf, TrailingSignificandBitwidthOf,
        MaxFiniteOf, MinFiniteOf, MinPositiveOf, MaxSubnormalOf, MinNormalOf,
