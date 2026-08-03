@@ -6120,11 +6120,11 @@ Project it back explicitly when that is what you mean: \texttt{Convert(\allowbre
 \label{15708086746009923714}{}
 
 
-Beyond arithmetic, \texttt{Binary} integrates where the other layers provide it: predicates and constants (\texttt{isnan}, \texttt{isfinite}, \texttt{signbit}, \texttt{zero}, \texttt{one}, \texttt{eps}, \texttt{typemin}/\allowbreak\texttt{typemax}, \texttt{floatmin}/\allowbreak\texttt{floatmax}), comparisons and \texttt{isless} on integer order keys, \texttt{sort} via an O(n) counting sort (which places the single NaN \textbf{first}, below −Inf, per the draft{\textquotesingle}s total order — not last as \texttt{Float64} sorting does), \texttt{nextfloat}/\allowbreak\texttt{prevfloat} as the draft Next operations, \texttt{codepoint}, and \texttt{rand}/\allowbreak\texttt{randn} (see \href{concept\_\allowbreak{}session\_\allowbreak{}state.md}{Random Values}). All of it goes through the same projection engine and decode tables as the draft-named API.
+Beyond arithmetic, \texttt{Binary} integrates where the other layers provide it: predicates and constants (\texttt{isnan}, \texttt{isfinite}, \texttt{signbit}, \texttt{zero}, \texttt{one}, \texttt{eps} in both its type and value forms, \texttt{typemin}/\allowbreak\texttt{typemax}, \texttt{floatmin}/\allowbreak\texttt{floatmax}), comparisons and \texttt{isless} on integer order keys, \texttt{sort} via an O(n) counting sort (which places the single NaN \textbf{first}, below −Inf, per the draft{\textquotesingle}s total order — not last as \texttt{Float64} sorting does), \texttt{nextfloat}/\allowbreak\texttt{prevfloat} as the draft Next operations, \texttt{codepoint}, and \texttt{rand}/\allowbreak\texttt{randn} (see \href{concept\_\allowbreak{}session\_\allowbreak{}state.md}{Random Values}). All of it goes through the same projection engine and decode tables as the draft-named API.
 
 
 
-\needspace{28\baselineskip}
+\needspace{32\baselineskip}
 \subsubsection{The \texttt{AbstractFloat} contract}
 
 
@@ -6147,12 +6147,18 @@ verb & behaviour \\
 \texttt{round}, \texttt{floor}, \texttt{ceil}, \texttt{trunc} & \textbf{one} rounding: the integer value is formed exactly on the carrier and projected once, under the session default{\textquotesingle}s saturation \\
 \texttt{round(\allowbreak{}x, r::RoundingMode)} & \texttt{RoundNearest}, \texttt{RoundNearestTiesAway}, \texttt{RoundUp}, \texttt{RoundDown}, \texttt{RoundToZero} \\
 \texttt{exponent}, \texttt{significand}, \texttt{frexp} & exact; \texttt{DomainError} on zero and the non-finites, as in Base \\
+\texttt{eps(x)} & the ulp \textbf{at} \texttt{x}, and always exactly a datum of \texttt{x}{\textquotesingle}s own format — see below \\
+\texttt{ldexp(x, n)} & exact: scaling by a power of two moves the exponent field and nothing else \\
 \texttt{widen} & the format{\textquotesingle}s promotion carrier — see \href{concept\_\allowbreak{}julia\_\allowbreak{}numeric.md}{No Automatic Promotion} for why it is not another format \\
 \texttt{reinterpret} & both directions, and the incoming one is \textbf{checked} against the representation invariant \\
 \bottomrule
 \end{tabulary}
 
 \end{table}
+
+
+
+\texttt{eps} has both forms: \texttt{eps(T)} is the constant \texttt{2{\textasciicircum}(1-P)}, and \texttt{eps(x)} is the spacing of the lattice at \texttt{x}. The second is always representable — the ulp is \texttt{2{\textasciicircum}Q} with \texttt{2−P−B ≤ Q ≤ e\_\allowbreak{}max−P+1}, and every power of two in a format{\textquotesingle}s range is a datum for every \texttt{P ≥ 1} — so it is exact rather than a projected approximation, and it does not vary with the session projection. In the subnormal band the spacing is constant, and at zero it is the least positive datum.
 
 
 
@@ -6166,6 +6172,12 @@ julia> Base.decompose(Binary8p4se(1.5))          # 12 · 2^-3 = 1.5, exactly
 
 julia> floor(Binary8p4se(1.6)), ceil(Binary8p4se(1.1))
 (Binary8p4se(1.0 ≡ 0x40), Binary8p4se(2.0 ≡ 0x48))
+
+julia> eps(Binary8p4se(1.5)), eps(Binary8p4se(64.0))   # the lattice widens
+(Binary8p4se(0.125 ≡ 0x28), Binary8p4se(8.0 ≡ 0x58))
+
+julia> ldexp(Binary8p4se(1.5), 2), ldexp(Binary8p4se(1.5), -2)
+(Binary8p4se(6.0 ≡ 0x54), Binary8p4se(0.375 ≡ 0x34))
 
 julia> reinterpret(Binary8p4se, 0x44)            # checked, unlike `rawvalue`
 Binary8p4se(1.5 ≡ 0x44)
@@ -6971,7 +6983,7 @@ Bulk ingestion: exact widening per element, then projection under ρ. Unlike the
 Convert(fr, ρ, x) -> fr
 \end{minted}
 
-Draft §4.9 Convert⟨f\emph{x, f}r, ρ⟩. Accepts \texttt{Binary}, IEEE binary16/32/64 floats (widened exactly to the Float64 carrier), \texttt{Float128} (projected directly), \texttt{Integer} (exact via a sufficiently wide BigFloat), and \texttt{BigFloat} (projected directly; the caller warrants the value is exact).
+Draft §4.9 Convert⟨f\emph{x, f}r, ρ⟩. Accepts \texttt{Binary}, IEEE binary16/32/64 floats (widened exactly to the Float64 carrier), \texttt{Float128} (projected directly), \texttt{Dyadic} (the rung-3 datum carrier — what \texttt{decode} returns for the eight rung-3 formats; projected directly and exactly), \texttt{Integer} (exact via a sufficiently wide BigFloat), and \texttt{BigFloat} (projected directly; the caller warrants the value is exact).
 
 
 
@@ -7383,6 +7395,8 @@ f32_exact(op, f1, f2) -> Bool
 
 True iff \texttt{op ∈ (\allowbreak{}:Add, :Subtract, :Multiply)} on Float32-decoded operands is exact for every finite pair of (f1, f2) datums — checked once by exhaustive enumeration against a 300-bit BigFloat oracle, then cached. When true, a Float32 intermediate is an exact carrier under every projection mode.
 
+Defined at \textbf{every} bitwidth. A signature whose pair count exceeds \texttt{F32\_\allowbreak{}EXACT\_\allowbreak{}MAX\_\allowbreak{}PAIRS[]} raises rather than enumerating; that is a cost refusal naming the budget, never a statement about the formats.
+
 
 
 \end{adjustwidth}
@@ -7529,7 +7543,9 @@ measure_kappa(fn, op, fr, argformats, ρ; max_exhaustive=2^22, rng, samples=2^20
     -> (κ::Float64, exhaustive::Bool)
 \end{minted}
 
-Measure κ of \texttt{fn(\allowbreak{}x::argformats[1], …)::fr} against the defined results of draft operation \texttt{op} under ρ. Enumerates the full input cross-product when it has at most \texttt{max\_\allowbreak{}exhaustive} points (always true for arity ≤ 2); otherwise measures on \texttt{samples} uniform draws and reports \texttt{exhaustive = false}.
+Measure κ of \texttt{fn(\allowbreak{}x::argformats[1], …)::fr} against the defined results of draft operation \texttt{op} under ρ. Enumerates the full input cross-product when it has at most \texttt{max\_\allowbreak{}exhaustive} points; otherwise measures on \texttt{samples} uniform draws and reports \texttt{exhaustive = false}.
+
+The parenthetical here used to read {\textquotedbl}always true for arity ≤ 2{\textquotedbl}, which was a K ≤ 8 fact: two K = 16 formats are \texttt{2{\textasciicircum}32} points against a \texttt{2{\textasciicircum}22} budget, so a wide binary signature samples. That is the mechanism working — κ is a \emph{measurement}, \texttt{exhaustive = false} is reported, and \texttt{conformance\_\allowbreak{}report} prints {\textquotedbl}(κ sampled — not exhaustive){\textquotedbl} — but the claim was no longer true.
 
 
 
@@ -7876,6 +7892,23 @@ Default random-bit budget used by no-argument stochastic projection constructors
 \begin{adjustwidth}{2em}{0pt}
 
 External float element types whose widening to the Float64 carrier is exact.
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{16003865593099067000}{\texttt{SmallFloats.F32\_\allowbreak{}EXACT\_\allowbreak{}MAX\_\allowbreak{}PAIRS}}  -- {Constant.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+Largest \texttt{2{\textasciicircum}(K1+K2)} operand-pair count \texttt{f32\_\allowbreak{}exact} will enumerate.
+
+A bound on \textbf{time}, not memory: each pair costs two decodes and two 300-bit \texttt{BigFloat} operations, so the pair count — not any byte figure — is what governs it. The same distinction \texttt{TABLE\_\allowbreak{}EAGER\_\allowbreak{}BITS} draws against \texttt{TABLE\_\allowbreak{}MAX\_\allowbreak{}BITS}.
+
+The floor is \texttt{2{\textasciicircum}16}, the largest K ≤ 8 signature (8 + 8), so \textbf{no answer that existed before the K ≤ 16 extension can change} — the fixed-point argument \texttt{TABLE\_\allowbreak{}EAGER\_\allowbreak{}BITS} makes for itself. \texttt{2{\textasciicircum}20} above it admits every signature through K1 + K2 = 20 while keeping the worst case seconds rather than hours; \texttt{2{\textasciicircum}32} (two K = 16 formats) is four billion pairs and is what this exists to refuse.
 
 
 
@@ -8607,7 +8640,7 @@ Three conditions, one per way a conversion can lose information:
 \item \texttt{P ≤ precision(X)} — the significand fits;
 
 
-\item the largest finite datum{\textquotesingle}s exponent is within \texttt{X}{\textquotesingle}s normal range. That exponent is \texttt{B − 1} for a signed format and \texttt{0} for an unsigned one, which is not symmetry-breaking pedantry: an unsigned format spends its whole exponent field below 1, so \texttt{Binary16p1uf}{\textquotesingle}s datums run down to \texttt{2{\textasciicircum}-32769} while its largest is \texttt{0.5};
+\item the largest finite datum{\textquotesingle}s exponent is within \texttt{X}{\textquotesingle}s normal range. That exponent is \texttt{B − 1} for \textbf{both} signedness classes, and it is \texttt{B − 2} when \texttt{P == 1}, so \texttt{B − 1} is a sound upper bound at every format: \texttt{Binary8p4uf}{\textquotesingle}s largest datum is \texttt{14·2{\textasciicircum}12 = 57 344}, exponent \texttt{15 = B − 1}, and \texttt{Binary16p1uf}{\textquotesingle}s is \texttt{2{\textasciicircum}32766} with a least positive datum of \texttt{2{\textasciicircum}-32767};
 
 
 \item \texttt{2 − P − B ≥} \texttt{X}{\textquotesingle}s least subnormal exponent — and the smallest datum being a \emph{subnormal} of \texttt{X} is fine, because a datum is \texttt{sig · 2{\textasciicircum}(2−P−B)} with integer \texttt{sig}, so once the step is a multiple of \texttt{X}{\textquotesingle}s subnormal step every datum lands on \texttt{X}{\textquotesingle}s grid exactly.
