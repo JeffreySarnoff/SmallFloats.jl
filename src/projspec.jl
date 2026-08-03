@@ -7,21 +7,24 @@
 # pure-vs-stochastic dispatch is static (pure ⇒ tabulable, stochastic ⇒ never).
 
 abstract type RoundingMode3109 end
+abstract type StochasticRoundingMode    <: RoundingMode3109 end
 abstract type DeterministicRoundingMode <: RoundingMode3109 end
-abstract type StochasticRoundingMode <: RoundingMode3109 end
+abstract type NearestRoundingMode       <: DeterministicRoundingMode end
+abstract type DirectedRoundingMode      <: DeterministicRoundingMode end
+abstract type FaithfulRoundingMode      <: DeterministicRoundingMode end
 
 "Round to nearest; ties to the even code point (IEEE default; draft §4.7.1)."
-struct NearestTiesToEven <: DeterministicRoundingMode end
+struct NearestTiesToEven <: NearestRoundingMode end
 "Round to nearest; ties away from zero (draft §4.7.1)."
-struct NearestTiesToAway <: DeterministicRoundingMode end
+struct NearestTiesToAway <: NearestRoundingMode end
 "Directed rounding toward +∞ (draft §4.7.2)."
-struct TowardPositive    <: DeterministicRoundingMode end
+struct TowardPositive    <: DirectedRoundingMode end
 "Directed rounding toward −∞ (draft §4.7.2)."
-struct TowardNegative    <: DeterministicRoundingMode end
+struct TowardNegative    <: DirectedRoundingMode end
 "Directed rounding toward zero — truncation (draft §4.7.2)."
-struct TowardZero        <: DeterministicRoundingMode end
+struct TowardZero        <: DirectedRoundingMode end
 "Round inexact results to the nearest *odd* code point (draft §4.7.3; sticky-friendly)."
-struct ToOdd             <: DeterministicRoundingMode end
+struct ToOdd             <: FaithfulRoundingMode end
 
 # Stochastic variants (draft §4.7.4): R random bits with 0 ≤ R < 2^N are supplied
 # per projected element. N is capped at 60 so every predicate stays in Int64
