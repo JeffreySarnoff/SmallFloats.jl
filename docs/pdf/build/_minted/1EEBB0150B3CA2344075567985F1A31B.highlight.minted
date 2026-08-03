@@ -3,6 +3,7 @@
 \PYG{n}{conformance\PYGZus{}dict}\PYG{p}{()}
 \PYG{n}{conformance\PYGZus{}report}\PYG{p}{()}
 \PYG{n}{draft\PYGZus{}revision}\PYG{p}{()}
+\PYG{n}{draft\PYGZus{}identity}\PYG{p}{()}
 
 \PYG{n}{κ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{exhaustive}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{measure\PYGZus{}kappa}\PYG{p}{(}\PYG{n}{fn}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{T}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{)}
 \PYG{n}{register\PYGZus{}approx!}\PYG{p}{(}\PYG{l+s+ss}{:fast\PYGZus{}exp}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{T}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{fn}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{κ}\PYG{p}{)}

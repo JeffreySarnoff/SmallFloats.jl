@@ -1,4 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{DefaultRNG}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{AbstractRNG}\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{o}{|}\PYG{+w}{ }\PYG{n}{AbstractRNG}
-\PYG{n}{DefaultRNG!}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rng}
-\end{MintedVerbatim}

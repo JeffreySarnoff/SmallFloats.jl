@@ -272,10 +272,11 @@ the docs rather than only in a source comment.
 ### 3.4 `DefaultProjection!` and friends
 
 `!` conventionally marks argument mutation, and these mutate process-global
-state instead. But they *do* mutate, the `!` warns, and the scoped alternatives
-(`with_default_projection`) exist. Keep. What was missing — and was added this
-session — is the warning that the setters are process-global and leak across
-modules, which had silently invalidated three examples in the user guide.
+state instead. They *do* mutate and the `!` warns, but there is no scoped
+alternative: `with_default_projection` only passes the currently configured
+projection to a function. Keep the setters for controlled session setup and
+state plainly that they persist and leak across modules and tasks. That warning
+was missing and had silently invalidated three examples in the user guide.
 
 ---
 

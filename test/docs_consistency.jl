@@ -32,8 +32,9 @@ using SmallFloats: KMIN, KMAX, KSPLIT, _NAMED, bitwidth
 # execution records — a stale range there misleads the next person to work on the
 # package, which is a slower failure but not a smaller one.
 #
-# `docs/build/` and `docs/pdf/build/` are deliberately NOT scanned: they are
-# generated, so a finding there is a finding about their source, reported twice.
+# Generated trees are not part of the general fact scan. The tracked PDF source
+# is, however, included in the interface-claim check below: it is a published
+# artifact, and a stale regeneration must not reintroduce a nonexistent API.
 const _DOC_ROOTS = [joinpath(@__DIR__, "..", "docs", "src"),
                     joinpath(@__DIR__, "..", "docs", "other")]
 const _DOC_FILES = let fs = String[]
@@ -151,13 +152,21 @@ end
     @test all(p -> isfile(joinpath(srcroot, p)), source_refs)
 
     # Removed controls and nonexistent scoped-setter forms must not return to
-    # the live manual. Historical records under docs/other are intentionally
-    # excluded from this interface check.
-    livetext = join(read.(filter(f -> occursin(joinpath("docs", "src"), f),
-                                _DOC_FILES), String), "\n")
-    @test !occursin(r"Default(RNG|Rbits)!?", livetext)
-    @test !occursin(r"with_default_(type|returntype|projection)\([^,\n]+\)\s+do", livetext)
-    @test !occursin("restores on exit", livetext)
+    # either the live manual or its tracked PDF source. Historical records under
+    # docs/other may discuss the old defect and are intentionally excluded.
+    interface_files = filter(f -> occursin(joinpath("docs", "src"), f), _DOC_FILES)
+    pdftex = joinpath(@__DIR__, "..", "docs", "pdf", "build", "main.tex")
+    @test isfile(pdftex)
+    push!(interface_files, pdftex)
+    interface_text = join(read.(interface_files, String), "\n")
+    @test !occursin(r"Default(RNG|Rbits)!?", interface_text)
+    @test !occursin(r"with_default_(type|returntype|projection)\([^,\n]+\)\s+do",
+                    interface_text)
+    @test !occursin("restores on exit", interface_text)
+    for false_claim in ("for a scoped region", "for scoped mutate-and-restore",
+                        "scoped combinators", "scoped alternatives")
+        @test !occursin(false_claim, lowercase(interface_text))
+    end
 
     @info "docs: $(length(_DOC_FILES)) files checked against the package — " *
           "$n_all formats ($n_exported exported at K ≤ $KSPLIT, $n_optin opt-in " *

@@ -168,8 +168,9 @@ default — which is exactly why `+`, `exp`, and `T(1.6)` all agree with
 !!! warning "The default is a session default"
     `+` and friends follow `DefaultProjection()`, which is process-global and
     stays set. Convenience syntax is for exploratory code; anything that must
-    be reproducible names its spec explicitly. The workflow guides teach the safe
-    `with_default_projection` form before showing `DefaultProjection!`.
+    be reproducible names its spec explicitly. The workflow guides distinguish
+    explicit local policy from `with_default_projection`, which only consumes
+    the current process-global default, before showing `DefaultProjection!`.
 
 *Now you can read:* [Rounding and Saturation](concept_rounding_saturation.md) for the
 experiments, and [Projection Specifications](reference_projections.md) for the complete grid.

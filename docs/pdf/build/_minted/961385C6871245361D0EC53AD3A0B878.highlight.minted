@@ -4,7 +4,7 @@
 
 \PYG{n}{c}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{              }\PYG{c}{\PYGZsh{} the code point, in the format\PYGZsq{}s storage unit}
 \PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}\PYG{+w}{                      }\PYG{c}{\PYGZsh{} an Unsigned means validated CODE POINT}
-\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{c}\PYG{p}{)}\PYG{+w}{            }\PYG{c}{\PYGZsh{} unchecked code\PYGZhy{}point construction}
+\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{(}\PYG{n}{c}\PYG{p}{)}\PYG{+w}{                      }\PYG{c}{\PYGZsh{} checked code\PYGZhy{}point construction (`c::Unsigned`)}
 
 \PYG{n}{d}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{                 }\PYG{c}{\PYGZsh{} the exact datum, on the format\PYGZsq{}s own carrier}
 \end{MintedVerbatim}

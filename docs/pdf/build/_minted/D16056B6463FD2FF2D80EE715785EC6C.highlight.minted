@@ -6,7 +6,7 @@
 \PYG{n}{κ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{exhaustive}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{measure\PYGZus{}kappa}\PYG{p}{(}\PYG{n}{fast}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}
 
 \PYG{k}{function}\PYG{+w}{ }\PYG{n}{margin\PYGZus{}audit}\PYG{p}{(}\PYG{n}{fast}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{κ}\PYG{p}{)}
-\PYG{+w}{    }\PYG{n}{codes}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{UInt8}\PYG{p}{(}\PYG{n}{c}\PYG{p}{))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{255}\PYG{p}{]}
+\PYG{+w}{    }\PYG{n}{codes}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{UInt8}\PYG{p}{(}\PYG{n}{c}\PYG{p}{))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{255}\PYG{p}{]}
 \PYG{+w}{    }\PYG{n}{safe}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{violations}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{0}
 \PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{a}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{codes}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{codes}
 \PYG{+w}{        }\PYG{n}{da}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{db}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Exp}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{a}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Exp}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}

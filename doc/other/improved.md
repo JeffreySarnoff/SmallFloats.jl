@@ -105,7 +105,7 @@ Document `Binary` as a closed dispatch/query type if external subtyping remains 
 
 The core interface already makes `T` and the projection specification visible. Preserve that clarity. Convenience defaults can exist for interactive use, but package internals and reusable examples should pass numerical policy explicitly.
 
-If scoped defaults remain, make them task-local and separate the interfaces for reading a value and temporarily overriding it. A single `with_default_*` name should not mean both “call a function with the current value” and “mutate, execute, then restore.”
+The existing `with_default_*` functions should remain consumption combinators only: they call a function with the current process-global value and neither mutate nor restore state. If temporary overrides are ever introduced, make them task-local and give them a distinct interface rather than overloading `with_default_*` with a second meaning.
 
 ## 4. Extend the performance evidence before optimizing
 

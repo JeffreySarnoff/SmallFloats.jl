@@ -1,4 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{DefaultRbits}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{k+kt}{Int}
-\PYG{n}{DefaultRbits!}\PYG{p}{(}\PYG{n}{n}\PYG{o}{::}\PYG{k+kt}{Int}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{n}
-\end{MintedVerbatim}

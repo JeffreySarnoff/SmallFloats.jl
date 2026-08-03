@@ -72,9 +72,11 @@ Prefer explicit forms in libraries and experiments:
 Multiply(F, RNE_SF, x, y)
 ```
 
-For a scoped region of exploratory code, use a `with_default_*` combinator
-rather than mutating a default and remembering to restore it. Process-global
-setters are convenient at the REPL and shared by all tasks in the process.
+The `with_default_*` combinators efficiently pass the current process-global
+default to a function; they do not create a scope or restore anything. Use
+explicit `T` and `ρ` arguments whenever numerical policy must be local.
+Process-global setters are convenient for controlled REPL setup, but their
+effects are persistent and shared by all tasks in the process.
 
 ## Validate the complete boundary
 

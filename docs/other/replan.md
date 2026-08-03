@@ -347,8 +347,9 @@ This section explains behavior without becoming an API catalog.
    and stochastic modes, boundary outcomes.
 6. **Julia Numeric Behavior** — promotion refusal, ordinary-number carriers,
    Base overloads, sorting, equality, and conversion conventions.
-7. **Session State and Reproducibility** — defaults, scoped combinators, RNGs,
-   display policy, and concurrency implications.
+7. **Session State and Reproducibility** — process-global defaults,
+   default-consumption combinators, explicit local policy, RNGs, display policy,
+   and concurrency implications.
 8. **Performance Model** — specialization, warm tables, array calls, storage,
    and what not to benchmark.
 9. **Defined, Stochastic, and Approximate** — three distinct sources of result

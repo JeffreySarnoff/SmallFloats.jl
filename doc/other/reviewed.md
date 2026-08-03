@@ -98,7 +98,7 @@ The top-level interface is nevertheless very large: format aliases, operation fa
 - `Binary` is exported although external subtyping is explicitly unsupported. It should be presented as a dispatch/query type, not an extension seam.
 - `rawvalue` is public while also described as an unchecked kernel route. Unsigned construction means a code point, whereas signed integer construction means a numeric value. That distinction is powerful but easy to misuse.
 - `DEFAULT_SHOW_STYLE` exposes a mutable `Ref` instead of a behavioral getter/setter interface.
-- Process-global mutable defaults are awkward in concurrent or compositional code. The `with_default_*` functions mix a reader convenience with scoped mutation/restore semantics.
+- Process-global mutable defaults are awkward in concurrent or compositional code. The implementation's `with_default_*` functions are consumption combinators only, although parts of the documentation incorrectly described nonexistent scoped mutation/restore semantics.
 
 The callable operation objects are a particularly good interface: they provide a typed, extensible common vocabulary without reducing operations to symbols. Future organization should build on them rather than introduce a weak symbol-based dispatcher.
 

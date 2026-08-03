@@ -3,7 +3,9 @@
 \PYG{k}{using}\PYG{+w}{ }\PYG{n}{Statistics}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{median}
 
 \PYG{k}{function}\PYG{+w}{ }\PYG{n}{bench\PYGZus{}add}\PYG{p}{(}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{k+kt}{T}\PYG{p}{\PYGZcb{})}\PYG{+w}{ }\PYG{k}{where}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{k+kt}{T}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{}}\PYG{+w}{          }\PYG{c}{\PYGZsh{} T: type parameter, not a global}
-\PYG{+w}{    }\PYG{n}{pool}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{k+kt}{UInt8}\PYG{p}{))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4096}\PYG{p}{]}
+\PYG{+w}{    }\PYG{n}{U}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{codeunit\PYGZus{}type}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n}{last}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{(}\PYG{k+kt}{UInt64}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{+w}{ }\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{T}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}
+\PYG{+w}{    }\PYG{n}{pool}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{U}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{k+kt}{UInt64}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{o}{:}\PYG{n}{last}\PYG{p}{)))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{l+m+mi}{4096}\PYG{p}{]}
 \PYG{+w}{    }\PYG{n+nd}{@be}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{pool}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{rand}\PYG{p}{(}\PYG{n}{pool}\PYG{p}{))}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{t}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Add}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{t}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],}\PYG{+w}{ }\PYG{n}{t}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]))(}\PYG{n}{\PYGZus{}}\PYG{p}{)}
 \PYG{k}{end}
 

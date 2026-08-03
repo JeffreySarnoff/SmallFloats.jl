@@ -3,7 +3,7 @@
 
 \PYG{n}{rng}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
 \PYG{n}{mk}\PYG{p}{()}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Block}\PYG{p}{(}\PYG{n}{Binary8p1uf}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{o}{\PYGZca{}}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{3}\PYG{o}{:}\PYG{l+m+mi}{3}\PYG{p}{)),}
-\PYG{+w}{             }\PYG{n}{ntuple}\PYG{p}{(}\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{UInt8}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{255}\PYG{p}{))),}\PYG{+w}{ }\PYG{l+m+mi}{32}\PYG{p}{))}
+\PYG{+w}{             }\PYG{n}{ntuple}\PYG{p}{(}\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{rawvalue}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{UInt8}\PYG{p}{(}\PYG{n}{rand}\PYG{p}{(}\PYG{n}{rng}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{l+m+mi}{255}\PYG{p}{))),}\PYG{+w}{ }\PYG{l+m+mi}{32}\PYG{p}{))}
 
 \PYG{k}{function}\PYG{+w}{ }\PYG{n}{verify\PYGZus{}dots}\PYG{p}{(}\PYG{n}{trials}\PYG{p}{)}
 \PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{\PYGZus{}}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{o}{:}\PYG{n}{trials}

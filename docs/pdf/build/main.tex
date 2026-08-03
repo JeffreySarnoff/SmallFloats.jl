@@ -1,6 +1,6 @@
 % Useful variables
 \newcommand{\DocMainTitle}{SmallFloats.jl}
-\newcommand{\DocVersion}{0.3.0}
+\newcommand{\DocVersion}{0.4.0}
 \newcommand{\DocAuthors}{Jeffrey Sarnoff}
 \newcommand{\JuliaVersion}{1.12.6}
 
@@ -862,7 +862,7 @@ The full deterministic grid is 6 rounding modes × 3 saturation modes = 18 prede
 
 
 \begin{tcolorbox}[toptitle=-1mm,bottomtitle=1mm,colback=admonition-warning!50!white,colframe=admonition-warning,title=\textbf{The default is a session default}]
-\texttt{+} and friends follow \texttt{DefaultProjection()}, which is process-global and stays set. Convenience syntax is for exploratory code; anything that must be reproducible names its spec explicitly. The workflow guides teach the safe \texttt{with\_\allowbreak{}default\_\allowbreak{}projection} form before showing \texttt{DefaultProjection!}.
+\texttt{+} and friends follow \texttt{DefaultProjection()}, which is process-global and stays set. Convenience syntax is for exploratory code; anything that must be reproducible names its spec explicitly. The workflow guides distinguish explicit local policy from \texttt{with\_\allowbreak{}default\_\allowbreak{}projection}, which only consumes the current process-global default, before showing \texttt{DefaultProjection!}.
 
 \end{tcolorbox}
 
@@ -1446,7 +1446,7 @@ Multiply(F, RNE_SF, x, y)
 
 
 
-For a scoped region of exploratory code, use a \texttt{with\_\allowbreak{}default\_\allowbreak{}*} combinator rather than mutating a default and remembering to restore it. Process-global setters are convenient at the REPL and shared by all tasks in the process.
+The \texttt{with\_\allowbreak{}default\_\allowbreak{}*} combinators efficiently pass the current process-global default to a function; they do not create a scope or restore anything. Use explicit \texttt{T} and \texttt{ρ} arguments whenever numerical policy must be local. Process-global setters are convenient for controlled REPL setup, but their effects are persistent and shared by all tasks in the process.
 
 
 
@@ -2010,7 +2010,7 @@ Make stochastic-rounding code reproducible — across runs, and inside test suit
 \item An explicit \texttt{R} (the raw stochastic draw) for tests that must be bit-exact.
 
 
-\item \texttt{DefaultRNG!} if you want the implicit (no-\texttt{rng}-argument) forms to be reproducible too.
+\item \texttt{Random.seed!} when intentionally using Julia{\textquotesingle}s task-local default RNG.
 
 
 \item The \texttt{projection} keyword on scalar \texttt{rand}/\allowbreak\texttt{randn} forms.
@@ -2111,7 +2111,7 @@ Binary8p4se(2.25 ≡ 0x49)     # largest draw: rounds up
 
 
 
-\textbf{4. Set \texttt{DefaultRNG!} if you want implicit calls to be reproducible too.} \texttt{DefaultRNG} is one of the six session defaults (initial value: the \texttt{Xoshiro} type); set it once at the top of a script or test file if you want every call that doesn{\textquotesingle}t name an rng to still be controlled by your seed.
+\textbf{4. Omitted RNGs follow Julia.} SmallFloats does not keep a second package-wide RNG. An operation with no \texttt{rng} argument uses \texttt{Random.default\_\allowbreak{}rng()}, so \texttt{Random.seed!} controls that task-local stream. Prefer an explicit RNG in library code and tests so ownership of the stream remains visible.
 
 
 
@@ -2251,7 +2251,7 @@ out = vmap(:Exp, Binary5p2se, ρ, pv)
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
 n = 1_000_000
-model = [rawvalue(Binary5p2se, UInt8(rand(0:31))) for _ in 1:n]
+model = [Binary5p2se(UInt8(rand(0:31))) for _ in 1:n]
 pv = PackedVector(model)
 (sizeof(model), sizeof(pv.data))
 \end{minted}
@@ -2464,6 +2464,9 @@ Produce a machine-readable statement of exactly which formats, operations, and a
 \item \texttt{draft\_\allowbreak{}revision()} — the P3109 draft revision the package implements.
 
 
+\item \texttt{draft\_\allowbreak{}identity()} — the retained draft source and its reproducibility digest.
+
+
 \item Any JSON/TOML writer your project already depends on.
 
 \end{itemize}
@@ -2498,6 +2501,10 @@ Serialize \texttt{d} with any JSON/TOML writer to attach a machine-readable conf
 
 
 \textbf{3. Record the draft revision alongside it.} \texttt{draft\_\allowbreak{}revision()} reports which revision of the P3109 draft this package implements — include it next to the conformance dict so an artifact remains interpretable even if the draft itself changes in a later package version.
+
+
+
+\texttt{conformance\_\allowbreak{}dict()} now includes this structured identity directly. Use \texttt{draft\_\allowbreak{}identity()} when an experiment manifest needs the same facts without the session-dependent cache and approximation entries.
 
 
 
@@ -3197,14 +3204,14 @@ This page develops the identity of a \texttt{Binary} value: how it is constructe
 
 
 
-\subsection{Four ways in, two ways out}
+\subsection{Three ways in, two ways out}
 
 
 
-\label{15348036207912288565}{}
+\label{18102166844669235044}{}
 
 
-A \texttt{Binary} value is an immutable wrapper around a code point. There are four constructors and two accessors:
+A \texttt{Binary} value is an immutable wrapper around a code point. There are three constructors and two accessors:
 
 
 
@@ -3215,9 +3222,6 @@ julia> x = Binary8p4se(1.6)              # construct from a Real: projects (roun
 Binary8p4se(1.625 ≡ 0x45)
 
 julia> Binary8p4se(0x45)                 # construct from a UInt8 CODE POINT (validated)
-Binary8p4se(1.625 ≡ 0x45)
-
-julia> rawvalue(Binary8p4se, 0x45)       # same, unchecked — the kernel-internal route
 Binary8p4se(1.625 ≡ 0x45)
 
 julia> Convert(Binary8p4se, RNE_SN, 3)   # explicit conversion, any mode
@@ -3259,7 +3263,7 @@ julia> Binary8p4se(0x02), Binary8p4se(2)
 \begin{tcolorbox}[toptitle=-1mm,bottomtitle=1mm,colback=admonition-warning!50!white,colframe=admonition-warning,title=\textbf{`Unsigned` means code point — at every width}]
 \texttt{T(0x02)} constructs code point \texttt{0x02}; \texttt{T(2)} projects the numeric value two. Signedness of the integer type is what distinguishes them, so the rule holds for \texttt{UInt8}, \texttt{UInt16} and any other \texttt{Unsigned}: \texttt{Binary16p6se(0x0002)} is code point 2, not the value 2.0. Use \texttt{Convert} when intent should be unmistakable.
 
-Out-of-range codes throw for K < 8 (\texttt{Binary5p3sf(0x20)} is an error); the range check costs nothing measurable — 2.1 ns, identical to unchecked \texttt{rawvalue}. Round-tripping is \texttt{T(codepoint(x)) === x}.
+Out-of-range codes throw for K < 8 (\texttt{Binary5p3sf(0x20)} is an error). Round-tripping is \texttt{T(codepoint(x)) === x}. The unchecked constructor is an internal kernel primitive rather than part of the exported interface.
 
 \end{tcolorbox}
 
@@ -3914,19 +3918,19 @@ The practical upshot is that a \texttt{Binary} expression never surprises you ab
 \label{17629063325696993065}{}
 
 
-Six values control what {\textquotedbl}the default{\textquotedbl} means for any convenience call in SmallFloats.jl — the format \texttt{T(2.1)} produces, the projection \texttt{x + y} follows, the RNG \texttt{rand(T)} draws from. This page explains what those six defaults are, how they stay consistent with each other, why they are dangerous to set casually, and the safe pattern for consuming them.
+Five values control what {\textquotedbl}the default{\textquotedbl} means for any convenience call in SmallFloats.jl — the format \texttt{T(2.1)} produces, the projection \texttt{x + y} follows, and the result format an omitted result type selects. This page explains what those five defaults are, how they stay consistent with each other, why they are dangerous to set casually, and the safe pattern for consuming them.
 
 
 
-\needspace{23\baselineskip}
-\subsection{The six defaults}
+\needspace{21\baselineskip}
+\subsection{The five defaults}
 
 
 
-\label{6312792895918690226}{}
+\label{10146546853569328460}{}
 
 
-Six session-wide defaults are readable as \texttt{DefaultX()} and settable as \texttt{DefaultX!(v)}:
+Five session-wide defaults are readable as \texttt{DefaultX()} and settable as \texttt{DefaultX!(v)}:
 
 
 
@@ -3942,8 +3946,6 @@ default & initial value & setter accepts \\
 \texttt{DefaultRoundingMode} & \texttt{NearestTiesToEven()} & mode instance or type \\
 \texttt{DefaultSaturationMode} & \texttt{SatNone()} & mode instance or type \\
 \texttt{DefaultProjection} & \texttt{RNE\_\allowbreak{}SN} & a \texttt{ProjSpec}, or \texttt{(mode, sat)} \\
-\texttt{DefaultRNG} & the \texttt{Xoshiro} type & RNG type or instance \\
-\texttt{DefaultRbits} & \texttt{8} & \texttt{Int} in \texttt{1:60} \\
 \bottomrule
 \end{tabulary}
 
@@ -3993,15 +3995,7 @@ julia> DefaultProjection!(RNE_SN)        # restore: these setters are PROCESS-wi
 \begin{tcolorbox}[toptitle=-1mm,bottomtitle=1mm,colback=admonition-warning!50!white,colframe=admonition-warning,title=\textbf{The session defaults are process-global and they stay set}]
 \texttt{DefaultProjection!} and its siblings mutate state shared by every module in the process. Nothing scopes them for you: set one in a script, a notebook cell, or a REPL session and \emph{every} later \texttt{T(x::Real)}, \texttt{a + b}, and \texttt{Exp(x)} follows it until something sets it back.
 
-Prefer \texttt{with\_\allowbreak{}default\_\allowbreak{}projection} (and \texttt{with\_\allowbreak{}default\_\allowbreak{}type}, \texttt{with\_\allowbreak{}default\_\allowbreak{}returntype}), which restore on exit even if the body throws:
-
-
-\nopagebreak[4]
-\begin{minted}{julia}
-with_default_projection(RTZ_SF) do
-    Binary8p4se(1e9)          # clamps, inside this block only
-end
-\end{minted}
+The \texttt{with\_\allowbreak{}default\_\allowbreak{}*} combinators consume the current value efficiently; they do not scope or restore mutation. Code needing a local policy should call an explicit form such as \texttt{Convert(\allowbreak{}Binary8p4se, RTZ\_\allowbreak{}SF, 1e9)}.
 
 Every example in the manual assumes the pristine \texttt{(\allowbreak{}NearestTiesToEven, SatNone)}, which is why each demonstration that changes a default restores it explicitly afterward.
 
@@ -4146,7 +4140,7 @@ using Chairmarks, SmallFloats, Random
 using Statistics: median
 
 function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
-    pool = [rawvalue(T, rand(UInt8)) for _ in 1:4096]
+    pool = [SmallFloats.rawvalue(T, rand(UInt8)) for _ in 1:4096]
     @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
 end
 
@@ -5729,7 +5723,7 @@ This page collects the contracts for process defaults, random sources, and displ
 
 
 
-\needspace{24\baselineskip}
+\needspace{22\baselineskip}
 \subsection{Getter / setter table}
 
 
@@ -5753,8 +5747,6 @@ Default & Initial value & Setter accepts & Related guide \\
 \texttt{DefaultRoundingMode} & \texttt{NearestTiesToEven()} & mode instance or type & Cheat Sheet \\
 \texttt{DefaultSaturationMode} & \texttt{SatNone()} & mode instance or type & Cheat Sheet \\
 \texttt{DefaultProjection} & \texttt{RNE\_\allowbreak{}SN} & a \texttt{ProjSpec}, or \texttt{(mode, sat)} & Cheat Sheet \\
-\texttt{DefaultRNG} & the \texttt{Xoshiro} type & RNG type or instance & Cheat Sheet \\
-\texttt{DefaultRbits} & \texttt{8} & \texttt{Int} in \texttt{1:60} & Cheat Sheet \\
 \bottomrule
 \end{tabulary}
 
@@ -5769,8 +5761,6 @@ DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
 DefaultProjection()      # RNE_SN
-DefaultRNG()             # Xoshiro         DefaultRNG!(Xoshiro(42))
-DefaultRbits()           # 8               DefaultRbits!(16)
 \end{minted}
 
 
@@ -5849,7 +5839,7 @@ with_default_returntype(f, args...)              # f(DefaultReturnType(), args..
 
 
 
-Each combinator restores nothing itself — it only \emph{reads} the default at call time via \texttt{f(default, args...)}. For scoped mutate-and-restore, the same names also support a do-block form that restores the prior value on exit, even if the body throws.
+Each combinator restores nothing and changes nothing — it only \emph{reads} the default at call time via \texttt{f(default, args...)}. There is no scoped mutate-and-restore form because the underlying state is process-global. Code that needs local numerical policy should pass \texttt{T} and \texttt{ρ} explicitly.
 
 
 
@@ -5900,6 +5890,10 @@ stochastic operation with \texttt{R = r} & exact raw draw & selected stochastic 
 \end{tabulary}
 
 \end{table}
+
+
+
+An omitted RNG uses Julia{\textquotesingle}s task-local \texttt{Random.default\_\allowbreak{}rng()}. The no-argument stochastic constructors use a compile-time bit budget of 8; select another budget explicitly, for example \texttt{RSA\_\allowbreak{}SN(16)}.
 
 
 
@@ -6021,7 +6015,7 @@ Code that must be insensitive to the session default names its projection: \text
 
 
 \begin{tcolorbox}[toptitle=-1mm,bottomtitle=1mm,colback=admonition-warning!50!white,colframe=admonition-warning,title=\textbf{Restore what you set}]
-\texttt{DefaultProjection!} mutates state shared by every module in the process, and nothing scopes it for you — it changes \texttt{T(x::Real)} construction too, so a later \texttt{Binary8p4se(1.1)} would truncate rather than round to nearest. Prefer \hyperlinkref{11729885955705173533}{\texttt{with\_\allowbreak{}default\_\allowbreak{}projection}}, which restores on exit even if the body throws. Every example after this point assumes the pristine \texttt{(\allowbreak{}NearestTiesToEven, SatNone)}, which is why the demonstration above puts it back.
+\texttt{DefaultProjection!} mutates state shared by every module in the process, and nothing scopes it for you — it changes \texttt{T(x::Real)} construction too, so a later \texttt{Binary8p4se(1.1)} would truncate rather than round to nearest. The \texttt{with\_\allowbreak{}default\_\allowbreak{}projection} combinator reads the configured projection; it does not scope mutation. Prefer explicit forms such as \texttt{Convert(T, ρ, x)} in library code. Every example after this point assumes the pristine \texttt{(\allowbreak{}NearestTiesToEven, SatNone)}, which is why the demonstration above puts it back.
 
 \end{tcolorbox}
 
@@ -6210,7 +6204,7 @@ This page is the contract for exporting the live conformance declaration and for
 
 
 
-\needspace{24\baselineskip}
+\needspace{27\baselineskip}
 \subsection{Conformance functions}
 
 
@@ -6229,6 +6223,7 @@ Function & Signature & Returns & Related guide \\
 \texttt{conformance\_\allowbreak{}dict} & \texttt{conformance\_\allowbreak{}dict()} & a plain nested \texttt{Dict}, for JSON/TOML serialization & \href{workflow\_\allowbreak{}conformance.md}{Read and Export Conformance} \\
 \texttt{conformance\_\allowbreak{}report} & \texttt{conformance\_\allowbreak{}report()} & prints the declaration & \href{workflow\_\allowbreak{}conformance.md}{Read and Export Conformance} \\
 \texttt{draft\_\allowbreak{}revision} & \texttt{draft\_\allowbreak{}revision()} & the P3109 draft revision this package conforms to & \href{workflow\_\allowbreak{}conformance.md}{Read and Export Conformance} \\
+\texttt{draft\_\allowbreak{}identity} & \texttt{draft\_\allowbreak{}identity()} & structured designation, upload date, retained source, and SHA-256 digest & \href{workflow\_\allowbreak{}conformance.md}{Read and Export Conformance} \\
 \bottomrule
 \end{tabulary}
 
@@ -6349,11 +6344,11 @@ The index below groups the exported surface by family and points each family at 
 Family & Scope & Descriptive reference page \\
 \toprule
 Arrays, blocks, packed storage & \texttt{Op(fr,ρ,A,...)}, \texttt{vmap}/\allowbreak\texttt{vmap!}, \texttt{Block}, \texttt{BlockVector}, \texttt{PackedVector}, \texttt{table\_\allowbreak{}bytes}, \texttt{empty\_\allowbreak{}tables!} & \href{reference\_\allowbreak{}arrays\_\allowbreak{}blocks\_\allowbreak{}storage.md}{Arrays, Blocks, and Packed Storage} \\
-Conformance and approximation registry & \texttt{conformance}, \texttt{conformance\_\allowbreak{}dict}, \texttt{conformance\_\allowbreak{}report}, \texttt{draft\_\allowbreak{}revision}, \texttt{measure\_\allowbreak{}kappa}, \texttt{register\_\allowbreak{}approx!}, \texttt{approx}, \texttt{kappa}, \texttt{kappa\_\allowbreak{}measured}, \texttt{list\_\allowbreak{}approx}, \texttt{unregister\_\allowbreak{}approx!} & \href{reference\_\allowbreak{}conformance.md}{Conformance and Approximation Registry} \\
+Conformance and approximation registry & \texttt{conformance}, \texttt{conformance\_\allowbreak{}dict}, \texttt{conformance\_\allowbreak{}report}, \texttt{draft\_\allowbreak{}revision}, \texttt{draft\_\allowbreak{}identity}, \texttt{measure\_\allowbreak{}kappa}, \texttt{register\_\allowbreak{}approx!}, \texttt{approx}, \texttt{kappa}, \texttt{kappa\_\allowbreak{}measured}, \texttt{list\_\allowbreak{}approx}, \texttt{unregister\_\allowbreak{}approx!} & \href{reference\_\allowbreak{}conformance.md}{Conformance and Approximation Registry} \\
 Formats & 504 aliases (120 exported at \texttt{K ≤ 8}), \texttt{format}, \texttt{formatname}, and format-query accessors & \href{reference\_\allowbreak{}formats\_\allowbreak{}values.md}{Formats and Value Queries} \\
 Operations & 30 unary, 18 binary, 3 ternary, and \texttt{Convert} & \href{reference\_\allowbreak{}operations.md}{Operation Catalog} \\
 Projection specs & \texttt{ProjSpec}, deterministic grid, stochastic constructors, and accessors & \href{reference\_\allowbreak{}projections.md}{Projection Specifications} \\
-Session state & defaults, RNG control, display styles, and scoped combinators & \href{reference\_\allowbreak{}defaults\_\allowbreak{}random\_\allowbreak{}display.md}{Defaults, Randomness, and Display} \\
+Session state & numerical defaults, Julia/explicit RNG use, display styles, and default-consumption combinators & \href{reference\_\allowbreak{}defaults\_\allowbreak{}random\_\allowbreak{}display.md}{Defaults, Randomness, and Display} \\
 Julia integration & Base overloads, promotion carriers, sorting, and conversion behavior & \href{reference\_\allowbreak{}julia\_\allowbreak{}compat.md}{Julia Compatibility Register} \\
 \bottomrule
 \end{tabulary}
@@ -6377,7 +6372,7 @@ Bit-exact defined results on every default path; the projection engine (\texttt{
 
 \textbf{Performance note}
 
-Pass format types through \texttt{const} bindings, type parameters, or function arguments. All exported entry points fully specialize when the format type is statically known (measured: a complete scalar \texttt{Add} ≈ 26 ns, \texttt{project} ≈ 13 ns, zero allocations). Calling through a \textbf{non-\texttt{const} global} format type forces dynamic dispatch on every call — measured at {\textasciitilde}1 µs per scalar keyword call — which is Julia semantics, not package overhead; a single function barrier (\texttt{f(::Type\{T\}, args...) where \{T\}}) restores full speed. The test suite pins the specialization properties (concrete return types, zero warm-path allocation) as deterministic regressions.
+Pass format types through \texttt{const} bindings, type parameters, or function arguments. All exported entry points fully specialize when the format type is statically known; the checked-in benchmark report records current timings and allocations. Calling through a \textbf{non-\texttt{const} global} format type forces dynamic dispatch on every call; this is Julia semantics, not package overhead. A single function barrier (\texttt{f(::Type\{T\}, args...) where \{T\}}) restores full speed. The test suite pins the specialization properties (concrete return types, zero warm-path allocation) as deterministic regressions.
 
 
 
@@ -6655,7 +6650,7 @@ Binary8p4se             # Code8{8,4,true,true}, its representation — concrete
 
 Consequently \texttt{Binary8p4se === Binary\{8,4,true,true\}} is \textbf{\texttt{false}} and \texttt{Binary8p4se <: Binary\{8,4,true,true\}} is \textbf{\texttt{true}}. Use the alias, or \texttt{format(K, P, Σ, Δ)}, wherever a concrete type is needed — an array element type, a \texttt{similar}, a constructor target.
 
-The code point occupies the low \texttt{K} bits of the storage unit; the high bits are maintained zero as a representation invariant. Construct raw code points with \texttt{T(c::Unsigned)} (validated code-point construction), \texttt{rawvalue(T, c)} (unchecked kernel route), or \texttt{Code8\{...\}(Val(:code), x)}; construct from numeric values with \texttt{T(x::Real)} (default projection spec) or \texttt{Convert}. \texttt{Unsigned} is the one argument-type class meaning \emph{code point}, at \textbf{every} width — \texttt{T(0x02)} is code point 2 whether \texttt{T}{\textquotesingle}s unit is a \texttt{UInt8} or a \texttt{UInt16}; all other \texttt{Real}s mean \emph{value}.
+The code point occupies the low \texttt{K} bits of the storage unit; the high bits are maintained zero as a representation invariant. Construct code points with \texttt{T(c::Unsigned)} (validated code-point construction); the implementation uses an unexported unchecked primitive only after establishing the invariant. Construct from numeric values with \texttt{T(x::Real)} (default projection spec) or \texttt{Convert}. \texttt{Unsigned} is the one argument-type class meaning \emph{code point}, at \textbf{every} width — \texttt{T(0x02)} is code point 2 whether \texttt{T}{\textquotesingle}s unit is a \texttt{UInt8} or a \texttt{UInt16}; all other \texttt{Real}s mean \emph{value}.
 
 There are \texttt{4K − 2} formats at each \texttt{K} (\texttt{P ∈ 1:K} × signed/unsigned × finite/extended, less the two \texttt{P == K} signed combinations, which have no exponent bits), so \texttt{KMIN:KMAX} = 504 in total.
 
@@ -7044,44 +7039,6 @@ The session{\textquotesingle}s default projection specification. Initialized to 
 \par\medskip
 
 \par\medskip\noindent\begin{minipage}{\linewidth}
-\hypertarget{2737063410370640279}{\texttt{SmallFloats.DefaultRNG}}  -- {Method.}
-\nopagebreak
-\begin{adjustwidth}{2em}{0pt}
-
-
-\begin{minted}{julia}
-DefaultRNG() -> Type{<:AbstractRNG} | AbstractRNG
-DefaultRNG!(rng) -> rng
-\end{minted}
-
-The session{\textquotesingle}s default random-number generator for stochastic rounding. Initialized to the \texttt{Xoshiro} \emph{type} (a fresh generator per use); may be set to an \texttt{AbstractRNG} instance for a reproducible stream.
-
-
-
-\end{adjustwidth}
-\end{minipage}
-\par\medskip
-
-\par\medskip\noindent\begin{minipage}{\linewidth}
-\hypertarget{2297064248264928244}{\texttt{SmallFloats.DefaultRbits}}  -- {Method.}
-\nopagebreak
-\begin{adjustwidth}{2em}{0pt}
-
-
-\begin{minted}{julia}
-DefaultRbits() -> Int
-DefaultRbits!(n::Int) -> n
-\end{minted}
-
-The session{\textquotesingle}s default random-bit budget N for the stochastic rounding families (\texttt{StochasticA\{N\}}, \texttt{StochasticB\{N\}}, \texttt{StochasticC\{N\}}). Initialized to 8; must satisfy 1 ≤ N ≤ 60.
-
-
-
-\end{adjustwidth}
-\end{minipage}
-\par\medskip
-
-\par\medskip\noindent\begin{minipage}{\linewidth}
 \hypertarget{2178409582565511335}{\texttt{SmallFloats.DefaultReturnType}}  -- {Method.}
 \nopagebreak
 \begin{adjustwidth}{2em}{0pt}
@@ -7350,6 +7307,32 @@ Two implementations, selected by \texttt{decodepolicy} — dispatch on the repre
 \par\medskip
 
 \par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{1910472893916712872}{\texttt{SmallFloats.draft\_\allowbreak{}identity}}  -- {Method.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+Structured identity and SHA-256 digest of the retained P3109 draft transliteration.
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{12251047644429871338}{\texttt{SmallFloats.draft\_\allowbreak{}revision}}  -- {Method.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+Human-readable designation of the retained P3109 draft implemented by this release.
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
 \hypertarget{11642396758074844399}{\texttt{SmallFloats.empty\_\allowbreak{}tables!}}  -- {Method.}
 \nopagebreak
 \begin{adjustwidth}{2em}{0pt}
@@ -7573,21 +7556,6 @@ Number of random bits N consumed per projected element; 0 for pure modes.
 \begin{adjustwidth}{2em}{0pt}
 
 Translate a \texttt{Base.RoundingMode} to its \texttt{RoundingMode3109} counterpart (identity on the latter). Used only at API boundaries. Internals always carry RoundingMode3109.
-
-
-
-\end{adjustwidth}
-\end{minipage}
-\par\medskip
-
-\par\medskip\noindent\begin{minipage}{\linewidth}
-\hypertarget{8685776062322191570}{\texttt{SmallFloats.rawvalue}}  -- {Method.}
-\nopagebreak
-\begin{adjustwidth}{2em}{0pt}
-
-Unsafe raw constructor used by kernels after invariants are established.
-
-Accepts an abstract format and normalizes through \texttt{reptype}; the type is passed \emph{as an argument} to \texttt{\_\allowbreak{}rawvalue} rather than assigned to a local, so it becomes a type parameter of the callee instead of a value the compiler has to fold (technique T6). Kernel call sites pass concrete types and pay nothing.
 
 
 
@@ -8824,6 +8792,21 @@ The public promotion target for \texttt{F} against external numeric types. Alway
 \par\medskip
 
 \par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{8685776062322191570}{\texttt{SmallFloats.rawvalue}}  -- {Method.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+Unsafe raw constructor used by kernels after invariants are established.
+
+Accepts an abstract format and normalizes through \texttt{reptype}; the type is passed \emph{as an argument} to \texttt{\_\allowbreak{}rawvalue} rather than assigned to a local, so it becomes a type parameter of the callee instead of a value the compiler has to fold (technique T6). Kernel call sites pass concrete types and pay nothing.
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
 \hypertarget{7234603244356363868}{\texttt{SmallFloats.rung}}  -- {Method.}
 \nopagebreak
 \begin{adjustwidth}{2em}{0pt}
@@ -9763,7 +9746,7 @@ Auditing an activation for a format is this cheap: enumerate all 256 inputs, loo
 \begin{minipage}{\linewidth}
 \begin{minted}{julia}
 n = 1_000_000
-model = [rawvalue(Binary5p2se, UInt8(rand(0:31))) for _ in 1:n]
+model = [Binary5p2se(UInt8(rand(0:31))) for _ in 1:n]
 pv = PackedVector(model)
 (sizeof(model), sizeof(pv.data))
 \end{minted}
@@ -9881,7 +9864,7 @@ using SmallFloats: get_table
 empty_tables!()
 tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN)
 (tbl[Int(0x45) + 1],
- codepoint(Exp(Binary8p4se, RNE_SN, rawvalue(Binary8p4se, 0x45))),
+ codepoint(Exp(Binary8p4se, RNE_SN, SmallFloats.rawvalue(Binary8p4se, 0x45))),
  table_bytes())
 \end{minted}
 
@@ -9955,7 +9938,7 @@ using SmallFloats: order_key
 function monotone_conversion(::Type{From}, ::Type{To}) where {From,To}
     prev = nothing
     U = codeunit_type(From)
-    values = [rawvalue(From, U(c))
+    values = [SmallFloats.rawvalue(From, U(c))
               for c in UInt64(0):((UInt64(1) << bitwidth(From)) - 1)]
     for v in sort(values)
         isnan(decode(v)) && continue
@@ -10005,7 +9988,7 @@ fast(x) = (r = Exp(Binary8p4se, RNE_SN, x);
 κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 
 function margin_audit(fast, κ)
-    codes = [rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
+    codes = [SmallFloats.rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
     safe = violations = 0
     for a in codes, b in codes
         da, db = Exp(Binary8p4se, RNE_SN, a), Exp(Binary8p4se, RNE_SN, b)
@@ -10062,7 +10045,7 @@ using SmallFloats
 function ref_nearest_distance(::Type{T}, x) where {T}
     U = codeunit_type(T)
     last = (UInt64(1) << bitwidth(T)) - 1
-    fins = [v for v in (rawvalue(T, U(c)) for c in UInt64(0):last)
+    fins = [v for v in (SmallFloats.rawvalue(T, U(c)) for c in UInt64(0):last)
             if isfinite(decode(v))]
     minimum(abs(setprecision(() -> BigFloat(decode(v)) - BigFloat(x), BigFloat, 256))
             for v in fins)
@@ -10071,7 +10054,7 @@ end
 function verify_quantizer()
     ok = true
     for c in 0x00:0xff
-        x = decode(rawvalue(Binary8p3se, c))
+        x = decode(SmallFloats.rawvalue(Binary8p3se, c))
         (isfinite(x) && abs(x) <= decode(MaxFiniteOf(Binary8p4se))) || continue
         got = Convert(Binary8p4se, RNE_SN, x)
         ok &= abs(decode(got) - x) == Float64(ref_nearest_distance(Binary8p4se, x))
@@ -10188,7 +10171,7 @@ using SmallFloats, Random
 
 rng = Xoshiro(5)
 mk() = Block(Binary8p1uf(2.0^rand(rng, -3:3)),
-             ntuple(_ -> rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
+             ntuple(_ -> SmallFloats.rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
 
 function verify_dots(trials)
     for _ in 1:trials
@@ -10338,7 +10321,7 @@ using Statistics: median
 function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
     U = codeunit_type(T)
     last = (UInt64(1) << bitwidth(T)) - 1
-    pool = [rawvalue(T, U(rand(UInt64(0):last))) for _ in 1:4096]
+    pool = [SmallFloats.rawvalue(T, U(rand(UInt64(0):last))) for _ in 1:4096]
     @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
 end
 
@@ -10396,7 +10379,7 @@ for (nm, T) in sort(collect(_NAMED); by = first)
 
     setprecision(BigFloat, 256) do
         for c in 1:M                             # every positive finite code
-            v = decode(rawvalue(T, codeunit_type(T)(c)))
+            v = decode(SmallFloats.rawvalue(T, codeunit_type(T)(c)))
             want = c < L ? ldexp(BigFloat(c), 2 - P - B) :
                            ldexp(BigFloat(L + (c % L)), (c ÷ L) - 1 + 2 - P - B)
             BigFloat(v) == want || (bad += 1)
@@ -11345,7 +11328,7 @@ The pages that follow work through the machinery each axis produces: the encodin
 
 
 
-\needspace{36\baselineskip}
+\needspace{39\baselineskip}
 \subsection{Layer map}
 
 
@@ -11365,6 +11348,8 @@ Source files load in dependency order, each layer speaking only downward:
 layer & file & provides \\
 \toprule
 formats & \texttt{formats.jl} & \texttt{Binary\{K,P,SGN,EXT\}}, the 504 named aliases, Group M queries \\
+display & \texttt{show.jl} & value/code-point rendering and \texttt{IOContext} display policy \\
+carriers & \texttt{carriers.jl} & exact in-flight carrier rungs selected from format range \\
 specs & \texttt{projspec.jl} & rounding/saturation singletons, \texttt{ProjSpec\{R,S\}}, the predefined spec grid \\
 defaults & \texttt{defaults.jl} & settable session defaults (\texttt{DefaultType}, \texttt{DefaultProjection}, …) behind \texttt{Ref}s; consumed via the speculation guard \\
 codec & \texttt{decode\_\allowbreak{}encode.jl} & decode (generated tables + bit-composed compute), encode, order keys, counting sort, \texttt{Class}, Next ops \\
@@ -11424,12 +11409,12 @@ For every valid code point \texttt{c} of a concrete representation \texttt{T}:
 
 \nopagebreak[4]
 \begin{minted}{julia}
-codepoint(rawvalue(T, c)) == c
+codepoint(SmallFloats.rawvalue(T, c)) == c
 \end{minted}
 
 
 
-and \texttt{decode(rawvalue(T, c))} equals the P3109 datum assigned to \texttt{c}. For every non-NaN datum, encoding the exact decoded value returns the corresponding code point under an exact-grid projection.
+and \texttt{decode(\allowbreak{}SmallFloats.rawvalue(\allowbreak{}T, c))} equals the P3109 datum assigned to \texttt{c}. For every non-NaN datum, encoding the exact decoded value returns the corresponding code point under an exact-grid projection.
 
 
 
@@ -11523,7 +11508,7 @@ The key type has room for the entire code lattice plus the NaN sentinel. The map
 \item computational decoding and order keys: \texttt{src/decode\_\allowbreak{}encode.jl};
 
 
-\item wide exact datum carriers: \texttt{src/dyadic.jl}, \texttt{src/dyadic3.jl}, and carrier support files;
+\item wide exact datum carriers: \texttt{src/dyadic.jl} and carrier support files;
 
 
 \item constructor normalization and representation aliases: format and conversion entry points in \texttt{src/}.
@@ -11861,7 +11846,7 @@ In both stages, if the sticky-projected endpoints agree, that code point is the 
 \label{13106405904108779198}{}
 
 
-The operation registry and ω evaluation live in \texttt{src/oracle.jl}; exact dyadic carriers and their rational bridge live in \texttt{src/dyadic.jl} and \texttt{src/dyadic3.jl}. Changes here must preserve enclosure containment, termination, and agreement with a wider independent path. The gate and tier files under \texttt{test/} record whether each check is exhaustive or sampled.
+The operation registry and ω evaluation live in \texttt{src/oracle.jl}; exact dyadic carriers and their rational bridge live in \texttt{src/dyadic.jl}, with carrier-rung selection in \texttt{src/carriers.jl}. Changes here must preserve enclosure containment, termination, and agreement with a wider independent path. The gate and tier files under \texttt{test/} record whether each check is exhaustive or sampled.
 
 
 
@@ -12246,7 +12231,7 @@ A register-resident superaccumulator remains a tracked optimization for the Phas
 \label{15691574599836510193}{}
 
 
-The value sets are small enough that sampling is never necessary, so the suite enumerates — ≈ 8.9 M assertions in all:
+The suite combines exhaustive finite-domain gates with explicitly sampled axes. The final roll-call is the authoritative record for a run: it names the selected \texttt{quick}, \texttt{default}, or \texttt{release} tier, the units compared by every gate, and whether each gate was exhaustive or sampled. Major coverage includes:
 
 
 
@@ -12257,7 +12242,7 @@ The value sets are small enough that sampling is never necessary, so the suite e
 \item ordering over all 2.5 M same-format pairs plus Next-op edge tables (7.6 M);
 
 
-\item every unary operation on every input against a 3072-bit protocol run; divide and the ternaries exhaustively;
+\item unary, divide, and ternary operations against high-precision reference paths, with the exact format/input coverage reported by their gates;
 
 
 \item stochastic R-sweeps with directed-asymptote pins;
@@ -12294,7 +12279,7 @@ Deterministic \textbf{specialization regressions} (concrete inferred return type
 \label{17637645545004941325}{}
 
 
-Recorded after two measurement post-mortems: a benchmark closure over any non-\texttt{const} global measures Julia{\textquotesingle}s dispatch machinery, not the code under test — and it distorts \emph{ratios}, not just absolutes, because dispatch cost varies with call shape (a dynamic keyword call costs {\textasciitilde}1 µs; a dynamic positional call far less; six unresolved interior sites cost six times one).
+Recorded after two measurement post-mortems: a benchmark closure over any non-\texttt{const} global measures Julia{\textquotesingle}s dispatch machinery, not the code under test — and it distorts \emph{ratios}, not just absolutes, because dispatch cost varies with call shape.
 
 
 
@@ -12914,7 +12899,7 @@ Here every in-range datum of \texttt{Binary8p3se} is projected into \texttt{Bina
 using SmallFloats
 
 function ref_nearest_distance(::Type{T}, x) where {T}
-    fins = [v for v in (rawvalue(T, UInt8(c)) for c in 0:255) if isfinite(decode(v))]
+    fins = [v for v in (SmallFloats.rawvalue(T, UInt8(c)) for c in 0:255) if isfinite(decode(v))]
     minimum(abs(setprecision(() -> BigFloat(decode(v)) - BigFloat(x), BigFloat, 256))
             for v in fins)
 end
@@ -12922,7 +12907,7 @@ end
 function verify_quantizer()
     ok = true
     for c in 0x00:0xff
-        x = decode(rawvalue(Binary8p3se, c))
+        x = decode(SmallFloats.rawvalue(Binary8p3se, c))
         (isfinite(x) && abs(x) <= decode(MaxFiniteOf(Binary8p4se))) || continue
         got = Convert(Binary8p4se, RNE_SN, x)
         ok &= abs(decode(got) - x) == Float64(ref_nearest_distance(Binary8p4se, x))
@@ -12966,7 +12951,7 @@ using SmallFloats, Random
 
 rng = Xoshiro(5)
 mk() = Block(Binary8p1uf(2.0^rand(rng, -3:3)),
-             ntuple(_ -> rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
+             ntuple(_ -> SmallFloats.rawvalue(Binary8p4se, UInt8(rand(rng, 0:255))), 32))
 
 function verify_dots(trials)
     for _ in 1:trials
@@ -13103,7 +13088,7 @@ fast(x) = (r = Exp(Binary8p4se, RNE_SN, x);
 κ, exhaustive = measure_kappa(fast, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 
 function margin_audit(fast, κ)
-    codes = [rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
+    codes = [SmallFloats.rawvalue(Binary8p4se, UInt8(c)) for c in 0:255]
     safe = violations = 0
     for a in codes, b in codes
         da, db = Exp(Binary8p4se, RNE_SN, a), Exp(Binary8p4se, RNE_SN, b)
@@ -13207,7 +13192,7 @@ using Chairmarks, SmallFloats, Random
 using Statistics: median
 
 function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
-    pool = [rawvalue(T, rand(UInt8)) for _ in 1:4096]
+    pool = [SmallFloats.rawvalue(T, rand(UInt8)) for _ in 1:4096]
     @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
 end
 
@@ -13284,7 +13269,7 @@ Symptom-first reference. Find what you are seeing, not what you did wrong — ea
 
 
 
-\textbf{Symptom: a value built with \texttt{rawvalue} decodes to garbage or a non-existent datum.} Cause: \texttt{rawvalue(T, c)} is unchecked code-point construction — it skips the range validation that \texttt{T(c::Unsigned)} performs, so an out-of-range integer produces a bit pattern with no corresponding intent-checked datum. Fix: prefer validated \texttt{T(c::Unsigned)} outside performance kernels; reserve \texttt{rawvalue} for hot loops where the caller has already proven \texttt{c} is in range. Full explanation: \href{help\_\allowbreak{}cheat\_\allowbreak{}sheet.md}{Cheat Sheet}, Values and code points.
+\textbf{Symptom: a value built with \texttt{SmallFloats.rawvalue} decodes to garbage or a non-existent datum.} Cause: \texttt{SmallFloats.rawvalue(\allowbreak{}T, c)} is an internal unchecked constructor — it skips the range validation that \texttt{T(c::Unsigned)} performs, so an out-of-range integer produces a bit pattern with no corresponding intent-checked datum. Fix: use validated \texttt{T(c::Unsigned)} outside package implementation code. Full explanation: \href{help\_\allowbreak{}cheat\_\allowbreak{}sheet.md}{Cheat Sheet}, Values and code points.
 
 
 
@@ -13535,7 +13520,7 @@ x = Convert(T, ρ, 1.6)       # explicit projection
 
 c = codepoint(x)              # the code point, in the format's storage unit
 x = T(c)                      # an Unsigned means validated CODE POINT
-x = rawvalue(T, c)            # unchecked code-point construction
+x = T(c)                      # checked code-point construction (`c::Unsigned`)
 
 d = decode(x)                 # the exact datum, on the format's own carrier
 \end{minted}
@@ -13725,8 +13710,6 @@ DefaultReturnType()      # Binary8p2se     DefaultReturnType!(Binary8p3se)
 DefaultRoundingMode()    # NearestTiesToEven()
 DefaultSaturationMode()  # SatNone()
 DefaultProjection()      # RNE_SN
-DefaultRNG()             # Xoshiro         DefaultRNG!(Xoshiro(42))
-DefaultRbits()           # 8               DefaultRbits!(16)
 \end{minted}
 
 
@@ -13949,6 +13932,7 @@ conformance()
 conformance_dict()
 conformance_report()
 draft_revision()
+draft_identity()
 
 κ, exhaustive = measure_kappa(fn, :Exp, T, (T,), ρ)
 register_approx!(:fast_exp, :Exp, T, (T,), ρ, fn; κ)
@@ -13989,7 +13973,7 @@ Expecting negative zero & Every format has one zero; \texttt{T(-0.0) === zero(T)
 Expecting \texttt{sort} to put NaN last & The draft{\textquotesingle}s total order puts the single NaN \textbf{first}, below −Inf (§4.12.1) — the opposite end from \texttt{Float64} \\
 Passing a \texttt{Rational} & Convert explicitly to an exact supported carrier or knowingly to \texttt{Float64} \\
 Reproducibility with stochastic rounding & Supply a seeded \texttt{rng}, or an explicit \texttt{R} in tests \\
-Using \texttt{rawvalue} on unchecked input & Prefer validated \texttt{T(c::Unsigned)} outside kernels \\
+Using the internal unchecked constructor & Prefer validated \texttt{T(c::Unsigned)} outside kernels \\
 \bottomrule
 \end{tabulary}
 

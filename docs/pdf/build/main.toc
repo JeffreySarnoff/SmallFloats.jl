@@ -150,7 +150,7 @@
 \contentsline {subsection}{Continue}{48}{section*.104}%
 \contentsline {chapter}{\chapternumberline {17}Values, Code Points, and Conversion}{49}{chapter.17}%
 \contentsline {section}{\numberline {17.1}Values, Code Points, and Conversion}{49}{section.17.1}%
-\contentsline {subsection}{Four ways in, two ways out}{49}{section*.105}%
+\contentsline {subsection}{Three ways in, two ways out}{49}{section*.105}%
 \contentsline {subsection}{Important: \texttt {Unsigned} means code point, at every width}{49}{section*.106}%
 \contentsline {subsection}{\texttt {Convert} versus \texttt {convert}}{50}{section*.107}%
 \contentsline {subsection}{The decode / codepoint round-trip}{50}{section*.108}%
@@ -189,11 +189,11 @@
 \contentsline {subsection}{Continue}{59}{section*.135}%
 \contentsline {chapter}{\chapternumberline {21}Session State and Reproducibility}{60}{chapter.21}%
 \contentsline {section}{\numberline {21.1}Session State and Reproducibility}{60}{section.21.1}%
-\contentsline {subsection}{The six defaults}{60}{section*.136}%
+\contentsline {subsection}{The five defaults}{60}{section*.136}%
 \contentsline {subsection}{Coherence in both directions}{60}{section*.137}%
 \contentsline {subsection}{The defaults are process-global}{61}{section*.138}%
 \contentsline {subsection}{The \texttt {with\_\allowbreak {}default\_\allowbreak {}*} combinators}{61}{section*.139}%
-\contentsline {subsubsection}{The speculation-guard cost model}{62}{section*.140}%
+\contentsline {subsubsection}{The speculation-guard cost model}{61}{section*.140}%
 \contentsline {subsubsection}{Allocation contract}{62}{section*.141}%
 \contentsline {subsection}{There is no accumulator default}{62}{section*.142}%
 \contentsline {subsection}{Continue}{62}{section*.143}%
