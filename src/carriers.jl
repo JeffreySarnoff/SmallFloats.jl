@@ -271,10 +271,11 @@ Three conditions, one per way a conversion can lose information:
 
   * `P ≤ precision(X)` — the significand fits;
   * the largest finite datum's exponent is within `X`'s normal range. That
-    exponent is `B − 1` for a signed format and `0` for an unsigned one, which
-    is not symmetry-breaking pedantry: an unsigned format spends its whole
-    exponent field below 1, so `Binary16p1uf`'s datums run down to `2^-32769`
-    while its largest is `0.5`;
+    exponent is `B − 1` for **both** signedness classes, and it is `B − 2` when
+    `P == 1`, so `B − 1` is a sound upper bound at every format:
+    `Binary8p4uf`'s largest datum is `14·2^12 = 57 344`, exponent
+    `15 = B − 1`, and `Binary16p1uf`'s is `2^32766` with a least positive datum
+    of `2^-32767`;
   * `2 − P − B ≥` `X`'s least subnormal exponent — and the smallest datum being
     a *subnormal* of `X` is fine, because a datum is `sig · 2^(2−P−B)` with
     integer `sig`, so once the step is a multiple of `X`'s subnormal step every
@@ -283,7 +284,28 @@ Three conditions, one per way a conversion can lose information:
 @inline function datumsexact(::Type{X}, ::Type{F}) where {K,P,S,E,X,F<:Binary{K,P,S,E}}
     lo, hi = _extexprange(X)
     B = expbias(F)
-    emax = S ? B - 1 : 0
+    # `emax` is `B − 1` for BOTH signedness classes. The unsigned row read `0`,
+    # from a reading of the exponent field that `_decode_compute` does not
+    # implement: `Binary8p4uf`'s largest datum is `14·2^12 = 57 344`, whose
+    # exponent is `15 = B − 1`, not 0. (It is `B − 2` when `P == 1`, so `B − 1`
+    # remains a sound upper bound at every format.)
+    #
+    # The correction changes no answer for the four types in `_extexprange`, and
+    # that is the part worth recording rather than the fix: at every
+    # power-of-two bias the subnormal condition below binds strictly first, with
+    # exactly zero margin —
+    #
+    #     Float64   subnormal ⇒ B ≤ 1076−P   normal ⇒ B ≤ 1024   no power of 2 between
+    #     Float32             ⇒ B ≤  151−P          ⇒ B ≤  128   no power of 2 between
+    #     Float16             ⇒ B ≤   26−P          ⇒ B ≤   16   no power of 2 between
+    #     BFloat16            ⇒ B ≤  135−P          ⇒ B ≤  128   no power of 2 between
+    #
+    # — so the wrong expression was masked by a coincidence of the IEEE
+    # exponent/precision relationship rather than by anything this package
+    # controls, and the first wider external type added above would have made it
+    # live. `test/gates_g6.jl` now enumerates this claim against the datums
+    # instead of resting on the coincidence.
+    emax = B - 1
     P <= Base.precision(X) && emax <= hi && (2 - P - B) >= lo
 end
 

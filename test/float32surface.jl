@@ -20,13 +20,30 @@ const _K8_FORMATS = filter(nm -> bitwidth(getfield(SmallFloats, nm)) <= KSPLIT, 
 const _F32_EXACT  = filter(nm -> datumsexact(Float32, getfield(SmallFloats, nm)), _NAMES)
 const _BF16_EXACT = filter(nm -> datumsexact(BFloat16, getfield(SmallFloats, nm)), _NAMES)
 
-"""Every datum of `T`, exact in `X`? Measured, not asked of the trait."""
+"""One datum, exact in `X`? The unit of both sweeps below."""
+function datum_exact(::Type{X}, v) where {X}
+    d = decode(v)
+    isnan(d) && return isnan(X(v))
+    big(X(v)) == big(d)
+end
+
+"""Every datum of `T`, exact in `X`? Measured, not asked of the trait.
+
+The extremal codes are probed **first**, and that is a cost decision rather than
+a semantic one: `datumsexact` can only fail by range (the largest magnitudes) or
+by underflow (the least positive datum), so a format the trait rejects has its
+witness at one end of the lattice or the other. Probing them turns the
+boundary sweep below from `2^K` `BigFloat` comparisons per rejected format into
+a handful, which is what makes it affordable at all four target types instead of
+only at `Float32`. The full sweep still runs — the probe is an accelerator for
+the `false` answer, never a substitute for the `true` one."""
 function all_datums_exact(::Type{X}, ::Type{T}) where {X,T}
+    for v in (MaxFiniteOf(T), MinFiniteOf(T), MinPositiveOf(T))
+        datum_exact(X, v) || return false
+    end
     U = codeunit_type(T)
     for i in UInt64(0):((UInt64(1) << bitwidth(T)) - 1)
-        v = rawvalue(T, U(i)); d = decode(v)
-        isnan(d) && (isnan(X(v)) || return false); isnan(d) && continue
-        big(X(v)) == big(d) || return false
+        datum_exact(X, rawvalue(T, U(i))) || return false
     end
     true
 end
@@ -52,10 +69,18 @@ end
         # For every format the trait REJECTS, some datum must genuinely fail to
         # round-trip. Without this the trait could refuse everything and the
         # suite above would still pass.
-        for nm in _NAMES
+        #
+        # All FOUR targets, not just `Float32`. The trait is one expression in
+        # `(P, B)` against `_extexprange(X)`, so a defect in it is a defect at
+        # every target — and it had one: the unsigned row of `emax` read `0`
+        # where the decoder produces `B − 1`, masked at all four types because
+        # the subnormal condition binds first at every power-of-two bias, with
+        # exactly zero margin. A completeness sweep at one target could not
+        # distinguish "the trait is tight" from "the trait is tight *here*".
+        for X in (Float64, Float32, Float16, BFloat16), nm in _NAMES
             T = getfield(SmallFloats, nm)
-            datumsexact(Float32, T) && continue
-            @test (nm, all_datums_exact(Float32, T)) == (nm, false)
+            datumsexact(X, T) && continue
+            @test (X, nm, all_datums_exact(X, T)) == (X, nm, false)
         end
     end
 
@@ -120,9 +145,9 @@ end
     # Multiply 118/120 same-format signatures; Add and Subtract 88/120.
     counts = Dict(op => 0 for op in (:Add, :Subtract, :Multiply))
     mulfail = Symbol[]
-    # Scoped to K ≤ 8 on purpose: these counts are a pinned measurement of the
-    # Float32 *kernel* gate over the grid it was measured on. The wide-format
-    # kernel surface is Stage 6's business, not this trait's.
+    # The COUNTS are scoped to K ≤ 8 on purpose: they are a pinned measurement
+    # over the grid they were measured on. The trait's DOMAIN is not — see the
+    # wide-format section below.
     for name in _K8_FORMATS, op in (:Add, :Subtract, :Multiply)
         T = getfield(SmallFloats, name)
         g = f32_exact(op, T, T)
@@ -134,6 +159,53 @@ end
     @test counts[:Add] == 88
     @test counts[:Subtract] == 88
     @test_throws ArgumentError f32_exact(:Divide, Binary8p3se, Binary8p3se)
+
+    # ---- the fast-`false` screen is a SUBSET of enumeration, not an equal.
+    #
+    # `f32_exact` answers `false` without enumerating when either format fails
+    # `datumsexact(Float32, ·)`, justified by a witness construction (see the
+    # comment at the screen). This checks the construction rather than trusting
+    # it: exhaustive over all 120 K ≤ 8 formats × three ops.
+    #
+    # Implication, NOT equality — and that asymmetry is the content. Add and
+    # Subtract fail 32 formats the screen passes, because those fail by
+    # *arithmetic* (a Float32 sum of two exactly-represented datums can still be
+    # inexact) rather than by datum representability. A test asserting equality
+    # would fail on exactly those 32 and would be wrong to.
+    @testset "screen ⊆ enumeration" begin
+        for name in _K8_FORMATS, op in (:Add, :Subtract, :Multiply)
+            T = getfield(SmallFloats, name)
+            datumsexact(Float32, T) && continue          # screen did not fire
+            @test (op, name, f32_exact(op, T, T)) == (op, name, false)
+        end
+    end
+
+    # ---- the domain is every bitwidth, and the budget refuses by name.
+    #
+    # Until 2026-08-xx this threw `InexactError` for every K ≥ 9 format, from a
+    # hardcoded `UInt8` in the enumeration bounds — an error about the storage
+    # unit where the caller's question was about the format, and the same defect
+    # `measure_kappa` had already fixed (its finding A1). The roll-call's
+    # uncovered list recorded it as "enumeration at K ≥ 12", which implied
+    # K = 9, 10, 11 worked; they did not.
+    @testset "wide formats answer, and the budget refuses" begin
+        # 2^18 pairs — inside the budget, and a format whose datums are all
+        # Float32-exact, so the screen does not short-circuit the enumeration.
+        @test datumsexact(Float32, Binary9p4se)
+        @test f32_exact(:Multiply, Binary9p4se, Binary9p4se) isa Bool
+        # The screen answers wide formats whose datums leave Float32's range,
+        # with no enumeration and therefore no budget question.
+        @test f32_exact(:Add, Binary16p1uf, Binary16p1uf) === false
+        # 2^32 pairs — a cost refusal that names the budget, not a MethodError
+        # and not an InexactError.
+        err = try
+            f32_exact(:Add, Binary16p8se, Binary16p8se); nothing
+        catch e
+            e
+        end
+        @test err isa ArgumentError
+        @test occursin("pair budget", sprint(showerror, err))
+    end
 end
 
 @testset "Float32 kernel family (M3)" begin

@@ -41,38 +41,36 @@ using SmallFloats: project, project_interval, round_to_precision, encode, order_
     KMIN, KMAX, KSPLIT, codemask, codeunit_type, reptype, nan_order_key, rung,
     Code8, Code16, HeadF64, HeadF128, HeadExact
 
-# Main.FastTest = true
+# The sampling loop counts. The literals below are the SOURCE OF TRUTH and
+# `LOOP_SCALE` (formatsel.jl) is the only thing that shrinks them — 1 at the
+# `release` tier, 4 at `default`, 8 at `quick`.
 #
-# if isdefined(Main, :FastTest)
+# They were previously divided unconditionally (`div(5000, 5)`, `div(4096, 4)`,
+# …) with the undivided set inside a block comment and the `FastTest` switch
+# that once chose between them commented out. The undivided counts were
+# therefore unreachable at every tier, including `release` — a narrowing the
+# tier dial could not see, which is precisely what the verification doctrine's
+# "a tier the caller asks for is honoured, never downgraded" forbids.
+#
+# `cld` rather than `div`: at the quick tier `div(10, 8)` is 1, and a loop of
+# one iteration is a different test, not a cheaper one.
+isdefined(@__MODULE__, :SUITE_TIER) || include("formatsel.jl")
 
-const K5  = div(5000, 5)
-const K4B = div(4096, 4)
-const K4  = div(4000, 4)
-const K2  = div(2000, 4)
-const K1  = div(1000, 4)
-const H2  = div(200,  4)
-const H1  = div(100, 4)
-const TEN5 = div(50, 5)
-const TEN1 = div(10, 2)
+const K5   = cld(5000, LOOP_SCALE)
+const K4B  = cld(4096, LOOP_SCALE)
+const K4   = cld(4000, LOOP_SCALE)
+const K2   = cld(2000, LOOP_SCALE)
+const K1   = cld(1000, LOOP_SCALE)
+const H2   = cld( 200, LOOP_SCALE)
+const H1   = cld( 100, LOOP_SCALE)
+const TEN5 = cld(  50, LOOP_SCALE)
+# `TEN1` was here and had no consumer in `test/` or `src/` — a loop count that
+# scaled nothing. Removed rather than rescaled.
 
 # No `T5`/`T1` loop counts: `T5` collides with the format binding
 # `T5 = Binary5p2se` (line ~653, 65 uses), and the only `T1` sites are the
 # BlockVector layout test, whose siblings hardcode `10`, `blocks[7]` and
 # `(4, 10)` — it is a fixed-size layout check, not a scaling loop.
-
-#else
-#=
-const K5  = 5000
-const K4B = 4096
-const K4  = 4000
-const K2  = 2000
-const K1  = 1000
-const H2  = 200
-const H1  = 100
-const TEN5  = 50
-const TEN1  = 10
-=#
-#end
 
 const UN = collect(_UNARY_OPS)
 
@@ -338,6 +336,194 @@ end
     r3, control = Random.Xoshiro(7), Random.Xoshiro(7)
     Add(T, RNE_SN, x, y; rng=r3)
     @test rand(r3, UInt64) == rand(control, UInt64)
+
+    # ---- the BULK surface owns its stream too.
+    #
+    # `Convert(fr, ρ, A::AbstractArray{<:Binary})` was the one array operation
+    # without an `rng` keyword, so a stochastic bulk conversion could not be
+    # given an owned stream — the single thing this testset exists to establish,
+    # and the thing `defaults.jl` removed the session-wide RNG in order to force.
+    @testset "bulk Convert owns its stream" begin
+        Sc = Binary8p2se                           # narrower ⇒ most elements round
+        A = [T(c) for c in 0x00:0xff]
+        # Compared by CODE POINT, not by `==`. The pool spans all 256 code points
+        # and therefore contains NaN, and `==` on `Binary` is the draft's numeric
+        # comparison — false whenever either side is NaN — so `a == b` is `false`
+        # for two identical arrays and `a != b` is `true` for any two. Both
+        # spellings would have passed or failed for reasons having nothing to do
+        # with the RNG. `float32surface.jl` carries the same helper for the same
+        # reason.
+        codes(v) = codepoint.(v)
+        # Seeded streams reproduce, and the array path agrees element-for-element
+        # with the scalar path fed the same stream — the property that says the
+        # keyword is actually threaded through `vmap` rather than accepted and
+        # dropped.
+        @test codes(Convert(Sc, σ, A; rng=Random.Xoshiro(42))) ==
+              codes(Convert(Sc, σ, A; rng=Random.Xoshiro(42)))
+        @test codes(Convert(Sc, σ, A; rng=Random.Xoshiro(42))) ==
+              codes(let rng = Random.Xoshiro(42); [Convert(Sc, σ, a; rng) for a in A] end)
+        # Distinct streams must actually diverge somewhere, or "owned" is a claim
+        # about an argument that changes nothing.
+        @test codes(Convert(Sc, σ, A; rng=Random.Xoshiro(1))) !=
+              codes(Convert(Sc, σ, A; rng=Random.Xoshiro(2)))
+        # Pure ρ ignores the stream and consumes nothing from it, in bulk as in
+        # scalar.
+        r4, ctrl4 = Random.Xoshiro(11), Random.Xoshiro(11)
+        @test codes(Convert(Sc, RNE_SN, A; rng=r4)) == codes(Convert(Sc, RNE_SN, A))
+        @test rand(r4, UInt64) == rand(ctrl4, UInt64)
+    end
+end
+
+# ==========================================================================
+# threading: execution strategy may change, numerical meaning may not
+# ==========================================================================
+# Two loops thread on pure ρ — the Shape-B compute kernels (the ONLY array path
+# above K = 8, where `table_for` declines) and the table builders. Both rest on
+# the same three facts: only pure ρ is ever tabulated or threaded, `_scalar_code`
+# holds no mutable state, and MPFR escalation reaches `setprecision`/`setrounding`
+# through their FUNCTION forms, which are `ScopedValue`-backed on Julia 1.12 and
+# therefore task-local. On 1.11 they mutate process globals, which is why the
+# `Project.toml` floor is a correctness bound.
+#
+# What is asserted is IDENTITY, not agreement within a tolerance: the same code
+# points, in the same order. A threading change that altered a result would be a
+# defect no timing could reveal.
+#
+# The thresholds are lowered here so the threaded path is actually taken by
+# test-sized inputs. Restored after, because they are process-global policy.
+@testset "threading preserves results exactly" begin
+    KN = SmallFloats
+    nthr = Threads.nthreads()
+    old_k, old_t = KN.THREAD_MIN_ELEMS[], KN.TABLE_BUILD_MIN_ENTRIES[]
+    KN.THREAD_MIN_ELEMS[] = 64
+    KN.TABLE_BUILD_MIN_ENTRIES[] = 64
+    try
+        # A wide format whose binary table the policy declines, so the compute
+        # kernel is the only path — the case threading was added for.
+        W = Binary16p8se
+        rng = Random.Xoshiro(7)
+        n = 4096
+        A = [rawvalue(W, UInt16(rand(rng, 0:(1 << 16) - 1))) for _ in 1:n]
+        B = [rawvalue(W, UInt16(rand(rng, 0:(1 << 16) - 1))) for _ in 1:n]
+        @test KN.table_for(:Add, W, W, W, RNE_SN) === nothing   # the premise
+
+        cp(v) = codepoint.(v)
+        withthreading(f, on) = (KN.THREADED_KERNELS[] = on;
+                                r = f(); KN.THREADED_KERNELS[] = true; r)
+        @test withthreading(() -> cp(Add(W, RNE_SN, A, B)), true) ==
+              withthreading(() -> cp(Add(W, RNE_SN, A, B)), false)
+        @test withthreading(() -> cp(Exp(W, RNE_SN, A)), true) ==
+              withthreading(() -> cp(Exp(W, RNE_SN, A)), false)
+
+        # Stochastic ρ must stay sequential: it draws from one stream, so its
+        # results are reproducible only in index order. Threading it would make a
+        # seeded run depend on the scheduler.
+        σ2 = RSA_SN(8)
+        @test cp(Add(W, σ2, A, B; rng=Random.Xoshiro(42))) ==
+              cp(Add(W, σ2, A, B; rng=Random.Xoshiro(42)))
+        @test cp(Add(W, σ2, A, B; rng=Random.Xoshiro(42))) !=
+              cp(Add(W, σ2, A, B; rng=Random.Xoshiro(43)))
+
+        # Table builds: byte-identical, at both arities that thread.
+        for (op, fr, f1, f2) in ((:Add, Binary8p4se, Binary8p4se, Binary8p4se),
+                                 (:Multiply, Binary8p3se, Binary8p3se, Binary8p3se))
+            KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+            t1 = copy(get_table(op, fr, f1, f2, RNE_SN))
+            KN.THREADED_TABLE_BUILDS[] = false; empty_tables!()
+            t2 = copy(get_table(op, fr, f1, f2, RNE_SN))
+            KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+            @test (op, t1 == t2) == (op, true)
+        end
+        # Unary, on the wide format whose build the parallel path was measured on.
+        KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+        u1 = copy(get_table(:Exp, W, W, RNE_SN))
+        KN.THREADED_TABLE_BUILDS[] = false; empty_tables!()
+        u2 = copy(get_table(:Exp, W, W, RNE_SN))
+        KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+        @test u1 == u2
+
+        nthr == 1 && @info "threading tests ran with 1 thread: the equality " *
+                           "assertions hold trivially, since `_should_thread` " *
+                           "requires nthreads() > 1. Run with `julia -t N` to " *
+                           "exercise the threaded paths."
+    finally
+        KN.THREAD_MIN_ELEMS[] = old_k
+        KN.TABLE_BUILD_MIN_ENTRIES[] = old_t
+        KN.THREADED_KERNELS[] = true
+        KN.THREADED_TABLE_BUILDS[] = true
+        empty_tables!()
+    end
+end
+
+# ==========================================================================
+# dyadic.jl — the checked twins of the two unchecked exact operations
+# ==========================================================================
+# `add_dy` and `mul_dy` are unchecked by design: their width preconditions hold
+# by construction for every operand the engine forms (a datum carries ≤ 16
+# significand bits, so a `mul_dy` product carries ≤ 32, and `DYADIC_ALIGN_MAX`
+# is derived from a 32-bit head). Inside the engine a guard is dead weight on
+# the rung-3 hot path — measured at 3.3× the cost of the multiply it guarded,
+# back when it was spelled `@boundscheck` and no call site was `@inbounds`.
+#
+# So the contract is carried by TWO NAMES rather than by an annotation, and this
+# testset is what makes the pair meaningful: the checked form must agree with
+# the unchecked one everywhere the precondition holds, and must throw — not
+# wrap — where it does not. Neither `mul_dy_checked` nor `add_dy_checked` had a
+# test before; the unchecked forms are covered only indirectly, through G7's
+# comparison of the `HeadExact` carrier against `BigFloat`.
+@testset "dyadic checked variants" begin
+    DN = SmallFloats.DyadicNumbers
+    D = DN.Dyadic
+
+    @testset "agreement where the precondition holds" begin
+        # Operand shapes the engine actually forms: datum significands (≤ 16
+        # bits) over the full rung-3 exponent span, plus the zero and sign rows.
+        sigs = Int128[0, 1, -1, 3, -3, 12, 255, -255, 65535, -65535]
+        exps = Int64[-32769, -1024, -17, 0, 17, 1024, 32766]
+        n = 0
+        for sx in sigs, qx in exps, sy in sigs, qy in exps
+            x, y = D(sx, qx), D(sy, qy)
+            # add: only where the alignment band and the head width admit it
+            d = abs(qx - qy)
+            hi = qx >= qy ? x : y
+            if d <= DN.DYADIC_ALIGN_MAX && DN.nbits_dy(hi.S) + d <= 126
+                @test DN.add_dy_checked(x, y) === DN.add_dy(x, y)
+                n += 1
+            end
+            if DN.nbits_dy(x.S) + DN.nbits_dy(y.S) <= 96
+                @test DN.mul_dy_checked(x, y) === DN.mul_dy(x, y)
+                n += 1
+            end
+        end
+        # Exact, not a floor. The operand lists are fixed above, so the count of
+        # pairs satisfying each precondition is a deterministic function of
+        # `DYADIC_ALIGN_MAX` and the 96-bit product bound — the two constants
+        # this testset is really about. A floor would pass while silently losing
+        # most of the sweep; an exact count says which band moved.
+        @test n == 6200
+    end
+
+    @testset "refusal where it does not" begin
+        # A head far wider than any datum: 100 significand bits, aligned by 40.
+        # 100 + 40 = 140 > 126, and 40 is inside the alignment band, so this is
+        # the case the width check exists for rather than the band check.
+        wide = D(Int128(1) << 99 | 1, Int64(40))
+        @test DN.nbits_dy(wide.S) == 100
+        @test_throws ArgumentError DN.add_dy_checked(wide, D(1, 0))
+        # Two 60-bit significands: 120 > 96, so the product leaves Int128.
+        w60 = D(Int128(1) << 59 | 1, Int64(0))
+        @test DN.nbits_dy(w60.S) == 60
+        @test_throws ArgumentError DN.mul_dy_checked(w60, w60)
+        # Past the alignment band the add refuses through `_add_wide`, which is
+        # a different guard with a different message — the caller must take the
+        # sticky path there, not a wider integer.
+        @test_throws ArgumentError DN.add_dy_checked(D(1, Int64(0)),
+                                                     D(1, Int64(-200)))
+        # The non-finite rows are reached BEFORE either width test, so they
+        # answer rather than throw.
+        @test DN.add_dy_checked(DN.DYADIC_POSINF, wide) === DN.DYADIC_POSINF
+        @test DN.mul_dy_checked(DN.DYADIC_NAN, w60) === DN.DYADIC_NAN
+    end
 end
 
 # ==========================================================================
@@ -1326,8 +1512,9 @@ modes_bo = [NearestTiesToEven(), NearestTiesToAway(), TowardPositive(), TowardNe
         r2 = sort(A; alg=Base.Sort.DEFAULT_UNSTABLE, rev=true)
         @test codepoint.(r1) == codepoint.(r2)
         @test issorted(s1)
-        # interior slice, derived from K5 so it tracks the FastTest scaling.
-        # Fixed point at the original literals: K5 = 5000 ⇒ 100:4000.
+        # interior slice, derived from K5 so it tracks `LOOP_SCALE`.
+        # Fixed point at the undivided literal: K5 = 5000 ⇒ 100:4000, which is
+        # what the `release` tier now actually runs.
         sv = sort!(view(copy(A), max(1, K5 ÷ 50):(4 * K5) ÷ 5))
         @test issorted(sv)
         byp = sort(A; by=decode)                       # non-default ordering falls back safely
@@ -1375,6 +1562,20 @@ end
     σ = ProjSpec(StochasticA{3}(), SatNone())
     # concrete inferred return types at public entry points, kwarg paths included
     @test Base.return_types(project, Tuple{Type{T}, typeof(RNE_SN), Float64}) == [T]
+    # ---- ωSaturate's return type is the CONTRACT, not an implementation detail.
+    #
+    # `saturate` returns the result code point, so its return type must be the
+    # format's storage unit and nothing wider. This is the pin the refactor was
+    # designed around: the obvious alternative — six singleton outcome tags —
+    # makes this a six-way `Union`, which exceeds Julia's union-splitting budget
+    # and can leave a dynamic dispatch inside `project`, the hottest function in
+    # the package. Golden digests cannot see that: they compare values, not
+    # dispatch. Checked at both storage widths.
+    for F in (Binary8p4se, Binary16p8se, Binary16p1uf)
+        @test Base.return_types(SmallFloats.saturate,
+                                Tuple{Type{F}, typeof(RNE_SN), Rounded}) ==
+              [codeunit_type(F)]
+    end
     for f in (Add, Multiply, Divide, Exp, FMA)
         n = f === FMA ? 3 : (f in (Add, Multiply, Divide) ? 2 : 1)
         sig = Tuple{Type{T}, typeof(RNE_SN), ntuple(_ -> T, n)...}
@@ -1552,6 +1753,88 @@ end
         x = rawvalue(T, c)
         @test sincos(x) === (Sin(x), Cos(x))
         @test sincospi(x) === (SinPi(x), CosPi(x))
+    end
+end
+
+# ==========================================================================
+# eps(x) and ldexp(x, n) — the ulp query and the exact power-of-two scaling
+# ==========================================================================
+# `Base.eps(::Type)` has always existed; the VALUE form had not, and Julia's
+# fallback for it reaches `ldexp(::Binary, ::Int)` — also absent — so `eps(x)`
+# raised a bare `MethodError` for every finite value at or above floatmin.
+#
+# Three properties, and the first is the one that makes the definition legal
+# under invariant 1: the ulp is `2^Q` with `2−P−B ≤ Q ≤ e_max−P+1`, and every
+# power of two in a format's range is a datum for every `P ≥ 1`, so `eps`
+# projects EXACTLY and never rounds.
+@testset "eps(x) and ldexp(x, n)" begin
+    for T in (Binary8p4se, Binary8p1uf, Binary5p2se, Binary3p1se,
+              Binary16p8se, Binary16p5se, Binary16p1uf)
+        K = bitwidth(T)
+        U = codeunit_type(T)
+        step = max(1, (1 << K) ÷ 64)                     # sample wide formats
+        for c in 0:step:((1 << K) - 1)
+            v = rawvalue(T, U(c))
+            d = decode(v)
+            e = eps(v)
+            # 1. the answer is a datum: the round trip through the carrier
+            #    changed nothing. Spelled the way a user writes it — the ulp is
+            #    `2^Q` with `2−P−B ≤ Q ≤ e_max−P+1`, and every power of two in a
+            #    format's range is a datum for every `P ≥ 1`, so the projection
+            #    inside the constructor cannot round.
+            @test (formatname(T), c, T(decode(e)) === e) == (formatname(T), c, true)
+            if !isfinite(d)
+                @test isnan(decode(e))
+                continue
+            end
+            if iszero(d)
+                @test e === MinPositiveOf(T)
+                continue
+            end
+            # 2. independent witness. `eps` is built on `round_to_precision`,
+            #    so the reference must not be: the ulp of a datum is the step to
+            #    its lattice neighbour, and `NextGreaterThan` is the lattice's
+            #    own answer. The arithmetic runs in `BigFloat` — exact for every
+            #    carrier, since a datum carries ≤ 16 significand bits and MPFR's
+            #    exponent range covers every B — rather than on the carrier,
+            #    where a rung-3 subtraction would re-enter the engine under test.
+            g = NextGreaterThan(v)
+            if !signbit(d) && isfinite(decode(g))
+                @test (formatname(T), c, BigFloat(d) + BigFloat(decode(e))) ==
+                      (formatname(T), c, BigFloat(decode(g)))
+            end
+            # 3. `ldexp` is the exponent-field move, not a rounding, so scaling
+            #    up and back is the identity ON THE CODE POINT wherever the
+            #    round trip stays in range.
+            up = ldexp(v, 1)
+            isfinite(decode(up)) &&
+                @test (formatname(T), c, ldexp(up, -1)) == (formatname(T), c, v)
+        end
+    end
+
+    # 4. `eps` does not read session state — it is a property of the format.
+    #
+    #    This is what the `rawvalue(T, nan_code(T))` spelling of the non-finite
+    #    row buys: `T(NaN)` would route through `_convert_default` →
+    #    `with_default_projection` and make the answer depend on the session
+    #    projection. Compared on CODE POINTS, because `==` on `Binary` is IEEE
+    #    unordered comparison and every format's NaN would compare unequal to
+    #    itself.
+    #
+    #    `ldexp` is deliberately NOT held to this. Its saturation comes from the
+    #    session default, exactly as `floor`/`ceil`/`round`/`trunc` do
+    #    (juliacompat.jl), so that the Base verbs agree with one another about
+    #    what happens at the top of the range. Only the overflow row can differ.
+    let T = Binary8p4se, saved = DefaultProjection()
+        try
+            before = [codepoint(eps(rawvalue(T, UInt8(c)))) for c in 0x00:0xff]
+            DefaultProjection!(RTZ_SF)
+            @test [codepoint(eps(rawvalue(T, UInt8(c)))) for c in 0x00:0xff] == before
+            DefaultProjection!(ProjSpec(TowardPositive(), SatPropagate()))
+            @test [codepoint(eps(rawvalue(T, UInt8(c)))) for c in 0x00:0xff] == before
+        finally
+            DefaultProjection!(saved)
+        end
     end
 end
 

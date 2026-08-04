@@ -878,7 +878,7 @@ The full deterministic grid is 6 rounding modes × 3 saturation modes = 18 prede
 \label{894732549624983631}{}
 
 
-The package{\textquotesingle}s speed comes from the first idea{\textquotesingle}s finiteness: an 8-bit unary operation is a function with 256 inputs, so its \emph{entire} behavior is a 256-byte table, built once through the exact scalar path and then gathered per element (0.27 ns). The exactness is inherited: table and scalar are the same function by construction.
+The package{\textquotesingle}s speed comes from the first idea{\textquotesingle}s finiteness: an 8-bit unary operation is a function with 256 inputs, so its \emph{entire} behavior is a 256-byte table, built once through the exact scalar path and then gathered per element (0.13 ns). The exactness is inherited: table and scalar are the same function by construction.
 
 
 
@@ -4121,7 +4121,7 @@ Performance advice for SmallFloats.jl is scattered across the manual, the cheat 
 \label{14626146111254921222}{}
 
 
-Every scalar entry point in the package — \texttt{Add}, \texttt{project}, a constructor — fully specializes when the format type is known at compile time: through a \texttt{const} binding, a type parameter, or an ordinary function argument. Under that condition, a scalar \texttt{Add} runs at roughly 18–26 ns and \texttt{project} at roughly 13 ns, with zero allocations.
+Every scalar entry point in the package — \texttt{Add}, \texttt{project}, a constructor — fully specializes when the format type is known at compile time: through a \texttt{const} binding, a type parameter, or an ordinary function argument. Under that condition, a scalar \texttt{Add} runs at roughly 7–9 ns and \texttt{project} at roughly 2–7 ns, with zero allocations.
 
 
 
@@ -4184,7 +4184,11 @@ Format operands entering \texttt{Chairmarks}-style benchmarks specifically must 
 \label{3141937120956456863}{}
 
 
-The table-gather kernels that back array operations run roughly 50× faster than the scalar path per element, because after the first call for a given \texttt{(op, formats, ρ)} specialization, every later element is a single table lookup rather than a full evaluation. That first call pays a one-time table build: roughly 0.4 ms for a unary table, tens of milliseconds for an 8×8 binary table, up to a few milliseconds for a 2 MiB ternary table. Benchmark warm calls separately from the first cold call, or the build cost will dominate a measurement that is supposed to be about steady-state throughput. Once warm, measured throughput is around 0.27 ns/element for unary gathers and 0.5 ns/element for binary gathers.
+The table-gather kernels that back array operations run roughly 25× faster than the scalar path per element, because after the first call for a given \texttt{(op, formats, ρ)} specialization, every later element is a single table lookup rather than a full evaluation. That first call pays a one-time table build: roughly 6 µs for a 256-entry unary table, 80 µs for a 64 K-entry 8×8 binary table, and a few milliseconds for a wide-spread signature whose entries escalate to MPFR. Benchmark warm calls separately from the first cold call, or the build cost will dominate a measurement that is supposed to be about steady-state throughput. Once warm, measured throughput is around 0.13 ns/element for unary gathers and 0.25 ns/element for binary gathers.
+
+
+
+Builds are also \textbf{parallel} when the table is large enough and the process has threads, so the first-call cost above is what one core pays; see \href{examples\_\allowbreak{}performance.md}{Performance Evidence} for the measured contrast.
 
 
 
@@ -4206,9 +4210,24 @@ Ternary operations (\texttt{FMA}, \texttt{FAA}, \texttt{Clamp}) ride the same ta
 \item \textbf{Adaptive} (up to 2 MiB; the \texttt{K = 7} band): built only once a signature has processed enough elements to earn its build, held in a byte-bounded, LRU-evicted cache — so a signature used once in passing doesn{\textquotesingle}t pay for a table it will never reuse.
 
 
-\item \textbf{Compute} (\texttt{K = 8}; a 16 MiB table stops being a cache win): the scalar pipeline runs per element instead, optionally threaded for long arrays (roughly 4× at 4 threads).
+\item \textbf{Compute} (\texttt{K = 8}; a 16 MiB table stops being a cache win): the scalar pipeline runs per element instead, threaded for long arrays.
 
 \end{itemize}
+
+
+\subsubsection{Wide formats take the compute path, and it threads}
+
+
+
+\label{742507674469878187}{}
+
+
+Above \texttt{K = 8} the same reasoning reaches unary and binary operations. A binary table for two \texttt{K = 16} operands would be \texttt{2{\textasciicircum}32} entries, so the policy declines it and the \textbf{compute kernel is the only array path those formats have}. It is threaded for long arrays under a pure ρ, at every arity — measured at roughly 6× on 8 threads for a 65 536-element \texttt{Binary16p8se} \texttt{Add}.
+
+
+
+Stochastic ρ is deliberately excluded: it draws from a single stream, so its results are reproducible only in index order, and threading it would make a seeded run depend on the scheduler.
+
 
 
 Every table entry, eager or adaptive, is built through the exact scalar path, so a table lookup and the equivalent scalar call are bit-identical by construction — the speed comes with no accuracy trade at all.
@@ -6120,11 +6139,11 @@ Project it back explicitly when that is what you mean: \texttt{Convert(\allowbre
 \label{15708086746009923714}{}
 
 
-Beyond arithmetic, \texttt{Binary} integrates where the other layers provide it: predicates and constants (\texttt{isnan}, \texttt{isfinite}, \texttt{signbit}, \texttt{zero}, \texttt{one}, \texttt{eps}, \texttt{typemin}/\allowbreak\texttt{typemax}, \texttt{floatmin}/\allowbreak\texttt{floatmax}), comparisons and \texttt{isless} on integer order keys, \texttt{sort} via an O(n) counting sort (which places the single NaN \textbf{first}, below −Inf, per the draft{\textquotesingle}s total order — not last as \texttt{Float64} sorting does), \texttt{nextfloat}/\allowbreak\texttt{prevfloat} as the draft Next operations, \texttt{codepoint}, and \texttt{rand}/\allowbreak\texttt{randn} (see \href{concept\_\allowbreak{}session\_\allowbreak{}state.md}{Random Values}). All of it goes through the same projection engine and decode tables as the draft-named API.
+Beyond arithmetic, \texttt{Binary} integrates where the other layers provide it: predicates and constants (\texttt{isnan}, \texttt{isfinite}, \texttt{signbit}, \texttt{zero}, \texttt{one}, \texttt{eps} in both its type and value forms, \texttt{typemin}/\allowbreak\texttt{typemax}, \texttt{floatmin}/\allowbreak\texttt{floatmax}), comparisons and \texttt{isless} on integer order keys, \texttt{sort} via an O(n) counting sort (which places the single NaN \textbf{first}, below −Inf, per the draft{\textquotesingle}s total order — not last as \texttt{Float64} sorting does), \texttt{nextfloat}/\allowbreak\texttt{prevfloat} as the draft Next operations, \texttt{codepoint}, and \texttt{rand}/\allowbreak\texttt{randn} (see \href{concept\_\allowbreak{}session\_\allowbreak{}state.md}{Random Values}). All of it goes through the same projection engine and decode tables as the draft-named API.
 
 
 
-\needspace{28\baselineskip}
+\needspace{32\baselineskip}
 \subsubsection{The \texttt{AbstractFloat} contract}
 
 
@@ -6147,12 +6166,18 @@ verb & behaviour \\
 \texttt{round}, \texttt{floor}, \texttt{ceil}, \texttt{trunc} & \textbf{one} rounding: the integer value is formed exactly on the carrier and projected once, under the session default{\textquotesingle}s saturation \\
 \texttt{round(\allowbreak{}x, r::RoundingMode)} & \texttt{RoundNearest}, \texttt{RoundNearestTiesAway}, \texttt{RoundUp}, \texttt{RoundDown}, \texttt{RoundToZero} \\
 \texttt{exponent}, \texttt{significand}, \texttt{frexp} & exact; \texttt{DomainError} on zero and the non-finites, as in Base \\
+\texttt{eps(x)} & the ulp \textbf{at} \texttt{x}, and always exactly a datum of \texttt{x}{\textquotesingle}s own format — see below \\
+\texttt{ldexp(x, n)} & exact: scaling by a power of two moves the exponent field and nothing else \\
 \texttt{widen} & the format{\textquotesingle}s promotion carrier — see \href{concept\_\allowbreak{}julia\_\allowbreak{}numeric.md}{No Automatic Promotion} for why it is not another format \\
 \texttt{reinterpret} & both directions, and the incoming one is \textbf{checked} against the representation invariant \\
 \bottomrule
 \end{tabulary}
 
 \end{table}
+
+
+
+\texttt{eps} has both forms: \texttt{eps(T)} is the constant \texttt{2{\textasciicircum}(1-P)}, and \texttt{eps(x)} is the spacing of the lattice at \texttt{x}. The second is always representable — the ulp is \texttt{2{\textasciicircum}Q} with \texttt{2−P−B ≤ Q ≤ e\_\allowbreak{}max−P+1}, and every power of two in a format{\textquotesingle}s range is a datum for every \texttt{P ≥ 1} — so it is exact rather than a projected approximation, and it does not vary with the session projection. In the subnormal band the spacing is constant, and at zero it is the least positive datum.
 
 
 
@@ -6166,6 +6191,12 @@ julia> Base.decompose(Binary8p4se(1.5))          # 12 · 2^-3 = 1.5, exactly
 
 julia> floor(Binary8p4se(1.6)), ceil(Binary8p4se(1.1))
 (Binary8p4se(1.0 ≡ 0x40), Binary8p4se(2.0 ≡ 0x48))
+
+julia> eps(Binary8p4se(1.5)), eps(Binary8p4se(64.0))   # the lattice widens
+(Binary8p4se(0.125 ≡ 0x28), Binary8p4se(8.0 ≡ 0x58))
+
+julia> ldexp(Binary8p4se(1.5), 2), ldexp(Binary8p4se(1.5), -2)
+(Binary8p4se(6.0 ≡ 0x54), Binary8p4se(0.375 ≡ 0x34))
 
 julia> reinterpret(Binary8p4se, 0x44)            # checked, unlike `rawvalue`
 Binary8p4se(1.5 ≡ 0x44)
@@ -6971,7 +7002,7 @@ Bulk ingestion: exact widening per element, then projection under ρ. Unlike the
 Convert(fr, ρ, x) -> fr
 \end{minted}
 
-Draft §4.9 Convert⟨f\emph{x, f}r, ρ⟩. Accepts \texttt{Binary}, IEEE binary16/32/64 floats (widened exactly to the Float64 carrier), \texttt{Float128} (projected directly), \texttt{Integer} (exact via a sufficiently wide BigFloat), and \texttt{BigFloat} (projected directly; the caller warrants the value is exact).
+Draft §4.9 Convert⟨f\emph{x, f}r, ρ⟩. Accepts \texttt{Binary}, IEEE binary16/32/64 floats (widened exactly to the Float64 carrier), \texttt{Float128} (projected directly), \texttt{Dyadic} (the rung-3 datum carrier — what \texttt{decode} returns for the eight rung-3 formats; projected directly and exactly), \texttt{Integer} (exact via a sufficiently wide BigFloat), and \texttt{BigFloat} (projected directly; the caller warrants the value is exact).
 
 
 
@@ -7383,6 +7414,8 @@ f32_exact(op, f1, f2) -> Bool
 
 True iff \texttt{op ∈ (\allowbreak{}:Add, :Subtract, :Multiply)} on Float32-decoded operands is exact for every finite pair of (f1, f2) datums — checked once by exhaustive enumeration against a 300-bit BigFloat oracle, then cached. When true, a Float32 intermediate is an exact carrier under every projection mode.
 
+Defined at \textbf{every} bitwidth. A signature whose pair count exceeds \texttt{F32\_\allowbreak{}EXACT\_\allowbreak{}MAX\_\allowbreak{}PAIRS[]} raises rather than enumerating; that is a cost refusal naming the budget, never a statement about the formats.
+
 
 
 \end{adjustwidth}
@@ -7529,7 +7562,9 @@ measure_kappa(fn, op, fr, argformats, ρ; max_exhaustive=2^22, rng, samples=2^20
     -> (κ::Float64, exhaustive::Bool)
 \end{minted}
 
-Measure κ of \texttt{fn(\allowbreak{}x::argformats[1], …)::fr} against the defined results of draft operation \texttt{op} under ρ. Enumerates the full input cross-product when it has at most \texttt{max\_\allowbreak{}exhaustive} points (always true for arity ≤ 2); otherwise measures on \texttt{samples} uniform draws and reports \texttt{exhaustive = false}.
+Measure κ of \texttt{fn(\allowbreak{}x::argformats[1], …)::fr} against the defined results of draft operation \texttt{op} under ρ. Enumerates the full input cross-product when it has at most \texttt{max\_\allowbreak{}exhaustive} points; otherwise measures on \texttt{samples} uniform draws and reports \texttt{exhaustive = false}.
+
+The parenthetical here used to read {\textquotedbl}always true for arity ≤ 2{\textquotedbl}, which was a K ≤ 8 fact: two K = 16 formats are \texttt{2{\textasciicircum}32} points against a \texttt{2{\textasciicircum}22} budget, so a wide binary signature samples. That is the mechanism working — κ is a \emph{measurement}, \texttt{exhaustive = false} is reported, and \texttt{conformance\_\allowbreak{}report} prints {\textquotedbl}(κ sampled — not exhaustive){\textquotedbl} — but the claim was no longer true.
 
 
 
@@ -7884,6 +7919,23 @@ External float element types whose widening to the Float64 carrier is exact.
 \par\medskip
 
 \par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{16003865593099067000}{\texttt{SmallFloats.F32\_\allowbreak{}EXACT\_\allowbreak{}MAX\_\allowbreak{}PAIRS}}  -- {Constant.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+Largest \texttt{2{\textasciicircum}(K1+K2)} operand-pair count \texttt{f32\_\allowbreak{}exact} will enumerate.
+
+A bound on \textbf{time}, not memory: each pair costs two decodes and two 300-bit \texttt{BigFloat} operations, so the pair count — not any byte figure — is what governs it. The same distinction \texttt{TABLE\_\allowbreak{}EAGER\_\allowbreak{}BITS} draws against \texttt{TABLE\_\allowbreak{}MAX\_\allowbreak{}BITS}.
+
+The floor is \texttt{2{\textasciicircum}16}, the largest K ≤ 8 signature (8 + 8), so \textbf{no answer that existed before the K ≤ 16 extension can change} — the fixed-point argument \texttt{TABLE\_\allowbreak{}EAGER\_\allowbreak{}BITS} makes for itself. \texttt{2{\textasciicircum}20} above it admits every signature through K1 + K2 = 20 while keeping the worst case seconds rather than hours; \texttt{2{\textasciicircum}32} (two K = 16 formats) is four billion pairs and is what this exists to refuse.
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
 \hypertarget{5954863807747789738}{\texttt{SmallFloats.KMAX}}  -- {Constant.}
 \nopagebreak
 \begin{adjustwidth}{2em}{0pt}
@@ -7928,6 +7980,21 @@ Largest \texttt{K} whose code point fits a \texttt{UInt8} — the \texttt{Code8}
 \begin{adjustwidth}{2em}{0pt}
 
 An explicit stochastic draw \texttt{R}, or \texttt{nothing} to draw one from the rng.
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{11007231064200409171}{\texttt{SmallFloats.TABLE\_\allowbreak{}BUILD\_\allowbreak{}MIN\_\allowbreak{}ENTRIES}}  -- {Constant.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+Minimum entry count before a table build parallelizes.
+
+Its own threshold rather than \texttt{THREAD\_\allowbreak{}MIN\_\allowbreak{}ELEMS}, because the units differ: an array element costs a decode plus one operation, while a table entry costs a full scalar-engine trip including any MPFR escalation. One number serving both would be conflating two different costs that happen to be counted in the same kind of integer.
 
 
 
@@ -8024,7 +8091,20 @@ K1+K2+K3 up to which a ternary table is built eagerly on first array call (defau
 \nopagebreak
 \begin{adjustwidth}{2em}{0pt}
 
-Master switch for threaded ternary compute loops.
+Master switch for threaded compute loops, at every arity.
+
+
+
+\end{adjustwidth}
+\end{minipage}
+\par\medskip
+
+\par\medskip\noindent\begin{minipage}{\linewidth}
+\hypertarget{7928213097002134564}{\texttt{SmallFloats.THREADED\_\allowbreak{}TABLE\_\allowbreak{}BUILDS}}  -- {Constant.}
+\nopagebreak
+\begin{adjustwidth}{2em}{0pt}
+
+Master switch for parallel table builds.
 
 
 
@@ -8037,7 +8117,7 @@ Master switch for threaded ternary compute loops.
 \nopagebreak
 \begin{adjustwidth}{2em}{0pt}
 
-Minimum element count before the pure-ρ ternary compute loop threads.
+Minimum element count before a pure-ρ compute loop threads.
 
 
 
@@ -8607,7 +8687,7 @@ Three conditions, one per way a conversion can lose information:
 \item \texttt{P ≤ precision(X)} — the significand fits;
 
 
-\item the largest finite datum{\textquotesingle}s exponent is within \texttt{X}{\textquotesingle}s normal range. That exponent is \texttt{B − 1} for a signed format and \texttt{0} for an unsigned one, which is not symmetry-breaking pedantry: an unsigned format spends its whole exponent field below 1, so \texttt{Binary16p1uf}{\textquotesingle}s datums run down to \texttt{2{\textasciicircum}-32769} while its largest is \texttt{0.5};
+\item the largest finite datum{\textquotesingle}s exponent is within \texttt{X}{\textquotesingle}s normal range. That exponent is \texttt{B − 1} for \textbf{both} signedness classes, and it is \texttt{B − 2} when \texttt{P == 1}, so \texttt{B − 1} is a sound upper bound at every format: \texttt{Binary8p4uf}{\textquotesingle}s largest datum is \texttt{14·2{\textasciicircum}12 = 57 344}, exponent \texttt{15 = B − 1}, and \texttt{Binary16p1uf}{\textquotesingle}s is \texttt{2{\textasciicircum}32766} with a least positive datum of \texttt{2{\textasciicircum}-32767};
 
 
 \item \texttt{2 − P − B ≥} \texttt{X}{\textquotesingle}s least subnormal exponent — and the smallest datum being a \emph{subnormal} of \texttt{X} is fine, because a datum is \texttt{sig · 2{\textasciicircum}(2−P−B)} with integer \texttt{sig}, so once the step is a multiple of \texttt{X}{\textquotesingle}s subnormal step every datum lands on \texttt{X}{\textquotesingle}s grid exactly.
@@ -10410,7 +10490,11 @@ bad
 \label{2936793895297684742}{}
 
 
-Generated: 2026-07-30 12:32 UTC  ·  Julia 1.12.6  ·  alderlake (32 logical CPUs, 1 Julia thread)  ·  Float128 paths: enabled  ·  Chairmarks 1.3.1
+Generated: 2026-08-04 00:56 UTC  ·  Julia 1.12.6  ·  alderlake (32 logical CPUs, 8 Julia threads)  ·  Float128 paths: enabled  ·  Chairmarks 1.3.1
+
+
+
+Source: SmallFloats.jl 0.4.0  ·  commit \texttt{ed6a0b7ba6cfdcc0452ac4c8fdab91522ba82fc0}  ·  tree dirty  ·  seed 2026
 
 
 
@@ -10437,14 +10521,14 @@ The decode/compare/step/classify layer plus the projection engine. Operands: all
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{decode} & 1.6 ns & 1.6 ns & 0 \\
-\texttt{order\_\allowbreak{}key} & 1.6 ns & 1.8 ns & 0 \\
-\texttt{x < y} & 1.8 ns & 1.8 ns & 0 \\
-\texttt{TotalOrder} & 2.1 ns & 2.1 ns & 0 \\
-\texttt{Class} & 1.6 ns & 2.5 ns & 0 \\
-\texttt{NextGreaterThan} & 1.8 ns & 2.1 ns & 0 \\
-\texttt{project (RNE·SatNone)} & 2.2 ns & 6.7 ns & 0 \\
-\texttt{project (\allowbreak{}StochasticA[8], R drawn)} & 2.1 ns & 7.1 ns & 0 \\
+\texttt{decode} & 1.4 ns & 1.4 ns & 0 \\
+\texttt{order\_\allowbreak{}key} & 1.4 ns & 1.6 ns & 0 \\
+\texttt{x < y} & 1.6 ns & 1.6 ns & 0 \\
+\texttt{TotalOrder} & 1.6 ns & 2.1 ns & 0 \\
+\texttt{Class} & 1.2 ns & 2.1 ns & 0 \\
+\texttt{NextGreaterThan} & 1.2 ns & 1.8 ns & 0 \\
+\texttt{project (RNE·SatNone)} & 1.6 ns & 6.7 ns & 0 \\
+\texttt{project (\allowbreak{}StochasticA[8], R drawn)} & 1.8 ns & 7.3 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10494,36 +10578,36 @@ Finite operands within each operation{\textquotesingle}s safe domain — the ful
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Abs} & 4.9 ns & 6.7 ns & 0 \\
 \texttt{Negate} & 4.8 ns & 6.9 ns & 0 \\
-\texttt{Recip} & 7.9 ns & 18.0 ns & 0 \\
-\texttt{Sqrt} & 5.7 ns & 18.7 ns & 0 \\
+\texttt{Abs} & 4.4 ns & 7.1 ns & 0 \\
+\texttt{Recip} & 7.9 ns & 18.2 ns & 0 \\
+\texttt{Sqrt} & 4.9 ns & 18.7 ns & 0 \\
+\texttt{Cosh} & 7.3 ns & 20.6 ns & 0 \\
 \texttt{RSqrt} & 9.6 ns & 20.7 ns & 0 \\
-\texttt{Cosh} & 7.3 ns & 21.4 ns & 0 \\
-\texttt{Sin} & 6.2 ns & 21.7 ns & 0 \\
-\texttt{Cos} & 7.3 ns & 21.7 ns & 0 \\
-\texttt{Exp2} & 7.3 ns & 22.4 ns & 0 \\
-\texttt{Exp} & 7.4 ns & 22.5 ns & 0 \\
-\texttt{ArcSin} & 5.7 ns & 23.2 ns & 0 \\
-\texttt{ExpMinusOne} & 5.3 ns & 23.2 ns & 0 \\
-\texttt{Tanh} & 5.8 ns & 23.2 ns & 0 \\
-\texttt{ArcCos} & 5.7 ns & 24.3 ns & 0 \\
-\texttt{ArcSinPi} & 5.5 ns & 25.5 ns & 0 \\
-\texttt{Sinh} & 5.7 ns & 25.6 ns & 0 \\
-\texttt{Log} & 5.5 ns & 25.7 ns & 0 \\
-\texttt{Log2} & 5.9 ns & 26.6 ns & 0 \\
-\texttt{Tan} & 5.3 ns & 26.6 ns & 0 \\
-\texttt{LogOnePlus} & 5.4 ns & 26.7 ns & 0 \\
-\texttt{ArcCosPi} & 6.1 ns & 26.8 ns & 0 \\
-\texttt{CosPi} & 6.9 ns & 27.8 ns & 0 \\
-\texttt{SinPi} & 5.6 ns & 28.1 ns & 0 \\
-\texttt{ArcTan} & 5.2 ns & 28.4 ns & 0 \\
-\texttt{ArcTanPi} & 5.1 ns & 31.0 ns & 0 \\
-\texttt{ArcTanh} & 6.2 ns & 31.1 ns & 0 \\
-\texttt{TanPi} & 6.2 ns & 31.1 ns & 0 \\
-\texttt{ArcCosh} & 5.5 ns & 33.3 ns & 0 \\
-\texttt{Softplus} & 13.8 ns & 33.3 ns & 0 \\
-\texttt{ArcSinh} & 6.2 ns & 33.4 ns & 0 \\
+\texttt{Sin} & 5.7 ns & 21.7 ns & 0 \\
+\texttt{Cos} & 7.3 ns & 22.2 ns & 0 \\
+\texttt{Exp2} & 7.3 ns & 22.3 ns & 0 \\
+\texttt{Exp} & 7.2 ns & 22.5 ns & 0 \\
+\texttt{ArcSin} & 6.0 ns & 23.1 ns & 0 \\
+\texttt{Tanh} & 5.6 ns & 23.3 ns & 0 \\
+\texttt{ExpMinusOne} & 5.7 ns & 23.4 ns & 0 \\
+\texttt{ArcCos} & 5.6 ns & 24.4 ns & 0 \\
+\texttt{ArcSinPi} & 5.3 ns & 25.6 ns & 0 \\
+\texttt{Sinh} & 5.5 ns & 25.6 ns & 0 \\
+\texttt{Log} & 5.7 ns & 25.8 ns & 0 \\
+\texttt{Log2} & 6.0 ns & 26.6 ns & 0 \\
+\texttt{LogOnePlus} & 5.5 ns & 26.7 ns & 0 \\
+\texttt{Tan} & 5.7 ns & 26.8 ns & 0 \\
+\texttt{ArcCosPi} & 5.4 ns & 26.8 ns & 0 \\
+\texttt{CosPi} & 6.6 ns & 28.0 ns & 0 \\
+\texttt{SinPi} & 6.0 ns & 28.1 ns & 0 \\
+\texttt{ArcTan} & 4.9 ns & 28.4 ns & 0 \\
+\texttt{ArcTanh} & 6.1 ns & 30.8 ns & 0 \\
+\texttt{TanPi} & 6.3 ns & 31.1 ns & 0 \\
+\texttt{ArcTanPi} & 5.3 ns & 31.1 ns & 0 \\
+\texttt{ArcCosh} & 5.6 ns & 33.3 ns & 0 \\
+\texttt{ArcSinh} & 5.3 ns & 33.3 ns & 0 \\
+\texttt{Softplus} & 14.9 ns & 33.4 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10550,35 +10634,35 @@ Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). 
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Sqrt} & 1.9 ns & 2.1 ns & 0 \\
-\texttt{ArcCosh} & 2.1 ns & 2.1 ns & 0 \\
-\texttt{ArcSinPi} & 1.9 ns & 2.2 ns & 0 \\
-\texttt{Abs} & 4.3 ns & 6.7 ns & 0 \\
-\texttt{Negate} & 4.8 ns & 6.9 ns & 0 \\
-\texttt{Log2} & 2.1 ns & 8.6 ns & 0 \\
-\texttt{RSqrt} & 2.1 ns & 9.5 ns & 0 \\
-\texttt{Recip} & 1.9 ns & 17.8 ns & 0 \\
-\texttt{Cos} & 7.1 ns & 21.2 ns & 0 \\
-\texttt{Sin} & 5.4 ns & 21.5 ns & 0 \\
+\texttt{ArcCosh} & 1.6 ns & 1.6 ns & 0 \\
+\texttt{Log2} & 1.8 ns & 1.8 ns & 0 \\
+\texttt{Sqrt} & 1.8 ns & 1.9 ns & 0 \\
+\texttt{ArcSinPi} & 1.9 ns & 2.0 ns & 0 \\
+\texttt{RSqrt} & 1.8 ns & 2.2 ns & 0 \\
+\texttt{Log} & 1.9 ns & 5.5 ns & 0 \\
+\texttt{Abs} & 4.7 ns & 6.7 ns & 0 \\
+\texttt{Negate} & 4.6 ns & 6.8 ns & 0 \\
+\texttt{ArcCosPi} & 1.8 ns & 7.5 ns & 0 \\
+\texttt{ArcCos} & 1.9 ns & 16.3 ns & 0 \\
+\texttt{ArcSin} & 1.8 ns & 17.2 ns & 0 \\
+\texttt{Recip} & 1.8 ns & 17.9 ns & 0 \\
+\texttt{Sin} & 4.7 ns & 21.6 ns & 0 \\
+\texttt{Cos} & 7.1 ns & 21.6 ns & 0 \\
 \texttt{Cosh} & 7.0 ns & 21.6 ns & 0 \\
-\texttt{Exp2} & 7.3 ns & 22.3 ns & 0 \\
-\texttt{Exp} & 7.0 ns & 22.4 ns & 0 \\
-\texttt{ExpMinusOne} & 4.5 ns & 22.8 ns & 0 \\
-\texttt{ArcSin} & 2.3 ns & 22.8 ns & 0 \\
-\texttt{Tanh} & 5.7 ns & 23.1 ns & 0 \\
-\texttt{ArcCos} & 2.5 ns & 23.8 ns & 0 \\
-\texttt{Log} & 2.3 ns & 25.3 ns & 0 \\
-\texttt{Sinh} & 5.1 ns & 25.6 ns & 0 \\
-\texttt{LogOnePlus} & 1.9 ns & 26.3 ns & 0 \\
-\texttt{ArcCosPi} & 2.1 ns & 26.5 ns & 0 \\
-\texttt{Tan} & 6.1 ns & 26.6 ns & 0 \\
-\texttt{CosPi} & 6.4 ns & 27.4 ns & 0 \\
-\texttt{SinPi} & 5.2 ns & 27.7 ns & 0 \\
-\texttt{ArcTan} & 5.5 ns & 28.3 ns & 0 \\
-\texttt{ArcTanh} & 2.1 ns & 28.7 ns & 0 \\
-\texttt{TanPi} & 5.3 ns & 30.8 ns & 0 \\
-\texttt{ArcTanPi} & 4.8 ns & 30.8 ns & 0 \\
-\texttt{Softplus} & 14.3 ns & 33.5 ns & 0 \\
+\texttt{Exp2} & 7.0 ns & 22.2 ns & 0 \\
+\texttt{Exp} & 7.0 ns & 22.3 ns & 0 \\
+\texttt{Tanh} & 5.0 ns & 23.1 ns & 0 \\
+\texttt{ExpMinusOne} & 5.3 ns & 23.3 ns & 0 \\
+\texttt{Sinh} & 5.6 ns & 25.7 ns & 0 \\
+\texttt{LogOnePlus} & 1.6 ns & 26.3 ns & 0 \\
+\texttt{Tan} & 4.9 ns & 26.7 ns & 0 \\
+\texttt{CosPi} & 6.5 ns & 27.8 ns & 0 \\
+\texttt{SinPi} & 5.0 ns & 27.8 ns & 0 \\
+\texttt{ArcTan} & 5.1 ns & 28.3 ns & 0 \\
+\texttt{ArcTanh} & 1.9 ns & 28.8 ns & 0 \\
+\texttt{TanPi} & 5.7 ns & 30.8 ns & 0 \\
+\texttt{ArcTanPi} & 4.5 ns & 30.9 ns & 0 \\
+\texttt{Softplus} & 14.5 ns & 33.5 ns & 0 \\
 \texttt{ArcSinh} & 5.0 ns & 33.6 ns & 0 \\
 \bottomrule
 \end{tabulary}
@@ -10606,36 +10690,36 @@ Operands exclude the NaN code point; ±Inf and every finite datum are sampled. S
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{ArcCosh} & 2.1 ns & 2.1 ns & 0 \\
-\texttt{RSqrt} & 2.1 ns & 2.2 ns & 0 \\
-\texttt{Log} & 2.3 ns & 2.5 ns & 0 \\
-\texttt{ArcSin} & 2.5 ns & 2.6 ns & 0 \\
-\texttt{Sqrt} & 1.9 ns & 5.1 ns & 0 \\
-\texttt{Abs} & 4.4 ns & 6.7 ns & 0 \\
-\texttt{Negate} & 4.4 ns & 6.8 ns & 0 \\
-\texttt{ArcSinPi} & 2.0 ns & 7.3 ns & 0 \\
-\texttt{Log2} & 2.1 ns & 8.6 ns & 0 \\
-\texttt{Recip} & 1.9 ns & 17.8 ns & 0 \\
-\texttt{Cosh} & 5.0 ns & 21.2 ns & 0 \\
-\texttt{Sin} & 2.1 ns & 21.4 ns & 0 \\
-\texttt{Cos} & 1.9 ns & 21.5 ns & 0 \\
-\texttt{Exp2} & 5.5 ns & 22.3 ns & 0 \\
-\texttt{Exp} & 5.0 ns & 22.3 ns & 0 \\
-\texttt{Tanh} & 5.7 ns & 23.0 ns & 0 \\
-\texttt{ExpMinusOne} & 4.6 ns & 23.1 ns & 0 \\
-\texttt{ArcCos} & 2.6 ns & 23.8 ns & 0 \\
-\texttt{Sinh} & 5.1 ns & 25.6 ns & 0 \\
-\texttt{LogOnePlus} & 1.9 ns & 26.2 ns & 0 \\
-\texttt{ArcCosPi} & 2.1 ns & 26.6 ns & 0 \\
-\texttt{Tan} & 2.0 ns & 27.2 ns & 0 \\
-\texttt{CosPi} & 2.5 ns & 27.5 ns & 0 \\
-\texttt{SinPi} & 2.1 ns & 27.7 ns & 0 \\
-\texttt{ArcTan} & 5.7 ns & 28.3 ns & 0 \\
-\texttt{ArcTanh} & 2.1 ns & 28.6 ns & 0 \\
-\texttt{ArcTanPi} & 4.7 ns & 30.8 ns & 0 \\
-\texttt{TanPi} & 2.1 ns & 30.8 ns & 0 \\
-\texttt{Softplus} & 4.8 ns & 33.5 ns & 0 \\
-\texttt{ArcSinh} & 4.5 ns & 33.6 ns & 0 \\
+\texttt{ArcCosh} & 1.6 ns & 1.6 ns & 0 \\
+\texttt{Sqrt} & 1.8 ns & 1.8 ns & 0 \\
+\texttt{ArcTanh} & 1.9 ns & 1.9 ns & 0 \\
+\texttt{ArcSin} & 1.8 ns & 2.0 ns & 0 \\
+\texttt{Log} & 1.9 ns & 5.5 ns & 0 \\
+\texttt{Abs} & 4.7 ns & 6.7 ns & 0 \\
+\texttt{Negate} & 4.6 ns & 7.0 ns & 0 \\
+\texttt{ArcSinPi} & 1.9 ns & 7.2 ns & 0 \\
+\texttt{ArcCosPi} & 1.8 ns & 7.3 ns & 0 \\
+\texttt{Log2} & 1.8 ns & 8.6 ns & 0 \\
+\texttt{RSqrt} & 1.8 ns & 9.4 ns & 0 \\
+\texttt{TanPi} & 1.8 ns & 12.3 ns & 0 \\
+\texttt{Recip} & 1.8 ns & 17.9 ns & 0 \\
+\texttt{Cos} & 1.5 ns & 21.7 ns & 0 \\
+\texttt{Sin} & 2.0 ns & 21.7 ns & 0 \\
+\texttt{Exp2} & 4.9 ns & 22.3 ns & 0 \\
+\texttt{Exp} & 4.5 ns & 22.3 ns & 0 \\
+\texttt{ExpMinusOne} & 5.2 ns & 22.9 ns & 0 \\
+\texttt{Tanh} & 5.0 ns & 23.1 ns & 0 \\
+\texttt{ArcCos} & 1.9 ns & 23.8 ns & 0 \\
+\texttt{Cosh} & 5.2 ns & 25.0 ns & 0 \\
+\texttt{Sinh} & 5.3 ns & 25.7 ns & 0 \\
+\texttt{LogOnePlus} & 1.6 ns & 26.2 ns & 0 \\
+\texttt{Tan} & 2.0 ns & 26.9 ns & 0 \\
+\texttt{SinPi} & 1.6 ns & 27.8 ns & 0 \\
+\texttt{CosPi} & 1.6 ns & 27.8 ns & 0 \\
+\texttt{ArcTan} & 5.2 ns & 28.2 ns & 0 \\
+\texttt{ArcTanPi} & 4.5 ns & 30.9 ns & 0 \\
+\texttt{Softplus} & 5.0 ns & 33.5 ns & 0 \\
+\texttt{ArcSinh} & 4.9 ns & 33.5 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10662,36 +10746,36 @@ Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; med
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Sqrt} & 1.9 ns & 2.0 ns & 0 \\
-\texttt{ArcCosh} & 2.1 ns & 2.1 ns & 0 \\
-\texttt{ArcSinPi} & 1.9 ns & 2.1 ns & 0 \\
-\texttt{RSqrt} & 2.1 ns & 2.1 ns & 0 \\
-\texttt{Log} & 2.3 ns & 3.8 ns & 0 \\
-\texttt{Log2} & 2.1 ns & 5.5 ns & 0 \\
-\texttt{ArcSin} & 2.1 ns & 5.8 ns & 0 \\
-\texttt{ArcTanh} & 2.1 ns & 6.6 ns & 0 \\
-\texttt{Abs} & 2.0 ns & 6.7 ns & 0 \\
-\texttt{Negate} & 2.1 ns & 6.8 ns & 0 \\
-\texttt{Recip} & 1.8 ns & 17.8 ns & 0 \\
-\texttt{Cosh} & 2.3 ns & 21.0 ns & 0 \\
-\texttt{Cos} & 1.9 ns & 21.3 ns & 0 \\
-\texttt{Sin} & 2.1 ns & 21.5 ns & 0 \\
-\texttt{Exp2} & 2.1 ns & 22.3 ns & 0 \\
-\texttt{Exp} & 2.0 ns & 22.3 ns & 0 \\
-\texttt{ExpMinusOne} & 2.0 ns & 22.7 ns & 0 \\
-\texttt{Tanh} & 2.3 ns & 23.1 ns & 0 \\
-\texttt{ArcCos} & 2.3 ns & 23.7 ns & 0 \\
-\texttt{Sinh} & 2.3 ns & 25.5 ns & 0 \\
-\texttt{LogOnePlus} & 1.8 ns & 26.4 ns & 0 \\
-\texttt{Tan} & 2.0 ns & 26.5 ns & 0 \\
-\texttt{ArcCosPi} & 1.9 ns & 26.6 ns & 0 \\
-\texttt{CosPi} & 2.3 ns & 27.5 ns & 0 \\
-\texttt{SinPi} & 2.0 ns & 27.7 ns & 0 \\
-\texttt{ArcTan} & 2.2 ns & 28.2 ns & 0 \\
-\texttt{ArcTanPi} & 2.1 ns & 30.8 ns & 0 \\
-\texttt{TanPi} & 1.9 ns & 30.8 ns & 0 \\
-\texttt{Softplus} & 2.0 ns & 33.5 ns & 0 \\
-\texttt{ArcSinh} & 2.1 ns & 33.6 ns & 0 \\
+\texttt{ArcCosh} & 1.6 ns & 1.6 ns & 0 \\
+\texttt{Log2} & 1.8 ns & 5.9 ns & 0 \\
+\texttt{Sqrt} & 1.8 ns & 6.2 ns & 0 \\
+\texttt{Abs} & 1.9 ns & 6.7 ns & 0 \\
+\texttt{Negate} & 1.8 ns & 6.9 ns & 0 \\
+\texttt{RSqrt} & 1.8 ns & 9.4 ns & 0 \\
+\texttt{ArcSin} & 1.6 ns & 17.1 ns & 0 \\
+\texttt{Recip} & 1.8 ns & 18.1 ns & 0 \\
+\texttt{Cosh} & 1.8 ns & 21.2 ns & 0 \\
+\texttt{Cos} & 1.5 ns & 21.5 ns & 0 \\
+\texttt{Sin} & 1.8 ns & 21.9 ns & 0 \\
+\texttt{Exp2} & 1.6 ns & 22.2 ns & 0 \\
+\texttt{Exp} & 1.8 ns & 22.3 ns & 0 \\
+\texttt{ExpMinusOne} & 1.9 ns & 23.1 ns & 0 \\
+\texttt{Tanh} & 1.9 ns & 23.4 ns & 0 \\
+\texttt{ArcCos} & 1.9 ns & 23.9 ns & 0 \\
+\texttt{ArcSinPi} & 1.8 ns & 24.3 ns & 0 \\
+\texttt{Log} & 1.9 ns & 25.3 ns & 0 \\
+\texttt{Sinh} & 1.8 ns & 25.7 ns & 0 \\
+\texttt{LogOnePlus} & 1.6 ns & 26.4 ns & 0 \\
+\texttt{Tan} & 1.8 ns & 26.4 ns & 0 \\
+\texttt{ArcCosPi} & 1.8 ns & 26.6 ns & 0 \\
+\texttt{CosPi} & 1.6 ns & 27.8 ns & 0 \\
+\texttt{SinPi} & 1.4 ns & 27.8 ns & 0 \\
+\texttt{ArcTan} & 1.8 ns & 28.2 ns & 0 \\
+\texttt{ArcTanh} & 1.8 ns & 28.5 ns & 0 \\
+\texttt{ArcTanPi} & 2.0 ns & 30.8 ns & 0 \\
+\texttt{TanPi} & 1.7 ns & 30.8 ns & 0 \\
+\texttt{Softplus} & 1.8 ns & 33.5 ns & 0 \\
+\texttt{ArcSinh} & 1.8 ns & 33.6 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10730,24 +10814,24 @@ Finite operands within each operation{\textquotesingle}s safe domain — the ful
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{MinimumMagnitude} & 4.9 ns & 7.1 ns & 0 \\
+\texttt{MinimumMagnitude} & 4.6 ns & 7.1 ns & 0 \\
 \texttt{MaximumMagnitude} & 6.9 ns & 7.1 ns & 0 \\
-\texttt{CopySign} & 4.8 ns & 7.2 ns & 0 \\
-\texttt{Maximum} & 4.5 ns & 7.2 ns & 0 \\
+\texttt{Maximum} & 4.6 ns & 7.2 ns & 0 \\
 \texttt{Minimum} & 4.6 ns & 7.2 ns & 0 \\
-\texttt{MaximumFinite} & 4.8 ns & 7.2 ns & 0 \\
-\texttt{MinimumFinite} & 4.9 ns & 7.3 ns & 0 \\
-\texttt{MinimumNumber} & 4.8 ns & 7.3 ns & 0 \\
-\texttt{MaximumNumber} & 5.0 ns & 7.3 ns & 0 \\
+\texttt{MaximumFinite} & 4.5 ns & 7.2 ns & 0 \\
+\texttt{MinimumFinite} & 5.3 ns & 7.2 ns & 0 \\
+\texttt{MaximumNumber} & 4.8 ns & 7.3 ns & 0 \\
+\texttt{MinimumNumber} & 5.1 ns & 7.3 ns & 0 \\
 \texttt{MaximumMagnitudeNumber} & 7.1 ns & 7.3 ns & 0 \\
-\texttt{MinimumMagnitudeNumber} & 4.8 ns & 7.3 ns & 0 \\
-\texttt{Multiply} & 4.9 ns & 7.4 ns & 0 \\
-\texttt{Add} & 7.1 ns & 9.0 ns & 0 \\
+\texttt{CopySign} & 4.6 ns & 7.3 ns & 0 \\
+\texttt{MinimumMagnitudeNumber} & 5.3 ns & 7.3 ns & 0 \\
+\texttt{Multiply} & 5.1 ns & 7.5 ns & 0 \\
+\texttt{Add} & 6.8 ns & 9.0 ns & 0 \\
 \texttt{Subtract} & 7.4 ns & 9.2 ns & 0 \\
-\texttt{Divide} & 6.4 ns & 18.3 ns & 0 \\
-\texttt{Hypot} & 7.8 ns & 28.0 ns & 0 \\
-\texttt{ArcTan2} & 8.0 ns & 32.7 ns & 0 \\
-\texttt{ArcTan2Pi} & 7.2 ns & 35.3 ns & 0 \\
+\texttt{Divide} & 6.7 ns & 18.7 ns & 0 \\
+\texttt{Hypot} & 7.7 ns & 28.0 ns & 0 \\
+\texttt{ArcTan2} & 6.5 ns & 33.1 ns & 0 \\
+\texttt{ArcTan2Pi} & 9.1 ns & 35.6 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10774,24 +10858,24 @@ Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). 
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{MinimumMagnitude} & 4.8 ns & 7.1 ns & 0 \\
-\texttt{MaximumMagnitude} & 6.9 ns & 7.1 ns & 0 \\
-\texttt{Minimum} & 4.7 ns & 7.2 ns & 0 \\
-\texttt{Maximum} & 4.6 ns & 7.2 ns & 0 \\
-\texttt{CopySign} & 4.7 ns & 7.2 ns & 0 \\
-\texttt{MinimumFinite} & 5.0 ns & 7.2 ns & 0 \\
-\texttt{MaximumFinite} & 5.1 ns & 7.2 ns & 0 \\
-\texttt{MinimumNumber} & 6.1 ns & 7.3 ns & 0 \\
-\texttt{MaximumNumber} & 4.8 ns & 7.3 ns & 0 \\
-\texttt{MinimumMagnitudeNumber} & 4.8 ns & 7.3 ns & 0 \\
-\texttt{MaximumMagnitudeNumber} & 7.2 ns & 7.3 ns & 0 \\
-\texttt{Multiply} & 4.9 ns & 7.4 ns & 0 \\
-\texttt{Add} & 7.1 ns & 9.0 ns & 0 \\
-\texttt{Subtract} & 7.9 ns & 9.5 ns & 0 \\
-\texttt{Divide} & 2.6 ns & 18.3 ns & 0 \\
-\texttt{Hypot} & 8.2 ns & 28.0 ns & 0 \\
-\texttt{ArcTan2} & 9.0 ns & 32.7 ns & 0 \\
-\texttt{ArcTan2Pi} & 7.1 ns & 35.4 ns & 0 \\
+\texttt{CopySign} & 4.8 ns & 7.2 ns & 0 \\
+\texttt{Maximum} & 4.7 ns & 7.2 ns & 0 \\
+\texttt{Minimum} & 4.4 ns & 7.2 ns & 0 \\
+\texttt{MinimumMagnitude} & 5.0 ns & 7.2 ns & 0 \\
+\texttt{MaximumFinite} & 5.3 ns & 7.2 ns & 0 \\
+\texttt{MaximumMagnitude} & 6.9 ns & 7.2 ns & 0 \\
+\texttt{MinimumFinite} & 4.9 ns & 7.3 ns & 0 \\
+\texttt{MaximumMagnitudeNumber} & 7.1 ns & 7.4 ns & 0 \\
+\texttt{Multiply} & 5.2 ns & 7.4 ns & 0 \\
+\texttt{MaximumNumber} & 5.1 ns & 7.4 ns & 0 \\
+\texttt{MinimumNumber} & 4.9 ns & 7.5 ns & 0 \\
+\texttt{MinimumMagnitudeNumber} & 4.7 ns & 7.6 ns & 0 \\
+\texttt{Add} & 6.6 ns & 9.0 ns & 0 \\
+\texttt{Subtract} & 7.5 ns & 9.3 ns & 0 \\
+\texttt{Divide} & 2.5 ns & 18.4 ns & 0 \\
+\texttt{Hypot} & 7.7 ns & 28.0 ns & 0 \\
+\texttt{ArcTan2} & 6.8 ns & 33.1 ns & 0 \\
+\texttt{ArcTan2Pi} & 4.2 ns & 35.9 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10818,24 +10902,24 @@ Operands exclude the NaN code point; ±Inf and every finite datum are sampled. S
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{MinimumMagnitude} & 4.6 ns & 7.1 ns & 0 \\
-\texttt{MaximumMagnitude} & 5.0 ns & 7.1 ns & 0 \\
-\texttt{CopySign} & 5.0 ns & 7.2 ns & 0 \\
-\texttt{Minimum} & 4.6 ns & 7.2 ns & 0 \\
-\texttt{Maximum} & 4.6 ns & 7.2 ns & 0 \\
-\texttt{MaximumFinite} & 5.0 ns & 7.2 ns & 0 \\
-\texttt{MinimumFinite} & 5.0 ns & 7.2 ns & 0 \\
-\texttt{MinimumNumber} & 5.1 ns & 7.3 ns & 0 \\
-\texttt{MaximumNumber} & 4.6 ns & 7.3 ns & 0 \\
-\texttt{MinimumMagnitudeNumber} & 4.6 ns & 7.3 ns & 0 \\
-\texttt{MaximumMagnitudeNumber} & 5.1 ns & 7.3 ns & 0 \\
-\texttt{Multiply} & 5.0 ns & 7.4 ns & 0 \\
-\texttt{Add} & 6.3 ns & 9.0 ns & 0 \\
-\texttt{Subtract} & 7.2 ns & 9.5 ns & 0 \\
-\texttt{Divide} & 2.6 ns & 18.3 ns & 0 \\
-\texttt{Hypot} & 6.1 ns & 28.0 ns & 0 \\
-\texttt{ArcTan2} & 7.1 ns & 32.7 ns & 0 \\
-\texttt{ArcTan2Pi} & 6.7 ns & 35.4 ns & 0 \\
+\texttt{MaximumMagnitude} & 5.4 ns & 7.2 ns & 0 \\
+\texttt{CopySign} & 4.8 ns & 7.2 ns & 0 \\
+\texttt{Maximum} & 4.7 ns & 7.2 ns & 0 \\
+\texttt{Minimum} & 4.8 ns & 7.2 ns & 0 \\
+\texttt{MinimumNumber} & 4.8 ns & 7.3 ns & 0 \\
+\texttt{MaximumNumber} & 4.9 ns & 7.3 ns & 0 \\
+\texttt{MaximumFinite} & 5.6 ns & 7.4 ns & 0 \\
+\texttt{Multiply} & 5.1 ns & 7.4 ns & 0 \\
+\texttt{MinimumMagnitude} & 5.2 ns & 7.4 ns & 0 \\
+\texttt{MinimumFinite} & 5.1 ns & 7.5 ns & 0 \\
+\texttt{MaximumMagnitudeNumber} & 5.5 ns & 7.5 ns & 0 \\
+\texttt{MinimumMagnitudeNumber} & 4.6 ns & 7.5 ns & 0 \\
+\texttt{Add} & 6.5 ns & 9.1 ns & 0 \\
+\texttt{Subtract} & 6.7 ns & 9.2 ns & 0 \\
+\texttt{Divide} & 2.5 ns & 18.3 ns & 0 \\
+\texttt{Hypot} & 5.2 ns & 28.0 ns & 0 \\
+\texttt{ArcTan2} & 6.7 ns & 33.0 ns & 0 \\
+\texttt{ArcTan2Pi} & 7.3 ns & 35.4 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10862,24 +10946,24 @@ Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; med
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{MinimumMagnitude} & 2.1 ns & 7.1 ns & 0 \\
-\texttt{MaximumMagnitude} & 1.9 ns & 7.1 ns & 0 \\
-\texttt{CopySign} & 2.1 ns & 7.2 ns & 0 \\
-\texttt{Minimum} & 2.1 ns & 7.2 ns & 0 \\
-\texttt{Maximum} & 1.8 ns & 7.2 ns & 0 \\
-\texttt{MaximumFinite} & 5.6 ns & 7.2 ns & 0 \\
-\texttt{MinimumFinite} & 5.0 ns & 7.2 ns & 0 \\
-\texttt{MinimumNumber} & 5.1 ns & 7.3 ns & 0 \\
-\texttt{MaximumNumber} & 4.6 ns & 7.3 ns & 0 \\
+\texttt{MinimumMagnitude} & 1.8 ns & 7.1 ns & 0 \\
+\texttt{MaximumMagnitude} & 1.9 ns & 7.2 ns & 0 \\
+\texttt{Maximum} & 1.6 ns & 7.2 ns & 0 \\
+\texttt{MaximumFinite} & 5.5 ns & 7.2 ns & 0 \\
+\texttt{MinimumFinite} & 4.6 ns & 7.2 ns & 0 \\
+\texttt{CopySign} & 1.8 ns & 7.3 ns & 0 \\
+\texttt{Minimum} & 1.6 ns & 7.3 ns & 0 \\
 \texttt{MinimumMagnitudeNumber} & 4.6 ns & 7.3 ns & 0 \\
-\texttt{MaximumMagnitudeNumber} & 5.0 ns & 7.4 ns & 0 \\
-\texttt{Multiply} & 2.1 ns & 7.4 ns & 0 \\
-\texttt{Add} & 3.7 ns & 9.0 ns & 0 \\
-\texttt{Subtract} & 4.6 ns & 9.5 ns & 0 \\
-\texttt{Divide} & 2.5 ns & 18.3 ns & 0 \\
-\texttt{Hypot} & 3.0 ns & 28.0 ns & 0 \\
-\texttt{ArcTan2} & 4.6 ns & 32.7 ns & 0 \\
-\texttt{ArcTan2Pi} & 3.8 ns & 35.3 ns & 0 \\
+\texttt{MinimumNumber} & 4.8 ns & 7.3 ns & 0 \\
+\texttt{MaximumMagnitudeNumber} & 5.6 ns & 7.3 ns & 0 \\
+\texttt{MaximumNumber} & 4.9 ns & 7.4 ns & 0 \\
+\texttt{Multiply} & 1.6 ns & 7.5 ns & 0 \\
+\texttt{Add} & 3.4 ns & 9.2 ns & 0 \\
+\texttt{Subtract} & 4.0 ns & 9.4 ns & 0 \\
+\texttt{Divide} & 2.2 ns & 17.9 ns & 0 \\
+\texttt{Hypot} & 2.2 ns & 27.5 ns & 0 \\
+\texttt{ArcTan2} & 3.0 ns & 33.0 ns & 0 \\
+\texttt{ArcTan2Pi} & 3.4 ns & 35.5 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10913,9 +10997,9 @@ Finite operands within each operation{\textquotesingle}s safe domain — the ful
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Clamp} & 5.1 ns & 8.0 ns & 0 \\
-\texttt{FMA} & 8.1 ns & 9.6 ns & 0 \\
-\texttt{FAA} & 8.3 ns & 9.9 ns & 0 \\
+\texttt{Clamp} & 5.1 ns & 8.1 ns & 0 \\
+\texttt{FMA} & 7.5 ns & 9.6 ns & 0 \\
+\texttt{FAA} & 7.4 ns & 9.9 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10941,9 +11025,9 @@ Operands exclude NaN and ±Inf; finite datums only (zeros and subnormals kept). 
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Clamp} & 5.5 ns & 8.0 ns & 0 \\
-\texttt{FMA} & 8.3 ns & 9.7 ns & 0 \\
-\texttt{FAA} & 8.1 ns & 9.7 ns & 0 \\
+\texttt{Clamp} & 5.1 ns & 8.1 ns & 0 \\
+\texttt{FMA} & 8.2 ns & 9.6 ns & 0 \\
+\texttt{FAA} & 7.5 ns & 9.7 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10970,9 +11054,9 @@ Operands exclude the NaN code point; ±Inf and every finite datum are sampled. S
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Clamp} & 5.2 ns & 8.0 ns & 0 \\
-\texttt{FMA} & 6.9 ns & 9.7 ns & 0 \\
-\texttt{FAA} & 7.1 ns & 9.7 ns & 0 \\
+\texttt{Clamp} & 5.0 ns & 8.1 ns & 0 \\
+\texttt{FMA} & 5.0 ns & 9.7 ns & 0 \\
+\texttt{FAA} & 4.3 ns & 9.8 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -10999,9 +11083,9 @@ Operands drawn uniformly over ALL code points — NaN and ±Inf are sampled; med
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Clamp} & 2.1 ns & 8.0 ns & 0 \\
-\texttt{FMA} & 3.7 ns & 9.7 ns & 0 \\
-\texttt{FAA} & 4.1 ns & 9.7 ns & 0 \\
+\texttt{Clamp} & 1.6 ns & 8.0 ns & 0 \\
+\texttt{FMA} & 3.9 ns & 9.6 ns & 0 \\
+\texttt{FAA} & 3.7 ns & 9.7 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -11039,21 +11123,21 @@ Same three binary ops across formats; \texttt{Binary8p1uf} exercises the wide-ex
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{Add⟨Binary8p4se⟩} & 3.7 ns & 9.0 ns & 0 \\
-\texttt{Divide⟨Binary8p4se⟩} & 2.5 ns & 18.3 ns & 0 \\
-\texttt{Multiply⟨Binary8p4se⟩} & 2.1 ns & 7.4 ns & 0 \\
-\texttt{Add⟨Binary8p3sf⟩} & 3.9 ns & 8.7 ns & 0 \\
-\texttt{Divide⟨Binary8p3sf⟩} & 2.6 ns & 16.4 ns & 0 \\
-\texttt{Multiply⟨Binary8p3sf⟩} & 2.1 ns & 7.2 ns & 0 \\
-\texttt{Add⟨Binary8p1uf⟩} & 4.7 ns & 74.0 ns & 0 \\
-\texttt{Divide⟨Binary8p1uf⟩} & 2.6 ns & 8.4 ns & 0 \\
-\texttt{Multiply⟨Binary8p1uf⟩} & 2.1 ns & 6.9 ns & 0 \\
-\texttt{Add⟨Binary5p2se⟩} & 4.0 ns & 9.1 ns & 0 \\
-\texttt{Divide⟨Binary5p2se⟩} & 2.5 ns & 9.0 ns & 0 \\
-\texttt{Multiply⟨Binary5p2se⟩} & 1.9 ns & 7.4 ns & 0 \\
-\texttt{Add⟨Binary3p1se⟩} & 4.0 ns & 7.6 ns & 0 \\
-\texttt{Divide⟨Binary3p1se⟩} & 2.6 ns & 6.3 ns & 0 \\
-\texttt{Multiply⟨Binary3p1se⟩} & 2.1 ns & 5.9 ns & 0 \\
+\texttt{Add⟨Binary8p4se⟩} & 3.4 ns & 9.0 ns & 0 \\
+\texttt{Divide⟨Binary8p4se⟩} & 2.3 ns & 18.3 ns & 0 \\
+\texttt{Multiply⟨Binary8p4se⟩} & 1.8 ns & 7.4 ns & 0 \\
+\texttt{Add⟨Binary16p8se⟩} & 14.6 ns & 77.8 ns & 0 \\
+\texttt{Divide⟨Binary16p8se⟩} & 11.0 ns & 24.5 ns & 0 \\
+\texttt{Multiply⟨Binary16p8se⟩} & 9.5 ns & 13.2 ns & 0 \\
+\texttt{Add⟨Binary16p5se⟩} & 136.6 ns & 698.3 ns & 34 \\
+\texttt{Divide⟨Binary16p5se⟩} & 428.8 ns & 1.81 μs & 63 \\
+\texttt{Multiply⟨Binary16p5se⟩} & 94.1 ns & 96.2 ns & 0 \\
+\texttt{Add⟨Binary16p1uf⟩} & 17.1 ns & 21.8 ns & 0 \\
+\texttt{Divide⟨Binary16p1uf⟩} & 1.5 μs & 1.61 μs & 81 \\
+\texttt{Multiply⟨Binary16p1uf⟩} & 9.8 ns & 13.2 ns & 0 \\
+\texttt{Add⟨Binary3p1se⟩} & 3.7 ns & 7.2 ns & 0 \\
+\texttt{Divide⟨Binary3p1se⟩} & 2.5 ns & 6.7 ns & 0 \\
+\texttt{Multiply⟨Binary3p1se⟩} & 1.8 ns & 6.2 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -11080,17 +11164,17 @@ operation & min & median & allocs \\
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{NearestTiesToEven} & 2.0 ns & 6.7 ns & 0 \\
-\texttt{NearestTiesToAway} & 2.8 ns & 7.7 ns & 0 \\
-\texttt{TowardPositive} & 3.0 ns & 6.0 ns & 0 \\
-\texttt{TowardNegative} & 2.6 ns & 5.9 ns & 0 \\
-\texttt{TowardZero} & 2.5 ns & 5.3 ns & 0 \\
-\texttt{ToOdd} & 2.0 ns & 6.6 ns & 0 \\
-\texttt{StochasticA[8]} & 2.0 ns & 7.0 ns & 0 \\
-\texttt{StochasticB[8]} & 2.5 ns & 7.1 ns & 0 \\
-\texttt{StochasticC[8]} & 2.3 ns & 7.1 ns & 0 \\
-\texttt{RNE · SatFinite} & 2.1 ns & 7.6 ns & 0 \\
-\texttt{RNE · SatPropagate} & 2.1 ns & 7.2 ns & 0 \\
+\texttt{NearestTiesToEven} & 1.6 ns & 6.6 ns & 0 \\
+\texttt{NearestTiesToAway} & 2.6 ns & 7.6 ns & 0 \\
+\texttt{TowardPositive} & 2.5 ns & 6.0 ns & 0 \\
+\texttt{TowardNegative} & 2.5 ns & 6.0 ns & 0 \\
+\texttt{TowardZero} & 2.3 ns & 5.3 ns & 0 \\
+\texttt{ToOdd} & 1.8 ns & 6.6 ns & 0 \\
+\texttt{StochasticA[8]} & 1.8 ns & 7.2 ns & 0 \\
+\texttt{StochasticB[8]} & 1.8 ns & 7.2 ns & 0 \\
+\texttt{StochasticC[8]} & 1.6 ns & 7.0 ns & 0 \\
+\texttt{RNE · SatFinite} & 1.8 ns & 6.3 ns & 0 \\
+\texttt{RNE · SatPropagate} & 1.8 ns & 6.4 ns & 0 \\
 \bottomrule
 \end{tabulary}
 
@@ -11128,11 +11212,11 @@ Warm caches: table specializations prebuilt, so table rows measure the gather; s
 \toprule
 operation & min & median & allocs & per element \\
 \toprule
-\texttt{vmap unary (\allowbreak{}table gather), n=65536} & 8.56 μs & 8.71 μs & 0 & 0.13 ns/elem — 7.52 Gelem/s \\
-\texttt{vmap binary (\allowbreak{}table gather), n=65536} & 16.45 μs & 16.81 μs & 0 & 0.26 ns/elem — 3.9 Gelem/s \\
-\texttt{vmap ternary (\allowbreak{}scalar loop), n=65536} & 1.01 ms & 1.02 ms & 0 & 15.54 ns/elem — 0.06 Gelem/s \\
-\texttt{vmap binary stochastic (\allowbreak{}scalar loop), n=65536} & 646.57 μs & 655.78 μs & 0 & 10.01 ns/elem — 0.1 Gelem/s \\
-\texttt{vmap unary through PackedVector, n=65536} & 76.97 μs & 90.29 μs & 773 & 1.38 ns/elem — 0.73 Gelem/s \\
+\texttt{vmap unary (\allowbreak{}table gather), n=65536} & 8.32 μs & 8.68 μs & 0 & 0.13 ns/elem — 7.55 Gelem/s \\
+\texttt{vmap binary (\allowbreak{}table gather), n=65536} & 16.35 μs & 16.67 μs & 0 & 0.25 ns/elem — 3.93 Gelem/s \\
+\texttt{vmap ternary (\allowbreak{}scalar loop), n=65536} & 135.26 μs & 207.61 μs & 42 & 3.17 ns/elem — 0.32 Gelem/s \\
+\texttt{vmap binary stochastic (\allowbreak{}scalar loop), n=65536} & 642.39 μs & 680.83 μs & 0 & 10.39 ns/elem — 0.1 Gelem/s \\
+\texttt{vmap unary through PackedVector, n=65536} & 80.72 μs & 85.78 μs & 773 & 1.31 ns/elem — 0.76 Gelem/s \\
 \bottomrule
 \end{tabulary}
 
@@ -11140,7 +11224,7 @@ operation & min & median & allocs & per element \\
 
 
 
-\needspace{34\baselineskip}
+\needspace{37\baselineskip}
 \subsubsection{Ternary bitwidth tiers (FMA/FAA)}
 
 
@@ -11148,7 +11232,7 @@ operation & min & median & allocs & per element \\
 \label{14443973703327008650}{}
 
 
-\texttt{FMA}/\allowbreak\texttt{FAA}/\texttt{Clamp} are total functions on \texttt{2{\textasciicircum}(K1+K2+K3)} code points, but that count spans 512 B (K=3) to 16 MiB (K=8), so the array kernel tables small operand formats eagerly, tables mid-size ones adaptively (after enough elements amortize the build; not shown here — see the adaptive-cache gate in \texttt{test/ternary\_\allowbreak{}opt.jl}), and always runs the scalar compute kernel at K=8, threaded above a size cutoff when \texttt{Threads.nthreads() > 1}. Each tier{\textquotesingle}s optimized row is paired with a scalar-loop baseline (policy Refs forced off around the measurement, restored after) so the win is visible per tier; this process has 1 Julia thread. No threaded/sequential comparison below — rerun with \texttt{julia -t N} (N > 1) to see it. Same reference format, ρ, and operand pool discipline as Array kernels above.
+\texttt{FMA}/\allowbreak\texttt{FAA}/\texttt{Clamp} are total functions on \texttt{2{\textasciicircum}(K1+K2+K3)} code points, but that count spans 512 B (K=3) to 16 MiB (K=8), so the array kernel tables small operand formats eagerly, tables mid-size ones adaptively (after enough elements amortize the build; not shown here — see the adaptive-cache gate in \texttt{test/ternary\_\allowbreak{}opt.jl}), and always runs the scalar compute kernel at K=8, threaded above a size cutoff when \texttt{Threads.nthreads() > 1}. Each tier{\textquotesingle}s optimized row is paired with a scalar-loop baseline (policy Refs forced off around the measurement, restored after) so the win is visible per tier; this process has 8 Julia threads. Same reference format, ρ, and operand pool discipline as Array kernels above.
 
 
 
@@ -11159,12 +11243,14 @@ operation & min & median & allocs & per element \\
 \toprule
 operation & min & median & allocs & per element \\
 \toprule
-\texttt{FMA K=4 (\allowbreak{}eager table), n=65536} & 19.58 μs & 20.46 μs & 0 & 0.31 ns/elem — 3.2 Gelem/s \\
-\texttt{FMA K=4 (\allowbreak{}eager table), scalar-loop baseline, n=65536} & 967.88 μs & 974.03 μs & 0 & 14.86 ns/elem — 0.07 Gelem/s \\
-\texttt{FMA K=6 (\allowbreak{}eager table), n=65536} & 24.03 μs & 24.34 μs & 0 & 0.37 ns/elem — 2.69 Gelem/s \\
-\texttt{FMA K=6 (\allowbreak{}eager table), scalar-loop baseline, n=65536} & 1.0 ms & 1.01 ms & 0 & 15.46 ns/elem — 0.06 Gelem/s \\
-\texttt{FMA K=8 (\allowbreak{}compute), n=65536} & 990.69 μs & 1.0 ms & 0 & 15.31 ns/elem — 0.07 Gelem/s \\
-\texttt{FMA K=8 (\allowbreak{}compute), scalar-loop baseline, n=65536} & 990.11 μs & 1.0 ms & 0 & 15.27 ns/elem — 0.07 Gelem/s \\
+\texttt{FMA K=4 (\allowbreak{}eager table), n=65536} & 19.47 μs & 20.72 μs & 0 & 0.32 ns/elem — 3.16 Gelem/s \\
+\texttt{FMA K=4 (\allowbreak{}eager table), scalar-loop baseline, n=65536} & 920.36 μs & 972.5 μs & 0 & 14.84 ns/elem — 0.07 Gelem/s \\
+\texttt{FMA K=6 (\allowbreak{}eager table), n=65536} & 24.07 μs & 25.15 μs & 0 & 0.38 ns/elem — 2.61 Gelem/s \\
+\texttt{FMA K=6 (\allowbreak{}eager table), scalar-loop baseline, n=65536} & 999.05 μs & 1.01 ms & 0 & 15.41 ns/elem — 0.06 Gelem/s \\
+\texttt{FMA K=8 (\allowbreak{}compute), n=65536} & 131.64 μs & 209.46 μs & 42 & 3.2 ns/elem — 0.31 Gelem/s \\
+\texttt{FMA K=8 (\allowbreak{}compute), scalar-loop baseline, n=65536} & 996.15 μs & 1.01 ms & 0 & 15.48 ns/elem — 0.06 Gelem/s \\
+\texttt{FMA K=8 (\allowbreak{}compute), threaded [8t], n=65536} & 133.02 μs & 211.11 μs & 42 & 3.22 ns/elem — 0.31 Gelem/s \\
+\texttt{FMA K=8 (\allowbreak{}compute), sequential [1t], n=65536} & 987.69 μs & 1.0 ms & 0 & 15.31 ns/elem — 0.07 Gelem/s \\
 \bottomrule
 \end{tabulary}
 
@@ -11191,9 +11277,9 @@ Counting sort is installed as the default algorithm for \texttt{Binary} vectors.
 \toprule
 operation & min & median & allocs \\
 \toprule
-\texttt{sort! (\allowbreak{}counting sort via defalg), n=65536} & 155.36 μs & 157.4 μs & 2 \\
-\texttt{sort! (\allowbreak{}stock comparison sort), n=65536} & 1.36 ms & 1.37 ms & 3 \\
-\texttt{sort! rev=true (\allowbreak{}counting sort), n=65536} & 155.48 μs & 157.95 μs & 2 \\
+\texttt{sort! (\allowbreak{}counting sort via defalg), n=65536} & 159.58 μs & 161.56 μs & 2 \\
+\texttt{sort! (\allowbreak{}stock comparison sort), n=65536} & 1.34 ms & 1.35 ms & 3 \\
+\texttt{sort! rev=true (\allowbreak{}counting sort), n=65536} & 160.9 μs & 165.64 μs & 2 \\
 \bottomrule
 \end{tabulary}
 
@@ -11201,7 +11287,7 @@ operation & min & median & allocs \\
 
 
 
-\needspace{25\baselineskip}
+\needspace{24\baselineskip}
 \subsubsection{Table builds (oracle + projection, Float128-first)}
 
 
@@ -11220,11 +11306,11 @@ Cold cache per sample (\texttt{empty\_\allowbreak{}tables!} in untimed setup); J
 \toprule
 operation & min & median & allocs & warm hit \\
 \toprule
-\texttt{Exp⟨8p4se⟩ (256 entries)} & 30.31 μs & 31.16 μs & 257 & 65.8 ns / 67.4 ns \\
-\texttt{Tanh⟨8p4se⟩ (\allowbreak{}256 entries)} & 29.49 μs & 30.93 μs & 257 & 65.4 ns / 67.5 ns \\
-\texttt{Add⟨8p4se×8p4se⟩ (\allowbreak{}64 K entries)} & 13.77 ms & 13.93 ms & 458754 & 65.0 ns / 66.6 ns \\
-\texttt{Divide⟨8p4se×8p4se⟩ (\allowbreak{}64 K)} & 14.02 ms & 14.14 ms & 458754 & 65.1 ns / 66.6 ns \\
-\texttt{Add⟨8p1uf×8p1uf⟩ (\allowbreak{}64 K, wide-spread)} & 27.08 ms & 29.5 ms & 995304 & 65.8 ns / 67.8 ns \\
+\texttt{Exp⟨8p4se⟩ (256 entries)} & 5.62 μs & 6.01 μs & 1 & 65.9 ns / 68.2 ns \\
+\texttt{Tanh⟨8p4se⟩ (\allowbreak{}256 entries)} & 6.05 μs & 6.15 μs & 1 & 66.1 ns / 67.6 ns \\
+\texttt{Add⟨8p4se×8p4se⟩ (\allowbreak{}64 K entries)} & 79.47 μs & 158.88 μs & 44 & 62.3 ns / 66.9 ns \\
+\texttt{Divide⟨8p4se×8p4se⟩ (\allowbreak{}64 K)} & 131.26 μs & 143.89 μs & 44 & 65.4 ns / 67.3 ns \\
+\texttt{Add⟨8p1uf×8p1uf⟩ (\allowbreak{}64 K, wide-spread)} & 2.57 ms & 3.83 ms & 536594 & 64.5 ns / 66.2 ns \\
 \bottomrule
 \end{tabulary}
 
@@ -11251,10 +11337,10 @@ Elements \texttt{Binary8p4se}, scales \texttt{Binary8p1uf}, B = 32. Operands: al
 \toprule
 operation & min & median & allocs & per lane \\
 \toprule
-\texttt{BlockAdd (B=32)} & 963.7 ns & 1.17 μs & 35 & 36.65 ns/lane \\
-\texttt{BlockDotProduct → 8p4se (\allowbreak{}B=32)} & 211.3 ns & 265.3 ns & 3 & 8.29 ns/lane \\
-\texttt{BlockReduceAdd → 8p4se (\allowbreak{}B=32)} & 43.5 ns & 489.4 ns & 0 & 15.29 ns/lane \\
-\texttt{ConvertToBlockMaxAbsFinite (\allowbreak{}B=32)} & 3.79 μs & 3.95 μs & 111 & 123.3 ns/lane \\
+\texttt{BlockAdd (B=32)} & 964.9 ns & 1.03 μs & 35 & 32.28 ns/lane \\
+\texttt{BlockDotProduct → 8p4se (\allowbreak{}B=32)} & 320.0 ns & 399.0 ns & 3 & 12.47 ns/lane \\
+\texttt{BlockReduceAdd → 8p4se (\allowbreak{}B=32)} & 45.0 ns & 493.0 ns & 0 & 15.41 ns/lane \\
+\texttt{ConvertToBlockMaxAbsFinite (\allowbreak{}B=32)} & 3.75 μs & 3.98 μs & 111 & 124.34 ns/lane \\
 \bottomrule
 \end{tabulary}
 
@@ -11281,13 +11367,87 @@ Operands: all code points — NaN and ±Inf sampled.
 \toprule
 operation & min & median & allocs & per element \\
 \toprule
-\texttt{T(\allowbreak{}::UInt8) code-point constructor} & 1.8 ns & 1.8 ns & 0 &  \\
-\texttt{rawvalue (\allowbreak{}unchecked kernel route)} & 1.8 ns & 1.8 ns & 0 &  \\
-\texttt{T(\allowbreak{}::Float64) numeric constructor (\allowbreak{}projects)} & 3.2 ns & 7.7 ns & 0 &  \\
-\texttt{Convert 8p4se → 8p3se (\allowbreak{}scalar)} & 2.1 ns & 6.7 ns & 0 &  \\
-\texttt{Float64 → 8p4se (\allowbreak{}project)} & 2.0 ns & 6.7 ns & 0 &  \\
-\texttt{PackedVector pack, n=65536} & 33.47 μs & 35.43 μs & 3 & 0.54 ns/elem \\
-\texttt{PackedVector unpack (\allowbreak{}collect), n=65536} & 28.86 μs & 29.05 μs & 3 & 0.44 ns/elem \\
+\texttt{T(\allowbreak{}::UInt8) code-point constructor} & 1.2 ns & 1.2 ns & 0 &  \\
+\texttt{rawvalue (\allowbreak{}unchecked kernel route)} & 1.2 ns & 1.2 ns & 0 &  \\
+\texttt{T(\allowbreak{}::Float64) numeric constructor (\allowbreak{}projects)} & 2.5 ns & 7.9 ns & 0 &  \\
+\texttt{Convert 8p4se → 8p3se (\allowbreak{}scalar)} & 1.8 ns & 6.7 ns & 0 &  \\
+\texttt{Float64 → 8p4se (\allowbreak{}project)} & 1.8 ns & 6.6 ns & 0 &  \\
+\texttt{PackedVector pack, n=65536} & 32.45 μs & 34.75 μs & 3 & 0.53 ns/elem \\
+\texttt{PackedVector unpack (\allowbreak{}collect), n=65536} & 28.86 μs & 29.04 μs & 3 & 0.44 ns/elem \\
+\bottomrule
+\end{tabulary}
+
+\end{table}
+
+
+
+\subsection{Parallelism and allocation}
+
+
+
+\label{197555801045686935}{}
+
+
+The two properties the doctrine states in prose and this report previously left unmeasured.
+
+
+
+\needspace{33\baselineskip}
+\subsubsection{Threading}
+
+
+
+\label{1114263727795999607}{}
+
+
+Both variants are warmed before either is measured, and the switch is a \texttt{Ref} read inside an already-compiled branch — not a second compilation, which is the harness failure the benchmark doctrine records. \texttt{Binary16p8se}{\textquotesingle}s binary table would be 2{\textasciicircum}32 entries, so \texttt{table\_\allowbreak{}for} declines and the Shape-B compute kernel is the \emph{only} array path that format has; that is what threading it buys. The build rows separate two different wins: \texttt{Multiply} is cheap per entry and was dominated by a per-entry dynamic dispatch (now fixed by the \texttt{\_\allowbreak{}fill\_\allowbreak{}*!} function barrier), while \texttt{Exp} is dominated by MPFR enclosure work and is where threading itself pays. This process has 8 Julia threads.
+
+
+
+
+\begin{table}[h]
+\centering
+\begin{tabulary}{\linewidth}{L L L L}
+\toprule
+operation & min & median & allocs \\
+\toprule
+\texttt{Shape-B compute ⟨Binary16p8se⟩ Add, n=65536 — 8 threads} & 2.69 ms & 5.14 ms & 597767 \\
+\texttt{Shape-B compute ⟨Binary16p8se⟩ Add, n=65536 — sequential} & 16.19 ms & 18.31 ms & 597725 \\
+\texttt{build Exp⟨Binary16p8se⟩ (\allowbreak{}64 K entries) — 8 threads} & 14.57 ms & 16.63 ms & 1654196 \\
+\texttt{build Multiply⟨Binary8p4se²⟩ (\allowbreak{}64 K entries) — 8 threads} & 64.46 μs & 132.86 μs & 44 \\
+\texttt{build Exp⟨Binary16p8se⟩ (\allowbreak{}64 K entries) — sequential} & 74.51 ms & 77.37 ms & 1764746 \\
+\texttt{build Multiply⟨Binary8p4se²⟩ (\allowbreak{}64 K entries) — sequential} & 445.35 μs & 451.85 μs & 2 \\
+\bottomrule
+\end{tabulary}
+
+\end{table}
+
+
+
+\needspace{24\baselineskip}
+\subsubsection{Allocation by rung}
+
+
+
+\label{9989398019819587694}{}
+
+
+Warm-path bytes for one call of each operation class, per carrier rung. The \textbf{exact selections are zero at every rung, unconditionally} — a selection returns one of its operands, so there is nothing to escalate into, and a nonzero reading there is plumbing rather than arithmetic (this is the condition \texttt{preflight} aborts on). Arithmetic is \emph{recorded, not gated}: it allocates exactly when the operand spread exceeds the carrier{\textquotesingle}s exact range and evaluation escalates to MPFR, which happens at rung 1 too. The enclosure ladder allocates at rungs 2 and 3 by construction. Times are not meaningful for these calls and are omitted.
+
+
+
+
+\begin{table}[h]
+\centering
+\begin{tabulary}{\linewidth}{L L L L L L L}
+\toprule
+format & rung & carrier & selection & add & fma & ladder \\
+\toprule
+\texttt{Binary8p4se} & 1 & \texttt{Float64} & 0 B & 0 B & 0 B & 0 B \\
+\texttt{Binary16p8se} & 1 & \texttt{Float64} & 0 B & 0 B & 0 B & 0 B \\
+\texttt{Binary16p5se} & 2 & \texttt{Float128} & 0 B & 0 B & 0 B & 2544 B \\
+\texttt{Binary16p1uf} & 3 & \texttt{Dyadic} & 0 B & 0 B & 0 B & 2968 B \\
+\texttt{Binary3p1se} & 1 & \texttt{Float64} & 0 B & 0 B & 0 B & 0 B \\
 \bottomrule
 \end{tabulary}
 
@@ -11298,7 +11458,7 @@ operation & min & median & allocs & per element \\
 {\rule{\textwidth}{1pt}}
 
 
-\emph{All numbers from this machine/run; absolute values vary by host. Regenerate with \texttt{julia --project=benchmarking benchmarking/\allowbreak{}benchmarking.jl benchmarking/\allowbreak{}benchmark\_\allowbreak{}report.md}.}
+\emph{All numbers from this machine/run; absolute values vary by host. Regenerate with \texttt{julia --project=benchmarking -t auto benchmarking/\allowbreak{}benchmarking.jl}; the thread count matters for the Threading table and is recorded in the header above.}
 
 
 
@@ -11878,7 +12038,15 @@ The operation registry and ω evaluation live in \texttt{src/oracle.jl}; exact d
 \label{5962693725618524284}{}
 
 
-For pure specs, unary and binary operations are \textbf{finite functions} — 256 or 65 536 entries — so the kernel layer materializes them once per \texttt{(op, formats, ρ)} into a locked cache (\texttt{Dict\{TableKey, Memory\{UInt8\}\}}, double-checked locking, builds outside the lock) and serves every later array call as a gather: Shape-A, one load per element, measured 0.27 ns/elem unary and 0.5 ns/elem binary. Tables are built \emph{through the scalar path}, so they inherit its bit-exactness; the suite asserts table ≡ scalar over every entry.
+For pure specs, unary and binary operations are \textbf{finite functions} — 256 or 65 536 entries — so the kernel layer materializes them once per \texttt{(op, formats, ρ)} into a locked cache (\texttt{Dict\{TableKey, Memory\{UInt8\}\}}, double-checked locking, builds outside the lock) and serves every later array call as a gather: Shape-A, one load per element, measured 0.13 ns/elem unary and 0.25 ns/elem binary. Tables are built \emph{through the scalar path}, so they inherit its bit-exactness; the suite asserts table ≡ scalar over every entry.
+
+
+
+Builds are \textbf{parallel} above \texttt{TABLE\_\allowbreak{}BUILD\_\allowbreak{}MIN\_\allowbreak{}ENTRIES}, partitioned over the outer code loop so each task writes a contiguous, disjoint span of the preallocated \texttt{Memory}. Nothing about the cache changes: the build already ran outside the lock, with a racing duplicate build documented as benign. Only pure ρ is ever tabulated, \texttt{\_\allowbreak{}scalar\_\allowbreak{}code} holds no mutable state, and MPFR escalation reaches \texttt{setprecision}/\allowbreak\texttt{setrounding} through their \emph{function} forms, which are \texttt{ScopedValue}-backed on Julia 1.12 and therefore task-local — the three facts the parallelism rests on, and the reason the package floors at 1.12.
+
+
+
+The fill loops are separate functions (\texttt{\_\allowbreak{}fill\_\allowbreak{}unary!}, \texttt{\_\allowbreak{}fill\_\allowbreak{}binary!}, \texttt{\_\allowbreak{}fill\_\allowbreak{}ternary!}) taking \texttt{Val(op)} as an \textbf{argument}, and that is load-bearing rather than tidiness. \texttt{\_\allowbreak{}build\_\allowbreak{}*} receives \texttt{op} as a runtime \texttt{Symbol}, so a \texttt{Val(op)} constructed in the same function body is type-unstable and every entry pays a dynamic dispatch; passing it across a barrier makes \texttt{op} a type parameter of the callee and specializes the whole scalar path. Measured on a 64 K-entry \texttt{Multiply} table: \textbf{445 µs → 64 µs}.
 
 
 
@@ -11893,12 +12061,27 @@ Ternary (\texttt{FMA}, \texttt{FAA}, \texttt{Clamp}) is a finite function too �
 \item \textbf{Adaptive} (≤ 21 bits, the \texttt{K = 7} band, up to 2 MiB): accumulates a per-signature element count across calls and builds only once a signature has processed enough elements to amortize the build; a byte-bounded LRU eviction (\texttt{TERNARY\_\allowbreak{}CACHE\_\allowbreak{}BYTES}) guards against many hot signatures coexisting.
 
 
-\item \textbf{Compute} (\texttt{K = 8}, 16+ MiB — a table is never worth it): \texttt{vmap!} runs Shape-B, the fully specialized scalar pipeline per element, optionally split across \texttt{Threads.@threads} for long enough arrays (each ternary draw is independent under a fixed, non-stochastic ρ, so lanes cannot interact).
+\item \textbf{Compute} (\texttt{K = 8}, 16+ MiB — a table is never worth it): \texttt{vmap!} runs Shape-B, the fully specialized scalar pipeline per element.
 
 \end{itemize}
 
 
 Every ternary table entry, eager or adaptive, is still built \emph{through the scalar path} — the tiering changes when/whether the cache exists, never what it contains. Stochastic calls of any arity always take Shape-B, with the RNG resolved once per array rather than per element.
+
+
+
+\subsubsection{Shape-B threads at every arity}
+
+
+
+\label{4450971302404912645}{}
+
+
+\texttt{Threads.@threads} is a property of the \textbf{pure-ρ compute loop}, not of the ternary tier that first needed it. \texttt{\_\allowbreak{}vmap\_\allowbreak{}compute!} covers unary and binary as well, gated by \texttt{THREADED\_\allowbreak{}KERNELS} and \texttt{THREAD\_\allowbreak{}MIN\_\allowbreak{}ELEMS} through the single \texttt{\_\allowbreak{}should\_\allowbreak{}thread} predicate. Above \texttt{K = 8} this is the case that matters: a binary table would be \texttt{2{\textasciicircum}(K1+K2)} entries, \texttt{table\_\allowbreak{}for} declines, and Shape-B is the only array path the format has — measured at roughly 6× on 8 threads for a 65 536-element \texttt{Binary16p8se} \texttt{Add}.
+
+
+
+Stochastic ρ stays sequential, and that requirement is carried by \emph{which function you are in} rather than by a branch: \texttt{\_\allowbreak{}vmap\_\allowbreak{}scalar!} keeps the stochastic traffic and never threads, because one rng stream is reproducible only in index order. The suite pins threaded and sequential results as \textbf{identical code points in identical order}, not as agreement within a tolerance — a threading change that altered a result is a defect no timing would reveal.
 
 
 

@@ -46,7 +46,7 @@ Binary K p P (s|u) (e|f)
 Examples:
 
 | Name | Meaning |
-|:---|---|
+|:---|:---|
 | `Binary8p4se` | 8-bit, precision 4, signed, extended |
 | `Binary8p4sf` | 8-bit, precision 4, signed, finite |
 | `Binary6p3ue` | 6-bit, precision 3, unsigned, extended |
@@ -158,7 +158,7 @@ saturationmode(ρ)
 ### Deterministic projections
 
 | Rounding | `SatFinite` | `SatPropagate` | `SatNone` |
-|:---|---|---|---|
+|:---|:---|:---|:---|
 | nearest, ties even | `RNE_SF` | `RNE_SP` | `RNE_SN` |
 | nearest, ties away | `RNA_SF` | `RNA_SP` | `RNA_SN` |
 | toward +∞ | `RTP_SF` | `RTP_SP` | `RTP_SN` |
@@ -169,7 +169,7 @@ saturationmode(ρ)
 `RNE_SN` is the package-wide default. Saturation modes mean:
 
 | Mode | Out-of-range behavior |
-|:---|---|
+|:---|:---|
 | `SatFinite` | clamp everything to the finite range |
 | `SatPropagate` | preserve representable infinities; clamp other overflow |
 | `SatNone` | apply the draft's domain-, signedness-, and direction-dependent rows |
@@ -179,7 +179,7 @@ saturationmode(ρ)
 Constructors are grouped by stochastic variant:
 
 | Variant | `SatFinite` | `SatPropagate` | `SatNone` |
-|:---|---|---|---|
+|:---|:---|:---|:---|
 | A | `RSA_SF(N)` | `RSA_SP(N)` | `RSA_SN(N)` |
 | B | `RSB_SF(N)` | `RSB_SP(N)` | `RSB_SN(N)` |
 | C | `RSC_SF(N)` | `RSC_SP(N)` | `RSC_SN(N)` |
@@ -245,7 +245,7 @@ FMA(x, y, z)
 ```
 
 | Arity | Operations |
-|:---|---|
+|:---|:---|
 | Unary | `Abs`, `Negate`, `Sqrt`, `RSqrt`, `Recip`, `Exp`, `Exp2`, `ExpMinusOne`, `Log`, `Log2`, `LogOnePlus`, `Softplus`, `Sin`, `Cos`, `Tan`, `ArcSin`, `ArcCos`, `ArcTan`, `Sinh`, `Cosh`, `Tanh`, `ArcSinh`, `ArcCosh`, `ArcTanh`, `SinPi`, `CosPi`, `TanPi`, `ArcSinPi`, `ArcCosPi`, `ArcTanPi` |
 | Binary | `CopySign`, `Add`, `Subtract`, `Multiply`, `Divide`, `Hypot`, `ArcTan2`, `ArcTan2Pi`, `Maximum`, `Minimum`, `MaximumNumber`, `MinimumNumber`, `MaximumMagnitude`, `MinimumMagnitude`, `MaximumMagnitudeNumber`, `MinimumMagnitudeNumber`, `MinimumFinite`, `MaximumFinite` |
 | Ternary | `FMA`, `FAA`, `Clamp` |
@@ -369,7 +369,7 @@ Approximate implementations are never substituted into the default API.
 ## Common missteps
 
 | Misapplication | Correct pattern |
-|:---|---|
+|:---|:---|
 | Treating an `Unsigned` as a number | `T(Int(c))` for a numeric integer; `T(c::Unsigned)` for a code point — at every width |
 | `Vector{Binary{K,P,Σ,Δ}}(undef, n)` | **Silently boxes every element** — the abstract format is not `isbits`. Use `Vector{Binary8p4se}` or `Vector{format(K,P,Σ,Δ)}`. `similar` normalizes; `Vector{…}(undef, n)` cannot be intercepted |
 | Silently mixing formats | Convert explicitly: `Convert(T, ρ, x)` |

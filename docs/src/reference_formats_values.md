@@ -15,7 +15,7 @@ Binary K p P (s|u) (e|f)
 ```
 
 | Field | Values | Meaning |
-|:---|---|---|
+|:---|:---|:---|
 | `K` | 3–16 | total bitwidth |
 | `P` | 1–`K` | significand precision, including the implicit bit |
 | `s`\|`u` | signed / unsigned | sign field present or absent |
@@ -25,7 +25,7 @@ There are 504 legal `(K,P,SGN,EXT)` combinations, each with a draft-named
 alias. 120 aliases at `K ≤ 8` are exported by `using SmallFloats`.
 
 | Example alias | K | P | Signed | Domain |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | `Binary8p4se` | 8 | 4 | signed | extended |
 | `Binary8p4sf` | 8 | 4 | signed | finite |
 | `Binary6p3ue` | 6 | 3 | unsigned | extended |
@@ -44,7 +44,7 @@ alias. 120 aliases at `K ≤ 8` are exported by `using SmallFloats`.
 ## `format()` and opt-in access
 
 | Form | Scope | Result |
-|:---|---|---|
+|:---|:---|:---|
 | `using SmallFloats` | exports 120 aliases, `K ≤ 8` | alias directly in scope |
 | `using SmallFloats.Formats` | brings all 504 aliases into scope | alias directly in scope |
 | `SmallFloats.Binary16p6se` | unexported, always reachable | alias by qualified path |
@@ -57,7 +57,7 @@ Every query accepts either a `Type` or a `value`; `bitwidth(x) ≡
 bitwidth(typeof(x))`, and both fold to a literal constant.
 
 | Query | Returns | Draft-named form | Related guide |
-|:---|---|---|---|
+|:---|:---|:---|:---|
 | `bitwidth(T)` | `K` | `BitwidthOf(T)` | [Cheat Sheet](help_cheat_sheet.md) |
 | `precision(T)` | `P` | `PrecisionOf(T)` | [Cheat Sheet](help_cheat_sheet.md) |
 | `issigned(T)` | `Bool` | `SignednessOf(T)` | [Cheat Sheet](help_cheat_sheet.md) |

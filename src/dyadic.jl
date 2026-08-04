@@ -272,6 +272,46 @@ end
     "(DYADIC_ALIGN_MAX = $DYADIC_ALIGN_MAX); the caller must take the sticky " *
     "path, which is only sound for ΔQ > P + N + 2 — see the C7 bands in dyadic.jl"))
 
+@noinline _throw_add_wide(nb::Int, d::Int) = throw(ArgumentError(
+    "Dyadic add would overflow Int128: the larger operand carries $nb " *
+    "significand bits and the alignment shift is $d, totalling $(nb + d) > 126. " *
+    "`DYADIC_ALIGN_MAX = $DYADIC_ALIGN_MAX` is derived from a head of at most " *
+    "`DYADIC_HEAD_BITS = $DYADIC_HEAD_BITS` bits, which every operand the engine " *
+    "forms satisfies — a datum's significand is ≤ 16 bits and `mul_dy` of two is " *
+    "≤ 32"))
+
+"""
+    add_dy_checked(x, y) -> Dyadic
+
+[`add_dy`](@ref) with its width precondition enforced: throws `ArgumentError`
+rather than wrapping when the aligned significand would leave `Int128`.
+
+`add_dy` is **unchecked**, exactly as [`mul_dy`](@ref) is, and for the same
+reason: `DYADIC_ALIGN_MAX = 127 − DYADIC_HEAD_BITS − 1` is derived from a head
+of at most 32 significand bits, which every operand the engine forms satisfies
+by construction (a datum carries ≤ 16 bits, so a `mul_dy` product carries ≤ 32).
+Inside the engine the check is dead weight on the rung-3 hot path.
+
+It is a *separate function* rather than a `@boundscheck` block, and that is the
+lesson `mul_dy`'s docstring records at length: `@boundscheck` elides only under
+an `@inbounds` caller, and no call site in `oracle.jl` is one — so the guard ran
+in production at 3.3× the cost of the operation it guarded. Two names put the
+contract at the call site instead of in an annotation nobody wrote.
+"""
+@inline function add_dy_checked(x::Dyadic, y::Dyadic)
+    bothfinite_dy(x, y) || return _add_special(x, y)
+    iszero(x.S) && return y
+    iszero(y.S) && return x
+    # ordered by EXPONENT, not magnitude, matching `_add_aligned`'s contract.
+    # Named `hi`/`lo` rather than `big`/`small`: `big` is `Base.big`, which this
+    # module defines a method for.
+    hi, lo, d = x.Q >= y.Q ? (x, y, Int(x.Q - y.Q)) : (y, x, Int(y.Q - x.Q))
+    d > DYADIC_ALIGN_MAX && return _add_wide(hi, lo, d)
+    nb = nbits_dy(hi.S)
+    nb + d <= 126 || _throw_add_wide(nb, d)
+    _add_aligned(hi, lo, d)
+end
+
 """
     add_sticky_dy(x, y) -> (Dyadic, Int)
 

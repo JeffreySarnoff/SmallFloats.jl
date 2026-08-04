@@ -48,8 +48,14 @@ end
 
 Measure κ of `fn(x::argformats[1], …)::fr` against the defined results of draft
 operation `op` under ρ. Enumerates the full input cross-product when it has at
-most `max_exhaustive` points (always true for arity ≤ 2); otherwise measures on
-`samples` uniform draws and reports `exhaustive = false`.
+most `max_exhaustive` points; otherwise measures on `samples` uniform draws and
+reports `exhaustive = false`.
+
+The parenthetical here used to read "always true for arity ≤ 2", which was a
+K ≤ 8 fact: two K = 16 formats are `2^32` points against a `2^22` budget, so a
+wide binary signature samples. That is the mechanism working — κ is a
+*measurement*, `exhaustive = false` is reported, and `conformance_report` prints
+"(κ sampled — not exhaustive)" — but the claim was no longer true.
 """
 function measure_kappa(fn::F, op::Symbol, fr::Type{<:Binary},
                        argformats::NTuple{N,DataType}, ρ::ProjSpec;

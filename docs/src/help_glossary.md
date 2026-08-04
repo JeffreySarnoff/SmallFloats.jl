@@ -4,7 +4,7 @@ Alphabetical, one or two lines per term, with links to the page where the term
 is defined or used in full.
 
 | Term | Definition | See |
-|:---|---|---|
+|:---|:---|:---|
 | Carrier | The concrete numeric type an exact intermediate or datum is held on during computation — `Float64` at rung 1, `Float128` at rung 2, or an exact dyadic carrier at rung 3, chosen by the format's exponent bias, never by the caller. | [Architecture and Invariants](internals_architecture.md); [Projection Engine](internals_projection_engine.md) |
 | Code point | The `2^K`-valued integer identity of a value within its format — what a `Binary` value actually stores, in bijection with the format's datum set. | [Core Model](core_model.md) |
 | Code unit | The storage word a format's code points are packed into — `UInt8` at `K ≤ 8`, `UInt16` above — returned by `codeunit_type(T)` and by `codepoint(x)`. | [Cheat Sheet](help_cheat_sheet.md), [Values, Code Points, and Conversion](concept_values_codepoints.md) |

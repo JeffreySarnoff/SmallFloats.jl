@@ -13,7 +13,7 @@ alphabetically, as generated from source.
 ## Index
 
 | Family | Scope | Descriptive reference page |
-|:---|---|---|
+|:---|:---|:---|
 | Arrays, blocks, packed storage | `Op(fr,ρ,A,...)`, `vmap`/`vmap!`, `Block`, `BlockVector`, `PackedVector`, `table_bytes`, `empty_tables!` | [Arrays, Blocks, and Packed Storage](reference_arrays_blocks_storage.md) |
 | Conformance and approximation registry | `conformance`, `conformance_dict`, `conformance_report`, `draft_revision`, `draft_identity`, `measure_kappa`, `register_approx!`, `approx`, `kappa`, `kappa_measured`, `list_approx`, `unregister_approx!` | [Conformance and Approximation Registry](reference_conformance.md) |
 | Formats | 504 aliases (120 exported at `K ≤ 8`), `format`, `formatname`, and format-query accessors | [Formats and Value Queries](reference_formats_values.md) |

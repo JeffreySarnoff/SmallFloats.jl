@@ -9,7 +9,7 @@ the complete Base mapping.
 ## Unary (30)
 
 | Operation | Arity | Base spelling | Notes | Related guide |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | `Abs` | unary | `abs` | | [Cheat Sheet](help_cheat_sheet.md) |
 | `Negate` | unary | unary `-` | | [Cheat Sheet](help_cheat_sheet.md) |
 | `Sqrt` | unary | `sqrt` | | [Cheat Sheet](help_cheat_sheet.md) |
@@ -46,7 +46,7 @@ Trig of ±Inf is NaN for all rows above.
 ## Binary (18)
 
 | Operation | Arity | Base spelling | Notes | Related guide |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | `CopySign` | binary | `copysign` | | [Julia Compatibility Register](reference_julia_compat.md) |
 | `Add` | binary | `+` | | [Cheat Sheet](help_cheat_sheet.md) |
 | `Subtract` | binary | `-` | | [Cheat Sheet](help_cheat_sheet.md) |
@@ -73,7 +73,7 @@ Trig of ±Inf is NaN for all rows above.
 ## Ternary (3)
 
 | Operation | Arity | Base spelling | Notes | Related guide |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | `FMA` | ternary | `fma`, `muladd` | one rounding for both Base spellings | [Cheat Sheet](help_cheat_sheet.md) |
 | `FAA` | ternary | — | fused add-add; no Base counterpart | [Julia Compatibility Register](reference_julia_compat.md) |
 | `Clamp` | ternary | `clamp` | | [Cheat Sheet](help_cheat_sheet.md) |
@@ -81,7 +81,7 @@ Trig of ±Inf is NaN for all rows above.
 ## Conversion
 
 | Operation | Arity | Base spelling | Notes | Related guide |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | `Convert` | conversion | — | the one operation accepting non-`Binary` operands: `Binary` (any format), `Float16/32/64`, `Float128`, `Integer`, `BigFloat` | [Values, Code Points, and Conversion](concept_values_codepoints.md) |
 
 Catalog total: 30 unary + 18 binary + 3 ternary + 1 conversion = 52.
@@ -92,7 +92,7 @@ These Base functions are not single draft operations; each is a componentwise
 tuple of draft operations run under the session default.
 
 | Base spelling | Composite of |
-|:---|---|
+|:---|:---|
 | `sincos` | `(Sin(x), Cos(x))` |
 | `sincospi` | `(SinPi(x), CosPi(x))` |
 | `minmax` | `(Minimum(x, y), Maximum(x, y))` |
@@ -103,7 +103,7 @@ No Base spelling exists for these; call them by draft name. Base has no
 counterpart for any row in this list.
 
 | Draft operation | Reason unmapped |
-|:---|---|
+|:---|:---|
 | `RSqrt` | Base has `inv(sqrt(x))` as two roundings, not one; no single-rounding Base spelling |
 | `Softplus` | no Base equivalent |
 | `ArcSinPi` | Base has only the `sinpi` family (no inverse) |

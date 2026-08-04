@@ -362,50 +362,98 @@ end
 # (subnormals and the lowest normal binade share Q = 2−B−P), signed formats are
 # sign–magnitude symmetric (|Mlo| = Mhi), unsigned underflow is simply sign < 0,
 # and the HUGEQ sentinel exceeds every Q_hi. Returns :asis/:mhi/:mlo/:pinf/:ninf/:nan.
-function saturate(::Type{T}, ρ::ProjSpec{RM,SM}, r::Rounded) where
+# ---- the outcome currency is a CODE POINT, not a symbol and not a value.
+#
+# All six ωSaturate outcomes name a code point the format already defines —
+# `nan_code`, `posinf_code`, `neginf_code`, `_maxfinite_code`, `_minfinite_code`,
+# and `encode`'s canonical form — so that is what `saturate` returns. One
+# concrete return type (`codeunit_type(T)`, a bitstype), nothing constructed,
+# and `project` finishes with the single `rawvalue` it was always going to make.
+#
+# This replaces a `Symbol` protocol consumed by a five-way `===` chain in
+# `project`. Three things wrong with that shape, in the order they matter:
+#
+#   1. An outcome that does not exist fell through to the NaN catch-all at run
+#      time. Now a mistyped row is an undefined-variable error at load time.
+#   2. It was the one stringly-typed protocol at the centre of the single write
+#      path — the exact shape invariant 9 was written against.
+#   3. `project` did up to five symbol comparisons per projection, on the
+#      hottest function in the package.
+#
+# **The intermediate tag type was tried first and rejected**, and the reason is
+# worth keeping: six singleton types make `saturate`'s return a six-way `Union`,
+# which exceeds Julia's union-splitting budget and can leave a dynamic dispatch
+# inside `project`. Golden digests would not have caught it — they compare
+# values, not dispatch. A code point has none of that: it is one bitstype at
+# every rung and every format.
+#
+# Per-mode dispatch on `SM()` (invariant 9) replaces the `sat isa SatFinite`
+# chain, so each method reads as the draft's rows for that mode. The rounding
+# conditions *inside* `SatNone` stay as `RM <: Union{…}` type tests: they are
+# genuine draft-row conditions rather than policy selection, they fold to
+# literals, and forcing them into dispatch would obscure the rows rather than
+# clarify them.
+#
+# Classification is not separately testable here and does not need to be:
+# `test/refimpl.jl`'s `refsaturate` is an INDEPENDENT reference implementation
+# and `tier_t2.jl` already compares the engine against it, which is a stronger
+# statement than any self-consistency check between two functions in this file.
+@inline function saturate(::Type{T}, ρ::ProjSpec{RM,SM},
+                          r::Rounded)::codeunit_type(T) where
         {K,P,SGN,EXT,T<:Binary{K,P,SGN,EXT},RM,SM}
-    r.kind == KIND_NAN && return :nan
+    r.kind == KIND_NAN && return nan_code(T)
     over = false; under = false
     if r.kind == KIND_FIN
-        r.S == 0 && return :asis                                     # zero always in range
+        r.S == 0 && return encode(T, Int(r.sign), r.S, r.Q)          # zero always in range
         Shi, Qhi = _extremal_SQ(T)
         overmag = (r.Q > Qhi) | ((r.Q == Qhi) & (r.S > Shi))
         over = overmag & (r.sign > 0)
         under = SGN ? (overmag & (r.sign < 0)) : (r.sign < 0)
-        (!over & !under) && return :asis                             # row 2
+        (!over & !under) && return encode(T, Int(r.sign), r.S, r.Q)  # row 2
     end
-    sat = SM(); isP = r.kind == KIND_PINF; isN = r.kind == KIND_NINF
-    if sat isa SatFinite
-        isP && return :mhi
-        isN && return :mlo
-        return under ? :mlo : :mhi
-    elseif sat isa SatPropagate
-        isP && return EXT ? :pinf : :mhi
-        isN && return (SGN && EXT) ? :ninf : :mlo
-        return under ? :mlo : :mhi
-    else # SatNone
-        rm = RM()
-        if r.kind == KIND_FIN
-            if over && (rm isa TowardZero || rm isa TowardNegative)
-                return :mhi
-            elseif under && (rm isa TowardZero || rm isa TowardPositive)
-                return :mlo
-            end
-            if EXT
-                over && return :pinf
-                if under
-                    return SGN ? :ninf : :nan
-                end
-            end
-            return :nan                                              # Finite catch-all
-        else
-            if EXT
-                isP && return :pinf
-                isN && return SGN ? :ninf : :nan
-            end
-            return :nan                                              # Finite catch-all
+    _saturate(SM(), RM(), T, r, over, under)
+end
+
+# Clamp everything to the finite range: the two infinity kinds land on the
+# extremal finites, and an out-of-range finite lands on the end it overran.
+@inline function _saturate(::SatFinite, ::RoundingMode3109, ::Type{T}, r::Rounded,
+                           over::Bool, under::Bool) where {T<:Binary}
+    r.kind == KIND_PINF && return _maxfinite_code(T)
+    r.kind == KIND_NINF && return _minfinite_code(T)
+    under ? _minfinite_code(T) : _maxfinite_code(T)
+end
+
+# Keep a representable infinity, clamp the rest. An unsigned format has no −Inf
+# code and a Finite-domain format has neither, so each row falls back to the
+# extremal finite exactly where the encoding cannot express the infinity.
+@inline function _saturate(::SatPropagate, ::RoundingMode3109, ::Type{T}, r::Rounded,
+                           over::Bool, under::Bool) where
+        {K,P,SGN,EXT,T<:Binary{K,P,SGN,EXT}}
+    r.kind == KIND_PINF && return EXT ? posinf_code(T) : _maxfinite_code(T)
+    r.kind == KIND_NINF && return (SGN && EXT) ? neginf_code(T) : _minfinite_code(T)
+    under ? _minfinite_code(T) : _maxfinite_code(T)
+end
+
+# The draft's direction/signedness/domain-governed rows (§4.7.5). A directed
+# rounding that points back into the range delivers the extremal finite; an
+# Extended domain spends its infinity; everything else is NaN.
+@inline function _saturate(::SatNone, ::RM, ::Type{T}, r::Rounded,
+                           over::Bool, under::Bool) where
+        {K,P,SGN,EXT,T<:Binary{K,P,SGN,EXT},RM<:RoundingMode3109}
+    if r.kind == KIND_FIN
+        over  && RM <: Union{TowardZero,TowardNegative} && return _maxfinite_code(T)
+        under && RM <: Union{TowardZero,TowardPositive} && return _minfinite_code(T)
+        if EXT
+            over && return posinf_code(T)
+            under && return SGN ? neginf_code(T) : nan_code(T)
         end
+        return nan_code(T)                                           # Finite catch-all
     end
+    if EXT
+        r.kind == KIND_PINF && return posinf_code(T)
+        r.kind == KIND_NINF && return SGN ? neginf_code(T) : nan_code(T)
+    end
+    nan_code(T)                                                      # Finite catch-all
 end
 
 # ---- ωProject (draft §4.7.3): full pipeline to a code point
@@ -421,13 +469,11 @@ function project(::Type{T}, ρ::ProjSpec{RM,SM}, X; R::Int=0, sticky::Int=0) whe
     isnan(X) && return rawvalue(T, nan_code(T))                       # ωProject row 1
     B = expbias(T)
     r = round_to_precision(P, B, RM(), X, R, sticky)
-    a = saturate(T, ρ, r)
-    a === :asis && return rawvalue(T, encode(T, Int(r.sign), r.S, r.Q))
-    a === :mhi  && return MaxFiniteOf(T)
-    a === :mlo  && return MinFiniteOf(T)
-    a === :pinf && return rawvalue(T, posinf_code(T))
-    a === :ninf && return rawvalue(T, neginf_code(T))
-    return rawvalue(T, nan_code(T))
+    # `saturate` returns the result CODE POINT, so the whole tail of ωProject is
+    # one construction. It was a five-way `===` chain over a `Symbol`, which cost
+    # up to five comparisons per projection and turned an unhandled outcome into
+    # a silent NaN instead of a load-time error.
+    rawvalue(T, saturate(T, ρ, r))
 end
 
 """

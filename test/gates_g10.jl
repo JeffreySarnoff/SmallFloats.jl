@@ -219,11 +219,35 @@ end
                          (:round_RoundDown, v -> round(v, RoundDown)),
                          (:round_RoundToZero, v -> round(v, RoundToZero)),
                          (:one, one), (:zero, zero), (:abs2, abs2),
+                         # `eps(x)` and `ldexp(x, n)` are total: `eps` answers
+                         # NaN on the non-finites and MinPositive at zero,
+                         # `ldexp` is the identity on the non-finites. Both were
+                         # absent, and `eps(x)`'s Base fallback reaches
+                         # `ldexp(::Binary, ::Int)` — so the missing method for
+                         # one was the failure of the other, at a user's call
+                         # site, for every finite value at or above floatmin.
+                         (:eps, eps), (:ldexp_up, v -> ldexp(v, 1)),
+                         (:ldexp_down, v -> ldexp(v, -1)),
                          (:isequal_self, v -> isequal(v, v)),
                          (:reinterpret_out, v -> reinterpret(codeunit_type(typeof(v)), v)),
                          (:reinterpret_in,
                           v -> reinterpret(typeof(v), codepoint(v)) === v ||
                                error("reinterpret round trip changed the value")),
+                         # `T(decode(v))` — the inverse of the package's most
+                         # basic query, and the round trip a user writes without
+                         # thinking. It was a `MethodError` on the eight rung-3
+                         # formats and worked on the other 496, because `decode`
+                         # returns the internal `Dyadic` carrier there and
+                         # `Convert` had no row for it. G10 exists to catch a
+                         # verb that is absent rather than wrong, and this one
+                         # slipped past because the list probed `decode` and the
+                         # constructors separately but never their composition.
+                         (:decode_roundtrip,
+                          v -> typeof(v)(decode(v)) === v ||
+                               error("T(decode(v)) round trip changed the value")),
+                         (:convert_roundtrip,
+                          v -> Convert(typeof(v), RNE_SN, decode(v)) === v ||
+                               error("Convert(T, ρ, decode(v)) changed the value")),
                          (:exponent, v -> (isfinite(v) && !iszero(v)) ? exponent(v) : 0),
                          (:significand,
                           v -> !(isfinite(v) && !iszero(v)) ? v :

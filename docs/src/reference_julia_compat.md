@@ -61,7 +61,7 @@ Code that must be insensitive to the session default names its projection:
 ## The mapping
 
 | Base spelling | draft operation |
-|:---|---|
+|:---|:---|
 | `+` `-` `*` `/`, unary `-` | `Add`, `Subtract`, `Multiply`, `Divide`, `Negate` |
 | `abs`, `inv`, `sqrt` | `Abs`, `Recip`, `Sqrt` |
 | `exp`, `exp2`, `expm1`, `log`, `log2`, `log1p` | `Exp`, `Exp2`, `ExpMinusOne`, `Log`, `Log2`, `LogOnePlus` |
@@ -126,7 +126,8 @@ Project it back explicitly when that is what you mean:
 
 Beyond arithmetic, `Binary` integrates where the other layers provide it:
 predicates and constants (`isnan`, `isfinite`, `signbit`, `zero`, `one`,
-`eps`, `typemin`/`typemax`, `floatmin`/`floatmax`), comparisons and `isless`
+`eps` in both its type and value forms, `typemin`/`typemax`,
+`floatmin`/`floatmax`), comparisons and `isless`
 on integer order keys, `sort` via an O(n) counting sort (which places the single
 NaN **first**, below −Inf, per the draft's total order — not last as `Float64`
 sorting does),
@@ -141,13 +142,23 @@ without asking. The routinely used numeric contracts are implemented, while
 operations with no P3109 meaning refuse explicitly:
 
 | verb | behaviour |
-|:---|---|
+|:---|:---|
 | `hash`, `Base.decompose` | exact — a datum is `S · 2^Q`, so `Dict` keys and `Set` elements work |
 | `round`, `floor`, `ceil`, `trunc` | **one** rounding: the integer value is formed exactly on the carrier and projected once, under the session default's saturation |
 | `round(x, r::RoundingMode)` | `RoundNearest`, `RoundNearestTiesAway`, `RoundUp`, `RoundDown`, `RoundToZero` |
 | `exponent`, `significand`, `frexp` | exact; `DomainError` on zero and the non-finites, as in Base |
+| `eps(x)` | the ulp **at** `x`, and always exactly a datum of `x`'s own format — see below |
+| `ldexp(x, n)` | exact: scaling by a power of two moves the exponent field and nothing else |
 | `widen` | the format's promotion carrier — see [No Automatic Promotion](concept_julia_numeric.md) for why it is not another format |
 | `reinterpret` | both directions, and the incoming one is **checked** against the representation invariant |
+
+`eps` has both forms: `eps(T)` is the constant `2^(1-P)`, and `eps(x)` is the
+spacing of the lattice at `x`. The second is always representable — the ulp is
+`2^Q` with `2−P−B ≤ Q ≤ e_max−P+1`, and every power of two in a format's range
+is a datum for every `P ≥ 1` — so it is exact rather than a projected
+approximation, and it does not vary with the session projection. In the
+subnormal band the spacing is constant, and at zero it is the least positive
+datum.
 
 ```julia-repl
 julia> hash(Binary8p4se(1.5)) == hash(Binary8p4se(1.5))
@@ -158,6 +169,12 @@ julia> Base.decompose(Binary8p4se(1.5))          # 12 · 2^-3 = 1.5, exactly
 
 julia> floor(Binary8p4se(1.6)), ceil(Binary8p4se(1.1))
 (Binary8p4se(1.0 ≡ 0x40), Binary8p4se(2.0 ≡ 0x48))
+
+julia> eps(Binary8p4se(1.5)), eps(Binary8p4se(64.0))   # the lattice widens
+(Binary8p4se(0.125 ≡ 0x28), Binary8p4se(8.0 ≡ 0x58))
+
+julia> ldexp(Binary8p4se(1.5), 2), ldexp(Binary8p4se(1.5), -2)
+(Binary8p4se(6.0 ≡ 0x54), Binary8p4se(0.375 ≡ 0x34))
 
 julia> reinterpret(Binary8p4se, 0x44)            # checked, unlike `rawvalue`
 Binary8p4se(1.5 ≡ 0x44)

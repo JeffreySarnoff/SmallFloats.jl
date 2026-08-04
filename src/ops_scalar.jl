@@ -356,8 +356,10 @@ end
 
 Draft §4.9 Convert⟨f_x, f_r, ρ⟩. Accepts `Binary`, IEEE binary16/32/64
 floats (widened exactly to the Float64 carrier), `Float128` (projected directly),
-`Integer` (exact via a sufficiently wide BigFloat), and `BigFloat` (projected
-directly; the caller warrants the value is exact).
+`Dyadic` (the rung-3 datum carrier — what `decode` returns for the eight rung-3
+formats; projected directly and exactly), `Integer` (exact via a sufficiently
+wide BigFloat), and `BigFloat` (projected directly; the caller warrants the
+value is exact).
 """
 @inline function Convert(fr::Type{<:Binary}, ρ::ProjSpec, x::Binary;
                          rng::MaybeRNG=nothing, R::MaybeR=nothing)
@@ -378,6 +380,34 @@ function Convert(fr::Type{<:Binary}, ρ::ProjSpec, x::Integer;
 end
 function Convert(fr::Type{<:Binary}, ρ::ProjSpec, x::BigFloat;
                  rng::MaybeRNG=nothing, R::MaybeR=nothing)
+    project(fr, ρ, x; R=_drawR(ρ, rng, R))
+end
+# `Dyadic` is the rung-3 datum carrier — what `decode` RETURNS for the eight
+# rung-3 formats — so this row is the inverse of the package's most basic query.
+# Without it `T(decode(v))` was a `MethodError` on exactly those formats and
+# worked on the other 496: `Dyadic <: Real`, so `(::Type{T})(x::Real)` in
+# formats.jl dispatched happily and then failed two frames deeper, naming
+# `Convert` — an internal function the caller never wrote. A signature that
+# claims `Real` has to honour `Real`.
+#
+# Deliberately a method rather than an absent one *and* rather than a stated
+# refusal. The package's "refuse by method" rule (decode_encode.jl, oracle.jl)
+# earns its exception from JET: a missing method reached through an inferred
+# `Union` is reported as a package defect. No `Union` reaches here — package
+# code projects decoded datums through `project`, never through `Convert` — so
+# that justification is absent, and a method existing only to throw would make
+# `hasmethod` and `applicable` answer `true` for something that does not work.
+#
+# Accepting the internal carrier as an INPUT is not the obligation carriers.jl's
+# two-trait split refuses. That split is about promotion TARGETS:
+# `promotecarrier` never names `Dyadic`, so `x + 1.0` still lands on a type with
+# a complete `Real` interface. Nothing here changes that.
+#
+# The body is the `Float128` row's, for the same reason: `project` is
+# carrier-generic (§1 C10), so the projection is exact and there is nothing to
+# widen or narrow first.
+@inline function Convert(fr::Type{<:Binary}, ρ::ProjSpec, x::Dyadic;
+                         rng::MaybeRNG=nothing, R::MaybeR=nothing)
     project(fr, ρ, x; R=_drawR(ρ, rng, R))
 end
 Convert(fr::Type{<:Binary}, ρ::ProjSpec, x::AbstractFloat; kw...) = Convert(fr, ρ, Float64(x); kw...)
