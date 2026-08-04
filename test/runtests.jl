@@ -336,6 +336,113 @@ end
     r3, control = Random.Xoshiro(7), Random.Xoshiro(7)
     Add(T, RNE_SN, x, y; rng=r3)
     @test rand(r3, UInt64) == rand(control, UInt64)
+
+    # ---- the BULK surface owns its stream too.
+    #
+    # `Convert(fr, ρ, A::AbstractArray{<:Binary})` was the one array operation
+    # without an `rng` keyword, so a stochastic bulk conversion could not be
+    # given an owned stream — the single thing this testset exists to establish,
+    # and the thing `defaults.jl` removed the session-wide RNG in order to force.
+    @testset "bulk Convert owns its stream" begin
+        Sc = Binary8p2se                           # narrower ⇒ most elements round
+        A = [T(c) for c in 0x00:0xff]
+        # Compared by CODE POINT, not by `==`. The pool spans all 256 code points
+        # and therefore contains NaN, and `==` on `Binary` is the draft's numeric
+        # comparison — false whenever either side is NaN — so `a == b` is `false`
+        # for two identical arrays and `a != b` is `true` for any two. Both
+        # spellings would have passed or failed for reasons having nothing to do
+        # with the RNG. `float32surface.jl` carries the same helper for the same
+        # reason.
+        codes(v) = codepoint.(v)
+        # Seeded streams reproduce, and the array path agrees element-for-element
+        # with the scalar path fed the same stream — the property that says the
+        # keyword is actually threaded through `vmap` rather than accepted and
+        # dropped.
+        @test codes(Convert(Sc, σ, A; rng=Random.Xoshiro(42))) ==
+              codes(Convert(Sc, σ, A; rng=Random.Xoshiro(42)))
+        @test codes(Convert(Sc, σ, A; rng=Random.Xoshiro(42))) ==
+              codes(let rng = Random.Xoshiro(42); [Convert(Sc, σ, a; rng) for a in A] end)
+        # Distinct streams must actually diverge somewhere, or "owned" is a claim
+        # about an argument that changes nothing.
+        @test codes(Convert(Sc, σ, A; rng=Random.Xoshiro(1))) !=
+              codes(Convert(Sc, σ, A; rng=Random.Xoshiro(2)))
+        # Pure ρ ignores the stream and consumes nothing from it, in bulk as in
+        # scalar.
+        r4, ctrl4 = Random.Xoshiro(11), Random.Xoshiro(11)
+        @test codes(Convert(Sc, RNE_SN, A; rng=r4)) == codes(Convert(Sc, RNE_SN, A))
+        @test rand(r4, UInt64) == rand(ctrl4, UInt64)
+    end
+end
+
+# ==========================================================================
+# dyadic.jl — the checked twins of the two unchecked exact operations
+# ==========================================================================
+# `add_dy` and `mul_dy` are unchecked by design: their width preconditions hold
+# by construction for every operand the engine forms (a datum carries ≤ 16
+# significand bits, so a `mul_dy` product carries ≤ 32, and `DYADIC_ALIGN_MAX`
+# is derived from a 32-bit head). Inside the engine a guard is dead weight on
+# the rung-3 hot path — measured at 3.3× the cost of the multiply it guarded,
+# back when it was spelled `@boundscheck` and no call site was `@inbounds`.
+#
+# So the contract is carried by TWO NAMES rather than by an annotation, and this
+# testset is what makes the pair meaningful: the checked form must agree with
+# the unchecked one everywhere the precondition holds, and must throw — not
+# wrap — where it does not. Neither `mul_dy_checked` nor `add_dy_checked` had a
+# test before; the unchecked forms are covered only indirectly, through G7's
+# comparison of the `HeadExact` carrier against `BigFloat`.
+@testset "dyadic checked variants" begin
+    DN = SmallFloats.DyadicNumbers
+    D = DN.Dyadic
+
+    @testset "agreement where the precondition holds" begin
+        # Operand shapes the engine actually forms: datum significands (≤ 16
+        # bits) over the full rung-3 exponent span, plus the zero and sign rows.
+        sigs = Int128[0, 1, -1, 3, -3, 12, 255, -255, 65535, -65535]
+        exps = Int64[-32769, -1024, -17, 0, 17, 1024, 32766]
+        n = 0
+        for sx in sigs, qx in exps, sy in sigs, qy in exps
+            x, y = D(sx, qx), D(sy, qy)
+            # add: only where the alignment band and the head width admit it
+            d = abs(qx - qy)
+            hi = qx >= qy ? x : y
+            if d <= DN.DYADIC_ALIGN_MAX && DN.nbits_dy(hi.S) + d <= 126
+                @test DN.add_dy_checked(x, y) === DN.add_dy(x, y)
+                n += 1
+            end
+            if DN.nbits_dy(x.S) + DN.nbits_dy(y.S) <= 96
+                @test DN.mul_dy_checked(x, y) === DN.mul_dy(x, y)
+                n += 1
+            end
+        end
+        # Exact, not a floor. The operand lists are fixed above, so the count of
+        # pairs satisfying each precondition is a deterministic function of
+        # `DYADIC_ALIGN_MAX` and the 96-bit product bound — the two constants
+        # this testset is really about. A floor would pass while silently losing
+        # most of the sweep; an exact count says which band moved.
+        @test n == 6200
+    end
+
+    @testset "refusal where it does not" begin
+        # A head far wider than any datum: 100 significand bits, aligned by 40.
+        # 100 + 40 = 140 > 126, and 40 is inside the alignment band, so this is
+        # the case the width check exists for rather than the band check.
+        wide = D(Int128(1) << 99 | 1, Int64(40))
+        @test DN.nbits_dy(wide.S) == 100
+        @test_throws ArgumentError DN.add_dy_checked(wide, D(1, 0))
+        # Two 60-bit significands: 120 > 96, so the product leaves Int128.
+        w60 = D(Int128(1) << 59 | 1, Int64(0))
+        @test DN.nbits_dy(w60.S) == 60
+        @test_throws ArgumentError DN.mul_dy_checked(w60, w60)
+        # Past the alignment band the add refuses through `_add_wide`, which is
+        # a different guard with a different message — the caller must take the
+        # sticky path there, not a wider integer.
+        @test_throws ArgumentError DN.add_dy_checked(D(1, Int64(0)),
+                                                     D(1, Int64(-200)))
+        # The non-finite rows are reached BEFORE either width test, so they
+        # answer rather than throw.
+        @test DN.add_dy_checked(DN.DYADIC_POSINF, wide) === DN.DYADIC_POSINF
+        @test DN.mul_dy_checked(DN.DYADIC_NAN, w60) === DN.DYADIC_NAN
+    end
 end
 
 # ==========================================================================
