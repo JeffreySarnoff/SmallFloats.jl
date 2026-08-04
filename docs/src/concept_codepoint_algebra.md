@@ -31,7 +31,7 @@ the algebra writes them as `0`/`1`, which is what makes the identities
 one-liners rather than case analyses.
 
 | symbol | meaning | value | package spelling |
-|:---|---|---|---|
+|:---|:---|:---|:---|
 | `K` | bitwidth — bits in the code | given, `3 ≤ K ≤ 16` | `bitwidth(T)` |
 | `P` | precision — significand digits *including* the hidden bit | given, `1 ≤ P ≤ K−S` | `precision(T)` |
 | `S` | signedness | `0` unsigned, `1` signed | `issigned(T)` |
@@ -40,7 +40,7 @@ one-liners rather than case analyses.
 ## Derived quantities
 
 | symbol | meaning | formula | package spelling |
-|:---|---|---|---|
+|:---|:---|:---|:---|
 | `Q` | total code points | `2^K` | — |
 | `H` | sign-bit weight; signed-region offset | `2^(K−1)` | `signmask(T)` |
 | `L` | trailing-significand patterns per exponent block | `2^(P−1)` | — |
@@ -79,7 +79,7 @@ C(MaxFinite) = N − 1 − D    always
 Worked for `Binary8p4se` — `K=8, P=4, S=1, D=1`, so `Q=256, H=128, L=8, B=8`:
 
 | quantity | formula | value | confirms |
-|:---|---|---|---|
+|:---|:---|:---|:---|
 | `N` | `255 − 1·127` | `128` = `0x80` | `Binary8p4se(NaN) ≡ 0x80` |
 | `C(+∞)` | `N − 1` | `127` = `0x7f` | `Binary8p4se(Inf) ≡ 0x7f` |
 | `M = C(MaxFinite)` | `N − 1 − D` | `126` = `0x7e` | `MaxFiniteOf(Binary8p4se) ≡ 0x7e` |

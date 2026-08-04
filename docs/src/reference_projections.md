@@ -19,7 +19,7 @@ specializes every call that reaches it.
 Named `R<mode>_Sat<mode>`. Every cell below is an exported constant.
 
 | Rounding | `SatFinite` | `SatPropagate` | `SatNone` | Related guide |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | `NearestTiesToEven` | `RNE_SF` | `RNE_SP` | `RNE_SN` | [Rounding and Saturation](concept_rounding_saturation.md) |
 | `NearestTiesToAway` | `RNA_SF` | `RNA_SP` | `RNA_SN` | [Rounding and Saturation](concept_rounding_saturation.md) |
 | `TowardPositive` | `RTP_SF` | `RTP_SP` | `RTP_SN` | [Rounding and Saturation](concept_rounding_saturation.md) |
@@ -35,7 +35,7 @@ Constructors, not constants — the random-bit budget `N` is a type parameter.
 `N ∈ 1:60`; omitting `N` uses the default `N = 8` (`SmallFloats.DEFAULT_RBITS`).
 
 | Variant | `SatFinite` | `SatPropagate` | `SatNone` | Related guide |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | `StochasticA` | `RSA_SF(N)` | `RSA_SP(N)` | `RSA_SN(N)` | [Rounding and Saturation](concept_rounding_saturation.md) |
 | `StochasticB` | `RSB_SF(N)` | `RSB_SP(N)` | `RSB_SN(N)` | [Rounding and Saturation](concept_rounding_saturation.md) |
 | `StochasticC` | `RSC_SF(N)` | `RSC_SP(N)` | `RSC_SN(N)` | [Rounding and Saturation](concept_rounding_saturation.md) |
@@ -49,7 +49,7 @@ RSC_SF(16) === ProjSpec(StochasticC{16}(), SatFinite())   # true
 ## Accessors
 
 | Accessor | Returns | Related guide |
-|:---|---|---|
+|:---|:---|:---|
 | `roundingmode(ρ)` | the rounding-mode instance | [Rounding and Saturation](concept_rounding_saturation.md) |
 | `saturationmode(ρ)` | the saturation-mode instance | [Rounding and Saturation](concept_rounding_saturation.md) |
 | `isstochastic(ρ)` | `Bool` | [Rounding and Saturation](concept_rounding_saturation.md) |
@@ -58,7 +58,7 @@ RSC_SF(16) === ProjSpec(StochasticC{16}(), SatFinite())   # true
 ## Saturation-mode meaning
 
 | Mode | Out-of-range behavior |
-|:---|---|
+|:---|:---|
 | `SatFinite` | clamp everything to the finite range |
 | `SatPropagate` | preserve representable infinities; clamp other overflow |
 | `SatNone` | apply the draft's domain-, signedness-, and direction-dependent rows (nearest modes overflow to ±Inf or NaN for finite formats; directed modes pointing away from the overflow clamp to the extremal finite value) |

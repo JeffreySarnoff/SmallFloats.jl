@@ -12,8 +12,8 @@ microsecond dynamic dispatch.
 Every scalar entry point in the package — `Add`, `project`, a constructor —
 fully specializes when the format type is known at compile time: through a
 `const` binding, a type parameter, or an ordinary function argument. Under
-that condition, a scalar `Add` runs at roughly 18–26 ns and `project` at
-roughly 13 ns, with zero allocations.
+that condition, a scalar `Add` runs at roughly 7–9 ns and `project` at
+roughly 2–7 ns, with zero allocations.
 
 The moment a format type is read from a **non-`const` global**, Julia can no
 longer resolve the method at compile time, and every call pays for dynamic
@@ -73,16 +73,20 @@ spelling in a hot loop.
 
 ## Bulk work belongs in array calls
 
-The table-gather kernels that back array operations run roughly 50× faster
+The table-gather kernels that back array operations run roughly 25× faster
 than the scalar path per element, because after the first call for a given
 `(op, formats, ρ)` specialization, every later element is a single table
 lookup rather than a full evaluation. That first call pays a one-time table
-build: roughly 0.4 ms for a unary table, tens of milliseconds for an 8×8
-binary table, up to a few milliseconds for a 2 MiB ternary table. Benchmark
-warm calls separately from the first cold call, or the build cost will
-dominate a measurement that is supposed to be about steady-state throughput.
-Once warm, measured throughput is around 0.27 ns/element for unary gathers
-and 0.5 ns/element for binary gathers.
+build: roughly 6 µs for a 256-entry unary table, 80 µs for a 64 K-entry 8×8
+binary table, and a few milliseconds for a wide-spread signature whose
+entries escalate to MPFR. Benchmark warm calls separately from the first cold
+call, or the build cost will dominate a measurement that is supposed to be
+about steady-state throughput. Once warm, measured throughput is around
+0.13 ns/element for unary gathers and 0.25 ns/element for binary gathers.
+
+Builds are also **parallel** when the table is large enough and the process has
+threads, so the first-call cost above is what one core pays; see
+[Performance Evidence](examples_performance.md) for the measured contrast.
 
 ### Ternary tiers scale with bitwidth
 
@@ -98,8 +102,19 @@ on your part:
   LRU-evicted cache — so a signature used once in passing doesn't pay for a
   table it will never reuse.
 - **Compute** (`K = 8`; a 16 MiB table stops being a cache win): the scalar
-  pipeline runs per element instead, optionally threaded for long arrays
-  (roughly 4× at 4 threads).
+  pipeline runs per element instead, threaded for long arrays.
+
+### Wide formats take the compute path, and it threads
+
+Above `K = 8` the same reasoning reaches unary and binary operations. A binary
+table for two `K = 16` operands would be `2^32` entries, so the policy declines
+it and the **compute kernel is the only array path those formats have**. It is
+threaded for long arrays under a pure ρ, at every arity — measured at roughly
+6× on 8 threads for a 65 536-element `Binary16p8se` `Add`.
+
+Stochastic ρ is deliberately excluded: it draws from a single stream, so its
+results are reproducible only in index order, and threading it would make a
+seeded run depend on the scheduler.
 
 Every table entry, eager or adaptive, is built through the exact scalar
 path, so a table lookup and the equivalent scalar call are bit-identical by

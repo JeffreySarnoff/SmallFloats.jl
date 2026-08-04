@@ -22,7 +22,7 @@ The deterministic modes answer different questions at the same pair of
 neighboring datums:
 
 | Family | Decision |
-|:---|---|
+|:---|:---|
 | nearest, ties to even | nearest datum; a tie selects the even code lattice choice |
 | nearest, ties away | nearest datum; a tie increases magnitude |
 | toward positive | least representable datum not below the exact value |

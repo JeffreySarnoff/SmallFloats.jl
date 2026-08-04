@@ -12,7 +12,7 @@ Five session-wide defaults are readable as `DefaultX()` and settable as
 `DefaultX!(v)`:
 
 | default | initial value | setter accepts |
-|:---|---|---|
+|:---|:---|:---|
 | `DefaultType` | `Binary8p2se` | any fully-parameterized `Binary` type |
 | `DefaultReturnType` | `Binary8p2se` | any fully-parameterized `Binary` type |
 | `DefaultRoundingMode` | `NearestTiesToEven()` | mode instance or type |

@@ -19,7 +19,7 @@ difference is the kind that produces correct-looking numbers rather than
 errors:
 
 | | `Binary16p11se` | `Float16` | `Binary16p8se` | `BFloat16` |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | precision `P` | 11 | 11 | 8 | 8 |
 | exponent bias | **16** | **15** | **128** | **127** |
 | largest finite | **65472** | **65504** | **3.3762e38** | **3.3895e38** |

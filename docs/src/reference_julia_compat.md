@@ -61,7 +61,7 @@ Code that must be insensitive to the session default names its projection:
 ## The mapping
 
 | Base spelling | draft operation |
-|:---|---|
+|:---|:---|
 | `+` `-` `*` `/`, unary `-` | `Add`, `Subtract`, `Multiply`, `Divide`, `Negate` |
 | `abs`, `inv`, `sqrt` | `Abs`, `Recip`, `Sqrt` |
 | `exp`, `exp2`, `expm1`, `log`, `log2`, `log1p` | `Exp`, `Exp2`, `ExpMinusOne`, `Log`, `Log2`, `LogOnePlus` |
@@ -142,7 +142,7 @@ without asking. The routinely used numeric contracts are implemented, while
 operations with no P3109 meaning refuse explicitly:
 
 | verb | behaviour |
-|:---|---|
+|:---|:---|
 | `hash`, `Base.decompose` | exact — a datum is `S · 2^Q`, so `Dict` keys and `Set` elements work |
 | `round`, `floor`, `ceil`, `trunc` | **one** rounding: the integer value is formed exactly on the carrier and projected once, under the session default's saturation |
 | `round(x, r::RoundingMode)` | `RoundNearest`, `RoundNearestTiesAway`, `RoundUp`, `RoundDown`, `RoundToZero` |

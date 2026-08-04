@@ -61,11 +61,12 @@ function write_table(io, title, note, rows; extra_header="", level=2,
     # `min` sits LEFT of `median`: the minimum is the cleanest estimate of the
     # work itself (fewest interruptions), and the median is the one carrying
     # scheduler and cache noise. Reading left-to-right then goes signal-first.
+    # Every column left-aligned, matching the documentation's table convention.
     hdr = "| operation | min | median | allocs |"
-    sep = "|---|---|---|---|"
+    sep = "|:---|:---|:---|:---|"
     if !isempty(extra_header)
         hdr *= " $extra_header |"
-        sep *= "---|"
+        sep *= ":---|"
     end
     println(io, hdr); println(io, sep)
     for r in rows
@@ -421,15 +422,24 @@ end
 # falsifiable: exact selections zero at every rung unconditionally, arithmetic
 # allocating exactly when the operand spread forces an MPFR escalation, and the
 # enclosure ladder allocating at rungs 2 and 3 by construction.
-function bench_allocation_by_rung(formats)
-    rows = Row[]
-    for F in formats
-        p = allocation_profile(F)
-        push!(rows, Row("$(SmallFloats.formatname(F)) — rung $(p.rung) ($(p.carrier))",
-                        0.0, 0.0, 0.0,
-                        "sel $(p.selection) B · add $(p.add) B · fma $(p.fma) B · ladder $(p.ladder) B"))
+bench_allocation_by_rung(formats) = [allocation_profile(F) for F in formats]
+
+# Its own writer rather than `write_table`. The generic table is
+# (name, min, median, allocs) and this data is (format, rung, carrier, and four
+# byte counts) with no meaningful time at all — forcing it into the timing shape
+# printed a row of `0.0 ns` columns and silently DROPPED the byte counts, because
+# `write_table` emits the `extra` column only when `extra_header` is passed. A
+# table of zeros that looks like a measurement is worse than no table.
+function write_alloc_table(io, title, note, profiles, formats; level=3)
+    println(io, "\n", "#"^level, " ", title, "\n")
+    isempty(note) || println(io, note, "\n")
+    println(io, "| format | rung | carrier | selection | add | fma | ladder |")
+    println(io, "|:---|:---|:---|:---|:---|:---|:---|")
+    for (F, p) in zip(formats, profiles)
+        println(io, "| `", SmallFloats.formatname(F), "` | ", p.rung, " | `", p.carrier,
+                "` | ", p.selection, " B | ", p.add, " B | ", p.fma, " B | ",
+                p.ladder, " B |")
     end
-    rows
 end
 
 # ---------------------------------------------------------------------------
@@ -695,7 +705,7 @@ function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
             (Threads.nthreads() == 1 ?
                 " **No threaded/sequential contrast below** — rerun with `julia -t N`." : ""),
             bench_threading(Binary16p8se, Binary8p4se); level=3, fresh_if_multipage=true)
-        write_table(io, "Allocation by rung",
+        write_alloc_table(io, "Allocation by rung",
             "Warm-path bytes for one call of each operation class, per carrier rung. " *
             "The **exact selections are zero at every rung, unconditionally** — a " *
             "selection returns one of its operands, so there is nothing to escalate " *
@@ -704,11 +714,14 @@ function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
             "not gated*: it allocates exactly when the operand spread exceeds the " *
             "carrier's exact range and evaluation escalates to MPFR, which happens at " *
             "rung 1 too. The enclosure ladder allocates at rungs 2 and 3 by " *
-            "construction. Times are not meaningful in this table and are omitted.",
-            bench_allocation_by_rung(RUNG_REPRESENTATIVES); level=3, fresh_if_multipage=true)
+            "construction. Times are not meaningful for these calls and are omitted.",
+            bench_allocation_by_rung(RUNG_REPRESENTATIVES), RUNG_REPRESENTATIVES; level=3)
 
         println(io, "\n---\n*All numbers from this machine/run; absolute values vary ",
-                "by host. Regenerate with `julia --project=benchmark benchmark/benchmarking.jl`.*")
+                "by host. Regenerate with " *
+                "`julia --project=benchmarking -t auto benchmarking/benchmarking.jl`; " *
+                "the thread count matters for the Threading table and is recorded in " *
+                "the header above.*")
     end
     path
 end

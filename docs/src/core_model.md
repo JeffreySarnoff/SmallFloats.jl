@@ -134,7 +134,7 @@ modes land exactly on asymptotes.
 A projection specification is the pair of two independent choices:
 
 | | what it decides | examples |
-|:---|---|---|
+|:---|:---|:---|
 | **rounding mode** | which neighbor a between-grid value lands on | nearest-ties-even, toward zero, toward ±∞, stochastic |
 | **saturation mode** | what an out-of-range result becomes | clamp to finite (`SF`), propagate infinities (`SP`), draft rows (`SN`) |
 
@@ -180,7 +180,7 @@ experiments, and [Projection Specifications](reference_projections.md) for the c
 The package's speed comes from the first idea's finiteness: an 8-bit unary
 operation is a function with 256 inputs, so its *entire* behavior is a
 256-byte table, built once through the exact scalar path and then gathered
-per element (0.27 ns). The exactness is inherited: table and scalar are the
+per element (0.13 ns). The exactness is inherited: table and scalar are the
 same function by construction.
 
 The same finiteness makes approximation *honest*. If you register a faster

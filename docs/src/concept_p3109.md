@@ -25,7 +25,7 @@ the law. SmallFloats.jl is built as a direct implementation of this sentence.
 A format is `Binary{K, P, Σ, Δ}` (§3.1):
 
 | parameter | meaning | range |
-|:---|---|---|
+|:---|:---|:---|
 | `K` | total bitwidth | 3 – 16 |
 | `P` | significand precision, implicit bit included | signed: `0 < P < K`; unsigned: `0 < P ≤ K` |
 | `Σ` | signedness: signed or unsigned | |
@@ -78,7 +78,7 @@ bit source unspecified).
 Three saturation modes decide what out-of-range results become (§4.7.5):
 
 | mode | finite overflow | ±Inf input |
-|:---|---|---|
+|:---|:---|:---|
 | `SatFinite` | clamp to the finite extremes | clamp |
 | `SatPropagate` | clamp | preserve representable infinities, else clamp |
 | `SatNone` | the draft's rows: to ±Inf, finite extreme, or NaN depending on rounding direction, signedness, and domain | preserve, else NaN |
@@ -134,7 +134,7 @@ measures κ by exhaustive enumeration at registration.
 They are not (Annex F compares them explicitly):
 
 | | `Binary16p11se` | `Float16` | `Binary16p8se` | `BFloat16` |
-|:---|---|---|---|---|
+|:---|:---|:---|:---|:---|
 | exponent bias | **16** | **15** | **128** | **127** |
 | largest finite | **65472** | **65504** | **3.3762e38** | **3.3895e38** |
 | NaN encodings | **1** | **2046** | **1** | **2046** |
