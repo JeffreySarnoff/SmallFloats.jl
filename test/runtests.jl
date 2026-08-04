@@ -1562,6 +1562,20 @@ end
     σ = ProjSpec(StochasticA{3}(), SatNone())
     # concrete inferred return types at public entry points, kwarg paths included
     @test Base.return_types(project, Tuple{Type{T}, typeof(RNE_SN), Float64}) == [T]
+    # ---- ωSaturate's return type is the CONTRACT, not an implementation detail.
+    #
+    # `saturate` returns the result code point, so its return type must be the
+    # format's storage unit and nothing wider. This is the pin the refactor was
+    # designed around: the obvious alternative — six singleton outcome tags —
+    # makes this a six-way `Union`, which exceeds Julia's union-splitting budget
+    # and can leave a dynamic dispatch inside `project`, the hottest function in
+    # the package. Golden digests cannot see that: they compare values, not
+    # dispatch. Checked at both storage widths.
+    for F in (Binary8p4se, Binary16p8se, Binary16p1uf)
+        @test Base.return_types(SmallFloats.saturate,
+                                Tuple{Type{F}, typeof(RNE_SN), Rounded}) ==
+              [codeunit_type(F)]
+    end
     for f in (Add, Multiply, Divide, Exp, FMA)
         n = f === FMA ? 3 : (f in (Add, Multiply, Divide) ? 2 : 1)
         sig = Tuple{Type{T}, typeof(RNE_SN), ntuple(_ -> T, n)...}

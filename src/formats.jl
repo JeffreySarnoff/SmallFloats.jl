@@ -345,14 +345,22 @@ const TrailingSignificandBitwidthOf = trailingsigbits
 # The four rows collapse to one expression: the ceiling is the NaN slot's
 # neighbourhood — `signmask` for signed formats, `codemask` for unsigned — and
 # the Extended domain spends one more code on +Inf.
-@inline function MaxFiniteOf(T::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
-    ceiling = S ? signmask(F) : codemask(F)
-    rawvalue(T, ceiling - _cu(F, E ? 2 : 1))
-end
-@inline function MinFiniteOf(T::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}}
-    S || return rawvalue(T, _cu(F, 0))                         # unsigned: 0
-    rawvalue(T, codepoint(MaxFiniteOf(T)) | signmask(T))       # most negative finite
-end
+# The CODE is primary and the value is built from it, not the other way round.
+#
+# These read `codepoint(MaxFiniteOf(T))` — construct a value, then destructure
+# it — and `MinFiniteOf` did that to its own sibling. Every consumer that wants
+# the code (`_extremal_SQ`, `saturate`'s clamping rows, `NextGreaterThan`'s
+# edges) then paid construct → extract, and `project` re-constructed on the way
+# out. Inverting the dependency removes the round trip at the source instead of
+# relying on it to fold, and it puts the extremal *code* beside the other
+# special code points, which is where a representation fact belongs.
+@inline _maxfinite_code(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} =
+    (S ? signmask(F) : codemask(F)) - _cu(F, E ? 2 : 1)
+@inline _minfinite_code(::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} =
+    S ? (_maxfinite_code(F) | signmask(F)) : _cu(F, 0)   # unsigned floor is 0
+
+@inline MaxFiniteOf(T::Type{<:Binary}) = rawvalue(T, _maxfinite_code(T))
+@inline MinFiniteOf(T::Type{<:Binary}) = rawvalue(T, _minfinite_code(T))
 @inline MinPositiveOf(T::Type{F}) where {F<:Binary} = rawvalue(T, _cu(F, 1))
 @inline MaxSubnormalOf(T::Type{F}) where {K,P,S,E,F<:Binary{K,P,S,E}} =
     rawvalue(T, (_cu(F, 1) << (P - 1)) - _cu(F, 1))  # P=1 formats have no subnormals ⇒ code 0

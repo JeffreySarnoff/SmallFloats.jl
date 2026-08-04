@@ -308,8 +308,11 @@ end
 # The stepping edges are named once here: both directions run off the lattice
 # into NaN, and both pivot on the extremal finite code.
 @inline _nan_datum(::Type{T}) where {T<:Binary} = rawvalue(T, nan_code(T))
-@inline _minfinite_code(::Type{T}) where {T<:Binary} = codepoint(MinFiniteOf(T))
-@inline _maxfinite_code(::Type{T}) where {T<:Binary} = codepoint(MaxFiniteOf(T))
+# `_minfinite_code` / `_maxfinite_code` now live in formats.jl beside the other
+# special code points, and `MinFiniteOf`/`MaxFiniteOf` are built FROM them. They
+# were defined here as `codepoint(MaxFiniteOf(T))` — construct then destructure —
+# which every consumer of the code paid for. Defining them again here would be a
+# method overwrite, which is a precompilation *error* (see show.jl:121).
 
 """NextGreaterThan(v) (draft §4.16): the least datum greater than `v` in the total
 order — one step up the code lattice, with NaN → NaN and MaxFinite/+Inf → NaN at
