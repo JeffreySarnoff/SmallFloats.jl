@@ -881,22 +881,74 @@ Three constraints, all local:
 Chunk over the outer code loop (`c1`) rather than over the flat index, so each
 task decodes its own `x1` once — the current loop's own structure.
 
-### 7c — the two block allocation centres
+### 7c — the block allocation centres
 
-Measured, not guessed: `ConvertToBlockMaxAbsFinite` at 111 allocations / 3.95 µs
-and `BlockAdd` at 35 allocations / ≈ 1 per lane, B = 32.
+> **EXECUTED, and this section was wrong. Corrected below from allocation
+> profiling.** Both attributions named `_joinheads`, and `_joinheads` was not the
+> cause of either. The version of this section that survives is the *method*, not
+> the diagnosis: profile the entry point, then read the line numbers.
 
-- **`BlockAdd`**: `blocks.jl:311-317` recomputes `h = _joinheads(...)` *inside*
-  the `ntuple(Val(B))`. The head is a function of the two blocks' formats, not
-  of the lane index, so it hoists out of the closure entirely.
-- **`ConvertToBlockMaxAbsFinite`**: `_joinheads(X...)` (`blocks.jl:522`) is a
-  splat — precisely the construction §11 M46 measured boxing 304 bytes per call
-  on `Float128` and 592 on `Dyadic` in `apply_op`, where every *component*
-  measured zero. The fix there was `Vararg{Any,N}` (`ops_scalar.jl:224-225`);
-  the same treatment applies here.
+**What the section originally claimed.** That `BlockAdd` recomputes
+`h = _joinheads(...)` inside its `ntuple(Val(B))`, and that
+`ConvertToBlockMaxAbsFinite`'s `_joinheads(X...)` splat is the §11 M46 boxing
+in a second place, curable by `Vararg{Any,N}`.
 
-Measure at the entry point, not by assembling the parts. That is the recorded
-lesson and the reason the earlier `apply_op` profile had to be retaken.
+**Why it was wrong, and how the error was caught.** Adding the length parameter
+changed nothing measurable, and the "before" number that seemed to prove it did
+— `BlockDotProduct` 2080 B → 32 B — turned out to be a **warm-up artifact**: a
+control run against a git worktree pinned at the pre-fix commit measured 48 B,
+not 2080 B. `_joinheads` also infers a **concrete** `HeadF64` at every lane
+count, so the abstract-head story it implied was never true either. The change
+was reverted.
+
+**What the profiler actually found**, with `Profile.Allocs` at
+`sample_rate=1.0` over deterministic all-finite blocks:
+
+- **`BlockDotProduct` — a real defect, now fixed.** `blocks.jl`'s Float128
+  accumulation loop shared a function body with an `if`/`else` whose branches
+  yield `Float64` (the NaN/∞ rows), `Float128`, and `BigExactF` — a union. The
+  accumulator could not stay unboxed across it, so every lane allocated:
+  **2080 B for a 32-lane block, 32 B per lane**. The identical loop measured in
+  isolation allocates **zero**, which is what pins the cause on the surrounding
+  union rather than on `Float128` (a bitstype) or `blockdecode` (which returns a
+  concrete `NTuple{B,Float64}`). Moving it into `_f128_dot` behind a `Val(B)`
+  barrier takes the all-finite 32-lane case to **16 B**. Verified against a
+  512-bit `BigFloat` reference over 90 block pairs.
+
+  This is the *same* defect the table builders had, found the same day: a hot
+  loop sharing a body with something abstractly typed. One function barrier.
+
+- **`BlockAdd` and `ConvertToBlockMaxAbsFinite` — not a defect.** Their cost is
+  a **tuple-length cliff**, not boxing. `ConvertToBlockMaxAbsFinite` measures
+  48 B at B = 8, 64 B at B = 16, **3200 B at B = 32**, and 6128 B at B = 64.
+  Julia stops unrolling `map`/splat over tuples past ~32 elements, and a
+  32×`Float64` tuple is 256 bytes that cannot stay in registers across a call
+  boundary. `ntuple(…, Val(B))` is no better (1184 B against `map`'s 1104 B) and
+  `foldl` already allocates **zero**, so there is nothing left to hoist. The
+  allocation is the data shape.
+
+  Leave it. A fix would mean changing the block representation away from tuples,
+  which is a design change with its own trade-offs, not a performance repair.
+
+**The methodological lesson, which is the durable part.** Three hypotheses were
+proposed for these numbers and all three were measured and rejected — the
+`_joinheads` splat, `@inbounds` on the operand index, and O(n) long-tuple
+indexing (benchmarked at 1.0× against a `Vector`). Guessing at an allocation
+source from reading the code has a poor record in this file specifically. Profile
+first; the profiler named `blocks.jl:477` in one run and the fix followed
+immediately.
+
+Two harness rules earned here, both of which produced false results before they
+were adopted:
+
+- **Warm up until the number stops moving.** One warm call is not enough; the
+  first measured call still carries specialization. Use
+  `minimum(@allocated(f()) for _ in 1:10)` after ≥ 10 warm calls.
+- **Seed the data.** These probes used unseeded `rand`, so each process got
+  different block contents and the results looked bistable across runs. With a
+  seed the allocation is a deterministic function of the data — and the *cheap*
+  cases were cheap only because a NaN or ∞ lane short-circuited the reduction,
+  which is exactly the wrong thing to measure.
 
 ### Pins
 

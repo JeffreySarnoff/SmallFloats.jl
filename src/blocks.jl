@@ -436,6 +436,31 @@ function BlockReduceMultiply(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B,FS,FE}
     _finish(fr, ρ, _drawR(ρ, rng, R), res)
 end
 
+# The Float128 accumulation lives in its OWN FUNCTION, and that is load-bearing.
+#
+# Inline in `BlockDotProduct`'s `if`/`else`, the accumulator sits inside an
+# expression whose branches yield `Float64` (the NaN/∞ rows), `Float128`, and
+# `BigExactF` — a union. `acc` could then not stay unboxed across the loop, and
+# each iteration allocated: **32 bytes per lane, 2080 B for a 32-lane block**.
+# The identical loop measured in isolation allocates ZERO, which is what pins the
+# cause on the surrounding union rather than on `Float128` (a bitstype) or on
+# `blockdecode` (which returns a concrete `NTuple{B,Float64}`).
+#
+# It is the same defect the table builders had, found the same day: a hot loop
+# sharing a function body with something abstractly typed. CLAUDE.md's rule —
+# "one function barrier restores full speed" — applies to a union-typed result
+# just as it does to a format read from a global.
+#
+# `Val(B)` rather than a plain `B::Int`: the lane count becomes a type parameter,
+# so the loop trip count is static and the tuple indexing needs no bounds logic.
+@inline function _f128_dot(X::NTuple{B,Any}, Y::NTuple{B,Any}, ::Val{B}) where {B}
+    acc = Float128(0)
+    @inbounds for i in 1:B
+        acc += Float128(X[i]) * Float128(Y[i])                  # exact products, exact sum
+    end
+    acc
+end
+
 """BlockDotProduct (draft §5.3.2). Lane products can carry 64 significant bits, so the
 products and their sum are formed in the exact accumulator, with the ∞/NaN fold algebra
 resolved on the Float64 classifications first."""
@@ -472,11 +497,7 @@ function BlockDotProduct(fr::Type{<:Binary}, ρ::ProjSpec,
         span = spanlo > spanhi ? 0 : (spanhi - spanlo) + 1
         hdot = joinhead(rung(Val(:Multiply), FS1, FE1), rung(Val(:Multiply), FS2, FE2))
         if _f128acc(hdot) && span + _log2ceil(B) <= 76
-            acc = Float128(0)
-            for i in 1:B
-                acc += Float128(X[i]) * Float128(Y[i])          # exact products, exact sum
-            end
-            acc
+            _f128_dot(X, Y, Val(B))                             # barrier — see below
         else
             BigExactF(() -> setprecision(BigFloat, dotprec) do
                 acc = BigFloat(0)

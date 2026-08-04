@@ -1596,6 +1596,28 @@ end
     @test @allocated(addR(a, b)) == 0
     @test addR(a, b) === addR(a, b)
 
+    # ---- the Float128 dot-product accumulator must not box per lane.
+    #
+    # `BlockDotProduct`'s accumulation loop shared a function body with an
+    # `if`/`else` whose branches yield `Float64`, `Float128` and `BigExactF` — a
+    # union — so the accumulator could not stay unboxed and every lane allocated:
+    # 2080 B for a 32-lane block. `_f128_dot` is the barrier that fixed it (16 B).
+    # The identical loop in isolation always allocated zero, which is what
+    # located the cause in the surrounding union rather than in `Float128`.
+    #
+    # DETERMINISTIC data, not `rand`: with random lanes this number is a function
+    # of the contents, because a NaN or ∞ lane short-circuits the reduction and
+    # makes the measurement cheap for the wrong reason. All-1.0 is the all-finite
+    # worst case and is reproducible. Bounded rather than pinned to zero — the
+    # reduction may still escalate legitimately — but 256 B is far below the
+    # 2080 B the boxing produced.
+    let FE = Binary8p4se, FS = Binary8p1uf, NB = 32
+        ones_blk = Block(one(FS), ntuple(_ -> rawvalue(FE, 0x40), NB))   # every lane 1.0
+        dot2(p, q) = BlockDotProduct(FE, RNE_SN, p, q)
+        for _ in 1:10; dot2(ones_blk, ones_blk); end
+        @test minimum(@allocated(dot2(ones_blk, ones_blk)) for _ in 1:10) <= 256
+    end
+
     # ---- the per-head allocation profile (Stage 7; §11 M46).
     #
     # `apply_op`'s wide route takes `xs::Vararg{Any,N}` rather than `xs...`, and
