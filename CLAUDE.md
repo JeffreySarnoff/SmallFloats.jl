@@ -328,6 +328,41 @@ duplicate `_fully_instantiated` made method overwriting during precompilation an
 
 ---
 
+## A docstring is a string literal before it is prose
+
+Julia parses a docstring *as code*. Anything that is not a valid escape sequence
+is a **syntax error**, not a rendering nuisance — the file stops parsing and the
+package stops loading.
+
+That is not hypothetical: a `measure_kappa` docstring written with LaTeX math
+(`\(2^{16}\)`, `\[ … \]`, `\text{…}`) made `using SmallFloats` fail outright with
+`invalid escape sequence`. Nothing in the suite runs when the package will not
+load, so this failure mode costs the whole gate, and it is invisible to a reader
+who is thinking about the prose rather than about the parser.
+
+**Do not put `\(`, `\)`, `\[`, `\]`, or `\text` in a docstring.** Three spellings
+work, in order of preference:
+
+- plain backticks with ASCII exponents — `` `2^16 = 65_536` ``, which also reads
+  correctly at the REPL, where LaTeX never would;
+- a ```` ```math ```` block, which Documenter renders and the parser accepts;
+- `raw"""…"""`, which makes every backslash literal — at the cost of losing `$`
+  interpolation.
+
+**In *code*, the same characters are usually right and must not be swept.**
+`docs_consistency.jl` matches `r"with_default_(…)\([^,\n]+\)\s+do"`, where `\(`
+is a regex escape for a literal parenthesis; rewriting it to `(` turns it into a
+capture group, and the test silently stops catching the false "scoped
+mutate-and-restore" claim it exists to catch. A find-and-replace over the tree is
+therefore the wrong instrument. The rule is about **string literals that are
+documentation**, not about the byte sequence.
+
+The vendored Julia-manual copies under `docs/other/` contain these escapes as
+markdown artifacts of their HTML conversion. They are retained third-party
+documents: leave them, so they keep matching their source.
+
+---
+
 ## What review found important
 
 The 2026-08-02 review checked every falsifiable claim in this file against the source. Six were wrong, The lesson worth keeping: **a doctrine file is code that nothing executes.** Every claim in it that can be checked should be checked by something, and the ones that cannot should say so.
