@@ -35,8 +35,14 @@ using SmallFloats: KMIN, KMAX, KSPLIT, _NAMED, bitwidth
 # Generated trees are not part of the general fact scan. The tracked PDF source
 # is, however, included in the interface-claim check below: it is a published
 # artifact, and a stale regeneration must not reintroduce a nonexistent API.
+# `doc/` AND `docs/` — the repository has both, and only the plural one was
+# covered. That is how a design note added to `doc/other/` walked past a gate
+# that had just been widened to catch exactly its defect: the hole was closed on
+# one of two similarly-named trees. Scanning both is the cheap half of the fix;
+# the ambiguity itself remains a trap for whoever adds the next file.
 const _DOC_ROOTS = [joinpath(@__DIR__, "..", "docs", "src"),
-                    joinpath(@__DIR__, "..", "docs", "other")]
+                    joinpath(@__DIR__, "..", "docs", "other"),
+                    joinpath(@__DIR__, "..", "doc", "other")]
 const _DOC_FILES = let fs = String[]
     for d in _DOC_ROOTS
         isdir(d) && append!(fs, filter(f -> endswith(f, ".md"), readdir(d; join=true)))
@@ -120,7 +126,17 @@ const _VENDORED_DOCS = ("Style Guide · The Julia Language.md",
     # They are still scanned for the `===` claim, which is a statement about the
     # package as it is now wherever it appears — but a line saying the relation
     # *becomes* `<:` is describing the change and is exempted above.
+    # BOTH record trees. `doc/other/` holds the review and improvement guides,
+    # whose entire subject is what the package used to claim — they quote the
+    # stale range and count deliberately, in order to correct them. Extending
+    # `_DOC_ROOTS` without extending this would turn every one of those guides
+    # red for saying true things about the past, and the gate would become the
+    # nuisance this file's header warns against.
+    #
+    # `"doc/other"` is NOT a substring of `"docs/other"` (the `s` intervenes), so
+    # both must be tested; one `occursin` cannot cover the pair.
     _is_record(f) = occursin(joinpath("docs", "other"), f) ||
+                    occursin(joinpath("doc", "other"), f) ||
                     basename(f) == "CHANGELOG.md"
     _always = [p for p in stale if occursin("===", p[2])]
 
@@ -152,10 +168,24 @@ const _VENDORED_DOCS = ("Style Guide · The Julia Language.md",
 
     # Implementation pages may name source files, but cannot keep links to a
     # layer that has been removed. Check every backticked src/*.jl reference.
+    # RECORDS are excluded, for the reason they are excluded from the stale
+    # literals: a review that says "`internals_oracle.md` points to the removed
+    # `src/dyadic3.jl`" is doing its job, and a plan that says "reject removed
+    # `src/dyadic3.jl` references" is describing this very check. Requiring those
+    # paths to exist would forbid a record from naming what was removed — which
+    # is most of what a record is for. The check exists to stop LIVE
+    # documentation pointing at a deleted layer, and that is `docs/src/`.
+    #
+    # Globs are skipped everywhere: `` `src/*.jl` `` is prose describing a set of
+    # files, not a link to one, and no `isfile` can be true of it.
     srcroot = normpath(joinpath(@__DIR__, ".."))
     source_refs = String[]
-    for f in _DOC_FILES, m in eachmatch(r"`(src/[^`]+\.jl)`", read(f, String))
-        push!(source_refs, m.captures[1])
+    for f in _DOC_FILES
+        _is_record(f) && continue
+        for m in eachmatch(r"`(src/[^`]+\.jl)`", read(f, String))
+            occursin('*', m.captures[1]) && continue
+            push!(source_refs, m.captures[1])
+        end
     end
     @test !isempty(source_refs)
     @test all(p -> isfile(joinpath(srcroot, p)), source_refs)
@@ -226,12 +256,15 @@ const _VENDORED_DOCS = ("Style Guide · The Julia Language.md",
         srcdir = joinpath(@__DIR__, "..", "src")
         docsrc = joinpath(@__DIR__, "..", "docs", "src")
         docoth = joinpath(@__DIR__, "..", "docs", "other")
+        dsingl = joinpath(@__DIR__, "..", "doc", "other")     # the OTHER record tree
         scan = String[]
         append!(scan, filter(f -> endswith(f, ".jl"), readdir(srcdir; join=true)))
         isdir(docsrc) && append!(scan, filter(f -> endswith(f, ".md"), readdir(docsrc; join=true)))
-        isdir(docoth) && append!(scan,
-            filter(f -> endswith(f, ".md") && !(basename(f) in _VENDORED_DOCS),
-                   readdir(docoth; join=true)))
+        for d in (docoth, dsingl)
+            isdir(d) && append!(scan,
+                filter(f -> endswith(f, ".md") && !(basename(f) in _VENDORED_DOCS),
+                       readdir(d; join=true)))
+        end
         # The vendored list must not rot into a list of files that no longer
         # exist: a stale name silently stops excluding anything, and a renamed
         # upstream copy would start failing the gate for the wrong reason.
