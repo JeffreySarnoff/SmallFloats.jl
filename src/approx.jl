@@ -56,6 +56,35 @@ K ≤ 8 fact: two K = 16 formats are `2^32` points against a `2^22` budget, so a
 wide binary signature samples. That is the mechanism working — κ is a
 *measurement*, `exhaustive = false` is reported, and `conformance_report` prints
 "(κ sampled — not exhaustive)" — but the claim was no longer true.
+
+## About that budget
+
+A `K = 16` format has `2^16 = 65_536` code points, so a binary operation over
+two of them is `2^16 * 2^16 = 2^32 ≈ 4.29` billion input pairs. The default
+ceiling is `max_exhaustive = 1 << 22` = `4_194_304` input tuples, and the test is
+simply
+
+```julia
+total = prod(1 .<< Ks)
+exhaustive = total <= max_exhaustive
+```
+
+**The budget is an engineering policy, not a mathematical requirement**, and it is
+not derived from available memory. It was inherited from `ByteFloats.jl`, where
+`2^22` operations took seconds; the design notes suggest it could be raised.
+
+Consequences for equal-width operands:
+
+| arity | condition | exhaustive through |
+|:---|:---|:---|
+| unary | `2^K ≤ 2^22` | every supported `K ≤ 16` |
+| binary | `2^2K ≤ 2^22` | `K = 11` |
+| ternary | `2^3K ≤ 2^22` | `K = 7` |
+
+Two `K = 16` operands exceed the budget by a factor of `2^10 = 1024`. Over
+budget, `measure_kappa` measures `samples` uniform draws instead — `2^20` by
+default — and returns `exhaustive = false`. Both thresholds are keyword
+arguments.
 """
 function measure_kappa(fn::F, op::Symbol, fr::Type{<:Binary},
                        argformats::NTuple{N,DataType}, ρ::ProjSpec;
