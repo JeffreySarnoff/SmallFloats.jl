@@ -294,14 +294,20 @@ function bench_scalar_ops(::Type{T}, names, arity; class::Symbol=:all) where {T<
     sort!(rows; by=r -> r.med)
 end
 
+# Representation width and carrier rung are independent axes. One explicit
+# representative of Code8/rung 1, Code16/rung 1, rung 2, and rung 3, plus the
+# smallest format. Evidence for the architecture rather than a collection of
+# only the formats that fit one-byte tables.
+#
+# Named once and shared: the format-sensitivity table and the allocation-by-rung
+# table must not drift into describing different grids, which is exactly what
+# two literal tuples would eventually do.
+const RUNG_REPRESENTATIVES = (Binary8p4se, Binary16p8se, Binary16p5se,
+                              Binary16p1uf, Binary3p1se)
+
 function bench_format_sensitivity(ops)
     rows = Row[]
-    # Representation width and carrier rung are independent axes. Keep one
-    # explicit representative of Code8/rung 1, Code16/rung 1, rung 2, and rung
-    # 3, plus the smallest format. This is evidence for the architecture rather
-    # than a collection of only the formats that fit one-byte tables.
-    for F in (Binary8p4se, Binary16p8se, Binary16p5se, Binary16p1uf,
-              Binary3p1se), op in ops
+    for F in RUNG_REPRESENTATIVES, op in ops
         pool = codes_pool(F, 4096)
         b = _bench_op(getfield(SmallFloats, op), F, pool, Val(2))
         push!(rows, Row("$(op)⟨$(SmallFloats.formatname(F))⟩", b))
@@ -403,6 +409,78 @@ function bench_sorting(::Type{T}; n=65536) where {T<:Binary}
     push!(rows, Row("sort! (stock comparison sort), n=$n", b))
     b = @be copy(A) sort!(_; rev=true) evals=1
     push!(rows, Row("sort! rev=true (counting sort), n=$n", b))
+    rows
+end
+
+# ---------------------------------------------------------------------------
+# Allocation by rung — the measured form of a claim the doctrine states in prose
+# ---------------------------------------------------------------------------
+# `allocation_profile` has existed since the Stage 7 work and was never called,
+# so CLAUDE.md's benchmark doctrine asserted a per-rung allocation contract that
+# nothing published. Emitting it beside the claim is what makes the paragraph
+# falsifiable: exact selections zero at every rung unconditionally, arithmetic
+# allocating exactly when the operand spread forces an MPFR escalation, and the
+# enclosure ladder allocating at rungs 2 and 3 by construction.
+function bench_allocation_by_rung(formats)
+    rows = Row[]
+    for F in formats
+        p = allocation_profile(F)
+        push!(rows, Row("$(SmallFloats.formatname(F)) — rung $(p.rung) ($(p.carrier))",
+                        0.0, 0.0, 0.0,
+                        "sel $(p.selection) B · add $(p.add) B · fma $(p.fma) B · ladder $(p.ladder) B"))
+    end
+    rows
+end
+
+# ---------------------------------------------------------------------------
+# Threading — the wide-format array path and the table builders
+# ---------------------------------------------------------------------------
+# Both variants are WARMED BEFORE EITHER IS MEASURED, and the toggle is a `Ref`
+# read inside an already-compiled branch rather than a second compilation of the
+# same code. That is what separates this from the harness failure the doctrine
+# records: the hazard there was compiling several variants in one process, and
+# measuring the first one's compilation as the second one's cost. Chairmarks
+# re-warms and takes many samples on top.
+#
+# The first attempt at this comparison did fall into exactly that trap — it
+# reported a 96× speedup on 8 threads, which is superlinear and therefore
+# impossible. The implausible number was the evidence: the sequential builder
+# was paying a dynamic dispatch per entry, because `Val(op)` built from a
+# runtime `Symbol` inside `_build_*` is type-unstable, while `Threads.@threads`
+# lowers its body into a closure that captures it concretely. The fix is the
+# function barrier now in `_fill_*!`; the rows below measure threading alone.
+function bench_threading(::Type{W}, ::Type{T8}; n=65536) where {W<:Binary,T8<:Binary}
+    rows = Row[]
+    nthr = Threads.nthreads()
+    A = codes_pool(W, n); B = codes_pool(W, n)
+    kern, build = SmallFloats.THREADED_KERNELS, SmallFloats.THREADED_TABLE_BUILDS
+    old_k, old_b = kern[], build[]
+    try
+        # warm BOTH paths before measuring EITHER
+        for on in (true, false)
+            kern[] = on; Add(W, RNE_SN, A, B)
+            build[] = on; empty_tables!(); get_table(:Exp, W, W, RNE_SN)
+            empty_tables!(); get_table(:Multiply, T8, T8, T8, RNE_SN); empty_tables!()
+        end
+        perel(b) = string(round(median(b).time / n * 1e9; digits=2), " ns/elem")
+        for on in (true, false)
+            tag = on ? "$(nthr) threads" : "sequential"
+            kern[] = on
+            b = @be similar(A) vmap!(_, Val(:Add), W, RNE_SN, A, B) evals=1
+            push!(rows, Row("Shape-B compute ⟨$(SmallFloats.formatname(W))⟩ Add, n=$n — $tag",
+                            b; extra=perel(b)))
+        end
+        for on in (true, false)
+            tag = on ? "$(nthr) threads" : "sequential"
+            build[] = on
+            b = @be empty_tables!() (_ -> get_table(:Exp, W, W, RNE_SN))(_) evals=1 seconds=3
+            push!(rows, Row("build Exp⟨$(SmallFloats.formatname(W))⟩ (64 K entries) — $tag", b))
+            b = @be empty_tables!() (_ -> get_table(:Multiply, T8, T8, T8, RNE_SN))(_) evals=1 seconds=3
+            push!(rows, Row("build Multiply⟨$(SmallFloats.formatname(T8))²⟩ (64 K entries) — $tag", b))
+        end
+    finally
+        kern[] = old_k; build[] = old_b; empty_tables!()
+    end
     rows
 end
 
@@ -598,6 +676,36 @@ function generate_report(path::AbstractString="benchmark_report.md"; seed=2026)
         write_table(io, "Conversions and packed storage",
             "Operands: all code points — NaN and ±Inf sampled.",
             bench_conversions(); extra_header="per element", level=3, fresh_if_multipage=true)
+
+        println(io, "\n## Parallelism and allocation\n")
+        println(io, "The two properties the doctrine states in prose and this ",
+                "report previously left unmeasured.")
+        write_table(io, "Threading",
+            "Both variants are warmed before either is measured, and the switch is a " *
+            "`Ref` read inside an already-compiled branch — not a second compilation, " *
+            "which is the harness failure the benchmark doctrine records. " *
+            "`Binary16p8se`'s binary table would be 2^32 entries, so `table_for` " *
+            "declines and the Shape-B compute kernel is the *only* array path that " *
+            "format has; that is what threading it buys. The build rows separate two " *
+            "different wins: `Multiply` is cheap per entry and was dominated by a " *
+            "per-entry dynamic dispatch (now fixed by the `_fill_*!` function barrier), " *
+            "while `Exp` is dominated by MPFR enclosure work and is where threading " *
+            "itself pays. This process has $(Threads.nthreads()) Julia " *
+            "thread$(Threads.nthreads() == 1 ? "" : "s")." *
+            (Threads.nthreads() == 1 ?
+                " **No threaded/sequential contrast below** — rerun with `julia -t N`." : ""),
+            bench_threading(Binary16p8se, Binary8p4se); level=3, fresh_if_multipage=true)
+        write_table(io, "Allocation by rung",
+            "Warm-path bytes for one call of each operation class, per carrier rung. " *
+            "The **exact selections are zero at every rung, unconditionally** — a " *
+            "selection returns one of its operands, so there is nothing to escalate " *
+            "into, and a nonzero reading there is plumbing rather than arithmetic " *
+            "(this is the condition `preflight` aborts on). Arithmetic is *recorded, " *
+            "not gated*: it allocates exactly when the operand spread exceeds the " *
+            "carrier's exact range and evaluation escalates to MPFR, which happens at " *
+            "rung 1 too. The enclosure ladder allocates at rungs 2 and 3 by " *
+            "construction. Times are not meaningful in this table and are omitted.",
+            bench_allocation_by_rung(RUNG_REPRESENTATIVES); level=3, fresh_if_multipage=true)
 
         println(io, "\n---\n*All numbers from this machine/run; absolute values vary ",
                 "by host. Regenerate with `julia --project=benchmark benchmark/benchmarking.jl`.*")

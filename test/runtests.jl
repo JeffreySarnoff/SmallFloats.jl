@@ -375,6 +375,87 @@ end
 end
 
 # ==========================================================================
+# threading: execution strategy may change, numerical meaning may not
+# ==========================================================================
+# Two loops thread on pure ρ — the Shape-B compute kernels (the ONLY array path
+# above K = 8, where `table_for` declines) and the table builders. Both rest on
+# the same three facts: only pure ρ is ever tabulated or threaded, `_scalar_code`
+# holds no mutable state, and MPFR escalation reaches `setprecision`/`setrounding`
+# through their FUNCTION forms, which are `ScopedValue`-backed on Julia 1.12 and
+# therefore task-local. On 1.11 they mutate process globals, which is why the
+# `Project.toml` floor is a correctness bound.
+#
+# What is asserted is IDENTITY, not agreement within a tolerance: the same code
+# points, in the same order. A threading change that altered a result would be a
+# defect no timing could reveal.
+#
+# The thresholds are lowered here so the threaded path is actually taken by
+# test-sized inputs. Restored after, because they are process-global policy.
+@testset "threading preserves results exactly" begin
+    KN = SmallFloats
+    nthr = Threads.nthreads()
+    old_k, old_t = KN.THREAD_MIN_ELEMS[], KN.TABLE_BUILD_MIN_ENTRIES[]
+    KN.THREAD_MIN_ELEMS[] = 64
+    KN.TABLE_BUILD_MIN_ENTRIES[] = 64
+    try
+        # A wide format whose binary table the policy declines, so the compute
+        # kernel is the only path — the case threading was added for.
+        W = Binary16p8se
+        rng = Random.Xoshiro(7)
+        n = 4096
+        A = [rawvalue(W, UInt16(rand(rng, 0:(1 << 16) - 1))) for _ in 1:n]
+        B = [rawvalue(W, UInt16(rand(rng, 0:(1 << 16) - 1))) for _ in 1:n]
+        @test KN.table_for(:Add, W, W, W, RNE_SN) === nothing   # the premise
+
+        cp(v) = codepoint.(v)
+        withthreading(f, on) = (KN.THREADED_KERNELS[] = on;
+                                r = f(); KN.THREADED_KERNELS[] = true; r)
+        @test withthreading(() -> cp(Add(W, RNE_SN, A, B)), true) ==
+              withthreading(() -> cp(Add(W, RNE_SN, A, B)), false)
+        @test withthreading(() -> cp(Exp(W, RNE_SN, A)), true) ==
+              withthreading(() -> cp(Exp(W, RNE_SN, A)), false)
+
+        # Stochastic ρ must stay sequential: it draws from one stream, so its
+        # results are reproducible only in index order. Threading it would make a
+        # seeded run depend on the scheduler.
+        σ2 = RSA_SN(8)
+        @test cp(Add(W, σ2, A, B; rng=Random.Xoshiro(42))) ==
+              cp(Add(W, σ2, A, B; rng=Random.Xoshiro(42)))
+        @test cp(Add(W, σ2, A, B; rng=Random.Xoshiro(42))) !=
+              cp(Add(W, σ2, A, B; rng=Random.Xoshiro(43)))
+
+        # Table builds: byte-identical, at both arities that thread.
+        for (op, fr, f1, f2) in ((:Add, Binary8p4se, Binary8p4se, Binary8p4se),
+                                 (:Multiply, Binary8p3se, Binary8p3se, Binary8p3se))
+            KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+            t1 = copy(get_table(op, fr, f1, f2, RNE_SN))
+            KN.THREADED_TABLE_BUILDS[] = false; empty_tables!()
+            t2 = copy(get_table(op, fr, f1, f2, RNE_SN))
+            KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+            @test (op, t1 == t2) == (op, true)
+        end
+        # Unary, on the wide format whose build the parallel path was measured on.
+        KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+        u1 = copy(get_table(:Exp, W, W, RNE_SN))
+        KN.THREADED_TABLE_BUILDS[] = false; empty_tables!()
+        u2 = copy(get_table(:Exp, W, W, RNE_SN))
+        KN.THREADED_TABLE_BUILDS[] = true;  empty_tables!()
+        @test u1 == u2
+
+        nthr == 1 && @info "threading tests ran with 1 thread: the equality " *
+                           "assertions hold trivially, since `_should_thread` " *
+                           "requires nthreads() > 1. Run with `julia -t N` to " *
+                           "exercise the threaded paths."
+    finally
+        KN.THREAD_MIN_ELEMS[] = old_k
+        KN.TABLE_BUILD_MIN_ENTRIES[] = old_t
+        KN.THREADED_KERNELS[] = true
+        KN.THREADED_TABLE_BUILDS[] = true
+        empty_tables!()
+    end
+end
+
+# ==========================================================================
 # dyadic.jl — the checked twins of the two unchecked exact operations
 # ==========================================================================
 # `add_dy` and `mul_dy` are unchecked by design: their width preconditions hold

@@ -37,9 +37,14 @@ function vmap!(dest::AbstractArray{FR}, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
     tbl = table_for(op, FR, F1, ρ)                       # hoisted; @noinline
     # Shape B when policy declines a table. Same answer by invariant 6 — a table
     # entry is one trip through `_scalar_code`, which is what this loop calls per
-    # element — so the branch trades speed only. `_vmap_scalar!` is reused rather
-    # than duplicated: under pure ρ its `_drawR` returns 0 without touching the rng.
-    tbl === nothing && return _vmap_scalar!(dest, Val(op), FR, ρ, A)
+    # element — so the branch trades speed only.
+    #
+    # This is the COMMON path above K = 8: a unary table is 2^K entries and a
+    # binary one 2^(K1+K2), so `table_for` declines across most of the wide grid
+    # and the compute loop is the only array path those formats have. It
+    # therefore threads, on the same terms the ternary loop has since the
+    # bitwidth policy landed.
+    tbl === nothing && return _vmap_compute!(dest, Val(op), FR, ρ, A)
     @inbounds for i in eachindex(dest, A)
         dest[i] = rawvalue(FR, tbl[Int(codepoint(A[i])) + 1])
     end
@@ -54,7 +59,7 @@ function vmap!(dest::AbstractArray{FR}, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
         return _vmap_scalar!(dest, Val(op), FR, ρ, A, B)
     end
     tbl = table_for(op, FR, F1, F2, ρ)
-    tbl === nothing && return _vmap_scalar!(dest, Val(op), FR, ρ, A, B)
+    tbl === nothing && return _vmap_compute!(dest, Val(op), FR, ρ, A, B)
     K2 = bitwidth(F2)
     @inbounds for i in eachindex(dest, A, B)
         dest[i] = rawvalue(FR, tbl[(Int(codepoint(A[i])) << K2) + Int(codepoint(B[i])) + 1])
@@ -66,10 +71,69 @@ end
 # adaptive K=7 band — see tables.jl), Shape-B compute otherwise. The pure-ρ
 # compute loop is deterministic per element, so it threads for long arrays;
 # stochastic ρ stays sequential (single rng stream, reproducible draws).
-"""Minimum element count before the pure-ρ ternary compute loop threads."""
+"""Minimum element count before a pure-ρ compute loop threads."""
 const THREAD_MIN_ELEMS = Ref(1 << 15)
-"""Master switch for threaded ternary compute loops."""
+"""Master switch for threaded compute loops, at every arity."""
 const THREADED_KERNELS = Ref(true)
+
+# The threading predicate, written ONCE. It governed only the ternary loop until
+# the unary and binary compute loops joined it, and the two copies it would
+# otherwise have are exactly the kind that drift: a `Ref` consulted in one place
+# and forgotten in another reads as a policy while behaving as an accident.
+#
+# `inds isa AbstractUnitRange` is not a formality. `Threads.@threads` partitions
+# by index arithmetic, so a non-unit-range `eachindex` (a `CartesianIndices`, an
+# offset axis) must stay on the sequential path.
+@inline _should_thread(inds) =
+    THREADED_KERNELS[] && Threads.nthreads() > 1 &&
+    length(inds) >= THREAD_MIN_ELEMS[] && inds isa AbstractUnitRange
+
+# ---- Shape B, pure ρ: the compute loops that thread.
+#
+# Separate from `_vmap_scalar!` on purpose. That function serves BOTH ρ kinds,
+# and the stochastic one must stay sequential — it draws from a single rng
+# stream, so its results are reproducible only in index order. Threading it
+# would make a seeded run depend on the scheduler, which is the one property
+# `defaults.jl` removed the session-wide RNG to protect. Splitting the pure case
+# out means the sequential requirement is carried by *which function you are in*
+# rather than by a branch someone can later hoist.
+#
+# `R = 0` is passed literally rather than through `_drawR`: under pure ρ that
+# call returns 0 without touching an rng, so this is the same value with the rng
+# plumbing removed — and it is what the ternary loop has always done.
+#
+# Safety at rung 2 and 3: `apply_op` can escalate to MPFR, and on Julia 1.12
+# `setprecision`'s function form is `ScopedValue`-backed (base/mpfr.jl:1210), so
+# the escalation is task-local. That is the fact this threading rests on, and it
+# is why `Project.toml` floors at 1.12.
+@inline function _vmap_compute!(dest, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
+                                A) where {op,FR<:Binary}
+    inds = eachindex(dest, A)
+    if _should_thread(inds)
+        Threads.@threads for i in inds
+            @inbounds dest[i] = apply_op(Val(op), FR, ρ, 0, decode(A[i]))
+        end
+        return dest
+    end
+    @inbounds for i in inds
+        dest[i] = apply_op(Val(op), FR, ρ, 0, decode(A[i]))
+    end
+    dest
+end
+@inline function _vmap_compute!(dest, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
+                                A, B) where {op,FR<:Binary}
+    inds = eachindex(dest, A, B)
+    if _should_thread(inds)
+        Threads.@threads for i in inds
+            @inbounds dest[i] = apply_op(Val(op), FR, ρ, 0, decode(A[i]), decode(B[i]))
+        end
+        return dest
+    end
+    @inbounds for i in inds
+        dest[i] = apply_op(Val(op), FR, ρ, 0, decode(A[i]), decode(B[i]))
+    end
+    dest
+end
 
 function vmap!(dest::AbstractArray{FR}, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
                A::AbstractArray{F1}, B::AbstractArray{F2}, C::AbstractArray{F3};
@@ -87,8 +151,7 @@ function vmap!(dest::AbstractArray{FR}, ::Val{op}, ::Type{FR}, ρ::ProjSpec,
             return dest
         end
         inds = eachindex(dest, A, B, C)
-        if THREADED_KERNELS[] && Threads.nthreads() > 1 &&
-           length(inds) >= THREAD_MIN_ELEMS[] && inds isa AbstractUnitRange
+        if _should_thread(inds)                          # the predicate, spelled once
             Threads.@threads for i in inds
                 @inbounds dest[i] = apply_op(Val(op), FR, ρ, 0,
                                              decode(A[i]), decode(B[i]), decode(C[i]))

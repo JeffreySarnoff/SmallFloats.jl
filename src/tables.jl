@@ -253,32 +253,161 @@ end
 @inline _opdat(::ComputeDecode, ::Type{F}) where {F<:Binary} =
     [decode(rawvalue(F, codeunit_type(F)(c))) for c in 0:(1 << bitwidth(F)) - 1]
 
-function _build_unary(op::Symbol, ::Type{fr}, ::Type{f1}, ρ::ProjSpec) where {fr<:Binary,f1<:Binary}
-    K1 = bitwidth(f1)
+# ---- parallel table builds -----------------------------------------------
+#
+# A build is embarrassingly parallel and was serial: every entry is one
+# independent trip through `_scalar_code`, and the entries are written to
+# disjoint indices of a preallocated `Memory`, so there is no reduction, no
+# ordering question, and no shared mutable state to guard. At 2^16 entries and
+# roughly a microsecond apiece, a wide unary build is ~65 ms of first-call
+# latency paid on one core while the rest idle.
+#
+# THREE FACTS MAKE THIS SOUND, and none of them is "threads are usually fine":
+#
+#   1. Only pure ρ is ever tabulated — `_check_tabulable` throws for stochastic
+#      before any builder is reached — so an entry is a pure function of its
+#      operand code points and cannot depend on evaluation order.
+#   2. `_scalar_code` reaches MPFR through the FUNCTION forms of `setprecision`
+#      and `setrounding` exclusively (oracle.jl:169-196, project.jl:241). On
+#      Julia 1.12 those are `ScopedValue`-backed (base/mpfr.jl:1210, :248-249),
+#      hence task-local. On 1.11 they mutate process globals and this would be
+#      a data race producing plausible wrong numbers — which is why
+#      `Project.toml` floors at 1.12, and why that floor is a correctness bound
+#      rather than a convenience.
+#   3. The build runs OUTSIDE the cache lock already (`_cached_table`'s
+#      double-checked pattern, with the racing-duplicate-build case documented
+#      as benign), so parallelizing it needs no lock changes at all.
+#
+# Invariant 6 is untouched: a table entry is still exactly one trip through the
+# oracle-backed scalar path. Only which core takes the trip has changed, and
+# `test/gates_shape.jl` compares table against scalar as its standing witness.
+
+"""Minimum entry count before a table build parallelizes.
+
+Its own threshold rather than `THREAD_MIN_ELEMS`, because the units differ: an
+array element costs a decode plus one operation, while a table entry costs a
+full scalar-engine trip including any MPFR escalation. One number serving both
+would be conflating two different costs that happen to be counted in the same
+kind of integer."""
+const TABLE_BUILD_MIN_ENTRIES = Ref(1 << 12)
+"""Master switch for parallel table builds."""
+const THREADED_TABLE_BUILDS = Ref(true)
+
+# Partitioned over the OUTER code loop rather than the flat index: each task then
+# decodes its own `x1` once and writes a contiguous `2^K2`-entry span, which is
+# both the cache-friendly shape and the one whose disjointness is obvious by
+# inspection.
+@inline _should_thread_build(n::Int) =
+    THREADED_TABLE_BUILDS[] && Threads.nthreads() > 1 && n >= TABLE_BUILD_MIN_ENTRIES[]
+
+# ---- the function barrier, and why the fill loops are separate functions.
+#
+# `_build_*` receives `op` as a runtime `Symbol`, so `Val(op)` inside it is a
+# value of unknown type: every `_scalar_code(V, …)` in the same function body is
+# a DYNAMIC DISPATCH, once per table entry. Passing `Val(op)` as an ARGUMENT
+# makes `op` a type parameter of the callee, and the whole scalar path
+# specializes — the technique CLAUDE.md's performance rules state for format
+# types ("one function barrier restores full speed") applied to the operation
+# selector.
+#
+# Measured on `Multiply⟨8p4se, 8p4se⟩`, 65 536 entries, single-threaded:
+# **13.4 ms → 1.0 ms**, a 13× serial win that has nothing to do with threading.
+#
+# It was found by accident and the accident is worth recording. `Threads.@threads`
+# lowers its body into a closure, and that closure captures `Val(op)` with its
+# concrete type — so the threaded path had the barrier for free while the
+# sequential path did not. The first measurement therefore read as a 96×
+# "threading speedup" on 8 threads, which is superlinear and impossible; the
+# implausible number was the evidence. Two earlier explanations for it —
+# `@inbounds` on the operand-datum index, then O(n) long-tuple indexing — were
+# both measured and both wrong (long-tuple indexing benchmarks at 1.0× against a
+# Vector). Threading's honest contribution is in the report.
+@inline function _fill_unary!(tbl, ::Val{op}, ::Type{fr}, ::Type{f1}, ρ::ProjSpec,
+                              n::Int, threaded::Bool) where {op,fr<:Binary,f1<:Binary}
     U1 = codeunit_type(f1)
-    tbl = Memory{codeunit_type(fr)}(undef, 1 << K1)
     V = Val(op)
-    for c in 0:(1 << K1) - 1
-        tbl[c + 1] = _scalar_code(V, fr, ρ, decode(rawvalue(f1, U1(c))))
+    if threaded
+        Threads.@threads for c in 0:n - 1
+            @inbounds tbl[c + 1] = _scalar_code(V, fr, ρ, decode(rawvalue(f1, U1(c))))
+        end
+    else
+        @inbounds for c in 0:n - 1
+            tbl[c + 1] = _scalar_code(V, fr, ρ, decode(rawvalue(f1, U1(c))))
+        end
     end
     tbl
 end
 
-function _build_binary(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2},
-                       ρ::ProjSpec) where {fr<:Binary,f1<:Binary,f2<:Binary}
+@inline function _fill_binary!(tbl, ::Val{op}, ::Type{fr}, ::Type{f1}, ::Type{f2},
+                               ρ::ProjSpec, threaded::Bool) where {op,fr<:Binary,f1<:Binary,f2<:Binary}
     K1, K2 = bitwidth(f1), bitwidth(f2)
     U1 = codeunit_type(f1)
-    tbl = Memory{codeunit_type(fr)}(undef, 1 << (K1 + K2))
     V = Val(op)
-    X2 = _operand_datums(f2)
-    for c1 in 0:(1 << K1) - 1
-        x1 = decode(rawvalue(f1, U1(c1)))
-        base = c1 << K2
-        for c2 in 0:(1 << K2) - 1
-            tbl[base + c2 + 1] = _scalar_code(V, fr, ρ, x1, X2[c2 + 1])
+    X2 = _operand_datums(f2)                 # shared, read-only
+    if threaded
+        Threads.@threads for c1 in 0:(1 << K1) - 1
+            x1 = decode(rawvalue(f1, U1(c1)))
+            base = c1 << K2
+            @inbounds for c2 in 0:(1 << K2) - 1
+                tbl[base + c2 + 1] = _scalar_code(V, fr, ρ, x1, X2[c2 + 1])
+            end
+        end
+    else
+        @inbounds for c1 in 0:(1 << K1) - 1
+            x1 = decode(rawvalue(f1, U1(c1)))
+            base = c1 << K2
+            for c2 in 0:(1 << K2) - 1
+                tbl[base + c2 + 1] = _scalar_code(V, fr, ρ, x1, X2[c2 + 1])
+            end
         end
     end
     tbl
+end
+
+@inline function _fill_ternary!(tbl, ::Val{op}, ::Type{fr}, ::Type{f1}, ::Type{f2},
+                                ::Type{f3}, ρ::ProjSpec, threaded::Bool) where
+        {op,fr<:Binary,f1<:Binary,f2<:Binary,f3<:Binary}
+    K1, K2, K3 = bitwidth(f1), bitwidth(f2), bitwidth(f3)
+    U1 = codeunit_type(f1)
+    V = Val(op)
+    X2, X3 = _operand_datums(f2), _operand_datums(f3)
+    if threaded
+        Threads.@threads for c1 in 0:(1 << K1) - 1
+            x1 = decode(rawvalue(f1, U1(c1)))
+            for c2 in 0:(1 << K2) - 1
+                x2 = @inbounds X2[c2 + 1]
+                base = ((c1 << K2) | c2) << K3
+                @inbounds for c3 in 0:(1 << K3) - 1
+                    tbl[base + c3 + 1] = _scalar_code(V, fr, ρ, x1, x2, X3[c3 + 1])
+                end
+            end
+        end
+    else
+        @inbounds for c1 in 0:(1 << K1) - 1
+            x1 = decode(rawvalue(f1, U1(c1)))
+            for c2 in 0:(1 << K2) - 1
+                x2 = X2[c2 + 1]
+                base = ((c1 << K2) | c2) << K3
+                for c3 in 0:(1 << K3) - 1
+                    tbl[base + c3 + 1] = _scalar_code(V, fr, ρ, x1, x2, X3[c3 + 1])
+                end
+            end
+        end
+    end
+    tbl
+end
+
+function _build_unary(op::Symbol, ::Type{fr}, ::Type{f1}, ρ::ProjSpec) where {fr<:Binary,f1<:Binary}
+    n = 1 << bitwidth(f1)
+    tbl = Memory{codeunit_type(fr)}(undef, n)
+    _fill_unary!(tbl, Val(op), fr, f1, ρ, n, _should_thread_build(n))
+end
+
+function _build_binary(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2},
+                       ρ::ProjSpec) where {fr<:Binary,f1<:Binary,f2<:Binary}
+    n = 1 << (bitwidth(f1) + bitwidth(f2))
+    tbl = Memory{codeunit_type(fr)}(undef, n)
+    _fill_binary!(tbl, Val(op), fr, f1, f2, ρ, _should_thread_build(n))
 end
 
 """
@@ -359,22 +488,11 @@ end
 
 function _build_ternary(op::Symbol, ::Type{fr}, ::Type{f1}, ::Type{f2}, ::Type{f3},
                         ρ::ProjSpec) where {fr<:Binary,f1<:Binary,f2<:Binary,f3<:Binary}
-    K1, K2, K3 = bitwidth(f1), bitwidth(f2), bitwidth(f3)
-    U1 = codeunit_type(f1)
-    tbl = Memory{codeunit_type(fr)}(undef, 1 << (K1 + K2 + K3))
-    V = Val(op)
-    X2, X3 = _operand_datums(f2), _operand_datums(f3)
-    for c1 in 0:(1 << K1) - 1
-        x1 = decode(rawvalue(f1, U1(c1)))
-        for c2 in 0:(1 << K2) - 1
-            x2 = X2[c2 + 1]
-            base = ((c1 << K2) | c2) << K3
-            for c3 in 0:(1 << K3) - 1
-                tbl[base + c3 + 1] = _scalar_code(V, fr, ρ, x1, x2, X3[c3 + 1])
-            end
-        end
-    end
-    tbl
+    # The largest builds in the package — up to 16 MiB at K = 8 — and therefore
+    # the ones the parallel path exists for.
+    n = 1 << (bitwidth(f1) + bitwidth(f2) + bitwidth(f3))
+    tbl = Memory{codeunit_type(fr)}(undef, n)
+    _fill_ternary!(tbl, Val(op), fr, f1, f2, f3, ρ, _should_thread_build(n))
 end
 
 _tkey(op::Symbol, fr, f1, f2, f3, ρ::ProjSpec) =
