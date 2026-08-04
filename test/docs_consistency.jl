@@ -168,6 +168,56 @@ end
         @test !occursin(false_claim, lowercase(interface_text))
     end
 
+    # ---- LaTeX math delimiters in documentation, and the one place they belong.
+    #
+    # A docstring is a Julia string literal before it is prose, so `\(`, `\)`,
+    # `\[`, `\]` and `\text{…}` are **invalid escape sequences** — a syntax error
+    # that stops the file parsing and the package loading. A `measure_kappa`
+    # docstring written that way made `using SmallFloats` fail outright.
+    #
+    # **That case cannot be caught here, and this gate does not pretend to.** If
+    # the package will not load, no test runs at all; the parse error announces
+    # itself immediately and loudly. What this catches is the family that does
+    # NOT announce itself:
+    #
+    #   * a `raw"""…"""` docstring, which parses happily and then renders as
+    #     literal backslashes — Documenter's math is ```math and ``…``, never
+    #     `\(…\)`;
+    #   * an escaped `\\(` in an ordinary string, same outcome;
+    #   * LaTeX in a `#` comment, written expecting it to render, which it never
+    #     will because comments are not documentation;
+    #   * the same in `docs/src/*.md`, where Documenter leaves it as literal text.
+    #
+    # A TEXTUAL gate, and that is the right strength — the defect *is* a
+    # spelling, exactly as `stage_gates.jl` argues for its `Binary{K` scan.
+    #
+    # Lines carrying a regex literal are exempt, and the exemption is the whole
+    # reason this is a gate rather than a find-and-replace. In a `Regex`, `\(` is
+    # an escape for a LITERAL parenthesis: this very file matches
+    # `r"with_default_(…)\([^,\n]+\)\s+do"` above, and rewriting that to `(`
+    # would silently turn it into a capture group and stop the false-claim check
+    # from catching anything. A blind sweep over the tree breaks working code.
+    #
+    # `docs/other/` is excluded on purpose: it holds vendored copies of the Julia
+    # manual whose backslashes are artifacts of an HTML-to-markdown conversion.
+    # They are third-party retained documents and must keep matching their source.
+    @testset "no LaTeX math delimiters in documentation" begin
+        srcdir = joinpath(@__DIR__, "..", "src")
+        docsrc = joinpath(@__DIR__, "..", "docs", "src")
+        scan = String[]
+        append!(scan, filter(f -> endswith(f, ".jl"), readdir(srcdir; join=true)))
+        isdir(docsrc) && append!(scan, filter(f -> endswith(f, ".md"), readdir(docsrc; join=true)))
+        offenders = String[]
+        for f in sort!(scan), (i, line) in enumerate(eachline(f))
+            occursin("r\"", line) && continue            # regex literal: `\(` is correct there
+            occursin(r"\\[()\[\]]|\\text\{", line) &&
+                push!(offenders, string(relpath(f, joinpath(@__DIR__, "..")), ":", i))
+        end
+        isempty(offenders) || @info "LaTeX delimiters found in: " * join(offenders, ", ")
+        @test offenders == String[]
+        @info "LaTeX-delimiter scan: $(length(scan)) source and documentation files clean"
+    end
+
     @info "docs: $(length(_DOC_FILES)) files checked against the package — " *
           "$n_all formats ($n_exported exported at K ≤ $KSPLIT, $n_optin opt-in " *
           "via SmallFloats.Formats), K ∈ $KMIN:$KMAX"
