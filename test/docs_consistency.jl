@@ -48,6 +48,15 @@ const _DOC_FILES = let fs = String[]
     sort!(fs)
 end
 
+# The four VENDORED documents under `docs/other/`: upstream copies of the Julia
+# manual and the SciML style guide, whose backslashes are artifacts of an
+# HTML-to-markdown conversion. They must keep matching their source, so the
+# LaTeX-delimiter gate below names them rather than skipping the directory.
+const _VENDORED_DOCS = ("Style Guide · The Julia Language.md",
+                        "Performance Tips · The Julia Language.md",
+                        "Optimizing your code.md",
+                        "SciML Style Guide for Julia.md")
+
 @testset "documentation agrees with the package" begin
     @test !isempty(_DOC_FILES)
 
@@ -198,15 +207,37 @@ end
     # would silently turn it into a capture group and stop the false-claim check
     # from catching anything. A blind sweep over the tree breaks working code.
     #
-    # `docs/other/` is excluded on purpose: it holds vendored copies of the Julia
-    # manual whose backslashes are artifacts of an HTML-to-markdown conversion.
-    # They are third-party retained documents and must keep matching their source.
+    # `docs/other/` IS scanned, minus four named files.
+    #
+    # The first version of this gate skipped the whole directory, and that was too
+    # broad in the way an over-wide exclusion always is: a hand-written design
+    # note added to `docs/other/` the same day went straight past it. The reason
+    # for the exclusion was never the directory — it was four VENDORED files,
+    # upstream copies of the Julia manual and the SciML style guide whose
+    # backslashes are artifacts of an HTML-to-markdown conversion. Those must keep
+    # matching their source, so they are named, and everything else is covered.
+    #
+    # `docs/other/` never renders through Documenter (`pages.jl` has no entry for
+    # it), but it IS read on GitHub — whose math syntax is `$…$`, `$$…$$` and
+    # ```math, not `\(…\)`. LaTeX delimiters there render as literal backslashes
+    # for every reader, so the check earns its place on rendering grounds even
+    # where no parser is involved.
     @testset "no LaTeX math delimiters in documentation" begin
         srcdir = joinpath(@__DIR__, "..", "src")
         docsrc = joinpath(@__DIR__, "..", "docs", "src")
+        docoth = joinpath(@__DIR__, "..", "docs", "other")
         scan = String[]
         append!(scan, filter(f -> endswith(f, ".jl"), readdir(srcdir; join=true)))
         isdir(docsrc) && append!(scan, filter(f -> endswith(f, ".md"), readdir(docsrc; join=true)))
+        isdir(docoth) && append!(scan,
+            filter(f -> endswith(f, ".md") && !(basename(f) in _VENDORED_DOCS),
+                   readdir(docoth; join=true)))
+        # The vendored list must not rot into a list of files that no longer
+        # exist: a stale name silently stops excluding anything, and a renamed
+        # upstream copy would start failing the gate for the wrong reason.
+        for v in _VENDORED_DOCS
+            @test isfile(joinpath(docoth, v))
+        end
         offenders = String[]
         for f in sort!(scan), (i, line) in enumerate(eachline(f))
             occursin("r\"", line) && continue            # regex literal: `\(` is correct there

@@ -4,19 +4,19 @@ Yes. `KMAX = 10` is a substantial and meaningful simplification; and it creates 
 
 First, every datum and every ordinary two-factor scalar intermediate fits within the Float64 exponent range. The largest possible exponent bias is:
 
-\[
-B_{\max}=2^{K-P}=2^{10-1}=512
-\]
+```math
+B_{\max} = 2^{K-P} = 2^{10-1} = 512
+```
 
-for an unsigned `P = 1` format. The carrier rule allows two-factor operations when \(2B \le 1024\), so `K = 10` lands exactly on the Float64 boundary described in [carriers.jl](/home/jas/github/SmallFloats.jl/src/carriers.jl:65).
+for an unsigned `P = 1` format. The carrier rule allows two-factor operations when `2B ≤ 1024`, so `K = 10` lands exactly on the Float64 boundary described in [carriers.jl](../../src/carriers.jl).
 
 Second, the largest binary input space is:
 
-\[
-2^{10}\times2^{10}=2^{20}=1{,}048{,}576
-\]
+```math
+2^{10} \times 2^{10} = 2^{20} = 1{,}048{,}576
+```
 
-which is below the κ exhaustive budget of \(2^{22}\).
+which is below the κ exhaustive budget of `2^22`.
 
 What could simplify:
 
@@ -25,7 +25,7 @@ What could simplify:
 - `promotecarrier` and `datumcarrier` would always be `Float64`.
 - No `HeadF128` or `HeadExact` paths would be needed merely to represent operand values.
 - All binary κ measurements become exhaustive.
-- `f32_exact` covers every binary signature at its existing \(2^{20}\)-pair limit.
+- `f32_exact` covers every binary signature at its existing `2^20`-pair limit.
 - Total-order keys fit comfortably in `UInt16`.
 - The supported grid shrinks from 504 to 192 formats.
 - The exhaustive single-point lattice falls from 7.6 million to only 69,616 points.
@@ -36,14 +36,14 @@ Some complexity remains:
 - `K = 9` and `10` still require `UInt16` storage, so the `Code8`/`Code16` representation split remains.
 - Correctly rounded addition/FMA cannot always be implemented by naïve Float64 arithmetic: a tiny term can be lost while its sticky direction still affects projection.
 - Transcendentals still need the enclosure/MPFR oracle for rigorous rounding.
-- Ternary exhaustive spaces remain large: three `K = 10` operands produce \(2^{30}\) tuples.
+- Ternary exhaustive spaces remain large: three `K = 10` operands produce `2^30` tuples.
 - Block reductions can require more precision because many terms are accumulated.
 
 Performance opportunities:
 
 1. Feasible binary lookup tables
 
-A complete `K=10 × K=10` result table contains \(2^{20}\) `UInt16` entries: 2 MiB. That is large but practical, unlike the 8 GiB `K=16` case.
+A complete `K=10 × K=10` result table contains `2^20` `UInt16` entries: 2 MiB. That is large but practical, unlike the 8 GiB `K=16` case.
 
 This could support adaptive caching:
 
