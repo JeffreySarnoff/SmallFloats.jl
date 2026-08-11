@@ -20,8 +20,6 @@ The display shows both parts of a stored value: `1.625` is the exact datum and
 exact value, a code point, and an explicit projection—is the center of the
 package and of this manual.
 
-## Choose a route
-
 ### Start using the package
 
 Begin with [Installation](install_and_verify.md), then work through
@@ -29,7 +27,7 @@ Begin with [Installation](install_and_verify.md), then work through
 moving into a larger workflow. Together these pages take you from installation
 to the four distinctions that prevent most mistakes.
 
-### Complete an application task
+### Basic Tasks
 
 Go directly to a workflow when you already know the core model:
 
@@ -37,6 +35,9 @@ Go directly to a workflow when you already know the core model:
 - [Quantize and Measure a Tensor](workflow_quantize_measure.md)
 - [Control Rounding and Overflow](workflow_rounding_overflow.md)
 - [Run Operations over Arrays](workflow_arrays.md)
+
+### Block tasks
+
 - [Use Blocks for Dynamic Range](workflow_blocks.md)
 - [Make Stochastic Work Reproducible](workflow_stochastic.md)
 - [Pack Values for Storage](workflow_packed_storage.md)
