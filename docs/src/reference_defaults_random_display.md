@@ -115,6 +115,31 @@ An `IOContext` property, `:binary_show_style`, overrides the process default for
 one stream. Prefer that form in concurrent code and in libraries that should
 not change another caller's display.
 
+Choose the style for the job:
+
+- Use `:value` for ordinary numerical output when the format and code point are
+  already clear from context.
+- Use `:codepoint` when inspecting storage, serialization, or a conversion
+  boundary.
+- Use `:datum` when validating a projection, because it keeps the represented
+  value and its identity together.
+- Use `:typed` in examples, logs, and mixed-format sessions, where the format
+  must remain visible.
+
+For a temporary rendering choice, attach the style to the destination stream
+instead of changing process-global state:
+
+```julia
+io = IOContext(stdout, :binary_show_style => :typed)
+show(io, x)
+```
+
+`set_show_style!` is appropriate for an interactive session you own. Restore
+the previous setting before returning control to another caller; library code
+should use an `IOContext` supplied by its caller, or create a local one as
+above. The display style changes presentation only: `decode(x)`,
+`codepoint(x)`, comparisons, and arithmetic are unaffected.
+
 ## Related contracts
 
 [First Session](first_session.md),

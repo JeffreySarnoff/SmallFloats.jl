@@ -47,6 +47,22 @@ julia> decode(x), codepoint(x)
 (1.625, 0x45)
 ```
 
+## Choose how values display
+
+`get_show_style()` returns the process-wide style and `set_show_style!(style)`
+sets it. `VALID_SHOW_STYLES` contains four values:
+
+| Style | Example rendering |
+|:---|:---|
+| `:value` | `1.625` |
+| `:codepoint` | `0x45` |
+| `:datum` | `(1.625 ≡ 0x45)` |
+| `:typed` | `Binary8p4se(1.625 ≡ 0x45)` |
+
+An `IOContext` property, `:binary_show_style`, overrides the process default for
+one stream. Prefer that form in concurrent code and in libraries that should
+not change another caller's display.
+
 ## Compute with an explicit policy
 
 ```julia-repl
