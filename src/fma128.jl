@@ -310,7 +310,7 @@ end
 # wiring into Base
 # ---------------------------------------------------------------------------
 if Sys.iswindows()
-    import Base: fma
+#    import Base: fma
     @eval Base.fma(x::Float128, y::Float128, z::Float128) = fma128(x, y, z)
 end
 
