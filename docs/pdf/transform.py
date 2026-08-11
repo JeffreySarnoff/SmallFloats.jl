@@ -648,9 +648,13 @@ def font_misses(nonascii):
     try:
         from fontTools.ttLib import TTFont
     except ImportError:
-        print("transform.py: fontTools unavailable — skipping coverage check "
-              "(Missing character log lines will catch any gap)", file=sys.stderr)
-        return []
+        print("transform.py: fontTools unavailable — applying registered "
+              "Unicode fallbacks conservatively", file=sys.stderr)
+        # Without a font cmap we cannot prove which glyphs DejaVu lacks.  The
+        # registered mappings are safe in every surrounding text family, so
+        # use them whenever their source character occurs rather than relying
+        # on the later LaTeX log gate to discover a known missing glyph.
+        return [c for c in nonascii if c in UNICODE_FALLBACKS]
     paths = []
     for fam in ("DejaVu Sans", "DejaVu Sans Mono"):
         p = subprocess.run(["fc-match", "-f", "%{file}", fam],
