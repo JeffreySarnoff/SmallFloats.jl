@@ -11,8 +11,8 @@ const DOC_PAGES = [
 
     "Workflows" => [
         "Choose a Format" => "workflow_choose_format.md",
-        "Quantize and Measure a Tensor" => "workflow_quantize_measure.md",
         "Control Rounding and Overflow" => "workflow_rounding_overflow.md",
+        "Quantize and Measure a Tensor" => "workflow_quantize_measure.md",
         "Make Stochastic Work Reproducible" => "workflow_stochastic.md",
         "Use Blocks for Dynamic Range" => "workflow_blocks.md",
         "Run Operations over Arrays" => "workflow_arrays.md",

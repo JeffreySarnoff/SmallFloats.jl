@@ -32,14 +32,14 @@ to the four distinctions that prevent most mistakes.
 Go directly to a workflow when you already know the core model:
 
 - [Choose a Format](workflow_choose_format.md)
-- [Quantize and Measure a Tensor](workflow_quantize_measure.md)
 - [Control Rounding and Overflow](workflow_rounding_overflow.md)
-- [Run Operations over Arrays](workflow_arrays.md)
+- [Quantize and Measure a Tensor](workflow_quantize_measure.md)
+- [Make Stochastic Work Reproducible](workflow_stochastic.md)
 
 ### Block tasks
 
 - [Use Blocks for Dynamic Range](workflow_blocks.md)
-- [Make Stochastic Work Reproducible](workflow_stochastic.md)
+- [Run Operations over Arrays](workflow_arrays.md)
 - [Pack Values for Storage](workflow_packed_storage.md)
 - [Interoperate with Float16 and BFloat16](workflow_float16.md)
 

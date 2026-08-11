@@ -44,7 +44,7 @@ include("fma128.jl")
 using .Float128FMA          # on Windows this installs Base.fma
 
 include("faa128.jl")
-using .Float128FAA          
+using .Float128FAA
 
 # Include order: formats → show → carriers → projspec → defaults →
 # decode_encode → project → ops_scalar → juliacompat → oracle → tables →
