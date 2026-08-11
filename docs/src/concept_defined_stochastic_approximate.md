@@ -89,7 +89,7 @@ more useful than treating every difference as “floating-point noise.”
 [Register an Approximation](workflow_approximation.md), and
 [Read and Export Conformance](workflow_conformance.md).
 
-## Look it up
+## See also
 
 [Projection Specifications](reference_projections.md) and
 [Conformance and Approximation Registry](reference_conformance.md).

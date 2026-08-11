@@ -24,7 +24,7 @@ package and of this manual.
 
 ### Start using the package
 
-Begin with [Install and Verify](install_and_verify.md), then work through
+Begin with [Installation](install_and_verify.md), then work through
 [First Session](first_session.md). Read [Core Model](core_model.md) once before
 moving into a larger workflow. Together these pages take you from installation
 to the four distinctions that prevent most mistakes.
@@ -117,8 +117,3 @@ The package implements all 504 legal formats at `K ∈ 3:16`. `using
 SmallFloats` exports the 120 aliases at `K ≤ 8`; the other 384 are available
 through `SmallFloats.Binary…`, `format(K, P, SGN, EXT)`, or `using
 SmallFloats.Formats`.
-
-## Next
-
-[Install and Verify](install_and_verify.md) → [First Session](first_session.md)
-→ [Core Model](core_model.md).

@@ -99,7 +99,7 @@ An explicit `R` must lie in `0:(2^N - 1)` for an `N`-bit stochastic mode.
 Array `rand`/`randn` forms use their documented defaults; construct arrays from
 scalar calls when each element must use another explicit projection.
 
-## Display
+## Choose how values display
 
 `get_show_style()` returns the process-wide style and `set_show_style!(style)`
 sets it. `VALID_SHOW_STYLES` contains four values:
@@ -114,31 +114,6 @@ sets it. `VALID_SHOW_STYLES` contains four values:
 An `IOContext` property, `:binary_show_style`, overrides the process default for
 one stream. Prefer that form in concurrent code and in libraries that should
 not change another caller's display.
-
-Choose the style for the job:
-
-- Use `:value` for ordinary numerical output when the format and code point are
-  already clear from context.
-- Use `:codepoint` when inspecting storage, serialization, or a conversion
-  boundary.
-- Use `:datum` when validating a projection, because it keeps the represented
-  value and its identity together.
-- Use `:typed` in examples, logs, and mixed-format sessions, where the format
-  must remain visible.
-
-For a temporary rendering choice, attach the style to the destination stream
-instead of changing process-global state:
-
-```julia
-io = IOContext(stdout, :binary_show_style => :typed)
-show(io, x)
-```
-
-`set_show_style!` is appropriate for an interactive session you own. Restore
-the previous setting before returning control to another caller; library code
-should use an `IOContext` supplied by its caller, or create a local one as
-above. The display style changes presentation only: `decode(x)`,
-`codepoint(x)`, comparisons, and arithmetic are unaffected.
 
 ## Related contracts
 

@@ -4,7 +4,7 @@ const DOC_PAGES = [
     "Home" => "index.md",
 
     "Start Here" => [
-        "Install and Verify" => "install_and_verify.md",
+        "Installation" => "install_and_verify.md",
         "First Session" => "first_session.md",
         "Core Model" => "core_model.md",
     ],

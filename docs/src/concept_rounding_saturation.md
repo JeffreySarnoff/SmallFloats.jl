@@ -91,6 +91,6 @@ conversion, scalar operations, and array table entries in the same way.
 [Control Rounding and Overflow](workflow_rounding_overflow.md) and
 [Make Stochastic Work Reproducible](workflow_stochastic.md).
 
-## Look it up
+## See also
 
 [Projection Specifications](reference_projections.md).

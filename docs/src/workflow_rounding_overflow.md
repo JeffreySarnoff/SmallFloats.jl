@@ -105,6 +105,6 @@ supported projection. At minimum assert:
 [Rounding and Saturation](concept_rounding_saturation.md) and
 [The Exact-Then-Project Contract](concept_exact_then_project.md).
 
-## Look it up
+## See also
 
 [Projection Specifications](reference_projections.md).

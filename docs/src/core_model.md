@@ -221,13 +221,7 @@ exact math followed by one projection (3); the projection is your choice of
 rounding and saturation (4); and the result is exact unless you explicitly
 register otherwise (5).
 
-## Next
-
-[Choose a Format](workflow_choose_format.md) applies the model to an application
-decision. [Values, Code Points, and Conversion](concept_values_codepoints.md)
-develops stored identity in more detail.
-
-## Look it up
+## See also
 
 [Formats and Value Queries](reference_formats_values.md),
 [Projection Specifications](reference_projections.md), and

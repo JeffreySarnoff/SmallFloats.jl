@@ -1,4 +1,4 @@
-# Install and Verify
+# Installation
 
 A working install in about five minutes.
 
@@ -46,20 +46,3 @@ true
 
 The first line proves the projection engine is live (1.6 rounds to 1.625, plus
 0.25, lands exactly on 1.875); the second proves the conformance machinery is.
-
-## Platform note: disabling Float128
-
-On platforms where libquadmath misbehaves, set an environment variable **before**
-loading the package:
-
-```julia
-ENV["SmallFloats_Float128"] = "disable"
-using SmallFloats
-```
-
-This selects the pure-MPFR configuration. Results are **bit-identical** — that
-equivalence is itself part of the test suite; only oracle and build speed change.
-
-## Next
-
-[First Session](first_session.md).

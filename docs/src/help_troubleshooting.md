@@ -139,6 +139,19 @@ streams desynchronize. Fix: thread one `rng` object through every call in the
 pipeline that needs to agree. Full explanation: [Cheat Sheet](help_cheat_sheet.md), Stochastic
 projections.
 
+## Platform note: disabling Float128
+
+On platforms where libquadmath misbehaves, set an environment variable **before**
+loading the package:
+
+```julia
+ENV["SmallFloats_Float128"] = "disable"
+using SmallFloats
+```
+
+This selects the pure-MPFR configuration. Results are **bit-identical** — that
+equivalence is itself part of the test suite; only oracle and build speed change.
+
 ## Related help
 
 [Cheat Sheet](help_cheat_sheet.md),

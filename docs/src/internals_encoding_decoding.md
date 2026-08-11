@@ -88,7 +88,3 @@ A new representation or carrier policy must preserve the public invariant and
 add equivalence tests against an existing wider path. Do not make a carrier
 choice from runtime caller preference; that would turn representation into
 semantics.
-
-## Next
-
-[Projection Engine](internals_projection_engine.md).

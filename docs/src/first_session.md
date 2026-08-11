@@ -1,7 +1,7 @@
 # First Session
 
 This session establishes the package's working vocabulary and runs one scalar
-and one array operation. It assumes [Install and Verify](install_and_verify.md)
+and one array operation. It assumes [Installation](install_and_verify.md)
 has succeeded.
 
 ```julia-repl
@@ -47,7 +47,7 @@ julia> decode(x), codepoint(x)
 (1.625, 0x45)
 ```
 
-## Choose how values display
+## Display
 
 `get_show_style()` returns the process-wide style and `set_show_style!(style)`
 sets it. `VALID_SHOW_STYLES` contains four values:
@@ -62,6 +62,31 @@ sets it. `VALID_SHOW_STYLES` contains four values:
 An `IOContext` property, `:binary_show_style`, overrides the process default for
 one stream. Prefer that form in concurrent code and in libraries that should
 not change another caller's display.
+
+Choose the style for the job:
+
+- Use `:value` for ordinary numerical output when the format and code point are
+  already clear from context.
+- Use `:codepoint` when inspecting storage, serialization, or a conversion
+  boundary.
+- Use `:datum` when validating a projection, because it keeps the represented
+  value and its identity together.
+- Use `:typed` in examples, logs, and mixed-format sessions, where the format
+  must remain visible.
+
+For a temporary rendering choice, attach the style to the destination stream
+instead of changing process-global state:
+
+```julia
+io = IOContext(stdout, :binary_show_style => :typed)
+show(io, x)
+```
+
+`set_show_style!` is appropriate for an interactive session you own. Restore
+the previous setting before returning control to another caller; library code
+should use an `IOContext` supplied by its caller, or create a local one as
+above. The display style changes presentation only: `decode(x)`,
+`codepoint(x)`, comparisons, and arithmetic are unaffected.
 
 ## Compute with an explicit policy
 
@@ -122,37 +147,12 @@ The array form uses the same result format, projection, and scalar semantics.
 Its implementation may use a cached function table, but that does not change
 the result contract.
 
-## Checkpoint
-
-Before running it, predict whether these two expressions have the same intent:
-
-```julia
-Binary8p4se(0x48)
-Binary8p4se(72)
-```
-
-They do not. The first selects code point `0x48`, whose datum is 2.0. The
-second projects the numeric value 72 into the format.
-
-## What you now know
-
-- a datum is an exact member of a format;
-- a code point names that datum;
-- an unsigned constructor argument selects a code point;
-- computation produces an exact result and projects once;
-- explicit operation forms name result format and policy;
-- array forms preserve the scalar contract.
-
-## Next
-
-[Core Model](core_model.md).
-
 ## Use it
 
 [Choose a Format](workflow_choose_format.md) or
 [Quantize and Measure a Tensor](workflow_quantize_measure.md).
 
-## Look it up
+## See also
 
 [Formats and Value Queries](reference_formats_values.md),
 [Projection Specifications](reference_projections.md), and

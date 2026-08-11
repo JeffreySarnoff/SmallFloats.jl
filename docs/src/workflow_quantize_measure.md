@@ -105,11 +105,6 @@ important values. If failures cluster by row or channel scale, move to
     First choose and validate the numerical format. Pack the resulting code
     points only after that choice; packing changes storage, not quantization.
 
-## Next
-
-[Pack Values for Storage](workflow_packed_storage.md) or
-[Use Blocks for Dynamic Range](workflow_blocks.md).
-
 ## Understand it
 
 [Format Anatomy](concept_format_anatomy.md) and

@@ -83,7 +83,3 @@ An optimization may bypass work only after proving that it returns the same
 canonical rounded form or final code point. A new rounding or saturation mode
 belongs in the shared `ProjSpec` machinery and its exhaustive predicate tests,
 not in an operation-specific shortcut.
-
-## Next
-
-[Oracle and Rigor Classes](internals_oracle.md).
