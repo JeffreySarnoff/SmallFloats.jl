@@ -143,26 +143,26 @@ end
 
 # Process global default
 
-set_default_show_style!(:value)
+set_show_style!(:value)
 display(x)
 display(A)
 
-set_default_show_style!(:codepoint)
+set_show_style!(:codepoint)
 display(x)
 
-set_default_show_style!(:all)
+set_show_style!(:typed)
 
 # A temporary process-global setting can use try/finally:
-# This global temporary form is not concurrency-safe. 
-# For concurrent or task-local behavior, 
-#  the IOContext mechanism should be preferred. 
-# Also, use show(io, value) rather than print(io, value) 
-#  in the value and codepoint renderers so nested IOContext
-#  properties are propagated correctly.
+# This global temporary form is not concurrency-safe.
+# For concurrent or task-local behavior,
+# the IOContext mechanism should be preferred.
+# Also, use show(io, value) rather than print(io, value)
+# in the value and codepoint renderers so nested IOContext
+# properties are propagated correctly.
 
 function with_show_style(f::Function, style::Symbol)
     old = DEFAULT_SHOW_STYLE[]
-    set_default_show_style!(style)
+    set_show_style!(style)
 
     try
         return f()
@@ -176,13 +176,13 @@ end
 
 x = Binary(...)  # construct as appropriate
 
-show(IOContext(stdout, :binary_show_style => :all), x)
+show(IOContext(stdout, :binary_show_style => :typed), x)
 show(IOContext(stdout, :binary_show_style => :value), x)
 show(IOContext(stdout, :binary_show_style => :codepoint), x)
 
 # It also works for matrices:
-# The matrix machinery adds properties such as :compact 
-#  while preserving your custom :binary_show_style property.
+# The matrix machinery adds properties such as :compact
+# while preserving your custom :binary_show_style property.
 
 A = Binary[...]
 
