@@ -309,9 +309,15 @@ end
 # ---------------------------------------------------------------------------
 # wiring into Base
 # ---------------------------------------------------------------------------
+import Base: fma
 if Sys.iswindows()
-    import Base: fma
-    Base.fma(x::Float128, y::Float128, z::Float128) = fma128(x, y, z)
+    function __init__()
+        if !hasmethod(fma, Tuple{Float128, Float128, Float128})
+            @eval Base begin
+                fma(x::Float128, y::Float128, z::Float128) = fma128(x, y, z)
+            end
+        end
+    end
 end
 
 end # module
