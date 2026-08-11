@@ -48,3 +48,8 @@ jobs:
         run: julia --project=docs -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
       - name: Build HTML documentation
         run: julia --project=docs docs/make.jl
+      - name: Build locally browsable HTML documentation
+        env:
+          CI: "false"
+          DOCS_BUILD_DIR: build-local
+        run: julia --project=docs docs/make.jl

@@ -31,6 +31,19 @@ makedocs(;
     warnonly = [:cross_references, :missing_docs],
 )
 
+# Validate the rendered site rather than only the Markdown source.  In
+# particular, this checks flat ``.html`` links for ``file://`` browsing and
+# directory/index links emitted when CI enables pretty URLs.
+function _check_html_links(docsdir::String)
+    python = something(Sys.which("python"), Sys.which("python3"), nothing)
+    python === nothing && error("Cannot validate documentation links: Python 3 was not found.")
+    builddir = joinpath(docsdir, get(ENV, "DOCS_BUILD_DIR", "build"))
+    @info "Checking rendered documentation links" builddir
+    run(`$python $(joinpath(docsdir, "check_links.py")) $builddir`)
+end
+
+_check_html_links(@__DIR__)
+
 # ---- PDF stage: every docs build regenerates the PDF from these same sources.
 #
 # It lives HERE rather than only in builddocs.jl because make.jl is what CI and
