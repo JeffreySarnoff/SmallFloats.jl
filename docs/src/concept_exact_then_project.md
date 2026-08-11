@@ -146,7 +146,7 @@ functions, rather than a vague impression of "close enough" — both sides of
 the comparison ultimately trace back to the same contract this page
 describes.
 
-## Continue
+## See also
 
 [Rounding and Saturation](concept_rounding_saturation.md) develops the two
 policy axes. [Control Rounding and Overflow](workflow_rounding_overflow.md)

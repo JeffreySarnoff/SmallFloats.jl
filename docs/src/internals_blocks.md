@@ -183,7 +183,7 @@ obligations: decoded lane values are exact, the chosen accumulator covers the
 proven span, and exactly one final projection occurs. Compare fused reductions
 with a deliberately wider reference, including mixed scales and special values.
 
-## Continue through the implementation
+## See also
 
 - [Blocks and Scaled Operations](reference_arrays_blocks_storage.md) — the API contract.
 - [Working with Blocks](workflow_blocks.md) — the task-oriented guide.

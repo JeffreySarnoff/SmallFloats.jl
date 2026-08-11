@@ -29,7 +29,7 @@ is defined or used in full.
 | Table gather | The array-kernel strategy of computing a result by indexing a precomputed, cached lookup table (built once through the scalar path) rather than recomputing per element. | [Function Tables and Array Kernels](internals_tables.md) |
 | Total order | The draft's total ordering over a format's value set, with the single NaN placed first, below −Inf (§4.12.1); the basis for `TotalOrder`, `isless`, comparisons, and counting sort. | [Projection Engine](internals_projection_engine.md) |
 
-## Related help
+## See also
 
 [Cheat Sheet](help_cheat_sheet.md),
 [Troubleshooting](help_troubleshooting.md),

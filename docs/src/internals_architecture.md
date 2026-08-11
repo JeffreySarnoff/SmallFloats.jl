@@ -52,7 +52,7 @@ Source files load in dependency order, each layer speaking only downward:
 | approx | `approx.jl` | κ measurement/registry, conformance declaration |
 | rand | `rand.jl` | Random-API hooks: uniform-[0,1) floor projection, clamped normal |
 
-## Continue through the implementation
+## See also
 
 [Encoding and Decoding](internals_encoding_decoding.md),
 [Oracle and Rigor Classes](internals_oracle.md),

@@ -224,7 +224,7 @@ The exhaustive form of that check — every distinguished code of every one of
 the 504 formats, plus the decoding formula at every positive finite code point
 — is in [Verification Sessions](examples_verification.md).
 
-## Continue
+## See also
 
 - [Formats, Aliases & Representations](concept_format_anatomy.md) — what a format is,
   and the type-vs-alias distinction.

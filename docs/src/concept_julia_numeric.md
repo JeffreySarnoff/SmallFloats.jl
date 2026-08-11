@@ -147,7 +147,7 @@ from the types alone, before running anything — which is the actual goal a
 promotion rule is supposed to serve, achieved here by refusing the one case
 that could not serve it honestly.
 
-## Continue
+## See also
 
 [Values, Code Points, and Conversion](concept_values_codepoints.md) gives the
 constructor and `Convert` rules. [Julia Compatibility Register](reference_julia_compat.md)

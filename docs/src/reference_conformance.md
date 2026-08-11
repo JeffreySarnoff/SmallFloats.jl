@@ -54,7 +54,7 @@ be produced by measurement alone and must be supplied by the caller of
 Approximate implementations registered through this path are never
 substituted into the default API; the default API is bit-exact, always.
 
-## Related contracts
+## See also
 
 [Read and Export Conformance](workflow_conformance.md),
 [Register an Approximation](workflow_approximation.md), and

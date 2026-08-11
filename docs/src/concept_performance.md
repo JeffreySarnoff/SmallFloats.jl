@@ -179,7 +179,7 @@ fix is one of the items above: static format types, a function barrier,
 array calls instead of scalar loops, or `PackedVector` for memory pressure —
 never `@fastmath`.
 
-## Continue
+## See also
 
 > Continue with **Benchmarking Without Fooling Yourself** (Understanding
 > track) for the full benchmark doctrine — Chairmarks setup discipline,

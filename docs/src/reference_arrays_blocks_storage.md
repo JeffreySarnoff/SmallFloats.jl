@@ -91,7 +91,7 @@ same-shape `Block`s.
 Computation unpacks tiles internally; packed arithmetic is deliberately not
 in-place — store packed, compute unpacked.
 
-## Related contracts
+## See also
 
 [Cheat Sheet](help_cheat_sheet.md),
 [Run Operations over Arrays](workflow_arrays.md),

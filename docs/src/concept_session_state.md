@@ -139,7 +139,7 @@ of returning a runtime-chosen type.
     `ENV["SmallFloats_Float128"] = "disable"`, which is bit-identical by
     construction and only affects build/oracle speed.
 
-## Continue
+## See also
 
 [Rounding and Saturation](concept_rounding_saturation.md) explains the policy
 stored by `DefaultProjection`. [Make Stochastic Work Reproducible](workflow_stochastic.md)

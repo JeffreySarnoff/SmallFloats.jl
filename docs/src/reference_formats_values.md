@@ -86,7 +86,7 @@ MaxFiniteOf(Binary8p4se)     # Binary8p4se(224.0 ≡ 0x7e)
 MaxFiniteOf(x)               # same result
 ```
 
-## Related contracts
+## See also
 
 [Core Model](core_model.md),
 [Values, Code Points, and Conversion](concept_values_codepoints.md),

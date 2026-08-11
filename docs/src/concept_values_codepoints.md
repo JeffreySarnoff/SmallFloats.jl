@@ -162,7 +162,7 @@ pitfall from this tutorial in miniature.
 
 </details>
 
-## Continue
+## See also
 
 [Rounding and Saturation](concept_rounding_saturation.md) and
 [Formats and Value Queries](reference_formats_values.md).

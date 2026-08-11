@@ -53,7 +53,7 @@ b = bench_add(Binary8p4se)
     specialization (zero warm-path allocation) before it believes any number, and
     so should yours.
 
-## Continue through the implementation
+## See also
 
 [Verification Strategy](internals_verification.md),
 [Verify Custom Code](internals_verify_custom.md),

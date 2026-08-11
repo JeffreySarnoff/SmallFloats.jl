@@ -146,7 +146,7 @@ denotes a value a factor of two away from its IEEE look-alike**. The same bits
 read as the other type silently halve or double every value. Converting
 between them is a conversion, never a reinterpretation.
 
-## Continue
+## See also
 
 [Core Model](core_model.md),
 [The Standard and this Design](help_standard_design.md),

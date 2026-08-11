@@ -111,7 +111,7 @@ selection in `src/carriers.jl`. Changes here must preserve enclosure containment
 termination, and agreement with a wider independent path. The gate and tier
 files under `test/` record whether each check is exhaustive or sampled.
 
-## Continue through the implementation
+## See also
 
 [Encoding and Decoding](internals_encoding_decoding.md),
 [Function Tables and Array Kernels](internals_tables.md),

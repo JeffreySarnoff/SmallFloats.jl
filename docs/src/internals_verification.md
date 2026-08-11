@@ -66,7 +66,7 @@ The gate files under `test/` own correctness assertions; benchmark scripts own
 timing methodology. Documentation examples are checked separately so a green
 package test cannot conceal stale printed output.
 
-## Continue through the implementation
+## See also
 
 [Function Tables and Array Kernels](internals_tables.md),
 [Benchmark Correctly](internals_benchmark.md),

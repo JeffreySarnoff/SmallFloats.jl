@@ -74,7 +74,7 @@ idiomatic Julia — ranked by user impact rather than by extension stage —
 covering broken `AbstractFloat` contract methods and deliberate departures
 alike. Status: exploratory/historical.
 
-## Related help
+## See also
 
 [Cheat Sheet](help_cheat_sheet.md),
 [Glossary](help_glossary.md),

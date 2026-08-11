@@ -115,7 +115,7 @@ An `IOContext` property, `:binary_show_style`, overrides the process default for
 one stream. Prefer that form in concurrent code and in libraries that should
 not change another caller's display.
 
-## Related contracts
+## See also
 
 [First Session](first_session.md),
 [Julia Numeric Behavior](concept_julia_numeric.md),

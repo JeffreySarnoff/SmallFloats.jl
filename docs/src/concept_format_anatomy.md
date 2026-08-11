@@ -158,7 +158,7 @@ kind of format it lives in.
     n)` cannot be intercepted at the call site. Always spell the alias, or
     use `format(K, P, Σ, Δ)` when the parameters are runtime values.
 
-## Continue
+## See also
 
 [Values, Code Points, and Conversion](concept_values_codepoints.md) explains
 how a value stores a code point, how `decode` recovers its exact datum, and how

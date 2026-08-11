@@ -181,7 +181,7 @@ treat sub-margin comparisons as ties to expand, or escalate those few nodes to
 the exact evaluator. Either way the pruning is *provably* sound, with κ measured
 at registration rather than promised.
 
-## Continue through the implementation
+## See also
 
 [Add an Operation](internals_add_operation.md),
 [Benchmark Correctly](internals_benchmark.md),

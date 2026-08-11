@@ -475,7 +475,7 @@ single `_finish`, stochastic `R` plumbing — is pattern.
 - `conformance_report()` shows the op (automatic for registry ops; manual
   block additions extend `blocknames`).
 
-## Continue through the implementation
+## See also
 
 [Oracle and Rigor Classes](internals_oracle.md),
 [Exact Block Reductions](internals_blocks.md),

@@ -152,7 +152,7 @@ using SmallFloats
 This selects the pure-MPFR configuration. Results are **bit-identical** — that
 equivalence is itself part of the test suite; only oracle and build speed change.
 
-## Related help
+## See also
 
 [Cheat Sheet](help_cheat_sheet.md),
 [Glossary](help_glossary.md),

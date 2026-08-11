@@ -84,7 +84,7 @@ only when table entries agree with scalar results over their full affordable
 domain, cold and warm behavior are measured separately, stochastic calls
 bypass pure tables, and cache byte accounting remains correct.
 
-## Continue through the implementation
+## See also
 
 [Encoding and Decoding](internals_encoding_decoding.md),
 [Oracle and Rigor Classes](internals_oracle.md),

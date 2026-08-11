@@ -73,7 +73,7 @@ Add(T, σ, x, y; rng = Xoshiro(1))   # reproducible stream
 Add(T, σ, x, y; R = 17)             # exact draw, ideal for tests
 ```
 
-## Related contracts
+## See also
 
 [Rounding and Saturation](concept_rounding_saturation.md),
 [Session Defaults](reference_defaults_random_display.md).

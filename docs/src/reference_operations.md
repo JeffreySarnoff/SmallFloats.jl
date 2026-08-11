@@ -136,7 +136,7 @@ Convenience form, same-format operands, `DefaultProjection()`:
 Op(x...)
 ```
 
-## Related contracts
+## See also
 
 [Cheat Sheet](help_cheat_sheet.md),
 [Why No Cross-Format Promotion](concept_julia_numeric.md),
