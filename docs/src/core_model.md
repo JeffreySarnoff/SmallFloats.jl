@@ -1,9 +1,12 @@
 # Core Model
 
-Five ideas organize the package. Read them as one connected model: a format
-defines a finite universe, a value names one member of it, computation is exact
-before projection, projection makes two explicit policy choices, and any
-departure from the defined path is named and measured.
+Five ideas organize the package, and each answers the question the previous
+one leaves open. *What is a format?* A finite universe of exact values. *How
+do you hold one?* A value is a code point, and reading it back is exact.
+*What happens when you compute?* Exact math, then one projection. *Who decides
+where the exact result lands?* You do — a projection is a named pair of
+rounding and saturation choices. *And what if you trade exactness for speed?*
+Only by name, with the error measured — never by default.
 
 ## A format is a finite set of datums
 
@@ -65,7 +68,7 @@ the datum back, exactly:
 
 ```julia-repl
 julia> x = Binary8p4se(1.6)
-Binary8p4se(1.625 ≡ 0x45)
+Binary8p4se(1.625 ⇆ 0x45)
 
 julia> codepoint(x)
 0x45
@@ -74,8 +77,8 @@ julia> decode(x)
 1.625
 ```
 
-The display `1.625 ≡ 0x45` is the idea in one line: the code point `0x45`
-*means* the datum 1.625, and the `≡` is exact, not approximate. `decode`
+The display `1.625 ⇆ 0x45` is the idea in one line: the code point `0x45`
+*means* the datum 1.625, and the `⇆` is exact, not approximate. `decode`
 never rounds — it is a table lookup from name to meaning.
 
 The asymmetry that matters: `decode` is exact, but **construction is a
@@ -84,7 +87,8 @@ nearest datum, which happens to be 1.625. The value you get back is the value
 the format can say, not the value you asked for.
 
 This is why the `Unsigned`-means-code-point rule (from the First Session) exists:
-`codepoint` and the constructor are inverses *by design* —
+on the code-point side, `codepoint` and the constructor are inverses *by
+design* —
 
 ```julia-repl
 julia> Binary8p4se(codepoint(x)) === x
@@ -93,6 +97,14 @@ true
 
 — and that round-trip is the format's identity. A value is its code point;
 everything else is a view.
+
+The inverse runs one way only, and the asymmetry above is the reason.
+`T(codepoint(x)) === x` holds for every code point, because nothing is
+discarded going out and back. Start from a number instead and it fails:
+`decode(T(1.6))` is 1.625, not 1.6 — construction already chose a datum, and
+no later step can recover which number asked for it. `decode` and `codepoint`
+are not the pair here; both merely read a value that has already been
+decided.
 
 *Now you can read:* [Values, Code Points, and Conversion](concept_values_codepoints.md) for the
 four ways in and two ways out, and the carriers `decode` returns at wide
@@ -109,9 +121,11 @@ rounding plus one saturation decision — to land on a code point:
 exact result  →  RoundToPrecision  →  Saturate  →  code point
 ```
 
-`x + y` from the First Session: exact sum 3.375, projected once to 3.5. `200 × 2`:
-exact product 400 (not representable — projection decides between `Inf`, `224`,
-or `NaN`, and the spec says which).
+`x + y` from the First Session: exact sum 3.375, projected once to 3.5. The
+overflow example from the same page: `w` holds 192 — constructing it from 200
+was itself one projection — so the multiply computes the exact product 384,
+which no finite datum can hold. One projection then decides what an
+out-of-range 384 becomes, and the next idea says who makes that choice.
 
 Two things follow from "one projection, at the end":
 
@@ -138,19 +152,20 @@ A projection specification is the pair of two independent choices:
 | **rounding mode** | which neighbor a between-grid value lands on | nearest-ties-even, toward zero, toward ±∞, stochastic |
 | **saturation mode** | what an out-of-range result becomes | clamp to finite (`SF`), propagate infinities (`SP`), draft rows (`SN`) |
 
-Watch one overflow resolve three ways (`Binary8p4se`, max finite 224):
+Watch the exact product 384 resolve three ways (`Binary8p4se`, max finite
+224):
 
 ```julia-repl
 julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);
 
 julia> Multiply(Binary8p4se, RNE_SN, w, two)   # nearest + draft rows → Inf
-Binary8p4se(Inf ≡ 0x7f)
+Binary8p4se(Inf ⇆ 0x7f)
 
 julia> Multiply(Binary8p4se, RNE_SF, w, two)   # nearest + clamp → 224
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 
 julia> Multiply(Binary8p4se, RTZ_SN, w, two)   # toward zero + draft rows → 224
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 ```
 
 The first two differ in *saturation* (SN vs SF); the first and third differ
@@ -177,11 +192,12 @@ experiments, and [Projection Specifications](reference_projections.md) for the c
 
 ## Approximation is opt-in, named, and measured
 
-The package's speed comes from the first idea's finiteness: an 8-bit unary
-operation is a function with 256 inputs, so its *entire* behavior is a
-256-byte table, built once through the exact scalar path and then gathered
-per element (0.13 ns). The exactness is inherited: table and scalar are the
-same function by construction.
+The package can exploit the first idea's finiteness without weakening it. For
+example, a pure unary `Binary8p4se` operation has 256 inputs, so its complete
+behavior may be cached as a 256-byte result table built through the exact scalar
+path. Other signatures use the representation-aware table policy or compute
+directly. In every case, exactness is inherited: a table entry and its scalar
+call are the same defined function by construction.
 
 The same finiteness makes approximation *honest*. If you register a faster
 but inexact kernel — say a hardware-style hard-tanh for `Tanh` — the registry
@@ -221,8 +237,18 @@ exact math followed by one projection (3); the projection is your choice of
 rounding and saturation (4); and the result is exact unless you explicitly
 register otherwise (5).
 
-## See also
+## Where to go next
 
-[Formats and Value Queries](reference_formats_values.md),
-[Projection Specifications](reference_projections.md), and
+These five ideas are the whole public model; the rest of the documentation
+develops them. Each of the three that raise a further question has a page that
+answers it. *What does "exact" actually mean, when the exact result is wider
+than any machine float?* — [The Exact-Then-Project
+Contract](concept_exact_then_project.md), which follows idea 3 down to the
+carrier. *How do I name a policy, and which one do I want?* —
+[Rounding and Saturation](concept_rounding_saturation.md) for the two axes,
+[Projection Specifications](reference_projections.md) for the complete grid of
+names. *How is an approximation held to its declared κ?* —
 [Conformance and Approximation Registry](reference_conformance.md).
+
+For the format-query vocabulary the examples above used in passing, see
+[Formats and Value Queries](reference_formats_values.md).

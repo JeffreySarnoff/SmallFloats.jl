@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{A}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{o}{.}\PYG{p}{([}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{1.0}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{0.5}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{2.0}\PYG{p}{]);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Exp}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{)}
+\PYG{g+go}{3\PYGZhy{}element Vector\PYGZob{}Binary8p4se\PYGZcb{}:}
+\PYG{g+go}{ Binary8p4se(0.375 ⇆ 0x34)}
+\PYG{g+go}{ Binary8p4se(1.625 ⇆ 0x45)}
+\PYG{g+go}{ Binary8p4se(7.5 ⇆ 0x57)}
+\end{MintedVerbatim}

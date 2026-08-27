@@ -1,7 +1,10 @@
 # Pack Values for Storage
 
-Store a vector of small-format values at its true bit width instead of one
-byte (or two) per element.
+A `Vector{Binary5p2se}` spends a whole byte on each 5-bit code point — three
+bits per element wasted, 37% of the array. `PackedVector` stores them at their
+true width instead. The trade is explicit: storage shrinks by exactly
+`bitwidth(F)/8`, and every read pays a small unpack cost, so this is a win
+when memory or bandwidth binds and a loss when only compute does.
 
 ## Ingredients
 
@@ -51,15 +54,15 @@ out = vmap(:Exp, Binary5p2se, ρ, pv)
 `bitwidth(F) / 8` against a plain byte-per-element vector (for `K ≤ 8`
 formats). At a million elements of a 5-bit format:
 
-```julia
-n = 1_000_000
-model = [Binary5p2se(UInt8(rand(0:31))) for _ in 1:n]
-pv = PackedVector(model)
-(sizeof(model), sizeof(pv.data))
-```
+```julia-repl
+julia> n = 1_000_000;
 
-```
-(1000000, 625000)   # 8 bits → 5 bits per value; indexing and vmap work directly on pv
+julia> model = [Binary5p2se(UInt8(rand(0:31))) for _ in 1:n];
+
+julia> pv = PackedVector(model);
+
+julia> (sizeof(model), sizeof(pv.data))
+(1000000, 625000)
 ```
 
 1,000,000 bytes of plain storage becomes 625,000 bytes packed — `n × K / 8`
@@ -77,8 +80,10 @@ bytes, in general, rounded to whole words.
 !!! perf "Packing helps storage bandwidth, not per-element compute speed"
     Reach for `PackedVector` when memory footprint or bandwidth is the
     bottleneck (e.g. a large quantized model kept resident). If you are only
-    computing, not storing, an ordinary `Vector{F}` (one byte per element at
-    `K ≤ 8`) is simpler and does not pay any unpacking cost.
+    computing, not storing, an ordinary `Vector{F}` is simpler and does not pay
+    unpacking cost. Its code-unit storage is one byte for `Code8` and two bytes
+    for `Code16`; compare that representation-specific cost with the packed
+    bitwidth before choosing a layout.
 
 ## Next steps
 

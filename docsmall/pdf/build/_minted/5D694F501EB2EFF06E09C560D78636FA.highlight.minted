@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{b}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Block}\PYG{p}{(}\PYG{n}{Binary8p1uf}\PYG{p}{(}\PYG{l+m+mf}{0.5}\PYG{p}{),}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{80.0}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{0.375}\PYG{p}{),}
+\PYG{+w}{                                    }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{5.5}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{2.25}\PYG{p}{)));}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{blockdecode}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}\PYG{+w}{              }\PYG{c}{\PYGZsh{} the exact lane values}
+\PYG{g+go}{(40.0, \PYGZhy{}0.1875, \PYGZhy{}2.75, 1.125)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{BlockReduceAdd}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}\PYG{+w}{  }\PYG{c}{\PYGZsh{} exact sum 38.1875, projected once}
+\PYG{g+go}{Binary8p4se(40.0 ⇆ 0x6a)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{lanes}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{blockdecode}\PYG{p}{(}\PYG{n}{b}\PYG{p}{);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{foldl}\PYG{p}{((}\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Add}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{)),}
+\PYG{+w}{             }\PYG{n}{lanes}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{init}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{zero}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{))}\PYG{+w}{  }\PYG{c}{\PYGZsh{} rounding at every step}
+\PYG{g+go}{Binary8p4se(36.0 ⇆ 0x69)}
+\end{MintedVerbatim}

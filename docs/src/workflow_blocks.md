@@ -1,8 +1,12 @@
 # Use Blocks for Dynamic Range
 
-Use this workflow when groups of values need more dynamic range than a narrow
-element format can provide. A `Block` pairs one shared scale with a group of
-elements, following the MX-style `scale × element` model.
+A narrow element format has good resolution over a small range. When your data
+spans more range than that, the usual fix — a wider element format — spends
+bits on exponent that you wanted for precision. A block spends them once per
+group instead: one shared scale, `B` elements, each representing
+`scale × element`. This page builds one, measures what it buys on data that
+actually needs it, and shows the one staging mistake that silently throws the
+benefit away.
 
 ## Scale × element
 
@@ -14,7 +18,7 @@ one directly from a scale and its elements:
 ```julia-repl
 julia> b = Block(Binary8p1uf(4.0), Binary8p4se(1.5), Binary8p4se(-0.75),
                  Binary8p4se(2.0), Binary8p4se(0.5))
-Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(4.0 ≡ 0x82), (…))
+Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(4.0 ⇆ 0x82), (…))
 ```
 
 Read the type parameters: block size 4, scale format `Binary8p1uf` (unsigned —
@@ -32,7 +36,7 @@ element against it:
 ```julia-repl
 julia> ConvertToBlockMaxAbsFinite(Binary8p1uf, Binary8p4se, RNE_SN, RNE_SN,
            (Binary8p4se(100.0), Binary8p4se(-12.0), Binary8p4se(0.5), Binary8p4se(3.0)))
-Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(64.0 ≡ 0x86), (…))
+Block{4, Binary8p1uf, Binary8p4se}(Binary8p1uf(64.0 ⇆ 0x86), (…))
 ```
 
 Read the arguments in order: scale format, element format, a projection spec
@@ -47,7 +51,7 @@ Read a block back out as plain values in a format of your choosing: each
 
 ```julia-repl
 julia> ConvertFromBlock(Binary8p3se, RNE_SN, b)   # decode scale×elem, project
-(Binary8p3se(6.0 ≡ 0x4a), Binary8p3se(-3.0 ≡ 0xc6), Binary8p3se(8.0 ≡ 0x4c), Binary8p3se(2.0 ≡ 0x44))
+(Binary8p3se(6.0 ⇆ 0x4a), Binary8p3se(-3.0 ⇆ 0xc6), Binary8p3se(8.0 ⇆ 0x4c), Binary8p3se(2.0 ⇆ 0x44))
 ```
 
 ## The stage-wide pitfall

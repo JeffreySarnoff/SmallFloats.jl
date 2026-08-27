@@ -35,15 +35,9 @@ fma(x, y, z)
 
 ## Format names
 
-```text
-Binary K p P (s|u) (e|f)
-       │   │  │     └─ extended (Inf) or finite domain
-       │   │  └────── signed or unsigned
-       │   └───────── significand precision, including the implicit bit
-       └───────────── total bitwidth, 3 through 16
-```
-
-Examples:
+`Binary`*K*`p`*P*`(s|u)(e|f)` — bitwidth, precision, signedness, domain. The
+field-by-field grammar is in [Formats and
+Values](reference_formats_values.md); read it off the examples:
 
 | Name | Meaning |
 |:---|:---|
@@ -90,7 +84,7 @@ Every query above also takes a **value** instead of a type — `bitwidth(x)` ≡
 ```julia
 x = Binary8p4se(1.6)
 bitwidth(x)       # 8
-MaxFiniteOf(x)    # Binary8p4se(224.0 ≡ 0x7e)
+MaxFiniteOf(x)    # Binary8p4se(224.0 ⇆ 0x7e)
 ```
 
 ## Values and code points
@@ -226,7 +220,7 @@ dispatch after a change; zero-alloc when `f`'s result type doesn't depend on
 the default (a default-typed result boxes once at escape):
 
 ```julia
-with_default_type((T, x) -> T(x), 1.5)          # Binary8p2se(1.5 ≡ 0x41)
+with_default_type((T, x) -> T(x), 1.5)          # Binary8p2se(1.5 ⇆ 0x41)
 with_default_projection((ρ, x, y) -> Add(T, ρ, x, y), x, y)
 with_default_returntype(f, args...)              # f(DefaultReturnType(), args...)
 ```

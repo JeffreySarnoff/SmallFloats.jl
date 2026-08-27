@@ -11,13 +11,13 @@ constructors and two accessors:
 
 ```julia-repl
 julia> x = Binary8p4se(1.6)              # construct from a Real: projects (rounds)
-Binary8p4se(1.625 ≡ 0x45)
+Binary8p4se(1.625 ⇆ 0x45)
 
 julia> Binary8p4se(0x45)                 # construct from a UInt8 CODE POINT (validated)
-Binary8p4se(1.625 ≡ 0x45)
+Binary8p4se(1.625 ⇆ 0x45)
 
 julia> Convert(Binary8p4se, RNE_SN, 3)   # explicit conversion, any mode
-Binary8p4se(3.0 ≡ 0x4c)
+Binary8p4se(3.0 ⇆ 0x4c)
 
 julia> decode(x)                          # the exact datum, on the format's carrier
 1.625
@@ -39,7 +39,7 @@ number:
 
 ```julia-repl
 julia> Binary8p4se(0x02), Binary8p4se(2)
-(Binary8p4se(0.001953125 ≡ 0x02), Binary8p4se(2.0 ≡ 0x48))
+(Binary8p4se(0.001953125 ⇆ 0x02), Binary8p4se(2.0 ⇆ 0x48))
 ```
 
 !!! warning "`Unsigned` means code point — at every width"
@@ -50,8 +50,10 @@ julia> Binary8p4se(0x02), Binary8p4se(2)
     unmistakable.
 
     Out-of-range codes throw for K < 8 (`Binary5p3sf(0x20)` is an error).
-    Round-tripping is `T(codepoint(x)) === x`. The unchecked constructor is an
-    internal kernel primitive rather than part of the exported interface.
+    Round-tripping is `T(codepoint(x)) === x` — see [What is, and is not, a
+    round-trip here](#What-is,-and-is-not,-a-round-trip-here) for the direction
+    that does *not* invert. The unchecked constructor is an internal kernel
+    primitive rather than part of the exported interface.
 
 ## `Convert` versus `convert`
 
@@ -63,28 +65,27 @@ reading:
 
 ```julia-repl
 julia> Binary8p4se(0x02)
-Binary8p4se(0.001953125 ≡ 0x02)
+Binary8p4se(0.001953125 ⇆ 0x02)
 ```
 
 Keep the two apart: `T(x::Unsigned)` reads a code point; `Convert(T, ρ, x)` always
 projects a numeric value, whatever its type. When you want projection and the
 argument might be an `Unsigned`, reach for `Convert`, not the constructor.
 
-## The decode / codepoint round-trip
+## What is, and is not, a round-trip here
 
-`decode` and `codepoint` are inverses by construction — that round-trip is a
-format's identity:
+`decode` and `codepoint` are not inverses of each other — both are read-only
+accessors on the same `x`, one returning the datum, the other the identity it
+is stored under. Neither writes a code point, so neither can undo the other.
 
-```julia-repl
-julia> x = Binary8p4se(1.6)
-Binary8p4se(1.625 ≡ 0x45)
-
-julia> codepoint(x)
-0x45
-
-julia> decode(x)
-1.625
-```
+The actual inverse pair is the code-point constructor and `codepoint`
+(stated above): `T(codepoint(x)) === x`, exact for every valid code point.
+The other direction fails on purpose — `codepoint(T(v))` for a `Real v` is
+not an inverse of anything, because `T(v)` *projects* `v` to the nearest
+datum first, so you recover that datum's code point, not a code point that
+would reconstruct `v`. Only the code-point round-trip is exact both ways; the
+`Real` round-trip loses information by design, every time construction
+rounds.
 
 `decode` is **always exact**, but the type it returns is a property of the
 format, not of the package: `Float64` for the 432 formats whose exponent range it
@@ -97,18 +98,81 @@ Small formats are small enough to look at in full. `Binary4p2se` has 16 code
 points, sorted here by the draft's total order — which places the single NaN
 **first**, below −Inf (§4.12.1), not last as `Float64` sorting does:
 
-```julia
-decode.(sort(Binary4p2se.(0x00:0x0f)))      # broadcast the code-point constructor
-```
-
-```
-[NaN, -Inf, -2.0, -1.5, -1.0, -0.75, -0.5, -0.25, 0.0,
-  0.25, 0.5, 0.75, 1.0, 1.5, 2.0, Inf]
+```julia-repl
+julia> decode.(sort(Binary4p2se.(0x00:0x0f)))      # broadcast the code-point constructor
+16-element Vector{Float64}:
+ NaN
+ -Inf
+  -2.0
+  -1.5
+  -1.0
+  -0.75
+  -0.5
+  -0.25
+   0.0
+   0.25
+   0.5
+   0.75
+   1.0
+   1.5
+   2.0
+  Inf
 ```
 
 That listing *is* the format: one NaN, no negative zero, subnormal spacing near
 zero, binades doubling outward. This is a good way to build intuition for a
 format before committing to it.
+
+The one-liner generalizes to any of the 504 formats, in either storage order
+or total order, as a complete `(code, value)` table. No projection is
+involved: `decode` is exact and policy-free, so the table is a function of
+the format alone.
+
+```julia
+function codetable(::Type{F}; by::Symbol = :code) where {F<:Binary}
+    by in (:code, :value) || throw(ArgumentError("by must be :code or :value"))
+    U = codeunit_type(F)                        # UInt8 at K ≤ 8, UInt16 above
+    vals = [F(U(c)) for c in 0:(1 << bitwidth(F)) - 1]   # validated code-point constructor
+    by === :value && sort!(vals)                # the draft's total order: NaN first
+    [(code = codepoint(v), value = decode(v)) for v in vals]
+end
+
+function printcodetable(io::IO, ::Type{F}; by::Symbol = :code) where {F<:Binary}
+    w = 2 * sizeof(codeunit_type(F))            # hex digits per code unit
+    for r in codetable(F; by)
+        println(io, "  0x", string(r.code; base = 16, pad = w), "  ", r.value)
+    end
+end
+
+printcodetable(stdout, Binary4p2se)
+```
+
+```
+  0x00  0.0
+  0x01  0.25
+  0x02  0.5
+  0x03  0.75
+  0x04  1.0
+  0x05  1.5
+  0x06  2.0
+  0x07  Inf
+  0x08  NaN
+  0x09  -0.25
+  0x0a  -0.5
+  0x0b  -0.75
+  0x0c  -1.0
+  0x0d  -1.5
+  0x0e  -2.0
+  0x0f  -Inf
+```
+
+Storage order makes the layout visible — positives ascending from `0x00`,
+the sign bit alone (`0x08`) naming the single NaN, negatives mirroring above
+it. `by = :value` gives the sorted listing shown earlier. The value column is
+the format's datum carrier, so the table stays exact for the 72 wide formats
+too. The reverse table, value → code, *does* need a projection — it is
+`codepoint(Convert(F, ρ, x))` over inputs of your choosing, one rounding per
+entry.
 
 ## Stepping and classification
 
@@ -117,7 +181,7 @@ datum you're holding:
 
 ```julia-repl
 julia> NextGreaterThan(Binary8p4se(1.0))
-Binary8p4se(1.125 ≡ 0x41)
+Binary8p4se(1.125 ⇆ 0x41)
 
 julia> Class(Binary8p4se(0.01))           # draft classification
 ClassPosNormal::FPClass = 0x06
@@ -129,10 +193,10 @@ ClassPosNormal::FPClass = 0x06
 
 ```julia-repl
 julia> Binary8p4se(1e9)                   # overflow under the default spec → +Inf
-Binary8p4se(Inf ≡ 0x7f)
+Binary8p4se(Inf ⇆ 0x7f)
 
 julia> Binary8p4se(-0.0)                  # no −0: projects to the single zero
-Binary8p4se(0.0 ≡ 0x00)
+Binary8p4se(0.0 ⇆ 0x00)
 
 julia> isnan(Binary8p4se(NaN)), isfinite(Binary8p4se(2.0))
 (true, true)
@@ -145,24 +209,13 @@ The usual numeric-type vocabulary works on every format too — `zero`, `one`,
 above; they answer from the format's own grid, not from any IEEE assumption
 about it.
 
-## Try it
+## What this leaves open
 
-Using only what this tutorial covered: what does `decode(Binary8p4se(0x01))`
-return, and how is it different from `decode(Binary8p4se(1))`? Work it out
-before checking.
-
-<details>
-<summary>Answer</summary>
-
-`Binary8p4se(0x01)` reads code point 1 — the smallest positive subnormal for
-this format, `0.0009765625` (shown as `MinPositiveOf(Binary8p4se)` in the User
-Guide). `Binary8p4se(1)` projects the numeric value one onto the nearest datum,
-`1.0`. Same digit, two different constructors, two very different answers — the
-pitfall from this tutorial in miniature.
-
-</details>
-
-## See also
-
-[Rounding and Saturation](concept_rounding_saturation.md) and
+Every route in on this page that takes a `Real` rounds, and none of them said
+by what rule. That rule is a *policy* you choose rather than a property of the
+format: [The Exact-Then-Project Contract](concept_exact_then_project.md)
+establishes that the rounding happens exactly once and at the end, and
+[Rounding and Saturation](concept_rounding_saturation.md) develops the two
+choices that decide where it lands. The query vocabulary used above —
+`MaxFiniteOf`, `MinPositiveOf`, and the rest — is catalogued in
 [Formats and Value Queries](reference_formats_values.md).

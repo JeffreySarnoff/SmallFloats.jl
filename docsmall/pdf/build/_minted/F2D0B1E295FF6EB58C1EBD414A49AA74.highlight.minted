@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{d}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{conformance\PYGZus{}dict}\PYG{p}{()}\PYG{+w}{          }\PYG{c}{\PYGZsh{} formats, operations, specializations, approximations}
+\PYG{n}{rev}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{draft\PYGZus{}revision}\PYG{p}{()}\PYG{+w}{          }\PYG{c}{\PYGZsh{} \PYGZdq{}IEEE P3109/D1, uploaded 2026\PYGZhy{}07\PYGZhy{}17\PYGZdq{}}
+\end{MintedVerbatim}

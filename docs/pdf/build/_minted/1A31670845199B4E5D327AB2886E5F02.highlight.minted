@@ -1,3 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-(16.3, 0.0)          \PYGZsh{} ns per full scalar Add, zero allocations
-\end{MintedVerbatim}

@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{with\PYGZus{}default\PYGZus{}type}\PYG{p}{((}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{(}\PYG{n}{x}\PYG{p}{),}\PYG{+w}{ }\PYG{l+m+mf}{1.5}\PYG{p}{)}
+\PYG{g+go}{Binary8p2se(1.5 ⇆ 0x41)}
+\end{MintedVerbatim}

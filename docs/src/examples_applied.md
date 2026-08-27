@@ -20,10 +20,10 @@ so you can reproduce them exactly.
 julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);   # MaxFinite is 224
 
 julia> Multiply(Binary8p4se, RNE_SN, w, two)
-Binary8p4se(Inf ≡ 0x7f)
+Binary8p4se(Inf ⇆ 0x7f)
 
 julia> Multiply(Binary8p4se, RNE_SF, w, two)
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 ```
 
 ### Random values under a chosen projection
@@ -37,16 +37,16 @@ julia> rand(Xoshiro(2), Float64)                # the underlying uniform draw
 0.0022505868897625403
 
 julia> rand(Xoshiro(2), Binary8p4se)            # default: floor (stays in [0,1))
-Binary8p4se(0.001953125 ≡ 0x02)
+Binary8p4se(0.001953125 ⇆ 0x02)
 
 julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SN)   # ceiling
-Binary8p4se(0.0029296875 ≡ 0x03)
+Binary8p4se(0.0029296875 ⇆ 0x03)
 
 julia> rand(Xoshiro(2), Binary8p4se; projection = RNE_SN)   # nearest
-Binary8p4se(0.001953125 ≡ 0x02)
+Binary8p4se(0.001953125 ⇆ 0x02)
 
 julia> rand(Xoshiro(2), Binary8p4se; projection = RSA_SN(8))  # stochastic
-Binary8p4se(0.001953125 ≡ 0x02)
+Binary8p4se(0.001953125 ⇆ 0x02)
 ```
 
 A stochastic projection draws its random bits from the *same* rng as the
@@ -58,10 +58,10 @@ The same keyword on `randn` — here the draw is `-1.9757…`:
 
 ```julia-repl
 julia> randn(Xoshiro(6), Binary8p4se)           # default: nearest + SatFinite
-Binary8p4se(-2.0 ≡ 0xc8)
+Binary8p4se(-2.0 ⇆ 0xc8)
 
 julia> randn(Xoshiro(6), Binary8p4se; projection = RTZ_SF)  # toward zero
-Binary8p4se(-1.875 ≡ 0xc7)
+Binary8p4se(-1.875 ⇆ 0xc7)
 ```
 
 Where the saturation half of the default earns its keep: `Binary3p1se` has
@@ -70,10 +70,10 @@ Where the saturation half of the default earns its keep: `Binary3p1se` has
 
 ```julia-repl
 julia> randn(Xoshiro(360), Binary3p1se)         # SatFinite clamps the tail
-Binary3p1se(1.0 ≡ 0x02)
+Binary3p1se(1.0 ⇆ 0x02)
 
 julia> randn(Xoshiro(360), Binary3p1se; projection = RNE_SN)
-Binary3p1se(Inf ≡ 0x03)                         # opt out, get the overflow
+Binary3p1se(Inf ⇆ 0x03)                         # opt out, get the overflow
 ```
 
 The array and `!` forms (`rand(T, dims)`, `randn!(A)`, …) always use the
@@ -126,19 +126,19 @@ finite format. `Binary8p6uf` gives a [0, 15.5] range with 1/32 resolution at 1;
 the classic fuzzy connectives are registry operations (`Minimum` = Gödel t-norm,
 `Maximum` = s-norm, `Multiply` = product t-norm):
 
-```julia
-F = Binary8p6uf
-trap(x, a, b, c, d) = clamp(min((x - a) / (b - a), 1.0, (d - x) / (d - c)), 0.0, 1.0)
-warm = F(trap(26.0, 15, 20, 24, 28))         # membership of 26 °C in "warm"
-hot  = F(trap(26.0, 24, 30, 100, 101))       # … and in "hot"
+```julia-repl
+julia> F = Binary8p6uf;
 
-(decode(warm), decode(hot),
- decode(Minimum(F, RNE_SN, warm, hot)),      # warm AND hot
- decode(Maximum(F, RNE_SN, warm, hot)),      # warm OR hot
- decode(Multiply(F, RNE_SF, warm, hot)))   # product t-norm
-```
+julia> trap(x, a, b, c, d) = clamp(min((x - a) / (b - a), 1.0, (d - x) / (d - c)), 0.0, 1.0);
 
-```
+julia> warm = F(trap(26.0, 15, 20, 24, 28));    # membership of 26 °C in "warm"
+
+julia> hot  = F(trap(26.0, 24, 30, 100, 101));  # … and in "hot"
+
+julia> (decode(warm), decode(hot),
+        decode(Minimum(F, RNE_SN, warm, hot)),  # warm AND hot
+        decode(Maximum(F, RNE_SN, warm, hot)),  # warm OR hot
+        decode(Multiply(F, RNE_SF, warm, hot))) # product t-norm
 (0.5, 0.3359375, 0.3359375, 0.5, 0.16796875)
 ```
 
@@ -153,17 +153,15 @@ Quantizing 200 heuristic scores to 8 bits collapses them onto 78 distinct code
 points — yet the argmax survives, and sorting is exact (integer order keys, O(n)
 counting sort, the single NaN ordered first, deterministically):
 
-```julia
-using Random
-rng = Xoshiro(21)
-scores = randn(rng, 200) .* 3
-q = Binary8p4se.(scores)
+```julia-repl
+julia> rng = Xoshiro(21);
 
-(argmax(scores), argmax(decode.(q)), argmax(scores) == argmax(decode.(q)),
- decode.(sort(q; rev=true)[1:5]), length(unique(codepoint.(q))))
-```
+julia> scores = randn(rng, 200) .* 3;
 
-```
+julia> q = Binary8p4se.(scores);
+
+julia> (argmax(scores), argmax(decode.(q)), argmax(scores) == argmax(decode.(q)),
+        decode.(sort(q; rev=true)[1:5]), length(unique(codepoint.(q))))
 (140, 140, true, [8.0, 7.5, 6.5, 6.0, 6.0], 78)
 ```
 

@@ -1,8 +1,11 @@
 # Read and Export Conformance
 
-Produce a machine-readable statement of exactly which formats, operations,
-and approximations a session used, and attach it to an experiment's
-artifacts.
+A result is only as interpretable as the record of what produced it. The
+conformance declaration is that record in machine-readable form: which formats
+and operations exist, which draft revision they implement, which table
+specializations this session actually built, and which approximations — if any
+— were in play. Export it beside an artifact and a later reader can tell
+exactly what your numbers came from without rerunning anything.
 
 ## Ingredients
 
@@ -28,6 +31,17 @@ d = conformance_dict()          # plain nested Dict{String,Any}
 (d["package"], length(d["formats"]), length(d["operations"]),
  [s["op"] for s in d["cached_specializations"]])
 ```
+
+```
+("SmallFloats.jl 0.4.0", 504, 52, Any[])
+```
+
+All 504 formats and all 52 operations, always — those are properties of the
+package, not of your session. The fourth entry is the one that varies: it lists
+the table specializations built so far, and it is empty above only because that
+session had not yet made an array call. Run one first and the operation appears
+there. That is what the "live, not static" note below means in practice —
+snapshot the declaration after the work, not before it.
 
 Serialize `d` with any JSON/TOML writer to attach a machine-readable
 conformance statement to experiment artifacts — for example, alongside a

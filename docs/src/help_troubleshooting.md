@@ -99,7 +99,7 @@ literal values); `similar` normalizes correctly and is safe. Full
 explanation: [Cheat Sheet](help_cheat_sheet.md), Common pitfalls.
 
 **Symptom: benchmarks report ~1 microsecond per call for an operation you
-know is sub-nanosecond warm.**
+expect to be much faster on a fixed, warm signature.**
 Cause: the format type or projection spec was read from a non-`const` global,
 so every call pays Julia's dynamic dispatch instead of running the specialized
 method. This is a benchmarking-methodology bug, not a package performance

@@ -80,9 +80,9 @@ Worked for `Binary8p4se` — `K=8, P=4, S=1, D=1`, so `Q=256, H=128, L=8, B=8`:
 
 | quantity | formula | value | confirms |
 |:---|:---|:---|:---|
-| `N` | `255 − 1·127` | `128` = `0x80` | `Binary8p4se(NaN) ≡ 0x80` |
-| `C(+∞)` | `N − 1` | `127` = `0x7f` | `Binary8p4se(Inf) ≡ 0x7f` |
-| `M = C(MaxFinite)` | `N − 1 − D` | `126` = `0x7e` | `MaxFiniteOf(Binary8p4se) ≡ 0x7e` |
+| `N` | `255 − 1·127` | `128` = `0x80` | `Binary8p4se(NaN) ⇆ 0x80` |
+| `C(+∞)` | `N − 1` | `127` = `0x7f` | `Binary8p4se(Inf) ⇆ 0x7f` |
+| `M = C(MaxFinite)` | `N − 1 − D` | `126` = `0x7e` | `MaxFiniteOf(Binary8p4se) ⇆ 0x7e` |
 
 ## Decoding: code to value
 
@@ -200,23 +200,23 @@ M = N − 1 − D
 The formulas above are worth re-deriving if you are implementing against the
 draft. To check a derivation against this package:
 
-```julia
-using SmallFloats
-using SmallFloats: nan_code, posinf_code, expbias, MaxFiniteOf
+```julia-repl
+julia> using SmallFloats: nan_code, posinf_code
 
-T = Binary8p4se
-K, P = bitwidth(T), precision(T)
-S, D = issigned(T) ? 1 : 0, isextended(T) ? 1 : 0
-Q, H, L, B = 1 << K, 1 << (K - 1), 1 << (P - 1), 1 << (K - P - S)
-N = Q - 1 - S * (H - 1)
+julia> T = Binary8p4se;
 
-(N == Int(nan_code(T)),
- N - 1 == Int(posinf_code(T)),
- N - 1 - D == Int(codepoint(MaxFiniteOf(T))),
- B == expbias(T))
-```
+julia> K, P = bitwidth(T), precision(T);
 
-```
+julia> S, D = issigned(T) ? 1 : 0, isextended(T) ? 1 : 0;
+
+julia> Q, H, L, B = 1 << K, 1 << (K - 1), 1 << (P - 1), 1 << (K - P - S);
+
+julia> N = Q - 1 - S * (H - 1);
+
+julia> (N == Int(nan_code(T)),
+        N - 1 == Int(posinf_code(T)),
+        N - 1 - D == Int(codepoint(MaxFiniteOf(T))),
+        B == expbias(T))
 (true, true, true, true)
 ```
 

@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{io}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k+kt}{IOContext}\PYG{p}{(}\PYG{n+nb}{stdout}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:binary\PYGZus{}show\PYGZus{}style}\PYG{+w}{ }\PYG{o}{=\PYGZgt{}}\PYG{+w}{ }\PYG{l+s+ss}{:typed}\PYG{p}{)}
+\PYG{n}{show}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{)}
+\end{MintedVerbatim}

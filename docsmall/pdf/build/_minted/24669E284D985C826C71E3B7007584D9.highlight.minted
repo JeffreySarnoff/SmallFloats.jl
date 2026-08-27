@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{:}\PYG{+w}{ }\PYG{n}{order\PYGZus{}key}
+
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{monotone\PYGZus{}conversion}\PYG{p}{(}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{k+kt}{From}\PYG{p}{\PYGZcb{},}\PYG{+w}{ }\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{k+kt}{To}\PYG{p}{\PYGZcb{})}\PYG{+w}{ }\PYG{k}{where}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{k+kt}{From}\PYG{p}{,}\PYG{k+kt}{To}\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{prev}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{nothing}
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{sort}\PYG{p}{(}\PYG{n}{From}\PYG{o}{.}\PYG{p}{(}\PYG{l+m+mh}{0x00}\PYG{o}{:}\PYG{k+kt}{UInt8}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{\PYGZca{}}\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{From}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{)))}
+\PYG{+w}{        }\PYG{n}{isnan}\PYG{p}{(}\PYG{n}{decode}\PYG{p}{(}\PYG{n}{v}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{k}{continue}
+\PYG{+w}{        }\PYG{n}{g}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{To}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{v}\PYG{p}{)}
+\PYG{+w}{        }\PYG{n}{prev}\PYG{+w}{ }\PYG{o}{!==}\PYG{+w}{ }\PYG{n+nb}{nothing}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{n}{order\PYGZus{}key}\PYG{p}{(}\PYG{n}{g}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZlt{}}\PYG{+w}{ }\PYG{n}{order\PYGZus{}key}\PYG{p}{(}\PYG{n}{prev}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nb}{false}
+\PYG{+w}{        }\PYG{n}{prev}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{g}
+\PYG{+w}{    }\PYG{k}{end}
+\PYG{+w}{    }\PYG{n+nb}{true}
+\PYG{k}{end}
+\PYG{n}{monotone\PYGZus{}conversion}\PYG{p}{(}\PYG{n}{Binary8p3se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{)}
+\end{MintedVerbatim}

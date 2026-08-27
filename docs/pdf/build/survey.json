@@ -1,18 +1,18 @@
 {
- "code_blocks": 296,
- "longest_block_lines": 35,
+ "code_blocks": 282,
+ "longest_block_lines": 42,
  "longest_code_line_chars": 101,
  "parts": 8,
  "parts_flattened": false,
- "duplicate_labels": 28,
+ "duplicate_labels": 23,
  "docstrings": 170,
- "tables": 77,
+ "tables": 79,
  "longtables": 0,
- "admonitions": 86,
+ "admonitions": 84,
  "figures": 1,
- "escaped_underscores_prose": 1136,
+ "escaped_underscores_prose": 1192,
  "longest_texttt_token": 80,
- "nonascii": "\u00a7\u00b0\u00b1\u00b2\u00b3\u00b5\u00b7\u00b9\u00bc\u00bd\u00be\u00d7\u00f6\u00f7\u02b8\u02e3\u0394\u03a3\u03b4\u03b5\u03b7\u03ba\u03bc\u03bd\u03c0\u03c1\u03c3\u03c9\u1d62\u2013\u2014\u201c\u201d\u2026\u2070\u2074\u2075\u2076\u2077\u2078\u2079\u207b\u2081\u2082\u211d\u2192\u2194\u21a6\u21d2\u2208\u2209\u2212\u2218\u221a\u221e\u2248\u2261\u2264\u2265\u227c\u2308\u2309\u230a\u230b\u2500\u2502\u2514\u27e8\u27e9\u27fa",
+ "nonascii": "\u00a7\u00b0\u00b1\u00b2\u00b3\u00b5\u00b7\u00b9\u00bc\u00bd\u00be\u00d7\u00f6\u00f7\u02b8\u02e3\u0394\u03a3\u03b4\u03b5\u03b7\u03ba\u03bc\u03bd\u03c0\u03c1\u03c3\u03c9\u1d62\u2013\u2014\u201c\u201d\u2026\u2070\u2074\u2075\u2076\u2077\u2078\u2079\u207b\u2081\u2082\u211d\u2192\u2194\u21a6\u21c6\u21d2\u2208\u2209\u2212\u2218\u221a\u221e\u2248\u2261\u2264\u2265\u227c\u2308\u2309\u230a\u230b\u2500\u2502\u2514\u27e8\u27e9\u27fa",
  "toc_depth": 1,
  "toc": {
   "levels": [
@@ -25,18 +25,18 @@
   "blocks": {
    "part": {
     "parents": 8,
-    "max_direct_children": 10,
-    "max_recursive_entries": 21,
-    "max_estimated_lines": 21
+    "max_direct_children": 12,
+    "max_recursive_entries": 25,
+    "max_estimated_lines": 25
    },
    "chapter": {
-    "parents": 51,
-    "max_direct_children": 5,
-    "max_recursive_entries": 6,
-    "max_estimated_lines": 6
+    "parents": 54,
+    "max_direct_children": 3,
+    "max_recursive_entries": 4,
+    "max_estimated_lines": 4
    },
    "section": {
-    "parents": 55,
+    "parents": 56,
     "max_direct_children": 0,
     "max_recursive_entries": 1,
     "max_estimated_lines": 1
@@ -46,8 +46,8 @@
    {
     "title": "Home",
     "direct_children": 1,
-    "recursive_entries": 7,
-    "estimated_lines": 7
+    "recursive_entries": 5,
+    "estimated_lines": 5
    },
    {
     "title": "Start Here",
@@ -56,16 +56,22 @@
     "estimated_lines": 7
    },
    {
+    "title": "User Guide",
+    "direct_children": 10,
+    "recursive_entries": 21,
+    "estimated_lines": 21
+   },
+   {
     "title": "Workflows",
     "direct_children": 10,
     "recursive_entries": 21,
     "estimated_lines": 21
    },
    {
-    "title": "Concepts",
-    "direct_children": 10,
-    "recursive_entries": 21,
-    "estimated_lines": 21
+    "title": "Performance and Examples",
+    "direct_children": 5,
+    "recursive_entries": 11,
+    "estimated_lines": 11
    },
    {
     "title": "Reference",
@@ -74,16 +80,10 @@
     "estimated_lines": 19
    },
    {
-    "title": "Examples and Evidence",
-    "direct_children": 4,
-    "recursive_entries": 9,
-    "estimated_lines": 9
-   },
-   {
-    "title": "Implementation",
-    "direct_children": 10,
-    "recursive_entries": 21,
-    "estimated_lines": 21
+    "title": "Technical Guide",
+    "direct_children": 12,
+    "recursive_entries": 25,
+    "estimated_lines": 25
    },
    {
     "title": "Help",
@@ -97,64 +97,62 @@
    "section"
   ]
  },
- "toc_max_chapter_block": 5,
+ "toc_max_chapter_block": 3,
  "toc_patch_levels": [
   "chapter",
   "section"
  ],
  "regroup_candidates": [
-  "section 'First Session' (10 subsections; avg 10 est lines; short spans)",
-  "section 'Quantize and Measure a Tensor' (8 subsections; avg 12 est lines; short spans)",
-  "section 'Control Rounding and Overflow' (9 subsections; avg 10 est lines; short spans)",
-  "section 'Run Operations over Arrays' (8 subsections; avg 14 est lines; short spans)",
-  "section 'Values, Code Points, and Conversion' (9 subsections; avg 14 est lines; short spans)",
-  "section 'Rounding and Saturation' (9 subsections; avg 9 est lines; short spans)",
-  "section 'Performance Model' (8 subsections; avg 14 est lines; short spans)",
+  "section 'User Guide' (6 subsections; avg 10 est lines; short spans)",
+  "section 'Rounding and Saturation' (8 subsections; avg 11 est lines; short spans)",
   "section 'Defined, Stochastic, and Approximate Results' (7 subsections; avg 10 est lines; short spans)",
-  "section 'Encoding and Decoding' (9 subsections; avg 7 est lines; short spans)",
-  "section 'Projection Engine' (9 subsections; avg 8 est lines; short spans)",
+  "section 'Control Rounding and Overflow' (9 subsections; avg 11 est lines; short spans)",
+  "section 'Performance Model' (7 subsections; avg 10 est lines; short spans)",
+  "section 'Encoding and Decoding' (8 subsections; avg 8 est lines; short spans)",
+  "section 'Projection Engine' (8 subsections; avg 9 est lines; short spans)",
+  "section 'Function Tables and Array Kernels' (7 subsections; avg 10 est lines; short spans)",
   "section 'Exact Block Reductions' (7 subsections; avg 13 est lines; short spans)"
  ],
  "toc_part_reservations": [
   {
    "title": "Home",
-   "lines": 9
+   "lines": 7
   },
   {
    "title": "Start Here",
    "lines": 9
   },
   {
+   "title": "User Guide",
+   "lines": 23
+  },
+  {
    "title": "Workflows",
    "lines": 23
   },
   {
-   "title": "Concepts",
-   "lines": 23
+   "title": "Performance and Examples",
+   "lines": 13
   },
   {
    "title": "Reference",
    "lines": 21
   },
   {
-   "title": "Examples and Evidence",
-   "lines": 11
-  },
-  {
-   "title": "Implementation",
-   "lines": 23
+   "title": "Technical Guide",
+   "lines": 27
   },
   {
    "title": "Help",
    "lines": 11
   }
  ],
- "labels_uniquified": 28,
- "colon_glued": 140,
- "chains_glued": 45,
+ "labels_uniquified": 23,
+ "colon_glued": 138,
+ "chains_glued": 34,
  "docstrings_wrapped": 170,
- "long_texttt_tokens_broken": 241,
- "table_units_kept_together": 62,
+ "long_texttt_tokens_broken": 242,
+ "table_units_kept_together": 64,
  "tables_glued_to_paragraph": 12,
  "kept_unit_headings": [
   "Accessors",
@@ -166,6 +164,7 @@
   "Binary (18)",
   "Block and scaled operations",
   "Block functions",
+  "Choose how values display",
   "Coherence invariant",
   "Common missteps",
   "Conformance functions",
@@ -180,6 +179,7 @@
   "Deterministic rounding modes",
   "Differences from IEEE 754",
   "Display",
+  "Documentation claim ledger",
   "Format names",
   "Format query table",
   "Format sensitivity",

@@ -1,3 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-Binary8p4se(0.9375 ≡ 0x3f)     \PYGZsh{} == NextLessThan(1.0): the engine crossed the binade
-\end{MintedVerbatim}

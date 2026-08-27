@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{  }\PYG{n}{precision}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{  }\PYG{n}{issigned}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{  }\PYG{n}{isextended}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{expbias}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{   }\PYG{n}{expbitwidth}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{  }\PYG{n}{trailingsigbits}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{MaxFiniteOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{  }\PYG{n}{MinFiniteOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{  }\PYG{n}{MinPositiveOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{MinNormalOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}\PYG{+w}{  }\PYG{n}{MaxSubnormalOf}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{n}{format}\PYG{p}{(}\PYG{n}{K}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{P}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{SGN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{EXT}\PYG{p}{)}\PYG{+w}{    }\PYG{c}{\PYGZsh{} programmatic route to any of the 504}
+\end{MintedVerbatim}

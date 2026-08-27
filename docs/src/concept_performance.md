@@ -1,187 +1,99 @@
 # Performance Model
 
-Performance advice for SmallFloats.jl is scattered across the manual,
-the cheat sheet, and the technical examples because it applies at every
-layer — construction, arithmetic, arrays, storage. This page pulls all of it
-into one spine: the handful of decisions that determine whether your code
-runs at scalar speed (tens of nanoseconds) or falls off a cliff into
-microsecond dynamic dispatch.
+Nothing in this package makes a result faster by making it different. Tables,
+carrier selection, packing, and threading all schedule the same
+exact-then-project computation; the code point never depends on which one ran.
+That narrows performance work to two questions, in order: can Julia see the
+format and projection at compile time, and does your signature qualify for a
+table? Get the first wrong and you measure dynamic dispatch — roughly a
+microsecond per call, swamping the operation entirely. The second decides
+whether an array call gathers from memory or computes per element.
 
-## Pass formats statically
+## Pass formats and policies statically
 
-Every scalar entry point in the package — `Add`, `project`, a constructor —
-fully specializes when the format type is known at compile time: through a
-`const` binding, a type parameter, or an ordinary function argument. Under
-that condition, a scalar `Add` runs at roughly 7–9 ns and `project` at
-roughly 2–7 ns, with zero allocations.
+Give scalar code a concrete format type and, in a hot path, a concrete
+projection specification. A function barrier is enough when a format arrives
+at run time:
 
-The moment a format type is read from a **non-`const` global**, Julia can no
-longer resolve the method at compile time, and every call pays for dynamic
-dispatch instead — roughly 1 µs for a keyword call, a difference of nearly
-two orders of magnitude for the identical computation:
+```julia
+function add_one(::Type{T}, ρ, x, y) where {T<:Binary}
+    Add(T, ρ, x, y)
+end
+```
 
-!!! perf "The 60× benchmarking slowdown"
-    The same benchmark, run with the format type `T` read from a
-    non-`const` global instead of passed as a type parameter, measures
-    around 1 µs — Julia's dynamic keyword dispatch overhead, not this
-    package's arithmetic. Two real project post-mortems trace their
-    "SmallFloats is slow" reports to exactly this mistake. The shipped
-    `benchmarking/benchmarking.jl` asserts zero warm-path allocation before
-    it believes any number it produces, and your own benchmarks should do
-    the same:
+This does not require every application to hard-code its format. It gives Julia
+a point at which the type has become known, so calls inside the barrier can
+specialize. A benchmark that reads a format from a non-`const` global measures
+dynamic dispatch as well as the operation and cannot be used to compare codec,
+projection, or carrier paths.
 
-    ```julia
-    using Chairmarks, SmallFloats, Random
-    using Statistics: median
+## Let the signature choose the array shape
 
-    function bench_add(::Type{T}) where {T<:Binary}          # T: type parameter, not a global
-        pool = [SmallFloats.rawvalue(T, rand(UInt8)) for _ in 1:4096]
-        @be (rand(pool), rand(pool)) (t -> Add(T, RNE_SN, t[1], t[2]))(_)
-    end
+For a pure projection, an array operation may be a Shape-A table gather or a
+Shape-B scalar compute loop. Ask the package which one applies:
 
-    b = bench_add(Binary8p4se)
-    (round(median(b).time * 1e9; digits=1), median(b).allocs)
-    ```
+```julia-repl
+julia> table_policy(:Add, Binary8p4se, Binary8p4se, Binary8p4se, RNE_SN)
+(shape = :A, entries = 65536, bytes = 65536, reason = "within the 2^16-entry build band")
+```
 
-    ```
-    (16.3, 0.0)          # ns per full scalar Add, zero allocations
-    ```
+Read the answer as a budget decision. A same-format binary `Add` needs one
+entry per operand pair — 256 × 256 = 65 536 entries at one byte each — which
+fits the build band, so it gathers. A unary `Exp` on the same format needs 256
+entries and fits easily. Change one format to `Code16` and the entry count
+grows by 256×, which is what the budget exists to refuse.
 
-The fix, when a format genuinely has to come from a runtime value, is one
-function barrier: write `f(::Type{T}, …) where {T}` and call into it once
-the type is known, and everything inside specializes at full speed again.
+The first Shape-A call may build a table; later calls can reuse it. Benchmark
+cold construction and warm use separately. Shape B is not an error or a less
+correct mode: it runs the same defined scalar semantics once per element and
+may thread for long, pure-spec arrays.
 
-Format operands entering `Chairmarks`-style benchmarks specifically must
-come from the untimed `setup` phase, and if you retrieve an operation
-function reflectively (`getfield(SmallFloats, op)`), pass it through an
-argument barrier so it specializes too — the same discipline that makes the
-benchmark trustworthy also makes ordinary calling code fast.
+Representation alone does not determine the shape. A `Code16` unary or
+mixed-width signature can fit the current budget, while a larger or stochastic
+signature may compute. Conversely, an all-`Code8` ternary signature can become
+too large for an eager table. Use `table_policy`, not a K-only rule of thumb.
 
-## Convenience forms are free at the initial default
+## Stochastic work preserves order
 
-`x + y`, `Exp(x)`, and `T(2.1)` all read the session default projection
-through a speculation guard rather than a dynamic lookup. While the default
-holds its initial value, the guard lets these calls compile against a
-constant, so they are allocation-free with concretely inferred results — a
-property pinned in the test suite, not an incidental benchmark result. The
-moment you change the default, these same calls cross a function barrier
-instead: one dynamic dispatch per call, with everything inside that barrier
-still fully specialized. Code that must stay insensitive to whatever the
-session default happens to be should name its projection explicitly —
-`Add(T, ρ, x, y)` with a `const` `ρ` — rather than rely on the convenience
-spelling in a hot loop.
+Stochastic projection consumes an RNG stream in index order. The corresponding
+array paths stay sequential so a seeded run does not depend on thread
+scheduling. Pass an explicit RNG when reproducibility is part of the
+experiment; use a pure projection when independent per-element computation is
+the desired performance case.
 
-## Bulk work belongs in array calls
+## Store packed; compute unpacked
 
-The table-gather kernels that back array operations run roughly 25× faster
-than the scalar path per element, because after the first call for a given
-`(op, formats, ρ)` specialization, every later element is a single table
-lookup rather than a full evaluation. That first call pays a one-time table
-build: roughly 6 µs for a 256-entry unary table, 80 µs for a 64 K-entry 8×8
-binary table, and a few milliseconds for a wide-spread signature whose
-entries escalate to MPFR. Benchmark warm calls separately from the first cold
-call, or the build cost will dominate a measurement that is supposed to be
-about steady-state throughput. Once warm, measured throughput is around
-0.13 ns/element for unary gathers and 0.25 ns/element for binary gathers.
+`PackedVector{F}` stores code points at `bitwidth(F)` bits per element when
+that saves space. It is useful for bandwidth and persistence, not an invitation
+to perform arithmetic directly on packed bits. Kernels unpack the working data
+they need and preserve the ordinary scalar/array semantics. `BlockVector`
+provides the analogous layout for collections of same-shaped blocks.
 
-Builds are also **parallel** when the table is large enough and the process has
-threads, so the first-call cost above is what one core pays; see
-[Performance Evidence](examples_performance.md) for the measured contrast.
+## Sorting and measurement discipline
 
-### Ternary tiers scale with bitwidth
+SmallFloats has a representation-aware counting-sort path for sufficiently
+large homogeneous vectors; short inputs deliberately use the stock algorithm
+because key-space setup can cost more than comparison sorting. NaN is first in
+the forward P3109 total order and last under reverse order.
 
-Ternary operations (`FMA`, `FAA`, `Clamp`) ride the same table-gather
-mechanism whenever the combined operand bitwidth keeps the resulting table
-affordable, and the package picks the tier automatically — no action needed
-on your part:
-
-- **Eager** (up to 256 KiB; every all-`K ≤ 6` signature): built on the first
-  array call, exactly like a unary or binary table.
-- **Adaptive** (up to 2 MiB; the `K = 7` band): built only once a signature
-  has processed enough elements to earn its build, held in a byte-bounded,
-  LRU-evicted cache — so a signature used once in passing doesn't pay for a
-  table it will never reuse.
-- **Compute** (`K = 8`; a 16 MiB table stops being a cache win): the scalar
-  pipeline runs per element instead, threaded for long arrays.
-
-### Wide formats take the compute path, and it threads
-
-Above `K = 8` the same reasoning reaches unary and binary operations. A binary
-table for two `K = 16` operands would be `2^32` entries, so the policy declines
-it and the **compute kernel is the only array path those formats have**. It is
-threaded for long arrays under a pure ρ, at every arity — measured at roughly
-6× on 8 threads for a 65 536-element `Binary16p8se` `Add`.
-
-Stochastic ρ is deliberately excluded: it draws from a single stream, so its
-results are reproducible only in index order, and threading it would make a
-seeded run depend on the scheduler.
-
-Every table entry, eager or adaptive, is built through the exact scalar
-path, so a table lookup and the equivalent scalar call are bit-identical by
-construction — the speed comes with no accuracy trade at all.
-
-## Stochastic array calls are always per-element
-
-Deterministic array operations use cached tables; stochastic ones cannot,
-because each element needs its own independent random draw. Stochastic
-array calls always run the scalar pipeline once per element, consuming one
-draw per projection. Pass an explicit `rng` when you need the result
-reproducible — the array and `!` forms always use whatever RNG you supply,
-so this is the one lever available for controlling a stochastic array call's
-output exactly.
-
-## Memory: `PackedVector` and `BlockVector`
-
-When storage bandwidth matters more than direct byte-level access,
-`PackedVector{F}` stores code points at `bitwidth(F)` bits per element
-rather than rounding up to a whole byte or word — a `Binary5p2se` vector at
-5 bits/element instead of 8. It behaves as a full `AbstractVector{F}` for
-indexing, `collect`, and iteration, and `vmap` accepts it directly,
-unpacking cache-friendly tiles internally rather than materializing the
-whole array. The governing rule is *store packed, compute unpacked*: there
-is deliberately no in-place packed arithmetic, because computing directly on
-sub-byte-packed bits would give up more in kernel complexity than it could
-ever save in bandwidth. `BlockVector` is the analogous structure for many
-same-shape `Block`s, holding them in a structure-of-arrays layout instead of
-an array of individually-boxed blocks.
-
-`table_bytes()` reports the current cache footprint across unary, binary,
-and ternary tables alike; `empty_tables!()` resets it, which is useful both
-for isolating a benchmark from a previous session's warm tables and for
-freeing memory in a long-running process that has touched many format
-specializations.
-
-## Sorting: O(n) counting sort
-
-Sorting is special-cased rather than falling through to Base's generic
-comparison sort. `Binary` values compare through integer order keys, and a
-vector of `Binary` values sorts with an **O(n) counting sort** installed as
-the default algorithm — roughly 8× the stock comparison sort at 64K
-elements, with `rev=true` supported at the same cost. `sort(A)` simply picks
-this path up automatically. P3109's total order places the single NaN first
-(last under `rev=true`), unlike Base's ordering for ordinary floating-point
-NaNs.
+Treat timings, allocation counts, and thread scaling as measurements with a
+scope, not universal package properties. Record the format, operation,
+projection, input shape, Shape A/B decision, Julia version, thread count,
+hardware, and cold/warm state. [Performance Evidence](examples_performance.md)
+holds recorded results; [Benchmark Correctly](internals_benchmark.md) explains
+how to obtain new ones without measuring dispatch or cache setup by accident.
 
 ## Do not use `@fastmath`
 
-Every number in the performance model above depends on the one-write-path
-contract: exact math, then exactly one projection. `@fastmath` exists in
-Julia to relax IEEE semantics for speed — reordering operations, assuming no
-NaNs, dropping distinctions the standard is careful about — and every one of
-those relaxations is exactly the kind of silent rounding shortcut this
-package's whole design refuses to take. Applying `@fastmath` to code using
-`Binary` values does not make the arithmetic faster in any meaningful way,
-because the actual bottleneck the sections above address is dispatch and
-table-gather behavior, not floating-point instruction scheduling — but it
-can silently invalidate the exactness guarantee that makes the table-gather
-speedup safe to rely on in the first place. If a computation is slow, the
-fix is one of the items above: static format types, a function barrier,
-array calls instead of scalar loops, or `PackedVector` for memory pressure —
-never `@fastmath`.
+`@fastmath` is not a SmallFloats optimization strategy. The package's value is
+that each defined result follows its stated semantic path, including NaN,
+single-zero, and projection rules. If a workload is slow, make types static,
+use an appropriate array call, inspect `table_policy`, or reduce storage
+pressure with `PackedVector`; do not relax the semantics you are trying to
+study.
 
 ## See also
 
-> Continue with **Benchmarking Without Fooling Yourself** (Understanding
-> track) for the full benchmark doctrine — Chairmarks setup discipline,
-> argument barriers for reflectively-retrieved functions, and the warm/cold
-> table-build measurement split.
+[Function Tables and Array Kernels](internals_tables.md),
+[Performance Evidence](examples_performance.md), and
+[Benchmark Correctly](internals_benchmark.md).

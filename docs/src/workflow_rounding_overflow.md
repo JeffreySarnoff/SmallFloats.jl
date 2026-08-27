@@ -1,8 +1,10 @@
 # Control Rounding and Overflow
 
-Use this workflow when a computation must name how between-grid values round
-and how out-of-range values are handled. The result format and projection spec
-should be visible in any code whose numerical policy matters.
+Two questions have to be answered before a computation is reproducible: where
+a between-grid value lands, and what happens when a result leaves the format's
+range. This workflow names both in the call rather than inheriting them from
+session state, and then tests that the choice does what you expect at the
+cases where the modes actually disagree.
 
 ## Select the result format
 
@@ -25,7 +27,7 @@ predefined names use `ROUND_SATURATION`:
 julia> x, y = Binary8p4se(1.625), Binary8p4se(1.75);
 
 julia> Add(Binary8p4se, RNE_SN, x, y)
-Binary8p4se(3.5 ≡ 0x4e)
+Binary8p4se(3.5 ⇆ 0x4e)
 ```
 
 `RNE` is nearest, ties to even. `SN` is `SatNone`, the draft's
@@ -44,8 +46,15 @@ z = 1.6
  (RNE_SN, RNA_SN, RTP_SN, RTN_SN, RTZ_SN, RTO_SN)]
 ```
 
-Do not infer a rounding mode from one ordinary value. Include a tie, a negative
-value, and a value near a binade boundary in a policy test.
+1.6 sits between 1.5 and 1.625, closer to 1.625. Four modes land on 1.625
+(both nearest modes, toward-positive, and to-odd); toward-negative and
+toward-zero land on 1.5 — they agree here only because the value is positive.
+
+That is why one value is not a policy test. This value is not a tie, so the
+two nearest modes cannot be told apart by it, and it is positive, so
+toward-zero and toward-negative cannot be told apart either. Include a tie, a
+negative value, and a value near a binade boundary before concluding anything
+about a mode.
 
 ## Test positive and negative overflow
 
@@ -53,16 +62,21 @@ value, and a value near a binade boundary in a policy test.
 julia> w, two = Binary8p4se(200.0), Binary8p4se(2.0);
 
 julia> Multiply(Binary8p4se, RNE_SN, w, two)
-Binary8p4se(Inf ≡ 0x7f)
+Binary8p4se(Inf ⇆ 0x7f)
 
 julia> Multiply(Binary8p4se, RNE_SF, w, two)
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 ```
 
-Repeat the check for a negative result and, if relevant, an unsigned result
-format. Saturation behavior depends on domain, signedness, direction, and the
-rounded classification; “overflow clamps” is not a sufficient policy
-description.
+Note that `w` holds 192.0, not 200 — 200 ties between 192 and 208 and
+construction already rounded it. The exact product is therefore 384, past the
+largest finite datum, 224.
+
+Repeat the check for a negative result: `-192 × 2` gives `-Inf` under `RNE_SN`
+and `-224.0` under `RNE_SF`, mirroring the positive case. Repeat it again for
+an unsigned result format if you use one. Saturation behavior depends on
+domain, signedness, direction, and the rounded classification; "overflow
+clamps" is not a sufficient policy description.
 
 ## Keep policy local
 

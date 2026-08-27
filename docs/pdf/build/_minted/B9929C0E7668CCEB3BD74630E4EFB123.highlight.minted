@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{k}{using}\PYG{+w}{ }\PYG{n}{SmallFloats}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{)}\PYG{+w}{                 }\PYG{c}{\PYGZsh{} construction projects a value}
+\PYG{g+go}{Binary8p4se(1.625 ⇆ 0x45)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Add}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.75}\PYG{p}{))}
+\PYG{g+go}{Binary8p4se(3.5 ⇆ 0x4e)                     \PYGZsh{} exact sum, then one projection}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{T}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{format}\PYG{p}{(}\PYG{l+m+mi}{16}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{6}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb}{true}\PYG{p}{)}\PYG{+w}{        }\PYG{c}{\PYGZsh{} a wider format is an ordinary format}
+\PYG{g+go}{Binary16p6se}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{codeunit\PYGZus{}type}\PYG{p}{(}\PYG{n}{T}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{SmallFloats}\PYG{o}{.}\PYG{n}{datumcarrier}\PYG{p}{(}\PYG{n}{T}\PYG{p}{)}
+\PYG{g+go}{(UInt16, Float64)}
+\end{MintedVerbatim}

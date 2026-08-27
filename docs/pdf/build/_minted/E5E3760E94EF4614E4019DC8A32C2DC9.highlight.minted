@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{register\PYGZus{}approx!}\PYG{p}{(}\PYG{l+s+ss}{:cheater}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{step2}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{κ}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{)}
+\PYG{g+gr}{ERROR: ArgumentError: declared κ = 1.0 understates measured κ = 2.0 — registration rejected}
+\end{MintedVerbatim}

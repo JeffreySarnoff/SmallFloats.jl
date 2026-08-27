@@ -1,6 +1,10 @@
 # Choose a Format
 
-Pick a `Binary{K,P,SGN,EXT}` format that fits a specific tensor, signal, or quantity.
+Choosing a format is four decisions: how many bits, how to split them between
+precision and range, whether the quantity is ever negative, and whether an
+infinity is a meaningful outcome. This page works through each against real
+data, because the first three trade off against one another and the honest
+answer depends on what your numbers actually look like.
 
 ## Ingredients
 
@@ -15,14 +19,33 @@ Pick a `Binary{K,P,SGN,EXT}` format that fits a specific tensor, signal, or quan
 look at in full. Sorting `Binary4p2se`'s 16 code points shows the subnormal
 spacing, the binade structure, and the dynamic range in one line:
 
-```julia
-decode.(sort(Binary4p2se.(0x00:0x0f)))
+```julia-repl
+julia> decode.(sort(Binary4p2se.(0x00:0x0f)))
+16-element Vector{Float64}:
+ NaN
+ -Inf
+  -2.0
+  -1.5
+  -1.0
+  -0.75
+  -0.5
+  -0.25
+   0.0
+   0.25
+   0.5
+   0.75
+   1.0
+   1.5
+   2.0
+  Inf
 ```
 
-```
-[-Inf, -2.0, -1.5, -1.0, -0.75, -0.5, -0.25, 0.0,
-  0.25, 0.5, 0.75, 1.0, 1.5, 2.0, Inf, NaN]
-```
+Read past the leading NaN (the draft's total order puts it below −Inf; see
+[Core Model](core_model.md)) to the format itself: subnormal spacing near
+zero, binades doubling outward, and ±Inf occupying two of the sixteen code
+points. For a full `(code, value)` table of any format in either ordering,
+the `codetable` function in [Values, Code Points, and
+Conversion](concept_values_codepoints.md) does this for all 504.
 
 **2. At fixed bitwidth, precision trades against range.** For a unit-scale
 Gaussian tensor, RMSE roughly doubles per lost significand bit while
@@ -54,19 +77,19 @@ probability, a normalized score — anything that is never negative — is a job
 for an unsigned finite format, not a signed one spending a code on a sign it
 never uses. `Binary8p6uf` gives a [0, 15.5] range at 1/32 resolution near 1:
 
-```julia
-F = Binary8p6uf
-membership(x, a, b, c, d) = clamp(min((x - a) / (b - a), 1.0, (d - x) / (d - c)), 0.0, 1.0)
-warm = F(membership(26.0, 15, 20, 24, 28))   # membership of 26 °C in "warm"
-hot  = F(membership(26.0, 24, 30, 100, 101)) # … and in "hot"
+```julia-repl
+julia> F = Binary8p6uf;
 
-(decode(warm), decode(hot),
- decode(Minimum(F, RNE_SN, warm, hot)),      # warm AND hot
- decode(Maximum(F, RNE_SN, warm, hot)),      # warm OR hot
- decode(Multiply(F, RNE_SF, warm, hot)))   # product t-norm
-```
+julia> membership(x, a, b, c, d) = clamp(min((x - a) / (b - a), 1.0, (d - x) / (d - c)), 0.0, 1.0);
 
-```
+julia> warm = F(membership(26.0, 15, 20, 24, 28));   # membership of 26 °C in "warm"
+
+julia> hot  = F(membership(26.0, 24, 30, 100, 101)); # … and in "hot"
+
+julia> (decode(warm), decode(hot),
+        decode(Minimum(F, RNE_SN, warm, hot)),       # warm AND hot
+        decode(Maximum(F, RNE_SN, warm, hot)),       # warm OR hot
+        decode(Multiply(F, RNE_SF, warm, hot)))      # product t-norm
 (0.5, 0.3359375, 0.3359375, 0.5, 0.16796875)
 ```
 

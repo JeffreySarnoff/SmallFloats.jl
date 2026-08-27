@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{with\PYGZus{}default\PYGZus{}type}\PYG{p}{((}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{(}\PYG{n}{x}\PYG{p}{),}\PYG{+w}{ }\PYG{l+m+mf}{1.5}\PYG{p}{)}\PYG{+w}{          }\PYG{c}{\PYGZsh{} Binary8p2se(1.5 ⇆ 0x41)}
+\PYG{n}{with\PYGZus{}default\PYGZus{}projection}\PYG{p}{((}\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Add}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{)}
+\PYG{n}{with\PYGZus{}default\PYGZus{}returntype}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{args}\PYG{o}{...}\PYG{p}{)}\PYG{+w}{              }\PYG{c}{\PYGZsh{} f(DefaultReturnType(), args...)}
+\end{MintedVerbatim}

@@ -15,15 +15,12 @@ Outputs are captured from real sessions.
 `round_to_precision` returns the draft's exact `(sign, S, Q)` decomposition before
 saturation ever sees it:
 
-```julia
-using SmallFloats
-using SmallFloats: round_to_precision
+```julia-repl
+julia> using SmallFloats: round_to_precision
 
-r = round_to_precision(4, 8, NearestTiesToEven(), 2.30078125, 0, 0)   # P=4, bias=8
-(r.sign, r.S, r.Q, r.S * 2.0^r.Q)
-```
+julia> r = round_to_precision(4, 8, NearestTiesToEven(), 2.30078125, 0, 0);  # P=4, bias=8
 
-```
+julia> (r.sign, r.S, r.Q, r.S * 2.0^r.Q)
 (1, 9, -2, 2.25)          # S·2^Q = 9/4: the nearest P=4 value
 ```
 
@@ -33,27 +30,25 @@ The engine accepts `sticky ∈ {-1, 0, +1}` meaning "the true value is the carri
 plus an infinitesimal of this sign". This is how enclosure endpoints and asymptotes
 (`tanh → 1⁻`) are projected exactly:
 
-```julia
-using SmallFloats: project
-project(Binary8p4se, ProjSpec(TowardNegative(), SatNone()), 1.0; sticky=-1)
-```
+```julia-repl
+julia> using SmallFloats: project
 
-```
-Binary8p4se(0.9375 ≡ 0x3f)     # == NextLessThan(1.0): the engine crossed the binade
+julia> project(Binary8p4se, ProjSpec(TowardNegative(), SatNone()), 1.0; sticky=-1)
+Binary8p4se(0.9375 ⇆ 0x3f)     # == NextLessThan(1.0): the engine crossed the binade
 ```
 
 ### Tables are the scalar path, memoized
 
-```julia
-using SmallFloats: get_table
-empty_tables!()
-tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN)
-(tbl[Int(0x45) + 1],
- codepoint(Exp(Binary8p4se, RNE_SN, SmallFloats.rawvalue(Binary8p4se, 0x45))),
- table_bytes())
-```
+```julia-repl
+julia> using SmallFloats: get_table
 
-```
+julia> empty_tables!();
+
+julia> tbl = get_table(:Exp, Binary8p4se, Binary8p4se, RNE_SN);
+
+julia> (tbl[Int(0x45) + 1],
+        codepoint(Exp(Binary8p4se, RNE_SN, SmallFloats.rawvalue(Binary8p4se, 0x45))),
+        table_bytes())
 (0x52, 0x52, 256)              # table entry ≡ scalar result; one 256-byte table cached
 ```
 

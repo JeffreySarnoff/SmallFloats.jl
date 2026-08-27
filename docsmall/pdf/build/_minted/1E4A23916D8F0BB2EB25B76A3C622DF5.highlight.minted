@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+(format = :Binary8p4se, rmse = 0.0066, max\PYGZus{}error = 0.0622,
+ nonfinite\PYGZus{}rate = 0.0, boundary\PYGZus{}rate = 0.0)
+\end{MintedVerbatim}

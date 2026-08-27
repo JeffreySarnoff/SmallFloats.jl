@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{DefaultType}\PYG{+w}{        }\PYG{n}{DefaultReturnType}
+\PYG{n}{DefaultRoundingMode}\PYG{+w}{  }\PYG{n}{DefaultSaturationMode}\PYG{+w}{  }\PYG{n}{DefaultProjection}
+\end{MintedVerbatim}

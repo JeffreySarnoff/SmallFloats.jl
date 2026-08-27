@@ -26,11 +26,13 @@ Operands and destination must have matching axes.
 | `table_bytes` | `table_bytes()` | current cache footprint, bytes | [Cheat Sheet](help_cheat_sheet.md) |
 | `empty_tables!` | `empty_tables!()` | reset the table cache | [Cheat Sheet](help_cheat_sheet.md) |
 
-Deterministic unary/binary array calls use cached result tables (256 B unary,
-64 KiB binary). Ternary tables tier by combined operand bitwidth: eager
-(≤ 18 bits total), adaptive with LRU eviction (≤ 21 bits total), compute per
-element at `K = 8`. Stochastic operations always compute per element and
-consume one draw per projection.
+Deterministic unary/binary array calls use cached result tables when the current
+signature satisfies the table policy (a `Binary8p4se` unary result table is 256 B;
+its binary table is 64 KiB). Ternary tables tier by combined operand bitwidth:
+eager (≤ 18 bits total), adaptive with LRU eviction (≤ 21 bits total), then
+compute beyond the adaptive band. Table entry width follows the result
+representation. Stochastic operations always compute per element and consume
+one draw per projection.
 
 ## Block functions
 

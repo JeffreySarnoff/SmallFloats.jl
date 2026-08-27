@@ -1,0 +1,13 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{A}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{o}{.}\PYG{p}{([}\PYG{l+m+mf}{1.5}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{0.25}\PYG{p}{]);}\PYG{+w}{ }\PYG{n}{B}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{o}{.}\PYG{p}{([}\PYG{l+m+mf}{0.25}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{1.5}\PYG{p}{]);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{map}\PYG{p}{(}\PYG{n}{Op}\PYG{p}{(}\PYG{l+s+ss}{:Add}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{A}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{B}\PYG{p}{)}
+\PYG{g+go}{2\PYGZhy{}element Vector\PYGZob{}Binary8p4se\PYGZcb{}:}
+\PYG{g+go}{ Binary8p4se(1.75 ⇆ 0x46)}
+\PYG{g+go}{ Binary8p4se(1.75 ⇆ 0x46)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Op}\PYG{p}{(}\PYG{l+s+ss}{:Exp}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}\PYG{o}{.}\PYG{p}{(}\PYG{n}{A}\PYG{p}{)}
+\PYG{g+go}{2\PYGZhy{}element Vector\PYGZob{}Binary8p4se\PYGZcb{}:}
+\PYG{g+go}{ Binary8p4se(4.5 ⇆ 0x51)}
+\PYG{g+go}{ Binary8p4se(1.25 ⇆ 0x42)}
+\end{MintedVerbatim}

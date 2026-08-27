@@ -137,12 +137,14 @@ Every alias is defined in `SmallFloats` either way, so
 [`format`](@ref)`(K, P, Σ, Δ)` when the parameters are runtime values.
 """
 module Formats
+
 import ..SmallFloats
 for n in sort!(collect(keys(SmallFloats._NAMED)))
     @eval using ..SmallFloats: $n
     @eval export $n
 end
-end
+
+end # module Formats
 
 export binary64, binary32, binary16
 
@@ -220,6 +222,10 @@ export conformance, conformance_dict, conformance_report, draft_revision, draft_
        measure_kappa, codedistance, register_approx!, unregister_approx!,
        approx, kappa, kappa_measured, list_approx, ftz_variant,
        f32_impl, register_f32!
+
+
+# inclusions
+
 
 # ---------------------------------------------------------------------------
 # Tier-1 precompile workload (design §7.2): the standard profile's hot entries

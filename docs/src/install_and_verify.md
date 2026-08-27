@@ -38,7 +38,7 @@ Thirty seconds to confirm everything is in place:
 julia> using SmallFloats
 
 julia> Binary8p4se(1.6) + Binary8p4se(0.25)
-Binary8p4se(1.875 ≡ 0x47)
+Binary8p4se(1.875 ⇆ 0x47)
 
 julia> conformance() !== nothing
 true

@@ -1,0 +1,6 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+Binary8p5se  rmse=0.00356  max=0.0256  nonfinite=0.0  boundary=0.0
+Binary8p4se  rmse=0.00662  max=0.0622  nonfinite=0.0  boundary=0.0
+Binary8p3se  rmse=0.0132   max=0.0881  nonfinite=0.0  boundary=0.0
+Binary8p2se  rmse=0.0261   max=0.162   nonfinite=0.0  boundary=0.0
+\end{MintedVerbatim}

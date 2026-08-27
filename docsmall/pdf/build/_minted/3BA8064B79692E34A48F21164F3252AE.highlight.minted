@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{w}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{two}\PYG{+w}{                            }\PYG{c}{\PYGZsh{} follows the default: RNE\PYGZus{}SN → Inf}
+\PYG{g+go}{Binary8p4se(Inf ⇆ 0x7f)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultProjection!}\PYG{p}{(}\PYG{n}{RTZ\PYGZus{}SF}\PYG{p}{);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{w}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{two}\PYG{+w}{                            }\PYG{c}{\PYGZsh{} every convenience call changed}
+\PYG{g+go}{Binary8p4se(224.0 ⇆ 0x7e)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{DefaultProjection!}\PYG{p}{(}\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}\PYG{+w}{         }\PYG{c}{\PYGZsh{} restore; the setting is process\PYGZhy{}wide}
+\PYG{g+go}{(NearestTiesToEven, SatNone)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Multiply}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{two}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} explicit ρ never reads a default}
+\PYG{g+go}{Binary8p4se(Inf ⇆ 0x7f)}
+\end{MintedVerbatim}

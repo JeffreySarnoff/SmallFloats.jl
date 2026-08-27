@@ -1,91 +1,94 @@
 # Function Tables and Array Kernels
 
-## Function Tables
+Tables are a cache for defined scalar semantics, not a second arithmetic
+implementation. For a pure projection specification, a unary or binary
+operation is a finite function on code points. When the policy admits that
+function, SmallFloats builds it through the scalar path once and gathers from it
+thereafter. When the policy declines it, the kernel calls that same scalar path
+per element. The choice changes cost; it must never change a code point.
 
-For pure specs, unary and binary operations are **finite functions** — 256 or 65 536
-entries — so the kernel layer materializes them once per `(op, formats, ρ)` into a
-locked cache (`Dict{TableKey, Memory{UInt8}}`, double-checked locking, builds outside
-the lock) and serves every later array call as a gather: Shape-A, one load per
-element, measured 0.13 ns/elem unary and 0.25 ns/elem binary. Tables are built
-*through the scalar path*, so they inherit its bit-exactness; the suite asserts
-table ≡ scalar over every entry.
+## Two representations, two concrete caches
 
-Builds are **parallel** above `TABLE_BUILD_MIN_ENTRIES`, partitioned over the
-outer code loop so each task writes a contiguous, disjoint span of the
-preallocated `Memory`. Nothing about the cache changes: the build already ran
-outside the lock, with a racing duplicate build documented as benign. Only pure
-ρ is ever tabulated, `_scalar_code` holds no mutable state, and MPFR escalation
-reaches `setprecision`/`setrounding` through their *function* forms, which are
-`ScopedValue`-backed on Julia 1.12 and therefore task-local — the three facts the
-parallelism rests on, and the reason the package floors at 1.12.
+A table entry is a result code point. `Code8` results therefore use
+`Memory{UInt8}` and `Code16` results use `Memory{UInt16}`. The package keeps
+separate caches rather than a `Union`-typed cache, so the representation is
+chosen by dispatch before the hot loop indexes its local memory.
 
-The fill loops are separate functions (`_fill_unary!`, `_fill_binary!`,
-`_fill_ternary!`) taking `Val(op)` as an **argument**, and that is load-bearing
-rather than tidiness. `_build_*` receives `op` as a runtime `Symbol`, so a
-`Val(op)` constructed in the same function body is type-unstable and every
-entry pays a dynamic dispatch; passing it across a barrier makes `op` a type
-parameter of the callee and specializes the whole scalar path. Measured on a
-64 K-entry `Multiply` table: **445 µs → 64 µs**.
+```text
+pure ρ + admitted table  → Shape A: gather from Memory{codeunit_type(fr)}
+stochastic ρ or declined table → Shape B: compute one defined scalar result
+```
 
-Ternary (`FMA`, `FAA`, `Clamp`) is a finite function too — 2^(K1+K2+K3) entries —
-but that count spans four orders of magnitude across the 3–16 bitwidth range (512 B
-at K=3, 16 MiB at K=8), so one policy doesn't fit the whole range. A separate
-`TernaryKey → TernaryEntry` cache (`_ternary_table_for`, in `tables.jl`) tiers by
-Σ bitwidth:
+The branch happens once per array call, not once per element. `table_policy`
+reports the chosen shape, estimated entries and bytes, and the reason; it is the
+right diagnostic when an array call takes the compute path.
 
-- **Eager** (≤ 18 bits, all `K ≤ 6` combinations, ≤ 256 KiB): builds and caches
-  on the first array call.
-- **Adaptive** (≤ 21 bits, the `K = 7` band, up to 2 MiB): accumulates a
-  per-signature element count across calls and builds only once a signature has
-  processed enough elements to amortize the build; a byte-bounded LRU eviction
-  (`TERNARY_CACHE_BYTES`) guards against many hot signatures coexisting.
-- **Compute** (`K = 8`, 16+ MiB — a table is never worth it): `vmap!` runs
-  Shape-B, the fully specialized scalar pipeline per element.
+## Admission is a resource policy
 
-Every ternary table entry, eager or adaptive, is still built *through the scalar
-path* — the tiering changes when/whether the cache exists, never what it contains.
-Stochastic calls of any arity always take Shape-B, with the RNG resolved once per
-array rather than per element.
+The table policy has separate limits for memory and build time. The byte budget
+accounts for the result code-unit width, so a `Code16` table with the same
+number of entries as a `Code8` table occupies twice the storage. The eager
+build limit bounds first-call latency rather than pretending that every table
+that fits in RAM is useful to build.
 
-### Shape-B threads at every arity
+Unary and binary pure-spec tables are admitted only within both limits. Ternary
+tables have a third, reuse-sensitive policy:
 
-`Threads.@threads` is a property of the **pure-ρ compute loop**, not of the
-ternary tier that first needed it. `_vmap_compute!` covers unary and binary as
-well, gated by `THREADED_KERNELS` and `THREAD_MIN_ELEMS` through the single
-`_should_thread` predicate. Above `K = 8` this is the case that matters: a
-binary table would be `2^(K1+K2)` entries, `table_for` declines, and Shape-B is
-the only array path the format has — measured at roughly 6× on 8 threads for a
-65 536-element `Binary16p8se` `Add`.
+- **Eager band.** Small ternary signatures build on their first array call.
+- **Adaptive band.** Medium signatures accumulate use and build only after they
+  have processed enough elements to amortize construction; the cache is
+  byte-bounded and least-recently-used tables may be evicted.
+- **Compute band.** Larger signatures remain Shape B.
 
-Stochastic ρ stays sequential, and that requirement is carried by *which
-function you are in* rather than by a branch: `_vmap_scalar!` keeps the
-stochastic traffic and never threads, because one rng stream is reproducible
-only in index order. The suite pins threaded and sequential results as
-**identical code points in identical order**, not as agreement within a
-tolerance — a threading change that altered a result is a defect no timing would
-reveal.
+These are current policy knobs, not semantic limits. `table_policy` and the
+cache-accounting API expose them so a benchmark or application can report what
+actually happened instead of inferring it from a timing.
 
-## Sorting
+## Why Shape A and Shape B agree
 
-Ordering runs on **integer order keys**: a sign-magnitude fold into an unsigned
-type wide enough for the format's `2^K + 1` keys (`UInt16` at K ≤ 8, wider above),
-monotone with the total order. Key `0` is reserved for the single NaN, which the
-draft orders below −Inf (§4.12.1); every datum key is therefore ≥ 1.
-Same-format `TotalOrder`, `isless`, and the numeric comparisons are key
-comparisons (~1 ns); since a format has at most `2^K + 1` distinct keys, vectors
-sort with an **O(n) counting sort** installed via `Base.Sort.defalg` (forward and
-reverse orderings; anything exotic falls back to the stock algorithm).
+One table entry is one call through `_scalar_code`. Shape B reaches that same
+defined scalar route with the element's decoded operands. The table builders and
+compute kernels are therefore two scheduling strategies for the same operation,
+and the verification gates compare them wherever a table is affordable.
 
-## Source and gates
+This matters most outside the byte-sized sweet spot. A `Code16` format can still
+participate in an affordable unary or mixed-width table; it is not categorically
+“compute only.” Conversely, a byte format can take Shape B when its arity,
+signature, projection, or cache policy makes a table unsuitable. Describe the
+actual signature and `table_policy` result, never a broad K-only slogan.
 
-`src/tables.jl` owns table keys, construction, cache policy, and ternary tiers;
-`src/kernels.jl` owns gather and scalar-loop execution. A change is complete
-only when table entries agree with scalar results over their full affordable
-domain, cold and warm behavior are measured separately, stochastic calls
-bypass pure tables, and cache byte accounting remains correct.
+## Threading and stochastic calls
+
+Large pure-spec table builds partition independent output regions. Pure Shape-B
+loops may also thread when the index set, element count, and runtime thread
+configuration meet the kernel policy. The safety argument is concrete: each
+pure entry is independent, and exact fallback state is task-local.
+
+Stochastic projection remains sequential. It consumes one RNG stream in index
+order, and preserving a seeded experiment's result takes priority over a
+scheduler-dependent speedup.
+
+## Sorting belongs to the same performance story
+
+Same-format comparisons use integer order keys, not decoded floating values.
+The key type is representation-aware (`UInt16` for `Code8`, `UInt32` for
+`Code16`) and reserves zero for the NaN that P3109 orders first. Counting sort
+is available when the input is large enough to amortize its key-space setup;
+smaller inputs use Base's ordinary sort. This is another policy decision whose
+semantics are the total order, not a timing claim.
+
+## Evidence and extension seam
+
+`src/tables.jl` owns keys, budgets, cache lifecycle, and table construction;
+`src/kernels.jl` owns Shape-A gathering and Shape-B execution. A change is
+complete only when it preserves concrete code-unit storage, byte accounting,
+scalar/table equivalence, stochastic ordering, and the relevant threaded versus
+sequential result checks. Record cold build, warm hit, and compute-path results
+separately in [Performance Evidence](examples_performance.md).
 
 ## See also
 
+[Technical Guide](technical_guide.md),
 [Encoding and Decoding](internals_encoding_decoding.md),
-[Oracle and Rigor Classes](internals_oracle.md),
+[Performance Model](concept_performance.md), and
 [Verification Sessions](examples_verification.md).

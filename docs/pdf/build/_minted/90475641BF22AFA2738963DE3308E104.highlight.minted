@@ -1,7 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{)}\PYG{+w}{        }\PYG{c}{\PYGZsh{} type form}
-\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{)}
-\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{                  }\PYG{c}{\PYGZsh{} value form, same answer, folds to 8}
-\PYG{n}{MaxFiniteOf}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{)}\PYG{+w}{     }\PYG{c}{\PYGZsh{} Binary8p4se(224.0 ≡ 0x7e)}
-\PYG{n}{MaxFiniteOf}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{               }\PYG{c}{\PYGZsh{} same result}
-\end{MintedVerbatim}

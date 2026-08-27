@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="240" viewBox="0 0 720 240" font-family="DejaVu Sans, sans-serif">
+  <!-- Bit-field anatomy of Binary8p4se: 1 sign bit, 4 exponent bits,
+       3 trailing significand bits; the 4th significand bit is implicit. -->
+  <rect width="720" height="240" fill="#ffffff"/>
+
+  <!-- title -->
+  <text x="360" y="28" font-size="16" text-anchor="middle" fill="#111111">Binary8p4se — one byte, spent entirely</text>
+
+  <!-- bit cells: 8 cells, 64px each, from x=104 to x=616, y=56..112 -->
+  <!-- sign (1) -->
+  <rect x="104" y="56" width="64" height="56" fill="#e8eef7" stroke="#333333" stroke-width="1.5"/>
+  <!-- exponent (4) -->
+  <rect x="168" y="56" width="256" height="56" fill="#eef7e8" stroke="#333333" stroke-width="1.5"/>
+  <line x1="232" y1="56" x2="232" y2="112" stroke="#333333" stroke-width="0.75"/>
+  <line x1="296" y1="56" x2="296" y2="112" stroke="#333333" stroke-width="0.75"/>
+  <line x1="360" y1="56" x2="360" y2="112" stroke="#333333" stroke-width="0.75"/>
+  <!-- trailing significand (3) -->
+  <rect x="424" y="56" width="192" height="56" fill="#f7f0e8" stroke="#333333" stroke-width="1.5"/>
+  <line x1="488" y1="56" x2="488" y2="112" stroke="#333333" stroke-width="0.75"/>
+  <line x1="552" y1="56" x2="552" y2="112" stroke="#333333" stroke-width="0.75"/>
+
+  <!-- bit labels inside cells -->
+  <text x="136" y="90" font-size="15" text-anchor="middle" fill="#111111">s</text>
+  <text x="200" y="90" font-size="15" text-anchor="middle" fill="#111111">e₃</text>
+  <text x="264" y="90" font-size="15" text-anchor="middle" fill="#111111">e₂</text>
+  <text x="328" y="90" font-size="15" text-anchor="middle" fill="#111111">e₁</text>
+  <text x="392" y="90" font-size="15" text-anchor="middle" fill="#111111">e₀</text>
+  <text x="456" y="90" font-size="15" text-anchor="middle" fill="#111111">t₂</text>
+  <text x="520" y="90" font-size="15" text-anchor="middle" fill="#111111">t₁</text>
+  <text x="584" y="90" font-size="15" text-anchor="middle" fill="#111111">t₀</text>
+
+  <!-- bit indices above cells -->
+  <text x="136" y="50" font-size="11" text-anchor="middle" fill="#555555">7</text>
+  <text x="200" y="50" font-size="11" text-anchor="middle" fill="#555555">6</text>
+  <text x="264" y="50" font-size="11" text-anchor="middle" fill="#555555">5</text>
+  <text x="328" y="50" font-size="11" text-anchor="middle" fill="#555555">4</text>
+  <text x="392" y="50" font-size="11" text-anchor="middle" fill="#555555">3</text>
+  <text x="456" y="50" font-size="11" text-anchor="middle" fill="#555555">2</text>
+  <text x="520" y="50" font-size="11" text-anchor="middle" fill="#555555">1</text>
+  <text x="584" y="50" font-size="11" text-anchor="middle" fill="#555555">0</text>
+
+  <!-- group braces (drawn as brackets) -->
+  <path d="M 106 122 L 106 130 L 166 130 L 166 122" fill="none" stroke="#333333" stroke-width="1.25"/>
+  <path d="M 170 122 L 170 130 L 422 130 L 422 122" fill="none" stroke="#333333" stroke-width="1.25"/>
+  <path d="M 426 122 L 426 130 L 614 130 L 614 122" fill="none" stroke="#333333" stroke-width="1.25"/>
+
+  <!-- group labels -->
+  <text x="136" y="150" font-size="13" text-anchor="middle" fill="#111111">sign</text>
+  <text x="136" y="167" font-size="12" text-anchor="middle" fill="#555555">SGN = 1</text>
+  <text x="296" y="150" font-size="13" text-anchor="middle" fill="#111111">exponent</text>
+  <text x="296" y="167" font-size="12" text-anchor="middle" fill="#555555">E = K − P + 1 − SGN = 4</text>
+  <text x="520" y="150" font-size="13" text-anchor="middle" fill="#111111">trailing significand</text>
+  <text x="520" y="167" font-size="12" text-anchor="middle" fill="#555555">P − 1 = 3 stored; leading bit implicit</text>
+
+  <!-- budget line -->
+  <text x="360" y="205" font-size="14" text-anchor="middle" fill="#111111">K  =  SGN + E + (P − 1)  =  1 + 4 + 3  =  8</text>
+  <text x="360" y="226" font-size="12" text-anchor="middle" fill="#555555">one more significand bit must take an exponent bit — the budget is fixed</text>
+</svg>

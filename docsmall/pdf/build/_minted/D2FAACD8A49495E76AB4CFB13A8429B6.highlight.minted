@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{one4}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.0}\PYG{p}{);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{hardtanh}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Clamp}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Negate}\PYG{p}{(}\PYG{n}{one4}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{one4}\PYG{p}{);}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{κ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{exhaustive}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{measure\PYGZus{}kappa}\PYG{p}{(}\PYG{n}{hardtanh}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:Tanh}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}
+\PYG{+w}{                                     }\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,),}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}
+\PYG{g+go}{(4.0, true)                \PYGZsh{} worst deviation: 4 code points, all 256 inputs checked}
+\end{MintedVerbatim}

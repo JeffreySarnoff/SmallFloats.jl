@@ -17,7 +17,7 @@ names the problem:
 julia> x = Binary8p4se(1.5);
 
 julia> x + Convert(Binary8p4se, RNE_SN, Binary5p3sf(1.0))
-Binary8p4se(2.5 ≡ 0x4a)
+Binary8p4se(2.5 ⇆ 0x4a)
 ```
 
 The line above only works because the `Binary5p3sf` value was converted
@@ -65,9 +65,9 @@ define a `promote_rule` between two `Binary` types that picks the smallest
 format containing both operands' datum sets, the way `promote_type(Int,
 Float64)` picks `Float64`. A companion internal study worked this out in
 detail, and the answer is that this rule cannot be built soundly. Formats
-trade precision for range through the identity `K = P + E + σ` — raising
-precision by one bit necessarily lowers exponent range by the same amount —
-so two formats at the same bitwidth are usually *incomparable*: neither
+trade precision for range inside a fixed bit budget — raising precision by
+one bit necessarily removes an exponent bit — so two formats at the same
+bitwidth are usually *incomparable*: neither
 contains the other's datum set. Measured over the full 504-format grid, a
 "smallest format containing both" answer exists for only about 60% of
 format pairs; the other 40% have no common format at all within the K ≤ 16

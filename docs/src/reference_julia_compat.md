@@ -14,19 +14,19 @@ semantics: `x + y` *is* `Add(x, y)`, which *is*
 julia> x, y, z = Binary8p4se(1.6), Binary8p4se(0.25), Binary8p4se(2.0);
 
 julia> x + y                       # Add
-Binary8p4se(1.875 ≡ 0x47)
+Binary8p4se(1.875 ⇆ 0x47)
 
 julia> exp(y)                      # Exp — a 256-byte table lookup once warm
-Binary8p4se(1.25 ≡ 0x42)
+Binary8p4se(1.25 ⇆ 0x42)
 
 julia> atan(y, x)                  # ArcTan2, in Base's (y, x) argument order
-Binary8p4se(0.15625 ≡ 0x2a)
+Binary8p4se(0.15625 ⇆ 0x2a)
 
 julia> fma(x, y, z)                # FMA — one rounding; muladd is the same op
-Binary8p4se(2.5 ≡ 0x4a)
+Binary8p4se(2.5 ⇆ 0x4a)
 
 julia> sincos(y)                   # composite: (Sin(y), Cos(y)) componentwise
-(Binary8p4se(0.25 ≡ 0x30), Binary8p4se(1.0 ≡ 0x40))
+(Binary8p4se(0.25 ⇆ 0x30), Binary8p4se(1.0 ⇆ 0x40))
 ```
 
 Because the veneers follow the session default projection, changing it changes
@@ -34,12 +34,12 @@ them (see [Session Defaults](concept_session_state.md)):
 
 ```julia-repl
 julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # RNE_SN: overflow → Inf
-Binary8p4se(Inf ≡ 0x7f)
+Binary8p4se(Inf ⇆ 0x7f)
 
 julia> DefaultProjection!(RTZ_SF);
 
 julia> Binary8p4se(200.0) * Binary8p4se(2.0)     # now clamps to MaxFinite
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 
 julia> DefaultProjection!(RNE_SN)                # restore: this setter is PROCESS-wide
 (NearestTiesToEven, SatNone)
@@ -90,10 +90,10 @@ NaN-ignoring pair), and `FAA` (no Base fused add-add).
 
 ```julia-repl
 julia> min(Binary8p4se(NaN), x)          # Base semantics: NaN propagates
-Binary8p4se(NaN ≡ 0x80)
+Binary8p4se(NaN ⇆ 0x80)
 
 julia> MinimumNumber(Binary8p4se(NaN), x)   # the NaN-ignoring draft op
-Binary8p4se(1.625 ≡ 0x45)
+Binary8p4se(1.625 ⇆ 0x45)
 ```
 
 **Mixed `Binary` formats** — deliberately a `promotion ... failed to change`
@@ -101,7 +101,7 @@ error, never a silent widening. Mixing formats is an explicit `Convert`:
 
 ```julia-repl
 julia> x + Convert(Binary8p4se, RNE_SN, Binary5p3sf(1.0))
-Binary8p4se(2.5 ≡ 0x4a)
+Binary8p4se(2.5 ⇆ 0x4a)
 ```
 
 **`Binary` with ordinary numbers** — promotes to the format's **promotion
@@ -168,16 +168,16 @@ julia> Base.decompose(Binary8p4se(1.5))          # 12 · 2^-3 = 1.5, exactly
 (12, -3, 1)
 
 julia> floor(Binary8p4se(1.6)), ceil(Binary8p4se(1.1))
-(Binary8p4se(1.0 ≡ 0x40), Binary8p4se(2.0 ≡ 0x48))
+(Binary8p4se(1.0 ⇆ 0x40), Binary8p4se(2.0 ⇆ 0x48))
 
 julia> eps(Binary8p4se(1.5)), eps(Binary8p4se(64.0))   # the lattice widens
-(Binary8p4se(0.125 ≡ 0x28), Binary8p4se(8.0 ≡ 0x58))
+(Binary8p4se(0.125 ⇆ 0x28), Binary8p4se(8.0 ⇆ 0x58))
 
 julia> ldexp(Binary8p4se(1.5), 2), ldexp(Binary8p4se(1.5), -2)
-(Binary8p4se(6.0 ≡ 0x54), Binary8p4se(0.375 ≡ 0x34))
+(Binary8p4se(6.0 ⇆ 0x54), Binary8p4se(0.375 ⇆ 0x34))
 
 julia> reinterpret(Binary8p4se, 0x44)            # checked, unlike `rawvalue`
-Binary8p4se(1.5 ≡ 0x44)
+Binary8p4se(1.5 ⇆ 0x44)
 ```
 
 **Refusals name themselves.** Where a Base verb has no draft counterpart, the

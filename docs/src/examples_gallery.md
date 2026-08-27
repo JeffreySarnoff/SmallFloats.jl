@@ -56,12 +56,12 @@ subject:
 | [MX-style block quantization](examples_applied.md#MX-style-block-quantization-—-and-the-staging-pitfall) | shared-scale blocks, and the staging mistake that silently costs accuracy |
 | [Quantized dot products, one rounding](examples_applied.md#Quantized-dot-products-with-one-final-rounding) | all lane products accumulated exactly, projected once at the end |
 | [The swamping demo](examples_applied.md#Why-training-loops-like-stochastic-rounding:-the-swamping-demo) | why a training loop stalls under nearest and does not under stochastic |
-| [Activations are 256-byte tables](examples_applied.md#Activation-functions-are-256-byte-lookup-tables) | a whole unary op *is* its table, at a fraction of a nanosecond per element |
+| [Activations are 256-byte tables](examples_applied.md#Activation-functions-are-256-byte-lookup-tables) | the `Binary8p4se` unary table is one exact, reusable finite function; the example records the measurement scope |
 | [Packing a quantized model](examples_applied.md#Packing-a-quantized-model) | bit-packed storage at K not a multiple of 8 |
 | [Proving a fused kernel exact](examples_verification.md#Proving-your-fused-kernel-exact:-BlockDotProduct-vs-512-bit-truth) | `BlockDotProduct` against 512-bit truth |
 | [Stochastic rounding, audited](examples_verification.md#Stochastic-rounding,-audited:-the-full-R-sweep) | the full-R sweep: every random draw, not a sample |
 | [Hard-tanh κ measurement](examples_verification.md#An-accelerator-style-activation,-κ-measured:-hard-tanh-vs-Tanh) | an accelerator-style activation, measured rather than assumed |
-| [Benchmarking without measuring the dispatcher](examples_verification.md#Benchmarking-without-measuring-the-dispatcher) | the two measurement post-mortems this package learned from |
+| [Benchmarking without measuring the dispatcher](examples_verification.md#Benchmarking-without-measuring-the-dispatcher) | the measurement post-mortems this package learned from |
 
 ## Verification
 

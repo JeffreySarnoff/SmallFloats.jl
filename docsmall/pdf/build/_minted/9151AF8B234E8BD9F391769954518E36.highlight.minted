@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{)}\PYG{+w}{          }\PYG{c}{\PYGZsh{} Real → project to nearest datum}
+\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mh}{0x45}\PYG{p}{)}\PYG{+w}{         }\PYG{c}{\PYGZsh{} Unsigned → CODE POINT (validated)}
+\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{)}\PYG{+w}{          }\PYG{c}{\PYGZsh{} explicit projection, numeric for every integer}
+\PYG{n}{decode}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{                 }\PYG{c}{\PYGZsh{} the exact datum, on the format\PYGZsq{}s carrier}
+\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{              }\PYG{c}{\PYGZsh{} the stored identity}
+\PYG{n}{T}\PYG{p}{(}\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{x}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{===}\PYG{+w}{ }\PYG{n}{x}\PYG{+w}{     }\PYG{c}{\PYGZsh{} the round\PYGZhy{}trip law}
+\end{MintedVerbatim}

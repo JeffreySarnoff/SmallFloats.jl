@@ -1,0 +1,18 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+  0x00  0.0
+  0x01  0.25
+  0x02  0.5
+  0x03  0.75
+  0x04  1.0
+  0x05  1.5
+  0x06  2.0
+  0x07  Inf
+  0x08  NaN
+  0x09  \PYGZhy{}0.25
+  0x0a  \PYGZhy{}0.5
+  0x0b  \PYGZhy{}0.75
+  0x0c  \PYGZhy{}1.0
+  0x0d  \PYGZhy{}1.5
+  0x0e  \PYGZhy{}2.0
+  0x0f  \PYGZhy{}Inf
+\end{MintedVerbatim}

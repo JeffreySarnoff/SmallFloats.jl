@@ -695,7 +695,9 @@ end
     e = x.Q + nb - 1
     Base.exponent(floatmin(T)) <= e <= Base.exponent(floatmax(T))
 end
+
 Base.Float64(x::Dyadic) = _dyadic_to(Float64, x)
+
 # `big` is the standard "widen to arbitrary precision" verb, and for this carrier
 # it is exactly the exact form. Note what is deliberately NOT defined: `float`.
 # `_rtp_core`'s zero row builds `zero(float(typeof(X)))`, so defining
@@ -736,11 +738,13 @@ end
 # `Rational{BigInt}` oracle: the value never routes through a carrier whose
 # exactness is part of what is being tested.
 
-"""Fit a `BigInt` into `T`, or say which side overflowed and by how much.
+"""
+Fit a `BigInt` into `T`, or say which side overflowed and by how much.
 
 Two-sided bounds, not `abs(n) <= typemax(T)`: `abs(typemin(Int128))` wraps to
 itself, so the `abs` form is wrong on exactly one input — and that input is a
-legitimate significand."""
+legitimate significand.
+"""
 _fit_rat(::Type{BigInt}, n::BigInt, _) = n
 _fit_rat(::Type{T}, n::BigInt, what) where {T<:Integer} =
     typemin(T) <= n <= typemax(T) ? T(n) :

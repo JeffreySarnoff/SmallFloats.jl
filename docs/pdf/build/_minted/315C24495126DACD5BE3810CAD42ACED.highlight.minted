@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{table\PYGZus{}policy}\PYG{p}{(}\PYG{l+s+ss}{:Add}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}
+\PYG{g+go}{(shape = :A, entries = 65536, bytes = 65536, reason = \PYGZdq{}within the 2\PYGZca{}16\PYGZhy{}entry build band\PYGZdq{})}
+\end{MintedVerbatim}

@@ -21,10 +21,12 @@ package ships all of them: **504 formats** in total.
 
 That is the whole parameter space. There is no fifth axis, and — this is the
 detail that trips people up when they start comparing formats — `K` is not an
-independent budget. It is spent entirely by the other three:
-`K = P + E + SGN` where `E` is the exponent width implied by `K`, `P`, and
-`SGN`. Raising precision by one bit necessarily lowers exponent range,
-because there is nowhere else in the word for the extra bit to come from.
+independent budget. It is spent entirely: `K = SGN + E + (P − 1)`, one sign
+bit if signed, `E = K − P + 1 − SGN` exponent bits, and `P − 1` stored
+significand bits — the leading significand bit is implicit, which is why `P`
+enters as `P − 1`. For `Binary8p4se` that is 1 + 4 + 3 = 8. Raising precision
+by one bit necessarily takes an exponent bit, because there is nowhere else
+in the word for the extra bit to come from.
 
 ## `<:`, not `===`
 
@@ -102,10 +104,10 @@ julia> bitwidth(Binary8p4se), precision(Binary8p4se), expbias(Binary8p4se)
 (8, 4, 8)
 
 julia> MaxFiniteOf(Binary8p4se)
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 
 julia> MinPositiveOf(Binary8p4se)
-Binary8p4se(0.0009765625 ≡ 0x01)
+Binary8p4se(0.0009765625 ⇆ 0x01)
 ```
 
 `MinFiniteOf`, `MinNormalOf`, `MaxSubnormalOf`, `expbitwidth`,
@@ -124,7 +126,7 @@ julia> BitwidthOf(x), PrecisionOf(x), SignednessOf(x), DomainOf(x)
 (8, 4, true, true)
 
 julia> MaxFiniteOf(x)
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 ```
 
 `bitwidth(x)` and `bitwidth(typeof(x))` are the same query, and both fold to

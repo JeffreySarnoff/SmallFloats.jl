@@ -29,13 +29,13 @@ julia> SmallFloats.blockdecode(b)              # the exact lane values
 (40.0, -0.1875, -2.75, 1.125)
 
 julia> BlockReduceAdd(Binary8p4se, RNE_SN, b)  # exact sum 38.1875, projected ONCE
-Binary8p4se(40.0 ≡ 0x6a)
+Binary8p4se(40.0 ⇆ 0x6a)
 
 julia> lanes = SmallFloats.blockdecode(b);
 
 julia> foldl((a, v) -> Add(Binary8p4se, RNE_SN, a, Convert(Binary8p4se, RNE_SN, v)),
              lanes; init = zero(Binary8p4se))  # rounding at every step
-Binary8p4se(36.0 ≡ 0x69)
+Binary8p4se(36.0 ⇆ 0x69)
 ```
 
 One code point apart, from four lanes. The exact sum is 38.1875; the ulp in
@@ -186,9 +186,7 @@ with a deliberately wider reference, including mixed scales and special values.
 ## See also
 
 - [Blocks and Scaled Operations](reference_arrays_blocks_storage.md) — the API contract.
-- [Working with Blocks](workflow_blocks.md) — the task-oriented guide.
-- [Blocks for Dynamic Range](workflow_blocks.md) — when to reach
-  for one.
+- [Use Blocks for Dynamic Range](workflow_blocks.md) — the task-oriented guide.
 - [Oracle and Rigor Classes](internals_oracle.md) — where the enclosure cascade
   comes from.
 - [Proving your fused kernel exact](examples_verification.md#Proving-your-fused-kernel-exact:-BlockDotProduct-vs-512-bit-truth)

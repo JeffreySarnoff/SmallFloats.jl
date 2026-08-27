@@ -1,0 +1,71 @@
+{
+ "code_blocks": 42,
+ "longest_block_lines": 18,
+ "longest_code_line_chars": 91,
+ "parts": 9,
+ "parts_flattened": true,
+ "duplicate_labels": 3,
+ "docstrings": 0,
+ "tables": 2,
+ "longtables": 0,
+ "admonitions": 0,
+ "figures": 1,
+ "escaped_underscores_prose": 51,
+ "longest_texttt_token": 40,
+ "nonascii": "\u00b1\u00b5\u00b7\u00d7\u03ba\u03c0\u03c1\u03c3\u2014\u2026\u2192\u21a6\u21c6\u2208\u2212\u2264",
+ "toc_depth": 1,
+ "toc": {
+  "levels": [
+   "chapter",
+   "section"
+  ],
+  "wrapped_entries": 0,
+  "max_entry_lines": 1,
+  "blocks": {
+   "part": {
+    "parents": 0,
+    "max_direct_children": 0,
+    "max_recursive_entries": 0,
+    "max_estimated_lines": 0
+   },
+   "chapter": {
+    "parents": 9,
+    "max_direct_children": 8,
+    "max_recursive_entries": 9,
+    "max_estimated_lines": 9
+   },
+   "section": {
+    "parents": 44,
+    "max_direct_children": 0,
+    "max_recursive_entries": 1,
+    "max_estimated_lines": 1
+   }
+  },
+  "part_blocks": [],
+  "patch_children": [
+   "section"
+  ]
+ },
+ "toc_max_chapter_block": 8,
+ "toc_patch_levels": [
+  "section"
+ ],
+ "regroup_candidates": [
+  "chapter 'A Worked Example' (6 sections; avg 15 est lines; short spans)",
+  "chapter 'Quick Reference' (8 sections; avg 12 est lines; short spans)"
+ ],
+ "toc_part_reservations": [],
+ "labels_uniquified": 3,
+ "colon_glued": 26,
+ "chains_glued": 6,
+ "docstrings_wrapped": 0,
+ "long_texttt_tokens_broken": 14,
+ "table_units_kept_together": 1,
+ "tables_glued_to_paragraph": 1,
+ "kept_unit_headings": [
+  "Projection specifications"
+ ],
+ "unicode_fallbacks": "",
+ "figures_copied": 1,
+ "figures_svg_converted": 1
+}

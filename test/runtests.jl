@@ -25,8 +25,15 @@ using Test
 # `rollcall.jl` (last) asserts the register is complete (Stage 8 steps 5 and 6).
 include("gatelog.jl")
 using Random
-using SmallFloats
-using SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
+#=
+include("../src/SmallFloats.jl")
+using .SmallFloats
+using .SmallFloats.Formats          # the 384 names above K = 8 are opt-in (Stage 9 item 1)
+using ParallelTestRunner
+
+runtests(SmallFloats)
+=#
+
 using Quadmath: Float128
 using SmallFloats: project, project_interval, round_to_precision, encode, order_key,
     KIND_FIN, nan_code, posinf_code, neginf_code, signmask,

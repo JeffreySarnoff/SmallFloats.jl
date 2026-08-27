@@ -235,72 +235,18 @@ sweep in the suite.
 ### Adding a quaternary operation
 
 Arity 4 is **not yet plumbed** — the generation loops, kernels, and block layer
-handle arities 1–3. Adding a quaternary op is therefore two tasks: extend the
-plumbing (once), then add the op. Worked example: **`FMMA`** — `x·y + z·w`, a
-two-term dot product.
+handle arities 1–3, so adding one is two tasks: extend the plumbing once, then
+add the op like any other. Four sites need the arity-4 branch: the
+spec-register generation loop in `src/ops_scalar.jl` (register manually, since
+the arity loops stop at 3 — `apply_op` and `ωeval` are already variadic); a
+four-array `vmap!` in `src/kernels.jl` (the plain Shape-B loop suffices —
+table-tiering at arity 4 means 2^(4K) growth, so extend it only for a measured
+win); a Block/Scaled branch or a deliberate `op.arity > 3 && continue` skip in
+`src/blocks.jl`; and `conformance_report`'s `for a in 1:3` in `src/approx.jl`.
 
-**Plumbing (one-time), four sites:**
-
-1. `src/ops_scalar.jl` — register manually after the arity loops
-   (`register_op!(:FMMA, 4, :A)`), and add an `op.arity == 4` branch to the
-   spec-register generation loop, mirroring the ternary branch with a fourth
-   operand:
-
-   ```julia
-   # …continuing the existing `if op.arity == …` cascade:
-   if op.arity == 4
-       @eval begin
-           @inline function $name(fr::Type{<:Binary}, ρ::ProjSpec,
-                                  x::Binary, y::Binary, z::Binary, w::Binary;
-                                  rng::MaybeRNG=nothing, R::Union{Nothing,Int}=nothing)
-               apply_op($V(), fr, ρ, _drawR(ρ, rng, R),
-                        decode(x), decode(y), decode(z), decode(w))
-           end
-           @inline $name(x::T, y::T, z::T, w::T; kw...) where {T<:Binary} =
-               $name(T, default_projspec(T), x, y, z, w; kw...)
-       end
-   end
-   ```
-
-   (`apply_op` and `ωeval` are already variadic — no change needed there.)
-2. `src/kernels.jl` — a four-array `vmap!` method. The plain Shape-B loop (copy
-   the *body* of the ternary method's compute branch, add operand `D`) is
-   enough to get correct results; the ternary method's table-tiering and
-   threading are a bitwidth-driven optimization layered on top (`tables.jl`'s
-   `_ternary_table_for` and its LRU cache), not required plumbing — extend to
-   arity 4 only if a table win at that arity is worth the 2^(4K) growth.
-   Also add an arity-4 branch in the registry-generated array-surface loop and
-   the matching rng-threading overload (mirroring the three-array one) so
-   stochastic ρ dispatches correctly.
-3. `src/blocks.jl` — either an arity-4 branch in the Block/Scaled generation
-   loop (four operand blocks, four `blockdecode`s) or an explicit skip
-   (`op.arity > 3 && continue`) if a block form is not wanted; be deliberate.
-4. `src/approx.jl` — `conformance_report` prints arities with `for a in 1:3`;
-   widen to `1:4`.
-
-**The op itself** follows the `FAA`/`FMA` width-analysis playbook exactly:
-
-```julia
-const _DE_FMMA = 92     # two exact ≤17-bit products: 18 + ΔE ≤ 113, margin 3
-
-function ωeval(::Val{:FMMA}, x::Float64, y::Float64, z::Float64, w::Float64)
-    (isnan(x) | isnan(y) | isnan(z) | isnan(w)) && return NaN
-    (((iszero(x) && isinf(y)) || (isinf(x) && iszero(y))) ||
-     ((iszero(z) && isinf(w)) || (isinf(z) && iszero(w)))) && return NaN
-    p = x * y; q = z * w                          # exact: ≤8-bit significands
-    if isinf(p) || isinf(q)
-        (isinf(p) && isinf(q) && p != q) && return NaN
-        return isinf(p) ? p : q
-    end
-    s, e = _twosum(p, q)
-    e == 0.0 && return iszero(s) ? 0.0 : s        # exact in Float64
-    (_f128() && !iszero(p) && !iszero(q) && _expdiff(p, q) <= _DE_FMMA) &&
-        return Float128(p) + Float128(q)          # exact by width
-    BigExactF(() -> setprecision(() ->
-        BigFloat(x) * BigFloat(y) + BigFloat(z) * BigFloat(w),
-        BigFloat, bigprec_prod(x, y, z, w)))     # DERIVED, never a constant
-end
-```
+The op itself follows the `FMA`/`FAA` width-analysis playbook unchanged. Two
+duties get harder at this arity. The exact-escalation precision must be
+**derived** — `bigprec_prod(x, y, z, w)`, never a constant:
 
 !!! warning "Derive the precision from the operands — never a constant"
     This escalation used to read `_BIGP`, a 2200-bit constant. It was ample for
@@ -315,12 +261,12 @@ end
     the derivation is sufficient across the whole grid, so a new operation that
     uses it inherits that proof. A new constant would need its own.
 
-**Testing duty is heavier at arity 4**: the full cross-product is 2³² tuples,
-so the suite entry must be *sampled* (seeded, ladder-referenced, ≥ 10⁵ tuples
+And the testing duty changes in kind: the full cross-product is 2³² tuples, so
+the suite entry must be *sampled* (seeded, ladder-referenced, ≥ 10⁵ tuples
 across several modes) plus hand-picked exhaustion of the special-row algebra
-and the width-threshold boundary (`ΔE ∈ {91, 92, 93}` constructions). Document
-the sampling in the test, since it breaks the suite's "enumerate, never
-sample" norm — that exception must be visible, not silent.
+and the width-threshold boundary. Document the sampling in the test itself —
+it breaks the suite's "enumerate, never sample" norm, and that exception must
+be visible rather than silent.
 
 ## Block operations
 
@@ -443,10 +389,17 @@ function BlockSumOfSquares(fr::Type{<:Binary}, ρ::ProjSpec, b::Block{B};
             end
             acc
         else
-            BigExactF(() -> setprecision(BigFloat, _REDPREC) do
+            # precision DERIVED from the formats (the retired-`_REDPREC` lesson):
+            # squares carry 2(P_S+P_E) bits and span 4(B_S+B_E) binades, plus
+            # 64 slack and the carry term — `_lane_sum_prec`'s analysis, doubled
+            # where squaring doubles it.
+            p = 4 * (expbias(scaleformat(b)) + expbias(elemformat(b))) +
+                2 * (precision(scaleformat(b)) + precision(elemformat(b))) +
+                64 + _log2ceil(B)
+            BigExactF(() -> setprecision(BigFloat, p) do
                 acc = BigFloat(0)
                 for v in X
-                    acc += BigFloat(v)^2          # exact at _REDPREC
+                    acc += BigFloat(v)^2          # exact at derived precision
                 end
                 acc
             end)

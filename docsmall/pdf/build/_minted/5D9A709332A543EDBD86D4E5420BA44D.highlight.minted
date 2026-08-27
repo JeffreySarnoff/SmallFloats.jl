@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{Block}\PYG{p}{(}\PYG{n}{scale}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{elems}\PYG{o}{...}\PYG{p}{)}\PYG{+w}{                       }\PYG{c}{\PYGZsh{} scale × element per lane}
+\PYG{n}{ConvertToBlockMaxAbsFinite}\PYG{p}{(}\PYG{n}{FS}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{FE}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρs}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρe}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{elems}\PYG{p}{)}
+\PYG{n}{BlockReduceAdd}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{);}\PYG{+w}{  }\PYG{n}{BlockDotProduct}\PYG{p}{(}\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{a}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)}
+\PYG{n}{PackedVector}\PYG{p}{(}\PYG{n}{v}\PYG{p}{)}\PYG{+w}{                              }\PYG{c}{\PYGZsh{} true bit\PYGZhy{}width storage}
+\PYG{n}{measure\PYGZus{}kappa}\PYG{p}{(}\PYG{n}{f}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{op}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{argTs}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{)}\PYG{+w}{            }\PYG{c}{\PYGZsh{} exhaustive κ measurement}
+\PYG{n}{register\PYGZus{}approx!}\PYG{p}{(}\PYG{n}{name}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{op}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{argTs}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{ρ}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{f}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{κ}\PYG{p}{)}
+\PYG{n}{conformance\PYGZus{}dict}\PYG{p}{();}\PYG{+w}{  }\PYG{n}{draft\PYGZus{}revision}\PYG{p}{()}
+\end{MintedVerbatim}

@@ -1,13 +1,15 @@
 # Run Operations over Arrays
 
-Use this workflow to apply the scalar operation contract to arrays, choose
-between named calls, `vmap!`, and an `Op` callable, and avoid measuring a cold
-table build as steady-state performance.
+Array operations return exactly what the scalar call would return, element by
+element — that is the whole semantic story, and it does not change no matter
+which of the four spellings you use. What differs between them is
+ergonomics and, on a first call, timing. This page covers the spellings, then
+the one measurement mistake the caching makes easy.
 
-## The two registers, again
+## The two registers
 
-Every scalar operation used on those pages came from one of two
-registers, and the same split carries over to arrays:
+Every scalar operation comes from one of two registers, and the same split
+carries over to arrays:
 
 - **The spec-named register** exposes every draft operation under its draft
   name with an explicit result format and spec: `Op(fr, ρ, operands...)`. This
@@ -31,17 +33,17 @@ shape as the scalar form, operands replaced by arrays:
 ```julia-repl
 julia> A = Binary8p4se.(randn(Xoshiro(7), 4) .* 2)
 4-element Vector{Binary8p4se}:
- Binary8p4se(-0.875 ≡ 0xbe)
- Binary8p4se(4.0 ≡ 0x50)
- Binary8p4se(-3.25 ≡ 0xcd)
- Binary8p4se(2.25 ≡ 0x49)
+ Binary8p4se(-0.875 ⇆ 0xbe)
+ Binary8p4se(4.0 ⇆ 0x50)
+ Binary8p4se(-3.25 ⇆ 0xcd)
+ Binary8p4se(2.25 ⇆ 0x49)
 
 julia> Exp(Binary8p4se, RNE_SN, A)
 4-element Vector{Binary8p4se}:
- Binary8p4se(0.40625 ≡ 0x35)
- Binary8p4se(56.0 ≡ 0x6e)
- Binary8p4se(0.0390625 ≡ 0x1a)
- Binary8p4se(9.0 ≡ 0x59)
+ Binary8p4se(0.40625 ⇆ 0x35)
+ Binary8p4se(56.0 ⇆ 0x6e)
+ Binary8p4se(0.0390625 ⇆ 0x1a)
+ Binary8p4se(9.0 ⇆ 0x59)
 ```
 
 `Add(T, ρ, A, B)` reads the same way, elementwise, for a two-array call.
@@ -89,13 +91,13 @@ julia> A = Binary8p4se.([1.5, 0.25]); B = Binary8p4se.([0.25, 1.5]);
 
 julia> map(Op(:Add, Binary8p4se, RNE_SN), A, B)
 2-element Vector{Binary8p4se}:
- Binary8p4se(1.75 ≡ 0x46)
- Binary8p4se(1.75 ≡ 0x46)
+ Binary8p4se(1.75 ⇆ 0x46)
+ Binary8p4se(1.75 ⇆ 0x46)
 
 julia> Op(:Exp, Binary8p4se, RNE_SN).(A)
 2-element Vector{Binary8p4se}:
- Binary8p4se(4.5 ≡ 0x51)
- Binary8p4se(1.25 ≡ 0x42)
+ Binary8p4se(4.5 ⇆ 0x51)
+ Binary8p4se(1.25 ⇆ 0x42)
 ```
 
 `Op` is a singleton type — the operation, format, and projection all live in
@@ -110,13 +112,25 @@ integer order keys, and vectors of `Binary` sort with an O(n) **counting
 sort** installed as the default algorithm. `sort(A)` follows P3109's total
 order, with the single NaN first (last under `rev=true`):
 
-```julia
-decode.(sort(Binary4p2se.(0x00:0x0f)))      # broadcast the code-point constructor
-```
-
-```
-[NaN, -Inf, -2.0, -1.5, -1.0, -0.75, -0.5, -0.25,
-  0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, Inf]
+```julia-repl
+julia> decode.(sort(Binary4p2se.(0x00:0x0f)))      # broadcast the code-point constructor
+16-element Vector{Float64}:
+ NaN
+ -Inf
+  -2.0
+  -1.5
+  -1.0
+  -0.75
+  -0.5
+  -0.25
+   0.0
+   0.25
+   0.5
+   0.75
+   1.0
+   1.5
+   2.0
+  Inf
 ```
 
 `TotalOrder(x, y)` exposes the draft's total order directly if you need the

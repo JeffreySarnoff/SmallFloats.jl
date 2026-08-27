@@ -1,7 +1,7 @@
 # Oracle and Rigor Classes
 
-Every operation's defined result is computed by `ωeval`, which returns one of five
-result kinds; `apply_op` fast-splits the common one and finishes the rest:
+Every operation's defined result is computed by `ωeval`, which returns one of
+seven result kinds; `apply_op` fast-splits the common one and finishes the rest:
 
 | kind | meaning | finished by |
 |:---|:---|:---|

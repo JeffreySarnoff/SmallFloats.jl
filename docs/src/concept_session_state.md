@@ -1,10 +1,12 @@
 # Session State and Reproducibility
 
-Five values control what "the default" means for any convenience call in
-SmallFloats.jl — the format `T(2.1)` produces, the projection `x + y`
-follows, and the result format an omitted result type selects. This page explains what those five
-defaults are, how they stay consistent with each other, why they are
-dangerous to set casually, and the safe pattern for consuming them.
+Every convenience call in SmallFloats.jl — `T(x::Real)` construction and
+`x + y` arithmetic, which follow the default projection, and calls that omit
+a format, which follow the default types — reads one of five process-global
+defaults. This page names
+the five, shows how they stay coherent with each other, explains why setting
+one is a global semantic change rather than a local preference, and gives the
+safe pattern for consuming them.
 
 ## The five defaults
 
@@ -71,18 +73,18 @@ operators, and `T(x::Real)` construction all follow it:
 julia> x, y = Binary8p4se(200.0), Binary8p4se(2.0);
 
 julia> x * y                              # RNE_SN: overflow → +Inf
-Binary8p4se(Inf ≡ 0x7f)
+Binary8p4se(Inf ⇆ 0x7f)
 
 julia> DefaultProjection!(RTZ_SF);
 
 julia> x * y                              # now clamps to MaxFinite
-Binary8p4se(224.0 ≡ 0x7e)
+Binary8p4se(224.0 ⇆ 0x7e)
 
 julia> DefaultProjection!(RNE_SN)         # restore before moving on — see below
 (NearestTiesToEven, SatNone)
 
 julia> Multiply(Binary8p4se, RNE_SN, x, y)   # explicit ρ is unaffected
-Binary8p4se(Inf ≡ 0x7f)
+Binary8p4se(Inf ⇆ 0x7f)
 ```
 
 !!! warning "Changing the default is a global semantic change"
@@ -99,7 +101,7 @@ costs, go through the `with_default_*` combinators — `with_default_type`,
 
 ```julia-repl
 julia> with_default_type((T, x) -> T(x), 1.5)
-Binary8p2se(1.5 ≡ 0x41)
+Binary8p2se(1.5 ⇆ 0x41)
 ```
 
 ### The speculation-guard cost model

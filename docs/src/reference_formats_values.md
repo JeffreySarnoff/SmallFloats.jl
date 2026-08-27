@@ -82,7 +82,7 @@ interchangeable.
 bitwidth(Binary8p4se)        # type form
 x = Binary8p4se(1.6)
 bitwidth(x)                  # value form, same answer, folds to 8
-MaxFiniteOf(Binary8p4se)     # Binary8p4se(224.0 ≡ 0x7e)
+MaxFiniteOf(Binary8p4se)     # Binary8p4se(224.0 ⇆ 0x7e)
 MaxFiniteOf(x)               # same result
 ```
 

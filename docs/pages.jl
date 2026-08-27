@@ -9,6 +9,19 @@ const DOC_PAGES = [
         "Core Model" => "core_model.md",
     ],
 
+    "User Guide" => [
+        "Guide Overview" => "user_guide.md",
+        "P3109 in One Chapter" => "concept_p3109.md",
+        "Format Anatomy" => "concept_format_anatomy.md",
+        "Values, Code Points, and Conversion" => "concept_values_codepoints.md",
+        "The Exact-Then-Project Contract" => "concept_exact_then_project.md",
+        "Rounding and Saturation" => "concept_rounding_saturation.md",
+        "Julia's Numeric Model" => "concept_julia_numeric.md",
+        "Session State and Reproducibility" => "concept_session_state.md",
+        "Defined, Stochastic, and Approximate Results" => "concept_defined_stochastic_approximate.md",
+        "Code-Point Algebra" => "concept_codepoint_algebra.md",
+    ],
+
     "Workflows" => [
         "Choose a Format" => "workflow_choose_format.md",
         "Control Rounding and Overflow" => "workflow_rounding_overflow.md",
@@ -22,17 +35,12 @@ const DOC_PAGES = [
         "Register and Measure an Approximation" => "workflow_approximation.md",
     ],
 
-    "Concepts" => [
-        "P3109 in One Chapter" => "concept_p3109.md",
-        "Format Anatomy" => "concept_format_anatomy.md",
-        "Values, Code Points, and Conversion" => "concept_values_codepoints.md",
-        "The Exact-Then-Project Contract" => "concept_exact_then_project.md",
-        "Rounding and Saturation" => "concept_rounding_saturation.md",
-        "Julia's Numeric Model" => "concept_julia_numeric.md",
-        "Session State and Reproducibility" => "concept_session_state.md",
+    "Performance and Examples" => [
         "Performance Model" => "concept_performance.md",
-        "Defined, Stochastic, and Approximate Results" => "concept_defined_stochastic_approximate.md",
-        "Code-Point Algebra" => "concept_codepoint_algebra.md",
+        "Example Gallery" => "examples_gallery.md",
+        "Applied Sessions" => "examples_applied.md",
+        "Verification Sessions" => "examples_verification.md",
+        "Performance Sessions" => "examples_performance.md",
     ],
 
     "Reference" => [
@@ -47,14 +55,8 @@ const DOC_PAGES = [
         "Internal API Index" => "reference_internal_api.md",
     ],
 
-    "Examples and Evidence" => [
-        "Gallery" => "examples_gallery.md",
-        "Applied Sessions" => "examples_applied.md",
-        "Verification Sessions" => "examples_verification.md",
-        "Performance Sessions" => "examples_performance.md",
-    ],
-
-    "Implementation" => [
+    "Technical Guide" => [
+        "Guide Overview" => "technical_guide.md",
         "Architecture and Invariants" => "internals_architecture.md",
         "Encoding and Decoding" => "internals_encoding_decoding.md",
         "Projection Engine" => "internals_projection_engine.md",
@@ -65,6 +67,7 @@ const DOC_PAGES = [
         "Add an Operation" => "internals_add_operation.md",
         "Verify Custom Code" => "internals_verify_custom.md",
         "Benchmark Correctly" => "internals_benchmark.md",
+        "Documentation Claim Ledger" => "claim_ledger.md",
     ],
 
     "Help" => [

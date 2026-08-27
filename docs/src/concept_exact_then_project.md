@@ -68,13 +68,11 @@ sign." This lets `project` land exactly on the correct neighbor for
 enclosure endpoints and asymptotes without inventing a fake carrier value
 that isn't quite 1:
 
-```julia
-using SmallFloats: project
-project(Binary8p4se, ProjSpec(TowardNegative(), SatNone()), 1.0; sticky=-1)
-```
+```julia-repl
+julia> using SmallFloats: project
 
-```
-Binary8p4se(0.9375 ≡ 0x3f)     # == NextLessThan(1.0): the engine crossed the binade
+julia> project(Binary8p4se, ProjSpec(TowardNegative(), SatNone()), 1.0; sticky=-1)
+Binary8p4se(0.9375 ⇆ 0x3f)     # == NextLessThan(1.0): the engine crossed the binade
 ```
 
 Read this carefully: the carrier value passed in is `1.0`, exactly
@@ -146,8 +144,14 @@ functions, rather than a vague impression of "close enough" — both sides of
 the comparison ultimately trace back to the same contract this page
 describes.
 
-## See also
+## What this leaves open
 
-[Rounding and Saturation](concept_rounding_saturation.md) develops the two
-policy axes. [Control Rounding and Overflow](workflow_rounding_overflow.md)
-applies them to midpoint and boundary cases.
+The contract fixes *when* rounding happens — once, at the end — and says
+nothing about *which way*. That is the projection's job, and it is two
+independent choices rather than one: which neighbor a between-grid value lands
+on, and what a result beyond the format's range becomes. [Rounding and
+Saturation](concept_rounding_saturation.md) takes those two axes in turn and
+shows the one case where they interact. Once you can name a policy,
+[Control Rounding and Overflow](workflow_rounding_overflow.md) is the
+procedure for testing that it does what you expect at the values where the
+modes actually disagree.

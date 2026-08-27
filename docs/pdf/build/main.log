@@ -1,46 +1,48 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (TeX Live 2026) (preloaded format=xelatex 2026.7.24)  4 AUG 2026 01:00
+This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.8.18)  21 AUG 2026 19:57
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
-**main.tex
-(./main.tex
-LaTeX2e <2025-11-01>
-L3 programming layer <2026-03-20>
-(./preamble.tex (/usr/share/texlive/texmf-dist/tex/latex/memoir/memoir.cls
+**./main.tex
+(main.tex
+LaTeX2e <2026-06-01>
+L3 programming layer <2026-07-20>
+(preamble.tex
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/memoir\memoir.cls
 Document Class: memoir 2025/11/04 v3.8.4b configurable book, report, article do
 cument class
-(/usr/share/texlive/texmf-dist/tex/latex/xpatch/xpatch.sty
-(/usr/share/texlive/texmf-dist/tex/latex/l3kernel/expl3.sty
-Package: expl3 2026-03-20 L3 programming layer (loader) 
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/xpatch\xpatch.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
+Package: expl3 2026-07-20 L3 programming layer (loader) 
 
-(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
-File: l3backend-xetex.def 2026-02-18 L3 backend support: XeTeX
-\g__graphics_track_int=\count271
-\g__pdfannot_backend_int=\count272
-\g__pdfannot_backend_link_int=\count273
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-xet
+ex.def
+File: l3backend-xetex.def 2026-07-20 L3 backend support: XeTeX
+\g__graphics_track_int=\count273
+\g__pdfannot_backend_int=\count274
+\g__pdfannot_backend_link_int=\count275
 ))
 Package: xpatch 2020/03/25 v0.3a Extending etoolbox patching commands
 
-(/usr/share/texlive/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/xparse\xpars
+e.sty
 Package: xparse 2025-10-09 L3 Experimental document command parser
 )
-(/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
 Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count274
+\etb@tempcnta=\count276
 ))
 \onelineskip=\skip49
 \lxvchars=\skip50
 \xlvchars=\skip51
-\@memcnta=\count275
-\c@@memmarkcntra=\count276
-
-(/usr/share/texlive/texmf-dist/tex/generic/iftex/iftex.sty
+\@memcnta=\count277
+\c@@memmarkcntra=\count278
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
 Package: iftex 2024/12/12 v1.0g TeX engine tests
 )
 \trimtop=\skip52
 \trimedge=\skip53
 
-(/usr/share/texlive/texmf-dist/tex/latex/memoir/mem10.clo
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/memoir\mem10.clo
 File: mem10.clo 2022/07/29 v0.5 memoir class 10pt size option
 )
 \binding=\skip54
@@ -53,20 +55,20 @@ File: mem10.clo 2022/07/29 v0.5 memoir class 10pt size option
 \mem@maxheadheight=\skip61
 \mem@maxfootheight=\skip62
 \headwidth=\skip63
-\c@storedpagenumber=\count277
+\c@storedpagenumber=\count279
 \memPD=\dimen150
 \m@mabparskip=\skip64
 \thanksmarkwidth=\skip65
 \thanksmarksep=\skip66
 \droptitle=\skip67
-\c@book=\count278
-\c@part=\count279
-\c@chapter=\count280
-\c@section=\count281
-\c@subsection=\count282
-\c@subsubsection=\count283
-\c@paragraph=\count284
-\c@subparagraph=\count285
+\c@book=\count280
+\c@part=\count281
+\c@chapter=\count282
+\c@section=\count283
+\c@subsection=\count284
+\c@subsubsection=\count285
+\c@paragraph=\count286
+\c@subparagraph=\count287
 \beforechapskip=\skip68
 \midchapskip=\skip69
 \afterchapskip=\skip70
@@ -88,8 +90,8 @@ File: mem10.clo 2022/07/29 v0.5 memoir class 10pt size option
 \beforesubparaskip=\skip86
 \aftersubparaskip=\skip87
 \pfbreakskip=\skip88
-\c@@ppsavesec=\count286
-\c@@ppsaveapp=\count287
+\c@@ppsavesec=\count288
+\c@@ppsaveapp=\count289
 \ragrparindent=\dimen151
 \everylistparindent=\dimen152
 \parsepi=\skip89
@@ -111,10 +113,10 @@ File: mem10.clo 2022/07/29 v0.5 memoir class 10pt size option
 \absrightindent=\skip103
 \absparindent=\skip104
 \absparsep=\skip105
-\c@vslineno=\count288
-\c@poemline=\count289
-\c@modulo@vs=\count290
-\c@memfvsline=\count291
+\c@vslineno=\count290
+\c@poemline=\count291
+\c@modulo@vs=\count292
+\c@memfvsline=\count293
 \vleftskip=\skip106
 \vrightskip=\skip107
 \stanzaskip=\skip108
@@ -122,21 +124,17 @@ File: mem10.clo 2022/07/29 v0.5 memoir class 10pt size option
 \vgap=\skip110
 \vindent=\skip111
 \vleftmargin=\dimen154
-\c@verse=\count292
-\c@chrsinstr=\count293
+\c@verse=\count294
+\c@chrsinstr=\count295
 \beforepoemtitleskip=\skip112
 \afterpoemtitleskip=\skip113
-\c@poem=\count294
+\c@poem=\count296
 \beforePoemTitleskip=\skip114
 \midPoemTitleskip=\skip115
 \afterPoemTitleskip=\skip116
 
-(/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
-
-LaTeX Warning: You have requested release `2026/06/01' of LaTeX,
-               but only release `2025-11-01' is available.
-
-Package: array 2026/01/25 v2.7a Tabular extension package (FMi)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
+Package: array 2026/02/24 v2.7b Tabular extension package (FMi)
 \col@sep=\dimen155
 \ar@mcellbox=\box53
 \extrarowheight=\dimen156
@@ -144,23 +142,24 @@ Package: array 2026/01/25 v2.7a Tabular extension package (FMi)
 \extratabsurround=\skip117
 \backup@length=\skip118
 \ar@cellbox=\box54
-) (/usr/share/texlive/texmf-dist/tex/latex/tools/dcolumn.sty
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tools\dcolumn.sty
 Package: dcolumn 2025/10/21 v1.06 decimal alignment package (DPC)
 )
-(/usr/share/texlive/texmf-dist/tex/latex/tools/delarray.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tools\delarray.sty
 Package: delarray 2014/10/28 v1.01 array delimiter package (DPC)
 )
-(/usr/share/texlive/texmf-dist/tex/latex/tools/tabularx.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tools\tabularx.sty
 Package: tabularx 2023/12/11 v2.12a `tabularx' package (DPC)
 \TX@col@width=\dimen157
 \TX@old@table=\dimen158
 \TX@old@col=\dimen159
 \TX@target=\dimen160
 \TX@delta=\dimen161
-\TX@cols=\count295
+\TX@cols=\count297
 \TX@ftn=\toks19
 )
-(/usr/share/texlive/texmf-dist/tex/latex/booktabs/booktabs.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty
 Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \heavyrulewidth=\dimen162
 \lightrulewidth=\dimen163
@@ -172,23 +171,23 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \cmidrulesep=\dimen169
 \cmidrulekern=\dimen170
 \defaultaddspace=\dimen171
-\@cmidla=\count296
-\@cmidlb=\count297
+\@cmidla=\count298
+\@cmidlb=\count299
 \@aboverulesep=\dimen172
 \@belowrulesep=\dimen173
-\@thisruleclass=\count298
-\@lastruleclass=\count299
+\@thisruleclass=\count300
+\@lastruleclass=\count301
 \@thisrulewidth=\dimen174
 )
 \ctableftskip=\skip119
 \ctabrightskip=\skip120
-\abovecolumnspenalty=\count300
-\@linestogo=\count301
-\@cellstogo=\count302
-\@cellsincolumn=\count303
+\abovecolumnspenalty=\count302
+\@linestogo=\count303
+\@cellstogo=\count304
+\@cellsincolumn=\count305
 \crtok=\toks20
 \@mincolumnwidth=\dimen175
-\c@newflo@tctr=\count304
+\c@newflo@tctr=\count306
 \mem@margin@floatbox=\box55
 \@contcwidth=\skip121
 \@contindw=\skip122
@@ -200,7 +199,7 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \subfloatbottomskip=\skip128
 \subfloatlabelskip=\skip129
 \subfloatcapmargin=\dimen176
-\c@@contsubnum=\count305
+\c@@contsubnum=\count307
 \m@mscap@capbox=\box56
 \m@mscap@fbox=\box57
 \sidecapsep=\dimen177
@@ -215,32 +214,33 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \epigraphwidth=\skip132
 \epigraphrule=\skip133
 
-(/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
 Package: nameref 2026-01-29 v2.58 Cross-referencing by name of section
 
-(/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
 Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 
-(/usr/share/texlive/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
 Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/infwarerr/infwarerr.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.s
+ty
 Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
 ))
-(/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettit
+lestring.sty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 
-(/usr/share/texlive/texmf-dist/tex/latex/kvoptions/kvoptions.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
-
-(/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty
-Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
+Package: keyval 2026-05-17 v1.15 key=value parser (DPC)
 \KV@toks@=\toks21
 )
-(/usr/share/texlive/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
 Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
 )))
-\c@section@level=\count306
+\c@section@level=\count308
 )
 \tocentryskip=\skip134
 \tocbaseline=\skip135
@@ -270,7 +270,7 @@ Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
 \cftsubparagraphindent=\skip157
 \cftsubparagraphnumwidth=\skip158
 \prechapterprecisshift=\dimen186
-\c@maxsecnumdepth=\count307
+\c@maxsecnumdepth=\count309
 \bibindent=\dimen187
 \bibitemsep=\skip159
 \indexcolsep=\skip160
@@ -293,7 +293,7 @@ LaTeX Info: Redefining \flushbottom on input line 8099.
 \footinsdim=\skip170
 \footinsv@r=\insert250
 \@mpfootinsv@r=\insert249
-\m@m@k=\count308
+\m@m@k=\count310
 \m@m@h=\dimen190
 \m@mipn@skip=\skip171
 \sidefootins=\insert248
@@ -303,15 +303,14 @@ LaTeX Info: Redefining \flushbottom on input line 8099.
 \sidefootvsep=\skip175
 \sidefootwidth=\skip176
 \m@mdownsf=\skip177
-\c@sidefootnote=\count309
+\c@sidefootnote=\count311
 \sidefootmarkwidth=\skip178
 \sidefootmarksep=\skip179
 \sidefootparindent=\skip180
-\c@pagenote=\count310
-\c@pagenoteshadow=\count311
+\c@pagenote=\count312
+\c@pagenoteshadow=\count313
 \mem@pn@lastkern=\skip181
-
-(/usr/share/texlive/texmf-dist/tex/latex/tools/verbatim.sty
+ (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tools\verbatim.sty
 Package: verbatim 2024-01-22 v1.5x LaTeX2e package for verbatim enhancements
 \every@verbatim=\toks23
 \verbatim@line=\toks24
@@ -319,41 +318,40 @@ Package: verbatim 2024-01-22 v1.5x LaTeX2e package for verbatim enhancements
 )
 \verbatimindent=\skip182
 \verbatim@out=\write3
-
-(/usr/share/texlive/texmf-dist/tex/latex/base/shortvrb.sty
-Package: shortvrb 2024/12/25 v3.0q Standard LaTeX documentation package V3 (FMi
+ (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/base\shortvrb.sty
+Package: shortvrb 2026-03-13 v3.0r Standard LaTeX documentation package V3 (FMi
 )
 )
 \bvboxsep=\skip183
-\c@memfbvline=\count312
-\c@bvlinectr=\count313
+\c@memfbvline=\count314
+\c@bvlinectr=\count315
 \bvnumlength=\skip184
 \fb@frw=\dimen191
 \fb@frh=\dimen192
 \FrameRule=\dimen193
 \FrameSep=\dimen194
-\c@cp@cntr=\count314
-\c@ism@mctr=\count315
-\c@xsm@mctr=\count316
-\c@csm@mctr=\count317
-\c@ksm@mctr=\count318
-\c@xksm@mctr=\count319
-\c@cksm@mctr=\count320
-\c@msm@mctr=\count321
-\c@xmsm@mctr=\count322
-\c@cmsm@mctr=\count323
-\c@bsm@mctr=\count324
-\c@workm@mctr=\count325
-\c@sheetsequence=\count326
-\c@lastsheet=\count327
-\c@lastpage=\count328
-\c@figure=\count329
-\c@lofdepth=\count330
+\c@cp@cntr=\count316
+\c@ism@mctr=\count317
+\c@xsm@mctr=\count318
+\c@csm@mctr=\count319
+\c@ksm@mctr=\count320
+\c@xksm@mctr=\count321
+\c@cksm@mctr=\count322
+\c@msm@mctr=\count323
+\c@xmsm@mctr=\count324
+\c@cmsm@mctr=\count325
+\c@bsm@mctr=\count326
+\c@workm@mctr=\count327
+\c@sheetsequence=\count328
+\c@lastsheet=\count329
+\c@lastpage=\count330
+\c@figure=\count331
+\c@lofdepth=\count332
 \cftbeforefigureskip=\skip185
 \cftfigureindent=\skip186
 \cftfigurenumwidth=\skip187
-\c@table=\count331
-\c@lotdepth=\count332
+\c@table=\count333
+\c@lotdepth=\count334
 \cftbeforetableskip=\skip188
 \cfttableindent=\skip189
 \cfttablenumwidth=\skip190
@@ -384,41 +382,46 @@ Package tocbibind [2008/07/23] emulated by memoir.
 Package tocloft [2008/07/23] emulated by memoir.
 Package tocvsec2 [2008/07/23] emulated by memoir.
 Package verse [2008/07/23] emulated by memoir.
-) (./documenter.sty
-(/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.sty
+)
+(documenter.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/fontspec\fontspec.sty
 Package: fontspec 2025/09/29 v2.9g Font selection for XeLaTeX and LuaLaTeX
 
-(/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec-xetex.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/fontspec\fontspec-xetex
+.sty
 Package: fontspec-xetex 2025/09/29 v2.9g Font selection for XeLaTeX and LuaLaTe
 X
-\l__fontspec_script_int=\count333
-\l__fontspec_language_int=\count334
-\l__fontspec_strnum_int=\count335
-\l__fontspec_tmp_int=\count336
-\l__fontspec_tmpa_int=\count337
-\l__fontspec_tmpb_int=\count338
-\l__fontspec_tmpc_int=\count339
-\l__fontspec_em_int=\count340
-\l__fontspec_emdef_int=\count341
-\l__fontspec_strong_int=\count342
-\l__fontspec_strongdef_int=\count343
+\l__fontspec_script_int=\count335
+\l__fontspec_language_int=\count336
+\l__fontspec_strnum_int=\count337
+\l__fontspec_tmp_int=\count338
+\l__fontspec_tmpa_int=\count339
+\l__fontspec_tmpb_int=\count340
+\l__fontspec_tmpc_int=\count341
+\l__fontspec_em_int=\count342
+\l__fontspec_emdef_int=\count343
+\l__fontspec_strong_int=\count344
+\l__fontspec_strongdef_int=\count345
 \l__fontspec_tmpa_dim=\dimen195
 \l__fontspec_tmpb_dim=\dimen196
 \l__fontspec_tmpc_dim=\dimen197
-
-(/usr/share/texlive/texmf-dist/tex/latex/base/fontenc.sty
+ (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
 Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
 )
-(/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.cfg)))
-(/usr/share/texlive/texmf-dist/tex/latex/newunicodechar/newunicodechar.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/fontspec\fontspec.cfg))
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/newunicodechar\newunico
+dechar.sty
 Package: newunicodechar 2018/04/08 v1.2 Defining Unicode characters
 )
-(/usr/share/texlive/texmf-dist/tex/latex/polyglossia/polyglossia.sty
-Package: polyglossia 2026/04/18 v2.10 Modern multilingual typesetting with XeLa
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/polyglossia\polyglossia
+.sty
+Package: polyglossia 2026/07/22 v2.12 Modern multilingual typesetting with XeLa
 TeX and LuaLaTeX
-\l_xpg_alias_keyvals_int=\count344
+\l_xpg_alias_keyvals_int=\count346
 
-(/usr/share/texlive/texmf-dist/tex/latex/polyglossia/gloss-latex.ldf
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/polyglossia\gloss-latex
+.ldf
 File: gloss-latex.ldf polyglossia: module for default language
 ))
 
@@ -550,18 +553,17 @@ Package fontspec Info:
 (fontspec)             Sans/BI/OT:script=latn;language=dflt;"
 
 
-(/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
 Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
 
-(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package xcolor Info: Driver file: xetex.def on input line 274.
-
-(/usr/share/texlive/texmf-dist/tex/latex/graphics-def/xetex.def
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\xetex.def
 File: xetex.def 2025/11/01 v5.0p Graphics/color driver for xetex
-)
-(/usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx)
+) (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.lt
+x)
 Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
 Package xcolor Info: Model `RGB' extended on input line 1365.
 Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
@@ -570,35 +572,34 @@ Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1369.
 Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
 Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
 Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
-)
-(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty
-Package: amsmath 2025/07/09 v2.17z AMS math features
+) (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+Package: amsmath 2026/05/19 v2.18d AMS math features
 \@mathmargin=\skip191
 
 For additional information on amsmath, use the `?' option.
-(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amstext.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
 Package: amstext 2024/11/17 v2.01 AMS text
 
-(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsgen.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
 \@emptytoks=\toks25
 \ex@=\dimen198
 ))
-(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsbsy.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 \pmbraise@=\dimen199
 )
-(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsopn.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
 Package: amsopn 2022/04/08 v2.04 operator names
 )
-\inf@bad=\count345
+\inf@bad=\count347
 LaTeX Info: Redefining \frac on input line 233.
-\uproot@=\count346
-\leftroot@=\count347
+\uproot@=\count348
+\leftroot@=\count349
 LaTeX Info: Redefining \overline on input line 398.
 LaTeX Info: Redefining \colon on input line 409.
-\classnum@=\count348
-\DOTSCASE@=\count349
+\classnum@=\count350
+\DOTSCASE@=\count351
 LaTeX Info: Redefining \ldots on input line 495.
 LaTeX Info: Redefining \dots on input line 498.
 LaTeX Info: Redefining \cdots on input line 619.
@@ -611,20 +612,20 @@ LaTeX Info: Redefining \Bigg on input line 724.
 \big@size=\dimen256
 LaTeX Font Info:    Redeclaring font encoding OML on input line 742.
 LaTeX Font Info:    Redeclaring font encoding OMS on input line 743.
-\macc@depth=\count350
+\macc@depth=\count352
 LaTeX Info: Redefining \bmod on input line 904.
 LaTeX Info: Redefining \pmod on input line 909.
 LaTeX Info: Redefining \smash on input line 939.
 LaTeX Info: Redefining \relbar on input line 969.
 LaTeX Info: Redefining \Relbar on input line 970.
-\c@MaxMatrixCols=\count351
+\c@MaxMatrixCols=\count353
 \dotsspace@=\muskip17
-\c@parentequation=\count352
-\dspbrk@lvl=\count353
+\c@parentequation=\count354
+\dspbrk@lvl=\count355
 \tag@help=\toks26
-\row@=\count354
-\column@=\count355
-\maxfields@=\count356
+\row@=\count356
+\column@=\count357
+\maxfields@=\count358
 \andhelp@=\toks27
 \eqnshift@=\dimen257
 \alignsep@=\dimen258
@@ -636,172 +637,175 @@ LaTeX Info: Redefining \Relbar on input line 970.
 \multlinegap=\skip192
 \multlinetaggap=\skip193
 \mathdisplay@stack=\toks29
-LaTeX Info: Redefining \[ on input line 2950.
-LaTeX Info: Redefining \] on input line 2951.
+LaTeX Info: Redefining \[ on input line 2965.
+LaTeX Info: Redefining \] on input line 2966.
 )
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
 Package: amssymb 2013/01/14 v3.01 AMS font symbols
 
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
 Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 \symAMSa=\mathgroup4
 \symAMSb=\mathgroup5
 LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
-))
-(/usr/share/texlive/texmf-dist/tex/latex/minted/minted.sty
-Package: minted 2026/03/03 v3.8.0 Yet another Pygments shim for LaTeX
+)) (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/minted\minted.sty
+Package: minted 2025/05/14 v3.7.0 Yet another Pygments shim for LaTeX
 
-(/usr/share/texlive/texmf-dist/tex/generic/catchfile/catchfile.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/catchfile\catchfile.s
+ty
 Package: catchfile 2019/12/09 v1.8 Catch the contents of a file (HO)
 
-(/usr/share/texlive/texmf-dist/tex/generic/etexcmds/etexcmds.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/etexcmds\etexcmds.sty
 Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
-))
-(/usr/share/texlive/texmf-dist/tex/latex/fvextra/fvextra.sty
-Package: fvextra 2026/02/25 v1.14.0 fvextra - extensions and patches for fancyv
+)) (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/fvextra\fvextra.sty
+Package: fvextra 2025/05/29 v1.13.2 fvextra - extensions and patches for fancyv
 rb
 
-(/usr/share/texlive/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
-Package: fancyvrb 2026/04/16 4.6a verbatim text (tvz,hv)
-\FV@CodeLineNo=\count357
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/fancyvrb\fancyvrb.sty
+Package: fancyvrb 2025/07/28 4.6 verbatim text (tvz,hv)
+\FV@CodeLineNo=\count359
 \FV@InFile=\read3
 \FV@TabBox=\box60
-\c@FancyVerbLine=\count358
-\FV@StepNumber=\count359
+\c@FancyVerbLine=\count360
+\FV@StepNumber=\count361
 \FV@OutFile=\write4
 )
-(/usr/share/texlive/texmf-dist/tex/latex/upquote/upquote.sty
-Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
-tim
-
-(/usr/share/texlive/texmf-dist/tex/latex/base/textcomp.sty
-Package: textcomp 2024/04/24 v2.1b Standard LaTeX package
-))
-(/usr/share/texlive/texmf-dist/tex/latex/lineno/lineno.sty
-Package: lineno 2026/03/08 line numbers on paragraphs v5.9
-\linenopenalty=\count360
-\output=\toks30
-\linenoprevgraf=\count361
-\linenumbersep=\dimen263
-\linenumberwidth=\dimen264
-\c@linenumber=\count362
-\c@pagewiselinenumber=\count363
-\c@LN@truepage=\count364
-\c@internallinenumber=\count365
-\c@internallinenumbers=\count366
-\quotelinenumbersep=\dimen265
-\bframerule=\dimen266
-\bframesep=\dimen267
-\bframebox=\box61
-\@LN@amsmath@ams@eqpen=\count367
-)
-\c@FancyVerbWriteLine=\count368
-\c@FancyVerbBufferLine=\count369
-\c@FV@TrueTabGroupLevel=\count370
-\c@FV@TrueTabCounter=\count371
-\FV@TabBox@Group=\box62
-\FV@bgcolorstructbox=\box63
-\FV@TmpLength=\skip194
-\c@FV@HighlightLinesStart=\count372
-\c@FV@HighlightLinesStop=\count373
-\FV@LoopCount=\count374
-\FV@NCharsBox=\box64
-\FV@BreakIndent=\dimen268
-\FV@BreakIndentNChars=\count375
-\FV@BreakSymbolSepLeft=\dimen269
-\FV@BreakSymbolSepLeftNChars=\count376
-\FV@BreakSymbolSepRight=\dimen270
-\FV@BreakSymbolSepRightNChars=\count377
-\FV@BreakSymbolIndentLeft=\dimen271
-\FV@BreakSymbolIndentLeftNChars=\count378
-\FV@BreakSymbolIndentRight=\dimen272
-\FV@BreakSymbolIndentRightNChars=\count379
-\c@FancyVerbLineBreakLast=\count380
-\FV@LineBox=\box65
-\FV@LineIndentBox=\box66
-\c@FV@BreakBufferDepth=\count381
-\FV@LineWidth=\dimen273
-)
-(/usr/share/texlive/texmf-dist/tex/latex/latex2pydata/latex2pydata.sty
-Package: latex2pydata 2026/02/25 v0.7.0 latex2pydata - write data to file in Py
-thon literal format
-)
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex
-\pgfkeys@pathtoks=\toks31
-\pgfkeys@temptoks=\toks32
-
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfkeyslibraryfiltered
-.code.tex
-\pgfkeys@tmptoks=\toks33
-))) (/usr/share/texlive/texmf-dist/tex/latex/pgfopts/pgfopts.sty
-Package: pgfopts 2014/07/10 v2.1a LaTeX package options with pgfkeys
-\pgfopts@list@add@a@toks=\toks34
-\pgfopts@list@add@b@toks=\toks35
-)
-(/usr/share/texlive/texmf-dist/tex/latex/tools/shellesc.sty
-Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
-Package shellesc Info: Unrestricted shell escape enabled on input line 75.
-)
-(/usr/share/texlive/texmf-dist/tex/latex/float/float.sty
-Package: float 2001/11/08 v1.3d Float enhancements (AL)
-\c@float@type=\count382
-\float@exts=\toks36
-\float@box=\box67
-\@float@everytoks=\toks37
-\@floatcapt=\box68
-)
-\c@minted@FancyVerbLineTemp=\count383
-\@float@every@listing=\toks38
-\c@listing=\count384
-)
-(/usr/share/texlive/texmf-dist/tex/latex/tabulary/tabulary.sty
-Package: tabulary 2024/06/04 v0.11 tabulary package (DPC)
-\TY@count=\count385
-\TY@linewidth=\dimen274
-\tymin=\dimen275
-\tymax=\dimen276
-\TY@tablewidth=\dimen277
-)
-(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hyperref.sty
-Package: hyperref 2026-04-24 v7.01q Hypertext links for LaTeX
-
-(/usr/share/texlive/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty
-Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
-)
-(/usr/share/texlive/texmf-dist/tex/generic/pdfescape/pdfescape.sty
-Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
-
-(/usr/share/texlive/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds
+.sty
 Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
 )
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
 Package pdftexcmds Info: \pdfdraftmode not found.
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/upquote\upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
+tim
+
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/base\textcomp.sty
+Package: textcomp 2024/04/24 v2.1b Standard LaTeX package
 ))
-(/usr/share/texlive/texmf-dist/tex/latex/hycolor/hycolor.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/lineno\lineno.sty
+Package: lineno 2025/05/13 line numbers on paragraphs v5.5
+\linenopenalty=\count362
+\output=\toks30
+\linenoprevgraf=\count363
+\linenumbersep=\dimen263
+\linenumberwidth=\dimen264
+\c@linenumber=\count364
+\c@pagewiselinenumber=\count365
+\c@LN@truepage=\count366
+\c@internallinenumber=\count367
+\c@internallinenumbers=\count368
+\quotelinenumbersep=\dimen265
+\bframerule=\dimen266
+\bframesep=\dimen267
+\bframebox=\box61
+\@LN@amsmath@ams@eqpen=\count369
+)
+\c@FancyVerbWriteLine=\count370
+\c@FancyVerbBufferLine=\count371
+\c@FV@TrueTabGroupLevel=\count372
+\c@FV@TrueTabCounter=\count373
+\FV@TabBox@Group=\box62
+\FV@bgcolorstructbox=\box63
+\FV@TmpLength=\skip194
+\c@FV@HighlightLinesStart=\count374
+\c@FV@HighlightLinesStop=\count375
+\FV@LoopCount=\count376
+\FV@NCharsBox=\box64
+\FV@BreakIndent=\dimen268
+\FV@BreakIndentNChars=\count377
+\FV@BreakSymbolSepLeft=\dimen269
+\FV@BreakSymbolSepLeftNChars=\count378
+\FV@BreakSymbolSepRight=\dimen270
+\FV@BreakSymbolSepRightNChars=\count379
+\FV@BreakSymbolIndentLeft=\dimen271
+\FV@BreakSymbolIndentLeftNChars=\count380
+\FV@BreakSymbolIndentRight=\dimen272
+\FV@BreakSymbolIndentRightNChars=\count381
+\c@FancyVerbLineBreakLast=\count382
+\FV@LineBox=\box65
+\FV@LineIndentBox=\box66
+\c@FV@BreakBufferDepth=\count383
+\FV@LineWidth=\dimen273
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/latex2pydata\latex2pyda
+ta.sty
+Package: latex2pydata 2025/03/26 v0.6.0 latex2pydata - write data to file in Py
+thon literal format
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfkeys.s
+ty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys
+.code.tex
+\pgfkeys@pathtoks=\toks31
+\pgfkeys@temptoks=\toks32
+
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys
+libraryfiltered.code.tex
+\pgfkeys@tmptoks=\toks33
+)))
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgfopts\pgfopts.sty
+Package: pgfopts 2014/07/10 v2.1a LaTeX package options with pgfkeys
+\pgfopts@list@add@a@toks=\toks34
+\pgfopts@list@add@b@toks=\toks35
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tools\shellesc.sty
+Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
+Package shellesc Info: Unrestricted shell escape enabled on input line 75.
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count384
+\float@exts=\toks36
+\float@box=\box67
+\@float@everytoks=\toks37
+\@floatcapt=\box68
+)
+\c@minted@FancyVerbLineTemp=\count385
+\@float@every@listing=\toks38
+\c@listing=\count386
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tabulary\tabulary.sty
+Package: tabulary 2024/06/04 v0.11 tabulary package (DPC)
+\TY@count=\count387
+\TY@linewidth=\dimen274
+\tymin=\dimen275
+\tymax=\dimen276
+\TY@tablewidth=\dimen277
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+Package: hyperref 2026-06-17 v7.01r Hypertext links for LaTeX
+
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefine
+keys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.s
+ty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+) (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
 Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/stringenc/stringenc.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.s
+ty
 Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
 )
 )
 \@linkdim=\dimen278
-\Hy@linkcounter=\count386
-\Hy@pagecounter=\count387
-
-(/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def
-File: pd1enc.def 2026-04-24 v7.01q Hyperref: PDFDocEncoding definition (HO)
-)
-(/usr/share/texlive/texmf-dist/tex/generic/intcalc/intcalc.sty
+\Hy@linkcounter=\count388
+\Hy@pagecounter=\count389
+ (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
+File: pd1enc.def 2026-06-17 v7.01r Hyperref: PDFDocEncoding definition (HO)
+) (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count388
-
-(/usr/share/texlive/texmf-dist/tex/latex/hyperref/puenc.def
-File: puenc.def 2026-04-24 v7.01q Hyperref: PDF Unicode definition (HO)
+\Hy@SavedSpaceFactor=\count390
+ (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
+File: puenc.def 2026-06-17 v7.01r Hyperref: PDF Unicode definition (HO)
 )
 Package hyperref Info: Hyper figures OFF on input line 4199.
 Package hyperref Info: Link nesting OFF on input line 4204.
@@ -810,23 +814,24 @@ Package hyperref Info: Plain pages OFF on input line 4214.
 Package hyperref Info: Backreferencing OFF on input line 4219.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4466.
-\c@Hy@tempcnt=\count389
+\c@Hy@tempcnt=\count391
 
-(/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
 \Urlmuskip=\muskip18
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 4805.
 \XeTeXLinkMargin=\dimen279
 
-(/usr/share/texlive/texmf-dist/tex/generic/bitset/bitset.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 
-(/usr/share/texlive/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc
+.sty
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
-\Fld@menulength=\count390
+\Fld@menulength=\count392
 \Field@Width=\dimen280
 \Fld@charsize=\dimen281
 Package hyperref Info: Hyper figures OFF on input line 6091.
@@ -836,24 +841,26 @@ Package hyperref Info: backreferencing OFF on input line 6106.
 Package hyperref Info: Link coloring OFF on input line 6111.
 Package hyperref Info: Link coloring with OCG OFF on input line 6116.
 Package hyperref Info: PDF/A mode OFF on input line 6121.
-\Hy@abspage=\count391
-\c@Item=\count392
-\c@Hfootnote=\count393
+\Hy@abspage=\count393
+\c@Item=\count394
+\c@Hfootnote=\count395
 )
 Package hyperref Info: Driver (autodetected): hxetex.
 
-(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hxetex.def
-File: hxetex.def 2026-04-24 v7.01q Hyperref driver for XeTeX
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hxetex.def
+File: hxetex.def 2026-06-17 v7.01r Hyperref driver for XeTeX
 \pdfm@box=\box69
-\c@Hy@AnnotLevel=\count394
-\HyField@AnnotCount=\count395
-\Fld@listcount=\count396
-\c@bookmark@seq@number=\count397
+\c@Hy@AnnotLevel=\count396
+\HyField@AnnotCount=\count397
+\Fld@listcount=\count398
+\c@bookmark@seq@number=\count399
 
-(/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfil
+echeck.sty
 Package: rerunfilecheck 2025-06-21 v1.11 Rerun checks for auxiliary files (HO)
 
-(/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquec
+ounter.sty
 Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 )
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
@@ -861,10 +868,10 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip195
 )
-(/usr/share/texlive/texmf-dist/tex/latex/memoir/memhfixc.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/memoir\memhfixc.sty
 Package: memhfixc 2025/09/16 v1.24 hyperref package fixes for memoir class
-\c@memhycontfloat=\count398
-\c@mem@Hpagenote=\count399
+\c@memhycontfloat=\count400
+\c@mem@Hpagenote=\count401
 )
 
 Package hyperref Warning: Option `pdfpagelabels' has already been used,
@@ -900,16 +907,17 @@ Sidefoothsep and sidefootwidth: 7pt and 71pt
 Sidefootvsep and sidefootheight: 12pt and 548.39996pt
 ******************************************************
 
-(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
-Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+Package: graphicx 2026-05-17 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
 
-(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphics.sty
-Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
+Package: graphics 2026-05-17 v1.4h Standard LaTeX Graphics (DPC,SPQR)
 
-(/usr/share/texlive/texmf-dist/tex/latex/graphics/trig.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
 Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
 )
-(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphics.c
+fg
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: xetex.def on input line 106.
@@ -917,29 +925,28 @@ Package graphics Info: Driver file: xetex.def on input line 106.
 \Gin@req@height=\dimen282
 \Gin@req@width=\dimen283
 )
-(/usr/share/texlive/texmf-dist/tex/latex/adjustbox/adjustbox.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/adjustbox\adjustbox.sty
 Package: adjustbox 2025/02/26 v1.3c Adjusting TeX boxes (trim, clip, ...)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/xkeyval\xkeyval.sty
+Package: xkeyval 2022/06/16 v2.9 package option processing (HA)
 
-(/usr/share/texlive/texmf-dist/tex/latex/xkeyval/xkeyval.sty
-Package: xkeyval 2025/11/04 v2.10 package option processing (HA)
-
-(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkeyval.tex
-(/usr/share/texlive/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkeyval.tex
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkvutils.tex
 \XKV@toks=\toks39
 \XKV@tempa@toks=\toks40
-\XKV@tempb@toks=\toks41
 )
-\XKV@depth=\count400
+\XKV@depth=\count402
 File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
 ))
-(/usr/share/texlive/texmf-dist/tex/latex/adjustbox/adjcalc.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/adjustbox\adjcalc.sty
 Package: adjcalc 2012/05/16 v1.1 Provides advanced setlength with multiple back
 -ends (calc, etex, pgfmath)
 )
-(/usr/share/texlive/texmf-dist/tex/latex/adjustbox/trimclip.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/adjustbox\trimclip.sty
 Package: trimclip 2025/02/21 v1.2a Trim and clip general TeX material
 
-(/usr/share/texlive/texmf-dist/tex/latex/collectbox/collectbox.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/collectbox\collectbox.s
+ty
 Package: collectbox 2022/10/17 v0.4c Collect macro arguments as boxes
 \collectedbox=\box70
 )
@@ -949,7 +956,7 @@ Package: collectbox 2022/10/17 v0.4c Collect macro arguments as boxes
 \tc@ury=\dimen287
 Package trimclip Info: Using driver 'tc-xetex.def'.
 
-(/usr/share/texlive/texmf-dist/tex/latex/adjustbox/tc-xetex.def
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/adjustbox\tc-xetex.def
 File: tc-xetex.def 2019/01/04 v2.2 Clipping driver for xetex
 ))
 \adjbox@Width=\dimen288
@@ -961,43 +968,51 @@ File: tc-xetex.def 2019/01/04 v2.2 Clipping driver for xetex
 \adjbox@pdepth=\dimen294
 \adjbox@ptotalheight=\dimen295
 
-(/usr/share/texlive/texmf-dist/tex/latex/ifoddpage/ifoddpage.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/ifoddpage\ifoddpage.sty
 Package: ifoddpage 2022/10/18 v1.2 Conditionals for odd/even page detection
-\c@checkoddpage=\count401
+\c@checkoddpage=\count403
 LaTeX Info: Redefining \checkoddpage on input line 45.
-)
-(/usr/share/texlive/texmf-dist/tex/latex/varwidth/varwidth.sty
+) (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/varwidth\varwidth.sty
 Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
 \@vwid@box=\box71
-\sift@deathcycles=\count402
+\sift@deathcycles=\count404
 \@vwid@loff=\dimen296
 \@vwid@roff=\dimen297
 )
 ==> First Aid for varwidth.sty applied!
-) (/usr/share/texlive/texmf-dist/tex/latex/tcolorbox/tcolorbox.sty
-Package: tcolorbox 2025/11/28 version 6.9.0 text color boxes
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/tcolorbox\tcolorbox.sty
+Package: tcolorbox 2026/05/28 version 6.10.0 text color boxes
 
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/frontendlayer/tikz.sty
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgf.sty
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgfrcs.sty
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-common.tex
-\pgfutil@everybye=\toks42
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz.
+sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.st
+y
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
+-common.tex
+\pgfutil@everybye=\toks41
 \pgfutil@tempdima=\dimen298
 \pgfutil@tempdimb=\dimen299
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfutil-latex.def
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
+-latex.def
 \pgfutil@abb=\box72
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgfrcs.code.tex
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/pgf.revision.tex)
-Package: pgfrcs 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs.
+code.tex
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex)
+Package: pgfrcs 2026-08-01 v3.1.12 (3.1.12)
 ))
-Package: pgf 2025-08-29 v3.1.11a (3.1.11a)
+Package: pgf 2026-08-01 v3.1.12 (3.1.12)
 
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/basiclayer/pgfcore.sty
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/systemlayer/pgfsys.sty
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys.code.tex
-Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore.
+sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/systemlayer\pgfsys.
+sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+s.code.tex
+Package: pgfsys 2026-08-01 v3.1.12 (3.1.12)
 \pgf@x=\dimen300
 \pgf@y=\dimen301
 \pgf@xa=\dimen302
@@ -1010,80 +1025,91 @@ Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
 \pgf@yd=\dimen309
 \w@pgf@writea=\write5
 \r@pgf@reada=\read4
-\c@pgf@counta=\count403
-\c@pgf@countb=\count404
-\c@pgf@countc=\count405
-\c@pgf@countd=\count406
-\t@pgf@toka=\toks43
-\t@pgf@tokb=\toks44
-\t@pgf@tokc=\toks45
-\pgf@sys@id@count=\count407
+\c@pgf@counta=\count405
+\c@pgf@countb=\count406
+\c@pgf@countc=\count407
+\c@pgf@countd=\count408
+\t@pgf@toka=\toks42
+\t@pgf@tokb=\toks43
+\t@pgf@tokc=\toks44
+\pgf@sys@id@count=\count409
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgf.cfg
-File: pgf.cfg 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.c
+fg
+File: pgf.cfg 2026-08-01 v3.1.12 (3.1.12)
 )
 Driver file for pgf: pgfsys-xetex.def
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-xetex.def
-File: pgfsys-xetex.def 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+s-xetex.def
+File: pgfsys-xetex.def 2026-08-01 v3.1.12 (3.1.12)
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-dvipdfmx.def
-File: pgfsys-dvipdfmx.def 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+s-dvipdfmx.def
+File: pgfsys-dvipdfmx.def 2026-08-01 v3.1.12 (3.1.12)
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsys-common-pdf.de
-f
-File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+s-common-pdf.def
+File: pgfsys-common-pdf.def 2026-08-01 v3.1.12 (3.1.12)
 )
-\pgfsys@objnum=\count408
+\pgfsys@objnum=\count410
 )))
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsyssoftpath.code.
-tex
-File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfsyssoftpath@smallbuffer@items=\count409
-\pgfsyssoftpath@bigbuffer@items=\count410
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+ssoftpath.code.tex
+File: pgfsyssoftpath.code.tex 2026-08-01 v3.1.12 (3.1.12)
+\pgfsyssoftpath@smallbuffer@items=\count411
+\pgfsyssoftpath@bigbuffer@items=\count412
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/systemlayer/pgfsysprotocol.code.
-tex
-File: pgfsysprotocol.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
+sprotocol.code.tex
+File: pgfsysprotocol.code.tex 2026-08-01 v3.1.12 (3.1.12)
 ))
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcore.code.tex
-Package: pgfcore 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+e.code.tex
+Package: pgfcore 2026-08-01 v3.1.12 (3.1.12)
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathutil.code.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathparser.code.tex
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.code
+.tex
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathutil.
+code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathparse
+r.code.tex
 \pgfmath@dimen=\dimen310
-\pgfmath@count=\count411
+\pgfmath@count=\count413
 \pgfmath@box=\box73
-\pgfmath@toks=\toks46
-\pgfmath@stack@operand=\toks47
-\pgfmath@stack@operation=\toks48
+\pgfmath@toks=\toks45
+\pgfmath@stack@operand=\toks46
+\pgfmath@stack@operation=\toks47
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.code.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.basic.code
-.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.trigonomet
-ric.code.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.random.cod
-e.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.comparison
-.code.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.base.code.
-tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.round.code
-.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.misc.code.
-tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfunctions.integerari
-thmetics.code.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathcalc.code.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmathfloat.code.tex
-\c@pgfmathroundto@lastzeros=\count412
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.basic.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.trigonometric.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.random.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.comparison.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.base.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.round.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.misc.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
+ions.integerarithmetics.code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathcalc.
+code.tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloat
+.code.tex
+\c@pgfmathroundto@lastzeros=\count414
 ))
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfint.code.tex)
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepoints.code.te
-x
-File: pgfcorepoints.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code.
+tex)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epoints.code.tex
+File: pgfcorepoints.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgf@picminx=\dimen311
 \pgf@picmaxx=\dimen312
 \pgf@picminy=\dimen313
@@ -1099,115 +1125,126 @@ File: pgfcorepoints.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \pgf@zx=\dimen323
 \pgf@zy=\dimen324
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathconstruct.
-code.tex
-File: pgfcorepathconstruct.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epathconstruct.code.tex
+File: pgfcorepathconstruct.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgf@path@lastx=\dimen325
 \pgf@path@lasty=\dimen326
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathusage.code
-.tex
-File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epathusage.code.tex
+File: pgfcorepathusage.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgf@shorten@end@additional=\dimen327
 \pgf@shorten@start@additional=\dimen328
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorescopes.code.te
-x
-File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+escopes.code.tex
+File: pgfcorescopes.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgfpic=\box74
 \pgf@hbox=\box75
 \pgf@layerbox@main=\box76
-\pgf@picture@serial@count=\count413
+\pgf@picture@serial@count=\count415
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoregraphicstate.c
-ode.tex
-File: pgfcoregraphicstate.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+egraphicstate.code.tex
+File: pgfcoregraphicstate.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgflinewidth=\dimen329
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransformation
-s.code.tex
-File: pgfcoretransformations.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+etransformations.code.tex
+File: pgfcoretransformations.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgf@pt@x=\dimen330
 \pgf@pt@y=\dimen331
 \pgf@pt@temp=\dimen332
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorequick.code.tex
-File: pgfcorequick.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+equick.code.tex
+File: pgfcorequick.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreobjects.code.t
-ex
-File: pgfcoreobjects.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eobjects.code.tex
+File: pgfcoreobjects.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepathprocessing
-.code.tex
-File: pgfcorepathprocessing.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epathprocessing.code.tex
+File: pgfcorepathprocessing.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorearrows.code.te
-x
-File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+earrows.code.tex
+File: pgfcorearrows.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgfarrowsep=\dimen333
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreshade.code.tex
-File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eshade.code.tex
+File: pgfcoreshade.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgf@max=\dimen334
-\pgf@sys@shading@range@num=\count414
-\pgf@shadingcount=\count415
+\pgf@sys@shading@range@num=\count416
+\pgf@shadingcount=\count417
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreimage.code.tex
-File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eimage.code.tex
+File: pgfcoreimage.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoreexternal.code.
-tex
-File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+eexternal.code.tex
+File: pgfcoreexternal.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgfexternal@startupbox=\box77
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorelayers.code.te
-x
-File: pgfcorelayers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+elayers.code.tex
+File: pgfcorelayers.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcoretransparency.c
-ode.tex
-File: pgfcoretransparency.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+etransparency.code.tex
+File: pgfcoretransparency.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorepatterns.code.
-tex
-File: pgfcorepatterns.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+epatterns.code.tex
+File: pgfcorepatterns.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/basiclayer/pgfcorerdf.code.tex
-File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
+erdf.code.tex
+File: pgfcorerdf.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )))
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmoduleshapes.code.tex
-File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
+shapes.code.tex
+File: pgfmoduleshapes.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgfnodeparttextbox=\box78
-) (/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmoduleplot.code.tex
-File: pgfmoduleplot.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 )
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-0-65
-.sty
-Package: pgfcomp-version-0-65 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
+plot.code.tex
+File: pgfmoduleplot.code.tex 2026-08-01 v3.1.12 (3.1.12)
+)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfco
+mp-version-0-65.sty
+Package: pgfcomp-version-0-65 2026-08-01 v3.1.12 (3.1.12)
 \pgf@nodesepstart=\dimen335
 \pgf@nodesepend=\dimen336
 )
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/compatibility/pgfcomp-version-1-18
-.sty
-Package: pgfcomp-version-1-18 2025-08-29 v3.1.11a (3.1.11a)
-)) (/usr/share/texlive/texmf-dist/tex/latex/pgf/utilities/pgffor.sty
-(/usr/share/texlive/texmf-dist/tex/latex/pgf/math/pgfmath.sty
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/math/pgfmath.code.tex))
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/utilities/pgffor.code.tex
-Package: pgffor 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfco
+mp-version-1-18.sty
+Package: pgfcomp-version-1-18 2026-08-01 v3.1.12 (3.1.12)
+))
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgffor.st
+y (C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/pgf/math\pgfmath.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmath.code
+.tex))
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor.
+code.tex
+Package: pgffor 2026-08-01 v3.1.12 (3.1.12)
 \pgffor@iter=\dimen337
 \pgffor@skip=\dimen338
-\pgffor@stack=\toks49
-\pgffor@toks=\toks50
+\pgffor@stack=\toks48
+\pgffor@toks=\toks49
 ))
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/tikz.code.tex
-Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
+z\tikz.code.tex
+Package: tikz 2026-08-01 v3.1.12 (3.1.12)
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryplothandlers
-.code.tex
-File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgf@plot@mark@count=\count416
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibr
+aryplothandlers.code.tex
+File: pgflibraryplothandlers.code.tex 2026-08-01 v3.1.12 (3.1.12)
+\pgf@plot@mark@count=\count418
 \pgfplotmarksize=\dimen339
 )
 \tikz@lastx=\dimen340
@@ -1222,44 +1259,45 @@ File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \tikz@figbox@bg=\box80
 \tikz@tempbox=\box81
 \tikz@tempbox@bg=\box82
-\tikztreelevel=\count417
-\tikznumberofchildren=\count418
-\tikznumberofcurrentchild=\count419
-\tikz@fig@count=\count420
+\tikztreelevel=\count419
+\tikznumberofchildren=\count420
+\tikznumberofcurrentchild=\count421
+\tikz@fig@count=\count422
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/modules/pgfmodulematrix.code.tex
-File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfmatrixcurrentrow=\count421
-\pgfmatrixcurrentcolumn=\count422
-\pgf@matrix@numberofcolumns=\count423
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
+matrix.code.tex
+File: pgfmodulematrix.code.tex 2026-08-01 v3.1.12 (3.1.12)
+\pgfmatrixcurrentrow=\count423
+\pgfmatrixcurrentcolumn=\count424
+\pgf@matrix@numberofcolumns=\count425
 )
-\tikz@expandcount=\count424
+\tikz@expandcount=\count426
 
-(/usr/share/texlive/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tik
-zlibrarytopaths.code.tex
-File: tikzlibrarytopaths.code.tex 2025-08-29 v3.1.11a (3.1.11a)
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
+z/libraries\tikzlibrarytopaths.code.tex
+File: tikzlibrarytopaths.code.tex 2026-08-01 v3.1.12 (3.1.12)
 )))
-(/usr/share/texlive/texmf-dist/tex/latex/environ/environ.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/environ\environ.sty
 Package: environ 2014/05/04 v0.3 A new way to define environments
 
-(/usr/share/texlive/texmf-dist/tex/latex/trimspaces/trimspaces.sty
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/trimspaces\trimspaces.s
+ty
 Package: trimspaces 2009/09/17 v1.1 Trim spaces around a token list
 ))
 \tcb@titlebox=\box83
 \tcb@upperbox=\box84
 \tcb@lowerbox=\box85
 \tcb@phantombox=\box86
-\c@tcbbreakpart=\count425
-\c@tcblayer=\count426
-\c@tcolorbox@number=\count427
+\c@tcbbreakpart=\count427
+\c@tcblayer=\count428
+\c@tcolorbox@number=\count429
 \l__tcobox_tmpa_box=\box87
 \l__tcobox_tmpa_dim=\dimen348
 \tcb@temp=\box88
 \tcb@temp=\box89
 \tcb@temp=\box90
 \tcb@temp=\box91
-))
-(./custom.sty
+)) (custom.sty
 
 ******************************************************
 Stock height and width: 794.96999pt by 614.295pt
@@ -1282,7 +1320,7 @@ Sidefootvsep and sidefootheight: 12pt and 548.39996pt
 
 Package hyperref Info: Option `bookmarksnumbered' set `true' on input line 69.
 Package hyperref Info: Option `bookmarksopen' set `true' on input line 69.
-) (./main.aux)
+) (main.aux)
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 40.
@@ -1367,7 +1405,7 @@ LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  OT1/cmtt/m/n --> TU/DejaVuSansMono(0)/b/n on input line
  40.
 Package hyperref Info: Link coloring ON on input line 40.
- (./main.out) (./main.out)
+ (main.out) (main.out)
 \@outlinefile=\write6
 \openout6 = `main.out'.
 
@@ -1379,18 +1417,7 @@ LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
 (Font)              scaled to size 9.4574pt on input line 44.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
 (Font)              scaled to size 8.62987pt on input line 44.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 44.
-
-
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
-File: umsa.fd 2013/01/14 v3.01 AMS symbols A
-)
-LaTeX Font Info:    Trying to load font information for U+msb on input line 44.
-
-
-(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
-File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1
+ [1
 
 
 ]
@@ -1398,207 +1425,278 @@ LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
 (Font)              scaled to size 16.34554pt on input line 46.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
 (Font)              scaled to size 16.34554pt on input line 46.
- (./main.toc
+ (main.toc
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
 (Font)              scaled to size 7.88116pt on input line 3.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 3.
+
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 3.
+
+(C:\Users\MrJSa\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
 (Font)              scaled to size 8.62987pt on input line 5.
 
 [2
 
 ]
-Overfull \hbox (4.23534pt too wide) detected at line 298
- \TU/DejaVuSans(0)/b/n/10 107
+LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
+(Font)              scaled to size 7.09305pt on input line 301.
+ [3]
+Overfull \hbox (4.23534pt too wide) detected at line 303
+ \TU/DejaVuSans(0)/b/n/10 106
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 299
- \TU/DejaVuSans(0)/m/n/10 107
+Overfull \hbox (2.82689pt too wide) detected at line 304
+ \TU/DejaVuSans(0)/m/n/10 106
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 302
- \TU/DejaVuSans(0)/b/n/10 118
+Overfull \hbox (4.23534pt too wide) detected at line 311
+ \TU/DejaVuSans(0)/b/n/10 109
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 303
- \TU/DejaVuSans(0)/m/n/10 118
+Overfull \hbox (2.82689pt too wide) detected at line 312
+ \TU/DejaVuSans(0)/m/n/10 109
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 310
- \TU/DejaVuSans(0)/b/n/10 121
+Overfull \hbox (4.23534pt too wide) detected at line 320
+ \TU/DejaVuSans(0)/b/n/10 112
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 311
- \TU/DejaVuSans(0)/m/n/10 121
+Overfull \hbox (2.82689pt too wide) detected at line 321
+ \TU/DejaVuSans(0)/m/n/10 112
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 329
+Overfull \hbox (4.23534pt too wide) detected at line 330
+ \TU/DejaVuSans(0)/b/n/10 116
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 331
+ \TU/DejaVuSans(0)/m/n/10 116
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 339
+ \TU/DejaVuSans(0)/b/n/10 119
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 340
+ \TU/DejaVuSans(0)/m/n/10 119
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 348
+ \TU/DejaVuSans(0)/b/n/10 122
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 349
+ \TU/DejaVuSans(0)/m/n/10 122
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 355
+ \TU/DejaVuSans(0)/b/n/10 126
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 356
+ \TU/DejaVuSans(0)/m/n/10 126
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 362
  \TU/DejaVuSans(0)/b/n/10 128
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 330
+Overfull \hbox (2.82689pt too wide) detected at line 363
  \TU/DejaVuSans(0)/m/n/10 128
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 349
- \TU/DejaVuSans(0)/b/n/10 135
+Overfull \hbox (4.23534pt too wide) detected at line 365
+ \TU/DejaVuSans(0)/b/n/10 141
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 350
- \TU/DejaVuSans(0)/m/n/10 135
- []
-
-LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
-(Font)              scaled to size 7.09305pt on input line 381.
-[3]
-Overfull \hbox (4.23534pt too wide) detected at line 383
- \TU/DejaVuSans(0)/b/n/10 147
+Overfull \hbox (2.82689pt too wide) detected at line 366
+ \TU/DejaVuSans(0)/m/n/10 141
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 384
- \TU/DejaVuSans(0)/m/n/10 147
+Overfull \hbox (4.23534pt too wide) detected at line 369
+ \TU/DejaVuSans(0)/b/n/10 152
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 387
- \TU/DejaVuSans(0)/b/n/10 149
+Overfull \hbox (2.82689pt too wide) detected at line 370
+ \TU/DejaVuSans(0)/m/n/10 152
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 388
- \TU/DejaVuSans(0)/m/n/10 149
+Overfull \hbox (4.23534pt too wide) detected at line 376
+ \TU/DejaVuSans(0)/b/n/10 154
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 398
- \TU/DejaVuSans(0)/b/n/10 151
+Overfull \hbox (2.82689pt too wide) detected at line 377
+ \TU/DejaVuSans(0)/m/n/10 154
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 399
- \TU/DejaVuSans(0)/m/n/10 151
- []
-
-
-Overfull \hbox (4.23534pt too wide) detected at line 409
- \TU/DejaVuSans(0)/b/n/10 153
- []
-
-
-Overfull \hbox (2.82689pt too wide) detected at line 410
- \TU/DejaVuSans(0)/m/n/10 153
- []
-
-
-Overfull \hbox (4.23534pt too wide) detected at line 416
+Overfull \hbox (4.23534pt too wide) detected at line 380
  \TU/DejaVuSans(0)/b/n/10 156
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 417
+Overfull \hbox (2.82689pt too wide) detected at line 381
  \TU/DejaVuSans(0)/m/n/10 156
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 423
+Overfull \hbox (4.23534pt too wide) detected at line 390
  \TU/DejaVuSans(0)/b/n/10 158
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 424
+Overfull \hbox (2.82689pt too wide) detected at line 391
  \TU/DejaVuSans(0)/m/n/10 158
  []
 
 
+Overfull \hbox (4.23534pt too wide) detected at line 400
+ \TU/DejaVuSans(0)/b/n/10 160
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 401
+ \TU/DejaVuSans(0)/m/n/10 160
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 407
+ \TU/DejaVuSans(0)/b/n/10 163
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 408
+ \TU/DejaVuSans(0)/m/n/10 163
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 416
+ \TU/DejaVuSans(0)/b/n/10 165
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 417
+ \TU/DejaVuSans(0)/m/n/10 165
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 428
+ \TU/DejaVuSans(0)/b/n/10 169
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 429
+ \TU/DejaVuSans(0)/m/n/10 169
+ []
+
+
 Overfull \hbox (4.23534pt too wide) detected at line 435
- \TU/DejaVuSans(0)/b/n/10 162
+ \TU/DejaVuSans(0)/b/n/10 171
  []
 
 
 Overfull \hbox (2.82689pt too wide) detected at line 436
- \TU/DejaVuSans(0)/m/n/10 162
+ \TU/DejaVuSans(0)/m/n/10 171
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 442
- \TU/DejaVuSans(0)/b/n/10 164
+Overfull \hbox (4.23534pt too wide) detected at line 449
+ \TU/DejaVuSans(0)/b/n/10 179
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 443
- \TU/DejaVuSans(0)/m/n/10 164
+Overfull \hbox (2.82689pt too wide) detected at line 450
+ \TU/DejaVuSans(0)/m/n/10 179
  []
 
 
-Overfull \hbox (4.23534pt too wide) detected at line 456
- \TU/DejaVuSans(0)/b/n/10 173
- []
-
-
-Overfull \hbox (2.82689pt too wide) detected at line 457
- \TU/DejaVuSans(0)/m/n/10 173
- []
-
-
-Overfull \hbox (4.23534pt too wide) detected at line 464
- \TU/DejaVuSans(0)/b/n/10 177
- []
-
-
-Overfull \hbox (2.82689pt too wide) detected at line 465
- \TU/DejaVuSans(0)/m/n/10 177
- []
-
-
-Overfull \hbox (4.23534pt too wide) detected at line 471
- \TU/DejaVuSans(0)/b/n/10 180
- []
-
-
-Overfull \hbox (2.82689pt too wide) detected at line 472
- \TU/DejaVuSans(0)/m/n/10 180
- []
-
-
-Overfull \hbox (4.23534pt too wide) detected at line 478
+Overfull \hbox (4.23534pt too wide) detected at line 457
  \TU/DejaVuSans(0)/b/n/10 183
  []
 
 
-Overfull \hbox (2.82689pt too wide) detected at line 479
+Overfull \hbox (2.82689pt too wide) detected at line 458
  \TU/DejaVuSans(0)/m/n/10 183
  []
 
 
+Overfull \hbox (4.23534pt too wide) detected at line 463
+ \TU/DejaVuSans(0)/b/n/10 185
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 464
+ \TU/DejaVuSans(0)/m/n/10 186
+ []
+
+[4]
+Overfull \hbox (4.23534pt too wide) detected at line 467
+ \TU/DejaVuSans(0)/b/n/10 188
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 468
+ \TU/DejaVuSans(0)/m/n/10 188
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 475
+ \TU/DejaVuSans(0)/b/n/10 191
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 476
+ \TU/DejaVuSans(0)/m/n/10 191
+ []
+
+
+Overfull \hbox (4.23534pt too wide) detected at line 491
+ \TU/DejaVuSans(0)/b/n/10 198
+ []
+
+
+Overfull \hbox (2.82689pt too wide) detected at line 492
+ \TU/DejaVuSans(0)/m/n/10 198
+ []
+
+
 Overfull \hbox (4.23534pt too wide) detected at line 494
- \TU/DejaVuSans(0)/b/n/10 190
+ \TU/DejaVuSans(0)/b/n/10 200
  []
 
 
 Overfull \hbox (2.82689pt too wide) detected at line 495
- \TU/DejaVuSans(0)/m/n/10 190
+ \TU/DejaVuSans(0)/m/n/10 200
  []
 
-
-Overfull \hbox (4.23534pt too wide) detected at line 497
- \TU/DejaVuSans(0)/b/n/10 192
- []
-
-
-Overfull \hbox (2.82689pt too wide) detected at line 498
- \TU/DejaVuSans(0)/m/n/10 192
- []
-
-)) [4]
+)) [5]
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
 (Font)              scaled to size 13.61864pt on input line 12.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
@@ -1608,749 +1706,772 @@ LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
 
 ]
 Chapter 1.
+LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
+(Font)              scaled to size 7.88116pt on input line 22.
+LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/n' will be
+(Font)              scaled to size 7.88116pt on input line 26.
 \pydata@fh@0=\write7
 \openout7 = `_FAD58DE7366495DB4650CFEFAC2FCD61.data.minted'.
 
-runsystem(latexminted config  --timestamp 20260804010000 FAD58DE7366495DB4650CF
-EFAC2FCD61)...executed.
+runsystem(latexminted config  --timestamp 20260821195725Z FAD58DE7366495DB4650C
+FEFAC2FCD61)...executed.
 
-(./_FAD58DE7366495DB4650CFEFAC2FCD61.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20260804010000 FAD58DE7366495DB4
-650CFEFAC2FCD61)...executed.
+(_FAD58DE7366495DB4650CFEFAC2FCD61.config.minted)
+runsystem(latexminted cleanconfig  --timestamp 20260821195725Z FAD58DE7366495DB
+4650CFEFAC2FCD61)...executed.
 
-
-(./_minted/default.style.minted)
-(./_minted/C72E3FE9B33E418A1B3369F492FA22C4.highlight.minted
+ (_minted/default.style.minted) (_minted/B9929C0E7668CCEB3BD74630E4EFB123.highl
+ight.minted
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/n' will be
 (Font)              scaled to size 7.09305pt on input line 1.
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/b/n' will be
 (Font)              scaled to size 7.09305pt on input line 2.
+LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/it' will be
+(Font)              scaled to size 7.09305pt on input line 4.
 )
-LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/n' will be
-(Font)              scaled to size 7.88116pt on input line 39.
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
-(Font)              scaled to size 9.4574pt on input line 43.
+(Font)              scaled to size 9.4574pt on input line 53.
  [2
 
 ]
-(./_minted/68E8009F1C8EAD31218C8D81F9861A1F.highlight.minted)
-Underfull \hbox (badness 1184) in paragraph at lines 217--218
-\TU/DejaVuSans(0)/m/n/10 at \TU/DejaVuSansMono(0)/m/n/10 K ≤ 8\TU/DejaVuSans(0)
-/m/n/10 ; the other 384 are available through \TU/DejaVuSansMono(0)/m/n/10 Smal
-lFloats.Binary…\TU/DejaVuSans(0)/m/n/10 , \TU/DejaVuSansMono(0)/m/n/10 format(K
-, P, SGN, EXT)\TU/DejaVuSans(0)/m/n/10 , or \TU/DejaVuSansMono(0)/m/n/10 using
- []
-
-[3] [4] [5
+(_minted/D26A3501B861DCF71CDA5D2631EA139C.highlight.minted) [3] [4
 
 ]
 Chapter 2.
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/b/n' will be
-(Font)              scaled to size 7.88116pt on input line 261.
-(./_minted/9FC63D5FBF09D55F897EBF05820B8423.highlight.minted)
-(./_minted/AA1136E9BE0A5CA99D77ADEAC66D0F81.highlight.minted)
-Overfull \hbox (7.38509pt too wide) in paragraph at lines 297--298
+(Font)              scaled to size 7.88116pt on input line 154.
+(_minted/3AA4F61E1679525BD28BE452024D5596.highlight.minted)
+(_minted/8D5C80A3F5A30E6B0A7C1C05D19589B1.highlight.minted)
+Overfull \hbox (7.38509pt too wide) in paragraph at lines 190--191
 []\TU/DejaVuSans(0)/m/n/10 For an editable install, \TU/DejaVuSansMono(0)/m/n/1
 0 pkg> dev https://github.com/JeffreySarnoff/SmallFloats.jl \TU/DejaVuSans(0)/m
 /n/10 clones into \TU/DejaVuSansMono(0)/m/n/10 ~/.julia/dev\TU/DejaVuSans(0)/m/
 n/10 ,
  []
 
-(./_minted/76FB3F0DD2C6A856490D1A2832C93FC7.highlight.minted)
-(./_minted/30FC543E2A60F9A18415C71E93C1B792.highlight.minted)
-(./_minted/4FFBA054AFC869B6F9F51F11B97E2A39.highlight.minted) [6
+(_minted/3EA8D141404C24DB83FB45BF9D33E0E3.highlight.minted)
+(_minted/C5FE61E106278D02042B2EB972D5F848.highlight.minted) [5
 
-] [7]
+]
 Chapter 3.
-(./_minted/E1BEB17C4025A2A9FCB76F907C4A00ED.highlight.minted)
-(./_minted/814B2110AD43D026B6222DE3FFEDF1AE.highlight.minted)
-(./_minted/ED27FA7514FA0ABD1D0B0ECB8253DF33.highlight.minted)
-(./_minted/68E8009F1C8EAD31218C8D81F9861A1F.highlight.minted)
-(./_minted/5BE143A3C5F34A7A265131AC709746B3.highlight.minted)
-(./_minted/770E40074862A15389C80D2871317185.highlight.minted)
-(./_minted/43672E85CA8E2195E70844A78B05275F.highlight.minted) [8
+(_minted/BAC4E7F00F4975EB3AF9F82025AE3142.highlight.minted)
+(_minted/D0396CD9B3DED6C2C7EDE55F04C6CF50.highlight.minted)
+(_minted/56B5D17D5F58DE4263E4BDFFDBA64BE0.highlight.minted)
+(_minted/D26A3501B861DCF71CDA5D2631EA139C.highlight.minted)
+(_minted/9FB53275998E4D43FE51BC0B3D3F9D97.highlight.minted) [6
 
 ]
-(./_minted/C7F0F2EB86E546C9098BABB4FB211FA8.highlight.minted)
-(./_minted/9EF32CA53F1A78E702D58C2E6187AF60.highlight.minted)
-(./_minted/5BC47AD80FD46608CE0C302837E2F48C.highlight.minted)
-(./_minted/A60F35EC912B75F9D6E858F2E6B10C50.highlight.minted) [9] [10]
-Chapter 4.
-LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
-(Font)              scaled to size 7.88116pt on input line 660.
-(./_minted/8B696342178501D9A9CF89DDA86CA13A.highlight.minted) [11
-
-]
-(./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
-(./_minted/7AA8B67B2458ED2272CE91278D0E0FF6.highlight.minted)
-(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [12]
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/n' will be
-(Font)              scaled to size 6.30493pt on input line 822.
-LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
-(Font)              scaled to size 6.30493pt on input line 829.
+(Font)              scaled to size 6.30493pt on input line 331.
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/n' will be
-(Font)              scaled to size 6.30493pt on input line 829.
+(Font)              scaled to size 6.30493pt on input line 340.
 
-(./_minted/ED5695E79FD860212A92800159A332AB.highlight.minted
-LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/it' will be
-(Font)              scaled to size 7.09305pt on input line 4.
-)
-(./_minted/718D2FDA886A8E52D0B992F6990E2AC9.highlight.minted) [13]
+(_minted/E9616F543B972F24B05DE61B932E6904.highlight.minted)
+(_minted/6601A1B687FB379AC79C4B2B5CCB8B57.highlight.minted)
+(_minted/BBF43A2362E9C84A79E384A6A466374B.highlight.minted) [7]
+(_minted/E8AB2A8BD6E256A8382A210017B9CC8F.highlight.minted)
+(_minted/D9987E845F8CF01C5073D5E462A976DE.highlight.minted)
+(_minted/B0683E93894E2308861E4EA3BC0B76EE.highlight.minted) [8] [9]
+Chapter 4.
+(_minted/6B6F8E997C0F869447F399662EAAF8FD.highlight.minted) [10
+
+]
+(_minted/A206F77C3F13F3F37817C790E26BA4C7.highlight.minted)
+(_minted/A0FF0CB26463FD92E1D6A0FF175555B3.highlight.minted)
+(_minted/AE18751B90096B431142D00BA18A0644.highlight.minted) [11]
+LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/n' will be
+(Font)              scaled to size 6.30493pt on input line 702.
+
+(_minted/8A200A5D2A341BDDBA6C0128A1A7DBA3.highlight.minted) [12]
+(_minted/EEAF200D3D9FA957E8A3D2647F88776B.highlight.minted)
 File: assets/fiveideas.pdf Graphic file (type pdf)
 <use assets/fiveideas.pdf>
- [14]
-[15] [16
+ [13] [14] [15
 
 ]
 Chapter 5.
-(./_minted/A6781F2D5B6C9B8E04F29555CAE05A76.highlight.minted)
-(./_minted/5BCD5D055F0C2F4A1EF45A0E6497597D.highlight.minted)
-(./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
-(./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted)
-(./_minted/24171F4760C567CE1EA40911C5483997.highlight.minted)
-(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted) [17
+LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/it' will be
+(Font)              scaled to size 7.88116pt on input line 854.
+[16
 
-] [18]
+] [17]
 Chapter 6.
-(./_minted/33176B59E8F6358C7082A947E6E91FB3.highlight.minted)
-(./_minted/2098D31B368692E3018BBA2870CDA3A0.highlight.minted)
-(./_minted/183B216C80B8B4CFF9F5214DD3093DB2.highlight.minted) [19
+(_minted/83B795ED5334DC684213FFA0DFA904FF.highlight.minted)
+(_minted/B62D0368F5D599863B8092FF94BA9000.highlight.minted)
+(_minted/532239694CFE782D178F425F8675CA66.highlight.minted) [18
 
 ]
-(./_minted/CBD4BEC854BCB3BE445D1D00143D1EA6.highlight.minted)
-(./_minted/60ECB89291791673D5B97601752C2203.highlight.minted) [20] [21]
+Overfull \hbox (7.39253pt too wide) in paragraph at lines 1085--1085
+[]\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
+ []
+
+[19] [20]
 Chapter 7.
-(./_minted/752EA0C5709CC457FCA2E0B1183557F8.highlight.minted)
-(./_minted/F41FF768E183353DB151721441D710D0.highlight.minted)
-(./_minted/8815296D7FC35C8A1B46A91B0963A06F.highlight.minted)
-(./_minted/9EF32CA53F1A78E702D58C2E6187AF60.highlight.minted) [22
-
-]
-(./_minted/23F95FE104DEECFA040E559C82B94FD0.highlight.minted) [23]
-Chapter 8.
+(_minted/DFDC422117CA3F17F39DAE27519B2200.highlight.minted)
 LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/b/n' will be
-(Font)              scaled to size 8.62987pt on input line 1561.
-(./_minted/96DEBD867D606BD6A445A286F6C4B370.highlight.minted) [24
+(Font)              scaled to size 8.62987pt on input line 1236.
+
+(_minted/9780D68396080CFBE6DEBEA792778AA5.highlight.minted) [21
 
 ]
-(./_minted/94066BE698638A0CCD3E399F2C51534F.highlight.minted)
-(./_minted/151F618B27227E041996CC5A5B729B72.highlight.minted)
-(./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
-(./_minted/A32D8112C0B9CA595C16E3776C265AC0.highlight.minted) [25]
-(./_minted/55E1B6E85860C6D4C1F21D17BB4F5E63.highlight.minted) [26]
+(_minted/06B731451908BBA226C65A09AED07FE6.highlight.minted) [22]
+(_minted/0CDBE95BBF856D8DEFC58732F7941E2A.highlight.minted)
+(_minted/A96D01A7E32D1EF1EF44D03B1CA2BD99.highlight.minted) [23]
+Chapter 8.
+(_minted/2092C94B75924CAD5DABC29E33C26FF8.highlight.minted)
+(_minted/D26A3501B861DCF71CDA5D2631EA139C.highlight.minted) [24
+
+]
+(_minted/C6BFEC4E30E122D2E410DD2AAF3FD158.highlight.minted)
+(_minted/67035D4DF2E4AE363A6E23B840876D89.highlight.minted) [25]
+(_minted/BB0D58EDAE4501B92F8201FC59EB9659.highlight.minted)
+(_minted/275DAF239161B75DE0E7C0CF4327A280.highlight.minted) [26]
+(_minted/3B4328D175F57BD3BE391B729AEE7848.highlight.minted)
+(_minted/98295CC291D6BE5BCC3560AAB3068BC2.highlight.minted) [27] [28]
 Chapter 9.
-(./_minted/D6D8C14E8AA3B0AF82E2973879937CDB.highlight.minted)
-(./_minted/545E52F0DD625002A97EDF1151312636.highlight.minted)
-(./_minted/18378B06C772FE3B1514F2702A47DAEA.highlight.minted) [27
+(_minted/AE18751B90096B431142D00BA18A0644.highlight.minted) [29
 
 ]
-(./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
-(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted)
-(./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
-(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted) [28]
-Underfull \hbox (badness 2418) in paragraph at lines 1954--1955
+(_minted/CD10FACBC157C89FC48F02ED77225FBE.highlight.minted) [30] [31]
+Chapter 10.
+(_minted/AE4A34F07F66AFEBB1273A5158E3E3DA.highlight.minted)
+Underfull \hbox (badness 1314) in paragraph at lines 1839--1840
+[]\TU/DejaVuSans(0)/m/n/10 SmallFloats represents the pair as \TU/DejaVuSansMon
+o(0)/m/n/10 ProjSpec(rounding, saturation)\TU/DejaVuSans(0)/m/n/10 . A name lik
+e \TU/DejaVuSansMono(0)/m/n/10 RNE_SN \TU/DejaVuSans(0)/m/n/10 is \TU/DejaVuSan
+sMono(0)/m/n/10 ProjSpec(
+ []
+
+[32
+
+] [33]
+Chapter 11.
+(_minted/460FDA364FF400CC168AF3F7B946A191.highlight.minted)
+(_minted/A41A00FC3BE13C5142F387AFD66470D4.highlight.minted)
+(_minted/9A54700733F874B5C5EB52DCF6DF1BEB.highlight.minted) [34
+
+] [35] [36]
+Chapter 12.
+(_minted/3D5C880C81880161FA494C6D433907CA.highlight.minted) [37
+
+]
+(_minted/C2546AFDB296AA859F5CBC2ED8B4BDAD.highlight.minted)
+(_minted/AA42F20427086358306B3D82D9E96ED8.highlight.minted) [38] [39]
+Chapter 13.
+(_minted/AB39BF5BE9EA50DFC34BBFF62E1DDFE4.highlight.minted)
+(_minted/E32F50E2645BE3AC5222D37B05CAE614.highlight.minted)
+(_minted/DC49FF7BDC529DA749428D5440E1221C.highlight.minted) [40
+
+] [41]
+Chapter 14.
+LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
+(Font)              scaled to size 6.30493pt on input line 2532.
+[42
+
+] (_minted/7EF23344FA46AF4F11EC0F37636EA7F1.highlight.minted)
+(_minted/710027EFC5FF9EC8FF12F61F22F37758.highlight.minted)
+(_minted/F04CA646F47C1748CD3F93A63E965A44.highlight.minted)
+(_minted/1AA98BB5BB8CED075149A95AEF9DAAF2.highlight.minted) [43]
+(_minted/F493688D03C1EC7F946E39E089D50013.highlight.minted)
+(_minted/433AD3802AD02CEFD394558E80CD8AF8.highlight.minted)
+(_minted/47D8DD6E6B0260AD917E30844734C1EC.highlight.minted)
+(_minted/7B1506099FC261126B610E56AF35D89E.highlight.minted) [44]
+(_minted/5B63B2DDA81B8000F1BEF437C8BB3F8A.highlight.minted)
+(_minted/1A143EFC556D31322C1E679161C2EF62.highlight.minted) [45] [46
+
+]
+Chapter 15.
+(_minted/6B6F8E997C0F869447F399662EAAF8FD.highlight.minted) [47
+
+]
+(_minted/4C6543F4000BC78D7314E983FDA251C3.highlight.minted)
+(_minted/A9E21D771C22D67F072CAFA2371137EE.highlight.minted)
+(_minted/5B7405B474209256635709FEDFA310E7.highlight.minted) [48] [49]
+Chapter 16.
+(_minted/7BAF8697806D2F49FFE1B71C32BC9237.highlight.minted)
+(_minted/AB39BF5BE9EA50DFC34BBFF62E1DDFE4.highlight.minted)
+(_minted/D97BF37325E95CC4B138F1A5797EF736.highlight.minted) [50
+
+]
+(_minted/D9987E845F8CF01C5073D5E462A976DE.highlight.minted)
+(_minted/AE5CB71072B63DDCC6CD6DCCE4C0D60F.highlight.minted) [51] [52]
+Chapter 17.
+(_minted/3A97E3304EBE560D1BFF69BB9B4E6168.highlight.minted)
+(_minted/F9C6B90F44FDA4EE857E1D3944DA2329.highlight.minted)
+(_minted/160AFB7182767C61BB22FEFAEF4A120A.highlight.minted)
+(_minted/1E4A23916D8F0BB2EB25B76A3C622DF5.highlight.minted) [53
+
+]
+(_minted/BC77637D0A1C7B9D0DE47DDF8DA51079.highlight.minted)
+(_minted/30E9E5BE36187E171E851E0197B211B9.highlight.minted)
+(_minted/D0010330DD6FC3FC496CF671CB91199C.highlight.minted)
+(_minted/F3B7A3CA57206D206040B446B728FF6B.highlight.minted) [54] [55]
+Chapter 18.
+(_minted/8962C2E8E8705DAEF1F021AD555BF604.highlight.minted)
+(_minted/97A14316F4786B086098B397F512053F.highlight.minted)
+(_minted/B2AC6DED7DEAE7A8CCADE8C287E45F6E.highlight.minted) [56
+
+]
+(_minted/4754A511BE34900225160032720D49B8.highlight.minted) [57] [58]
+Chapter 19.
+(_minted/5EFE85046DAABDEE0C3D3B07C34410F1.highlight.minted)
+(_minted/5B697BCF65E0F011F905D526FFD2E528.highlight.minted)
+(_minted/C9757C0A744C0D4ED97DBE6AB910F125.highlight.minted) [59
+
+]
+(_minted/830A701BA754EFA1DF6693599FA9A56B.highlight.minted)
+(_minted/E75B007F2E1EF4D12B847ADE884DCEAB.highlight.minted)
+(_minted/CE05182F2EFFEFFA350F6EBC197124DA.highlight.minted)
+(_minted/9633351306BD22C4084182BAC7DF98FB.highlight.minted) [60]
+Underfull \hbox (badness 2418) in paragraph at lines 3854--3855
 \TU/DejaVuSans(0)/m/n/10 You have raw \TU/DejaVuSansMono(0)/m/n/10 Float64 \TU/
 DejaVuSans(0)/m/n/10 data with widely varying per-row magnitude, and you want t
 o quantize it into
  []
 
-[29]
-Chapter 10.
-(./_minted/9F57E7BEFBD145C1C1E951B1B243DB1F.highlight.minted)
-(./_minted/F79E40D4B4234E3838E952E1187B9F30.highlight.minted)
-(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [30
+[61]
+Chapter 20.
+(_minted/64A4EA5EB6532A19C33312092E4AF3AF.highlight.minted) [62
 
 ]
-(./_minted/378F75334C3E201B2D58B9164F0849E3.highlight.minted) [31] [32]
-Chapter 11.
-(./_minted/B2AE9B0F67DCEB32C91D9A341DD02B70.highlight.minted)
-(./_minted/B51BB4189BF4784CB6F36A8FEFAA20C3.highlight.minted)
-(./_minted/5E323BFA7ED255963337AF9ED3F4AE8F.highlight.minted)
-(./_minted/760BB0FE30F35F7B0E90FFBA56041115.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [33
+(_minted/2D0B52BD17BFCE453CF4D827A62BB8A6.highlight.minted)
+(_minted/672A14395B5D0CE3F396D2DF353F252D.highlight.minted)
+(_minted/67035D4DF2E4AE363A6E23B840876D89.highlight.minted) [63]
+(_minted/0FF95AA87C316FCFA1D126DF714E6DA6.highlight.minted) [64]
+Chapter 21.
+(_minted/98F5386DDD47ED287FCD3503E5ED435A.highlight.minted)
+(_minted/969287AC9A21E1BA4FE18B32B9454BF7.highlight.minted)
+(_minted/CD195A88CD88B34301915FA586BF6901.highlight.minted)
+(_minted/903E98343CB44DA205E5AA24F0AAAADC.highlight.minted) [65
 
-] [34]
-Chapter 12.
+] [66]
+Chapter 22.
 
-Underfull \hbox (badness 2521) in paragraph at lines 2373--2374
+Underfull \hbox (badness 2521) in paragraph at lines 4328--4329
 []\TU/DejaVuSans(0)/b/n/10 2. Always convert — never reinterpret. \TU/DejaVuSan
 sMono(0)/m/n/10 Convert \TU/DejaVuSans(0)/m/n/10 is a real conversion: \TU/Deja
 VuSansMono(0)/m/n/10 Float16(1.5) \TU/DejaVuSans(0)/m/n/10 becomes
  []
 
-(./_minted/DCEB4B54859B3B03BE33BB608AA8E438.highlight.minted) [35
+(_minted/775874F3E0CFBA2907973AC955E13448.highlight.minted) [67
 
-] [36]
-[37]
-Chapter 13.
-(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [38
+] [68] [69]
+Chapter 23.
+(_minted/18B4172FA3C710074D143229FC286855.highlight.minted)
+(_minted/0A534092327EE7E8E91F065D7370CA12.highlight.minted) [70
 
-] [39]
-Chapter 14.
+] [71]
+Chapter 24.
 
-Underfull \hbox (badness 1320) in paragraph at lines 2576--2577
+Underfull \hbox (badness 1320) in paragraph at lines 4545--4546
 []\TU/DejaVuSansMono(0)/m/n/10 register_approx!(name, opname, resultformat, ope
 randformats, ρ, fn; κ) \TU/DejaVuSans(0)/m/n/10 to register the imple-
  []
 
-(./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
-(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
-(./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
-(./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
-(./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
-(./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted)
-(./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
-(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted) [40
+(_minted/D8C1FB07270C1C16C7D11FDB4554BAD9.highlight.minted)
+(_minted/E5E3760E94EF4614E4019DC8A32C2DC9.highlight.minted)
+(_minted/B54C23B409B53940A87F373B47338EB3.highlight.minted)
+(_minted/BF094D000FAD948FA33DBF4F0930465C.highlight.minted) [72
 
 ]
-(./_minted/68936046CEC636C7E6E3F6B2FE139E97.highlight.minted) [41] [42
-
-]
-Chapter 15.
-(./_minted/D1E811343CC4F867BDC8B7C8529B9927.highlight.minted)
-(./_minted/84C6C7B2D324FED5946ED90801F6765E.highlight.minted)
-(./_minted/6872D03381CB350E2BAFFEB6F55F1C34.highlight.minted) [43
-
-]
-Overfull \hbox (7.39253pt too wide) in paragraph at lines 2890--2890
-[]\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
- []
-
-[44] [45]
-Chapter 16.
-(./_minted/6F79178BDBC794DDD7F65A736E883AF3.highlight.minted)
-(./_minted/BECBE3CE15471A5A218878B24EE7412E.highlight.minted) [46
-
-]
-(./_minted/E9512BCFAAB389535A6DA73C59EE7CFE.highlight.minted) [47]
-(./_minted/086CD7E41A2D2C77077154575F43EF10.highlight.minted)
-(./_minted/178966B7DCAB0086D92B690ED667CFDF.highlight.minted) [48]
-Chapter 17.
-(./_minted/7C24617B7884060093D46E75B8CE88DB.highlight.minted)
-(./_minted/68E8009F1C8EAD31218C8D81F9861A1F.highlight.minted) [49
-
-]
-(./_minted/751982D492CCA07529D70EA74ACB8E8F.highlight.minted)
-(./_minted/94B8284BEB08460BE72FC0D7072F3A79.highlight.minted)
-(./_minted/6B99D1042803E71A18551E12E0A95954.highlight.minted)
-(./_minted/992BB09E9AEFCDA6E68F87624C1A61F4.highlight.minted)
-(./_minted/4CF17B922FBC6981D0E57EACA7EF618C.highlight.minted) [50]
-(./_minted/176DD8320A8DA664543832735177EF07.highlight.minted) [51]
-Chapter 18.
-(./_minted/88941FDEC391FAAB316AD758AB45622B.highlight.minted) [52
-
-]
-(./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
-(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted) [53] [54]
-Chapter 19.
-(./_minted/D38A89C57F821AE9DF753F0912B6BCB3.highlight.minted) [55
-
-] [56]
-Chapter 20.
-(./_minted/5505F1A858F5BAE2B4A8FE326AA153EB.highlight.minted)
-(./_minted/F658A3A8D165F6BE3F95DAD57EF9E713.highlight.minted)
-(./_minted/C13A272E0D57DBB02A182F8D0555F2BD.highlight.minted) [57
-
-] [58]
-[59]
-Chapter 21.
-(./_minted/664E167B431B0266E71475DA411DA732.highlight.minted) [60
-
-]
-(./_minted/6ABE293EF42D6AB0E5814CA50E880B3B.highlight.minted)
-(./_minted/F08C9D7423EA7DEAD7F929E0409EDF49.highlight.minted) [61] [62]
-Chapter 22.
-(./_minted/DD21C4ACBBF7E1820366F5D176A8FE14.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [63
-
-] [64]
-[65]
-Chapter 23.
-(./_minted/F41FF768E183353DB151721441D710D0.highlight.minted)
-(./_minted/F08B6A2D0D37EE9987746476250D76EC.highlight.minted)
-(./_minted/E59584313716CB8A3A35F7FC898E402B.highlight.minted) [66
-
-] [67]
-Chapter 24.
-LaTeX Font Info:    Font shape `TU/DejaVuSansMono(0)/m/it' will be
-(Font)              scaled to size 7.88116pt on input line 4492.
-LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/m/it' will be
-(Font)              scaled to size 6.30493pt on input line 4524.
-[68
-
-] (./_minted/1DA78753D525B498DBC59F013E6FB0AC.highlight.minted)
-(./_minted/B5FA59F14DD32CE19098FA9E2ABB5CA7.highlight.minted)
-(./_minted/84821CD8140CAACEEAD93EB2B8E3FB92.highlight.minted)
-(./_minted/24C5A677D96D491627B884ADA8697BA0.highlight.minted) [69]
-(./_minted/CC980ADB670337480BA78ED00A63E527.highlight.minted)
-(./_minted/7311EC3F5A5990E7BDC202B722D5D71B.highlight.minted)
-(./_minted/014411AE4E4DAB9E504B540987334AD8.highlight.minted)
-(./_minted/81DD92F54EDB06B52B2E9DC99FCF1377.highlight.minted) [70]
-(./_minted/64518416754FD99B5827C9ABDA3E5F1B.highlight.minted)
-(./_minted/FB9C8891DF81231A0E929FE4C0090429.highlight.minted)
-(./_minted/A1173F98BFA2F78571E2B08DD37C0716.highlight.minted) [71] [72
+(_minted/3C92010AF59B21D1DF1812F21BEF484C.highlight.minted) [73] [74
 
 ]
 Chapter 25.
-[73
+(_minted/B2856C8351738DD764D1ACCBC723A4CB.highlight.minted)
+(_minted/315C24495126DACD5BE3810CAD42ACED.highlight.minted) [75
 
-] (./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted) [74]
-(./_minted/90475641BF22AFA2738963DE3308E104.highlight.minted) [75]
+] [76]
 Chapter 26.
-(./_minted/D112EECA7117437A55F73F7699877FBF.highlight.minted) [76
+[77
+
+] [78] [79]
+Chapter 27.
+(_minted/7CE0FE75334FAE7582C9B725CA897FC0.highlight.minted)
+(_minted/B2AC6DED7DEAE7A8CCADE8C287E45F6E.highlight.minted) [80
 
 ]
-(./_minted/558ECE6E71BCEBF34723A43181538BF0.highlight.minted)
-Overfull \hbox (6.05873pt too wide) in paragraph at lines 5206--5206
+(_minted/489DEBC12C96BF57879C8118F5A2EFAB.highlight.minted)
+(_minted/B2629356CAADD8D22605B59CE9908EC4.highlight.minted)
+(_minted/1BDF700D8D4961E6245F18FC97FAD7EA.highlight.minted)
+(_minted/91836817704D6CE4D37B7ABD44DE8AE4.highlight.minted) [81]
+(_minted/511CBC6B73DB47881BBAFDB15A1744FB.highlight.minted)
+(_minted/6C1807A562D605311454D2C18C9B14D3.highlight.minted) [82]
+(_minted/6ECB88C7783E09123598C206D1B8E15D.highlight.minted)
+(_minted/0946B41F701D0C5DFE0FC1586B1CAFD4.highlight.minted)
+(_minted/4C6543F4000BC78D7314E983FDA251C3.highlight.minted)
+(_minted/A9E21D771C22D67F072CAFA2371137EE.highlight.minted)
+(_minted/3EDD69D9E693B872B8BED18A5E24DBCB.highlight.minted)
+(_minted/3D7129C114B63EFD6EC0D7605C6F089F.highlight.minted) [83]
+(_minted/830A701BA754EFA1DF6693599FA9A56B.highlight.minted)
+(_minted/E75B007F2E1EF4D12B847ADE884DCEAB.highlight.minted) [84]
+(_minted/CE05182F2EFFEFFA350F6EBC197124DA.highlight.minted)
+(_minted/9633351306BD22C4084182BAC7DF98FB.highlight.minted)
+(_minted/5CA19011C1CAF19DB37E072C46CC8332.highlight.minted)
+(_minted/5BEEE1505E530EE895CEA671FD28E705.highlight.minted)
+(_minted/1A0BD8E9C34086D3C2BC8CB479E49EFF.highlight.minted)
+(_minted/CBE5D79F1C7195DD20C7ACDE83986D84.highlight.minted) [85]
+(_minted/C4A88D709FB44F76F04D11F0E20E97C5.highlight.minted)
+(_minted/D63783A76A3005DA449D584C9A70D93E.highlight.minted)
+(_minted/C72F32E9791BD61790293E2B78509B83.highlight.minted)
+(_minted/E4828DF9129A5DF96CBE92952A01A820.highlight.minted) [86]
+Chapter 28.
+
+Underfull \hbox (badness 1881) in paragraph at lines 5597--5598
+\TU/DejaVuSans(0)/m/n/10 Internals-level recipes: pipeline introspection, exhau
+stive verification of your own code, κ measurement,
+ []
+
+
+Underfull \hbox (badness 2035) in paragraph at lines 5597--5598
+\TU/DejaVuSans(0)/m/n/10 and doctrine-compliant benchmarking. These use unexpor
+ted names (\TU/DejaVuSansMono(0)/m/n/10 SmallFloats.round_to_precision\TU/DejaV
+uSans(0)/m/n/10 ,
+ []
+
+(_minted/6E5DEB97B02B4DA5E62FE96C955BAE61.highlight.minted)
+(_minted/CD10FACBC157C89FC48F02ED77225FBE.highlight.minted)
+(_minted/B84DA269CFFD07153F1E0CC5C24C7574.highlight.minted) [87
+
+]
+(_minted/F067CBB10162A225F20946BA40DE0784.highlight.minted)
+(_minted/39A3F4AB0EE64B97869F63EC5D8AA849.highlight.minted)
+(_minted/5E95A57CA64D472425E61EAEC75237EB.highlight.minted)
+(_minted/17FE4968B0468E716E0DC9AC3E0D4C60.highlight.minted)
+(_minted/975206E24CD7374FFE41B861B2661F40.highlight.minted)
+(_minted/8708480A8027601187CC5DF7D3B04740.highlight.minted) [88]
+(_minted/C4804E5F877B15BB6676338177CA6899.highlight.minted)
+(_minted/17FE4968B0468E716E0DC9AC3E0D4C60.highlight.minted) [89]
+(_minted/9A1A236A3CE94F4B8D5D0A29816F48D9.highlight.minted)
+(_minted/E0DABDB69462EAC2D46589B478202797.highlight.minted)
+(_minted/EB85BCF762F15CC5BF6883CD4D7607AD.highlight.minted)
+(_minted/5DA60DBD8716BF6814A2D6E74F472B33.highlight.minted)
+(_minted/18B4172FA3C710074D143229FC286855.highlight.minted) [90]
+(_minted/3010A19865BD05CA72A515021F68A2C3.highlight.minted)
+(_minted/17FE4968B0468E716E0DC9AC3E0D4C60.highlight.minted)
+(_minted/8DBC868E46947A5C99C88474FBCAB914.highlight.minted)
+(_minted/05D570C6A3EF8CE12104C2330266F864.highlight.minted)
+(_minted/A41E58838A436308495231F8C1D8948B.highlight.minted)
+(_minted/5629BD859A40512610090C03F3E83041.highlight.minted) [91]
+(_minted/7D323C90275D3D8E862D103B0DB09586.highlight.minted)
+(_minted/803CEB4EA91E6328173314495AD188D1.highlight.minted)
+(_minted/A7975FFF826CF2E0B041466DF0CA5077.highlight.minted) [92]
+(_minted/ECDBF304A9309D605A42E3A353466F71.highlight.minted)
+(_minted/3AE8DD3D2E83204974E9177CE6DA0FFE.highlight.minted) [93]
+Chapter 29.
+[94
+
+]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[95
+
+] [96] [97]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+[98
+
+] [99] [100] [101] [102] [103] [104] [105
+
+]
+Chapter 30.
+[106
+
+] (_minted/81887979057A8F123C2C0B5BDBCC2879.highlight.minted) [107]
+(_minted/2421E1FE62E2C37C4DEA48BF62711E79.highlight.minted) [108]
+Chapter 31.
+(_minted/A4E24BC5E767FE3E605019CBAFF2B867.highlight.minted) [109
+
+]
+(_minted/B42EFAB219D7D8C31D90A7A3919D3FAB.highlight.minted)
+Overfull \hbox (6.05873pt too wide) in paragraph at lines 7531--7531
 []\TU/DejaVuSansMono(0)/m/n/8 SatFinite|  
  []
 
 
-Overfull \hbox (17.4464pt too wide) in paragraph at lines 5206--5206
+Overfull \hbox (17.4464pt too wide) in paragraph at lines 7531--7531
 []\TU/DejaVuSansMono(0)/m/n/8 SatPropagate|  
  []
 
-(./_minted/86896283132DB045F422B07B57E23836.highlight.minted) [77] [78]
-Chapter 27.
+(_minted/AC89DD86AF72D0E9D4671681C8FEDEC9.highlight.minted) [110] [111]
+Chapter 32.
+[112
 
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[79
-
-]
-Overfull \hbox (4.49115pt too wide) in paragraph at lines 5398--5398
+] [113]
+Overfull \hbox (4.49115pt too wide) in paragraph at lines 7727--7727
 []\TU/DejaVuSansMono(0)/m/n/8 Convert|  
  []
 
-[80] (./_minted/3C0B2FB4A11F82583163EE50EC36DF14.highlight.minted)
-(./_minted/B1390EBAC9863498805623F0202275A6.highlight.minted) [81]
-Chapter 28.
-[82
+[114] (_minted/434F98B2D19F00BC34F5684DC117671E.highlight.minted)
+(_minted/64CFB99CDC1459C3490F723891470030.highlight.minted) [115]
+Chapter 33.
+[116
 
-] (./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted) [83]
-[84]
-Chapter 29.
-(./_minted/3398B865E06CC25B3CA0560227028868.highlight.minted) [85
+] (_minted/EE0901194FF4CEC2D2DB9A84262BD525.highlight.minted) [117]
+[118]
+Chapter 34.
+(_minted/68F567E3D0BF461BFD4FA129693AF3C9.highlight.minted) [119
 
 ]
-(./_minted/57984FFE13B6207F5B2547F95A621066.highlight.minted)
-(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [86] [87]
-Chapter 30.
-(./_minted/3ED9788E266FE9DB56A02F44E2809F42.highlight.minted)
-(./_minted/B8F21DE663E16F38CA260F06E6B8C471.highlight.minted) [88
+(_minted/7DBC3CF8A30ADB6DE2A2EA6560B72C5F.highlight.minted)
+(_minted/D5CA60D28354773B64A724EF69D5A173.highlight.minted) [120] [121]
+Chapter 35.
+(_minted/44A871ED9745DEE2D94F52A019F3B24E.highlight.minted)
+(_minted/BAC6B85A2DC59563BC94CD3E3540C540.highlight.minted) [122
 
 ]
 LaTeX Font Info:    Font shape `TU/DejaVuSans(0)/b/it' will be
-(Font)              scaled to size 8.62987pt on input line 6080.
+(Font)              scaled to size 8.62987pt on input line 8409.
 
-(./_minted/B630BA28595FAC2F26CA8B39F76056E1.highlight.minted)
-(./_minted/344103355B1B1CD09974EB7265879D81.highlight.minted)
-(./_minted/2E65C335A01DBB89C4D593B33117874C.highlight.minted) [89]
-(./_minted/BD3DEEC595D305DDBEC0636BEDE841E7.highlight.minted)
-(./_minted/BD4A9518B790D33F291326E5C17709CF.highlight.minted) [90] [91]
-Chapter 31.
+(_minted/C4C92493AA74C743CFA892480B961E1B.highlight.minted)
+(_minted/5E870956A8C745F611924C32CF17F535.highlight.minted)
+(_minted/BB08DB9C4248C9F1B32AFCFD6EF2AA22.highlight.minted) [123]
+(_minted/E8EBB0FEE1FCD75297FFAC4A9D1FAAAA.highlight.minted)
+(_minted/C347E779508DF882C4F18A6224B7F88A.highlight.minted) [124] [125]
+Chapter 36.
 
-Overfull \hbox (0.99739pt too wide) in paragraph at lines 6259--6259
+Overfull \hbox (0.99739pt too wide) in paragraph at lines 8588--8588
 []\TU/DejaVuSansMono(0)/m/n/8 conformance_ 
  []
 
 
-Overfull \hbox (0.99739pt too wide) in paragraph at lines 6259--6259
+Overfull \hbox (0.99739pt too wide) in paragraph at lines 8588--8588
 []\TU/DejaVuSansMono(0)/m/n/8 conformance_ 
  []
 
-[92
+[126
 
-] (./_minted/E2DCE1C54EBF4ED4E17B2CA5A024D3E7.highlight.minted) [93]
-Chapter 32.
-[94
+] (_minted/D5B99D607C60EA70D474495112E02A2A.highlight.minted) [127]
+Chapter 37.
+[128
 
-] (./_minted/9C3DAB7BBE8F2463FE97303E4C54E7DD.highlight.minted) [95]
-(./_minted/10381BB93BBA8C764996C7FC69679950.highlight.minted)
-(./_minted/B3A58D09D82AEA802F413DA53C01D568.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6682--6683
+] (_minted/3D8EDFC8911B49BC3BE4D7F3CDF8D537.highlight.minted) [129]
+(_minted/4E4A257153BB4F80229E3AC885759FD1.highlight.minted)
+(_minted/9B2318B5FCDE22808044A62E74268E2A.highlight.minted)
+Underfull \hbox (badness 10000) in paragraph at lines 9011--9012
 []\TU/DejaVuSans(0)/m/n/10 Consequently \TU/DejaVuSansMono(0)/m/n/10 Binary8p4s
 e === Binary{8,4,true,true} \TU/DejaVuSans(0)/m/n/10 is \TU/DejaVuSansMono(0)/b
 /n/10 false \TU/DejaVuSans(0)/m/n/10 and \TU/DejaVuSansMono(0)/m/n/10 Binary8p4
 se <:
  []
 
-[96] (./_minted/627F3DDA11A3A56FF811C343C374B73B.highlight.minted)
-(./_minted/48E5F69E65FF7A7FA7D51B48B98D7467.highlight.minted)
-(./_minted/7D3C1A969B31C38EA8662C2F6E57066E.highlight.minted)
-(./_minted/B41659FC1E5E16EBCB621BB37192A551.highlight.minted) [97]
-(./_minted/BF570C084BC3A67A5A7C9E4647CED36E.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 6806--6807
+[130] (_minted/DA84ED7F5B964A851E9F0089CA5424B6.highlight.minted)
+(_minted/8CF6CC4C2F9015D972DDF8B41FE9E8EB.highlight.minted)
+(_minted/B817239F7ABD5CEEEE05846468F51307.highlight.minted)
+(_minted/F17BF4EA152129A524F3F05ADC653AF7.highlight.minted) [131]
+(_minted/500ACE807AC25E67DD8C784C14CB43A2.highlight.minted)
+Underfull \hbox (badness 10000) in paragraph at lines 9135--9136
 []\TU/DejaVuSans(0)/m/n/10 Bit-packed storage of \TU/DejaVuSansMono(0)/m/n/10 F
  \TU/DejaVuSans(0)/m/n/10 code points at \TU/DejaVuSansMono(0)/m/n/10 bitwidth(
 F) \TU/DejaVuSans(0)/m/n/10 bits per element. Construct with
  []
 
 
-Underfull \hbox (badness 1024) in paragraph at lines 6806--6807
+Underfull \hbox (badness 1024) in paragraph at lines 9135--9136
 \TU/DejaVuSansMono(0)/m/n/10 PackedVector(A::AbstractVector{F})\TU/DejaVuSans(0
 )/m/n/10 ; recover with \TU/DejaVuSansMono(0)/m/n/10 Vector(pv) \TU/DejaVuSans(
 0)/m/n/10 or \TU/DejaVuSansMono(0)/m/n/10 collect(pv)\TU/DejaVuSans(0)/m/n/10 .
  Memory: \TU/DejaVuSansMono(0)/m/n/10 ⌈n·K/64⌉
  []
 
-(./_minted/02D8000DAB315D57FDA2A7DCEB63F7AC.highlight.minted) [98]
-(./_minted/B7FBE62B8A43596CB50217EFF5EFC03C.highlight.minted)
-(./_minted/F2D7F2369BA71030EC6E0929F4762B4D.highlight.minted)
-(./_minted/07E9226138ABB95EBCC075EC21E305E9.highlight.minted)
-Underfull \hbox (badness 10000) in paragraph at lines 7064--7065
+(_minted/27384C3438443A7C3FD1147C706A3956.highlight.minted) [132]
+(_minted/B4851015F49166FFFB4AB087D6D7AD14.highlight.minted)
+(_minted/ADF06B8D8C96462D5D66D51472F06BE3.highlight.minted)
+(_minted/1D2D0BE82E5D08930D2D01C995E8F855.highlight.minted)
+Underfull \hbox (badness 10000) in paragraph at lines 9393--9394
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default projection specification. Ini
 tialized to \TU/DejaVuSansMono(0)/m/n/10 (DefaultRoundingMode(),
  []
 
-(./_minted/F313BF3755A5F31EE1A13C3F5B752838.highlight.minted) [99]
-(./_minted/56B91C3BCC354A14E7B0FD2254BAB3AF.highlight.minted)
-Underfull \hbox (badness 6708) in paragraph at lines 7102--7103
+(_minted/50B1E584549F0A65A79028643319AF81.highlight.minted) [133]
+(_minted/3951D073956ADE3CFDA8346DA78D9635.highlight.minted)
+Underfull \hbox (badness 6708) in paragraph at lines 9431--9432
 []\TU/DejaVuSans(0)/m/n/10 The session[]s default rounding mode. Initialized to
  \TU/DejaVuSansMono(0)/m/n/10 NearestTiesToEven()\TU/DejaVuSans(0)/m/n/10 . Set
 ting it rebuilds
  []
 
-(./_minted/A9457530AE3DB537695338F4B4230D39.highlight.minted) [100]
-(./_minted/7514C9508753C13D6C4B8C4C449130E6.highlight.minted)
-(./_minted/2716F071634B921A9BDB8DF54178236A.highlight.minted)
-(./_minted/4A4775BA738AACAED5254B8046993652.highlight.minted) [101]
-(./_minted/D20520B6965B13885588B3F9DCB80E35.highlight.minted)
-(./_minted/AEA045F4195108DBEB929985F8CE0909.highlight.minted)
-(./_minted/43A053D9303E3D0822107B887427CFAA.highlight.minted)
-(./_minted/646D7B6ED6679C9665EF166F1E2332CC.highlight.minted) [102]
-(./_minted/CBEAD7F82682EB3E833A799D122F34FA.highlight.minted)
-(./_minted/D185D8F586BA41A304BCD11BB3E43A98.highlight.minted)
-(./_minted/6EB94FFC241531A8FF1A7FF06C4981EA.highlight.minted) [103]
-(./_minted/3E7BC3653ADFFCFF5192FEA3D017801D.highlight.minted)
-(./_minted/6984BD013738752208982C499EE7FF99.highlight.minted)
-(./_minted/15460B7E2E7DD7C0BB8EE0629BAE6133.highlight.minted) [104]
-(./_minted/3B6F3A83BD0980D40528155662E22D3E.highlight.minted)
-(./_minted/F2E910FBEFD5BB3FDA6ED34077013230.highlight.minted)
-(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted)
-(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [105]
-(./_minted/BBB8BF0E9E030E902DFC45622D22D2F8.highlight.minted)
-(./_minted/7CB9599F160DF8227A32F9463D1D4425.highlight.minted) [106]
-Chapter 33.
-[107
-
-] (./_minted/0FF39E463DC677199B8D407DCC067572.highlight.minted) [108]
-(./_minted/754FB2A589420F40E17E19D9DC8E718F.highlight.minted)
-(./_minted/EF4A561B3016D8C66619F8C7B566E4E3.highlight.minted) [109]
-(./_minted/E3E8DE1633F596F32A58AD81EC1DCBC3.highlight.minted) [110] [111]
-(./_minted/61B57B8FE42333E8762A2D0D3D94C25D.highlight.minted)
-(./_minted/C161E89C03E050B5E8CD16A53B2DD56D.highlight.minted)
-(./_minted/3E534D6E53C8BA4BD22C7197226F169C.highlight.minted) [112]
-(./_minted/AD7D038312F779FD7ADA103325F15849.highlight.minted)
-(./_minted/FB9F70652F9AA52AEA69E210352BD238.highlight.minted)
-(./_minted/315D63FCB2A3C1D3F0425640E7807F25.highlight.minted) [113]
-(./_minted/E85E67CF648CD2953BFA72F13356D062.highlight.minted)
-(./_minted/1E6A15F261624BA3E24B50D399B59D73.highlight.minted)
-(./_minted/F48657C253397B9E76197134CD4AD1A9.highlight.minted) [114]
-(./_minted/099F0F1D9BAC7C21C0681301BB0CC371.highlight.minted)
-(./_minted/7F6485EB6A3CB98207385020DAA0110C.highlight.minted)
-(./_minted/525319D406B7BBE1895883430E251D2D.highlight.minted) [115]
-(./_minted/8C8802386B483197761CC271D27AF48A.highlight.minted) [116] [117
-
-]
-Chapter 34.
-[118
-
-] [119] [120]
-Chapter 35.
-(./_minted/EF4A0B44321D331A18D2B9915C88468E.highlight.minted)
-(./_minted/A13BCB2368ED795A963D22B0BA31D521.highlight.minted) [121
-
-]
-(./_minted/652530FAEADDB819116063E078BFE6EE.highlight.minted)
-(./_minted/FD433E53A3DA30905F825492DD9DC6A5.highlight.minted)
-(./_minted/6317B3D3342C7C694D9A54C7F2DFCB51.highlight.minted)
-(./_minted/4E4D80A23F670BC1B6BFEDE688C19E99.highlight.minted) [122]
-(./_minted/98673B52D93C5BD71994999AA0146DCF.highlight.minted)
-(./_minted/BE0AB8DC49CF6B773979D1F51F9979AA.highlight.minted)
-(./_minted/1EB14C3BA86A79CC0A22D85B3FB9C041.highlight.minted)
-(./_minted/C047B74E7E6879B6A3F69D9CF109904E.highlight.minted) [123]
-(./_minted/D776F933A6751DA6EAB7F04C6DE8AFE5.highlight.minted)
-(./_minted/48E933C5363F9935310D70B3162A40E4.highlight.minted)
-(./_minted/A7C86B60B12E9F8B3726C55E7F30E866.highlight.minted)
-(./_minted/A613ACFAC0482FC6CEFF62B4EA858D67.highlight.minted) [124]
-(./_minted/18E583C5417677FA4DCAC2F1BC16A871.highlight.minted)
-(./_minted/6775A8A855E5A742627D707A20D72622.highlight.minted)
-(./_minted/4993C139D6060F5D424DC82171D63B62.highlight.minted)
-(./_minted/FAB13D2600F6ABFBF4A7F55505E228B8.highlight.minted) [125]
-(./_minted/F882F69F7B45F2258BFBD88F82AA9270.highlight.minted)
-(./_minted/A88F2E9E64A4DF7731E56F7A03DD8FEB.highlight.minted)
-(./_minted/703C1CA7665BD4E85B3307851E048B14.highlight.minted)
-(./_minted/715131B19AA83E1FA09D8C980FC5E5C9.highlight.minted)
-(./_minted/35EBACEBC0C695923F34013EB60B0F02.highlight.minted)
-(./_minted/1BC2A1151554D66C634DBD8A88350743.highlight.minted) [126]
-(./_minted/01C62FF12E659616913D1B50EA98AED1.highlight.minted)
-(./_minted/DAA4A4A174137440483C46AE01E508BA.highlight.minted)
-(./_minted/760BB0FE30F35F7B0E90FFBA56041115.highlight.minted)
-(./_minted/0F973335B3FB60AF3341895FD271F508.highlight.minted) [127]
-Chapter 36.
-
-Underfull \hbox (badness 1881) in paragraph at lines 9855--9856
-\TU/DejaVuSans(0)/m/n/10 Internals-level recipes: pipeline introspection, exhau
-stive verification of your own code, κ measurement,
- []
-
-
-Underfull \hbox (badness 2035) in paragraph at lines 9855--9856
-\TU/DejaVuSans(0)/m/n/10 and doctrine-compliant benchmarking. These use unexpor
-ted names (\TU/DejaVuSansMono(0)/m/n/10 SmallFloats.round_to_precision\TU/DejaV
-uSans(0)/m/n/10 ,
- []
-
-(./_minted/7BD6A8A5894C6EDACFB8F27976FA1794.highlight.minted)
-(./_minted/B2561F5BE89600E0FEC3C71B5EDA83FE.highlight.minted)
-(./_minted/866D31796A8F4523DDFA45F26F32A939.highlight.minted)
-(./_minted/844CD68EEE0956648F26E1C0718A5782.highlight.minted)
-(./_minted/2D8E0A7B3926948A41118544183E0C6E.highlight.minted)
-(./_minted/AC983B3F097735EAD89C4C150F1756E1.highlight.minted) [128
-
-]
-(./_minted/826C9FAD5662B5F78878DCCE9EDEAAAA.highlight.minted)
-(./_minted/8912717BAD1DB6AF48ABFDFCD9D27756.highlight.minted)
-(./_minted/D897D4FC7AD5BEFFC23BAA1B80DE218D.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
-(./_minted/D16056B6463FD2FF2D80EE715785EC6C.highlight.minted)
-(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [129]
-(./_minted/800B4EE9200AD98E3F8BB5C048886542.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [130]
-(./_minted/93D8FA7F1137F7CE2C03D450BBF63BAD.highlight.minted)
-(./_minted/5A9AA810D6FC01E437B662765ADB122B.highlight.minted)
-(./_minted/A07369782608363272746017F47FCEB1.highlight.minted)
-(./_minted/DE2A8DD189F8CA0FCE950803ABBC2D7B.highlight.minted)
-(./_minted/FDBFB57A82102CB82C9E014284FC74B9.highlight.minted) [131]
-(./_minted/82AB298B98D061B295003580AE16C58C.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
-(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
-(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/C3830CE010F0F628E09A51CCB12E9405.highlight.minted)
-(./_minted/CE7DA0495B7FCD5BB0F295758C2425ED.highlight.minted) [132]
-(./_minted/BD8E521EE3B41AAA262A3BCA0DD712A1.highlight.minted)
-(./_minted/9D0CD2DF46BE309078FF6126718BC01D.highlight.minted)
-(./_minted/ACFF29B3D0A2278CC96600A0C1A9684D.highlight.minted) [133]
-(./_minted/A39FF8718903F23EC1AA18AA8F5B6AE4.highlight.minted)
-(./_minted/98A3FE3D3C6C87FFEF1DF6D775902FD3.highlight.minted) [134]
-Chapter 37.
-[135
-
-]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[136
-
-] [137] [138]
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[139
-
-] [140] [141] [142] [143] [144] [145] [146
-
-]
+(_minted/493609A9E8C9B8D0F52DA46C608D5C89.highlight.minted) [134]
+(_minted/8A1685A58467325C92FF33B8674E72B6.highlight.minted)
+(_minted/AC0BF8C4F187E02A8E37BA5DCEFDAA86.highlight.minted)
+(_minted/3395B8DD539B0D08DE0E60009BCAA0D4.highlight.minted) [135]
+(_minted/5020B919D890AF99F312B6A4D56A59C7.highlight.minted)
+(_minted/6CDC1C9D54444AA8B2BD0AF4ABE533D7.highlight.minted)
+(_minted/D799BE5380ED22876934684D07FE70A5.highlight.minted)
+(_minted/1FDE9520D6BA748318CA29D5001219D5.highlight.minted) [136]
+(_minted/4C58E1F2F796AD68EA608EDF3338800F.highlight.minted)
+(_minted/6BD2A1F33ECC4A81085B84E368B54751.highlight.minted)
+(_minted/EA2783ECFFC455552DE3F9AFBB059A4E.highlight.minted) [137]
+(_minted/65115E4900627F96E702856F9A15B77A.highlight.minted)
+(_minted/99BA869717DF25CA14FA37563C0243E7.highlight.minted)
+(_minted/8303050E3C9D0934661117779526CACF.highlight.minted) [138]
+(_minted/D61226457AF0A3D7BCE395BBF24CA11D.highlight.minted)
+(_minted/692389A62347CE07EE15B86FA8CAEDD4.highlight.minted)
+(_minted/A2D57E94DA11DFB3E2FC0B232AC1FC23.highlight.minted)
+(_minted/061D4BE9944CDAF7F8226CED5F86821D.highlight.minted)
+(_minted/A2D57E94DA11DFB3E2FC0B232AC1FC23.highlight.minted)
+(_minted/061D4BE9944CDAF7F8226CED5F86821D.highlight.minted) [139]
+(_minted/A2D57E94DA11DFB3E2FC0B232AC1FC23.highlight.minted)
+(_minted/061D4BE9944CDAF7F8226CED5F86821D.highlight.minted) [140]
 Chapter 38.
-[147
+[141
 
-] [148]
+] (_minted/291A7DF0DD16380AC41C4E33CECDB0D8.highlight.minted) [142]
+(_minted/EC5F2B9493683BA11E975CE3A7510F70.highlight.minted)
+(_minted/A9A1203CAC9B3C48508604877047DC38.highlight.minted) [143]
+(_minted/A611BC16932152062E5171CCB0C549C6.highlight.minted) [144] [145]
+(_minted/52CD0037C73FFD21C48DBD0D71557CCF.highlight.minted)
+(_minted/B452BD08A34BB12A8D652F7EAA85692F.highlight.minted)
+(_minted/26A0129FC464C136444901767C85FBB2.highlight.minted) [146]
+(_minted/3587817B6E57F827CFE08BD09D73AE78.highlight.minted)
+(_minted/9F5C467384CF421CCFBD9416454568C3.highlight.minted)
+(_minted/9283AF52A4C095F3AF7F02CBAEC45FF2.highlight.minted) [147]
+(_minted/CAB1FF1DFD3A3272A4320BAD2FD79021.highlight.minted)
+(_minted/838C85DE25BA816E2A40DB35D035CDDE.highlight.minted)
+(_minted/25A3F1DD5D828DC00D2567826DE6A95E.highlight.minted) [148]
+(_minted/79E5AF4E176F1B2AAE9949EBB5F5FFE2.highlight.minted)
+(_minted/26E973B05B9A423BDC7927B1C2FC7452.highlight.minted)
+(_minted/E233F2B9FB22E781AC6421776FCBE0DC.highlight.minted) [149]
+(_minted/8BBCCA78940A1F9E8529127B8CFE96F3.highlight.minted) [150] [151
+
+]
 Chapter 39.
-(./_minted/B50FE8CD3A6F4684E8DB0A57D6356673.highlight.minted) [149
+[152
 
-] [150]
+] [153]
 Chapter 40.
-(./_minted/C61E54A4C2588C4CDF7416F9151998EC.highlight.minted) [151
+[154
 
-] [152]
+] [155]
 Chapter 41.
+(_minted/C4C715B646AE81EAE34200482DBF8E06.highlight.minted) [156
 
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 11913--11913
+] [157]
+Chapter 42.
+(_minted/94A2E0861DC84BAF470950224479F824.highlight.minted) [158
+
+] [159]
+Chapter 43.
+
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 11889--11889
 []\TU/DejaVuSansMono(0)/m/n/8 Float128|  
  []
 
 
-Overfull \hbox (6.05104pt too wide) in paragraph at lines 11913--11913
+Overfull \hbox (6.05104pt too wide) in paragraph at lines 11889--11889
 []\TU/DejaVuSansMono(0)/m/n/8 BigExactF|  
  []
 
 
-Overfull \hbox (13.6428pt too wide) in paragraph at lines 11913--11913
+Overfull \hbox (13.6428pt too wide) in paragraph at lines 11889--11889
 []\TU/DejaVuSansMono(0)/m/n/8 Enclose128F|  
  []
 
 
-Overfull \hbox (2.25514pt too wide) in paragraph at lines 11913--11913
+Overfull \hbox (2.25514pt too wide) in paragraph at lines 11889--11889
 []\TU/DejaVuSansMono(0)/m/n/8 EncloseF|  
  []
 
-(./_minted/7542DA689EC474092F9127FB2697040F.highlight.minted) [153
+(_minted/640777AD28B3F34A618BDA5D750B0245.highlight.minted) [160
 
-] [154]
-[155]
-Chapter 42.
-[156
+] [161]
+[162]
+Chapter 44.
+(_minted/173F932F6C26689A7F55B1BFFA948B72.highlight.minted) [163
 
-] [157]
-Chapter 43.
-(./_minted/5DAD30065C591BB20FE57F6F8F5660F7.highlight.minted)
-(./_minted/A5E9D01E118EFA8B338C4A207C2F4B13.highlight.minted) [158
+] [164]
+Chapter 45.
+(_minted/8A77A4148DF4D8AA21424979FEC62435.highlight.minted)
+(_minted/46BD5BF02737EAB8A784E06D10B1C588.highlight.minted) [165
 
 ]
-(./_minted/64A87CBD1B5C18B15C6289E60CC7E795.highlight.minted) [159]
-(./_minted/AF905E838692151675F3B98481E2659F.highlight.minted) [160]
-(./_minted/ADC012CAC73FE44AC8F8437EBBDF6A90.highlight.minted)
-Underfull \hbox (badness 3068) in paragraph at lines 12368--12369
+(_minted/0022200B0D0C17A388D0E2C93C7DC92C.highlight.minted) [166]
+(_minted/36DAA2A4A80F5D45CC5E7B59D4D74775.highlight.minted) [167]
+(_minted/7F368323C3A9075CB74A8AA5AFA82947.highlight.minted)
+Underfull \hbox (badness 3068) in paragraph at lines 12378--12379
 \TU/DejaVuSansMono(0)/m/n/10 src/blocks.jl \TU/DejaVuSans(0)/m/n/10 owns block 
 construction, scale/element operations, span filtering, exact reductions, and
  []
 
-[161]
-Chapter 44.
-[162
+[168]
+Chapter 46.
+[169
 
-] [163]
-Chapter 45.
+] [170]
+Chapter 47.
 
-Underfull \hbox (badness 2096) in paragraph at lines 12566--12567
+Underfull \hbox (badness 2096) in paragraph at lines 12554--12555
 []\TU/DejaVuSans(0)/b/n/10 Result-kind protocol. \TU/DejaVuSansMono(0)/m/n/10 ω
 eval \TU/DejaVuSans(0)/m/n/10 must return one of \TU/DejaVuSansMono(0)/m/n/10 F
 loat64 | Float128 | StickyF | BigExactF |
  []
 
-[164
+[171
 
-] [165] (./_minted/ABC2DF04343882B2315A4A7BAABF2AA4.highlight.minted)
-(./_minted/928E3D2E0EA571B1CCBEE70D266979D3.highlight.minted) [166]
-(./_minted/AA4AF40FC8E1795E1A9A1C1E7FB963EA.highlight.minted)
-(./_minted/35C445D26325FEA8A9A57A442FA825BA.highlight.minted) [167]
-(./_minted/EB42B160B1DD470EDD8665FF0EF11318.highlight.minted) [168]
-(./_minted/AABDD1A16FE4C05178F790A551C6E529.highlight.minted) [169]
-(./_minted/97CBE8A958824B7EDBE2B172E83FB5F6.highlight.minted)
-(./_minted/25800F52D181A5BC2646AC6A09D474FF.highlight.minted) [170]
-Underfull \hbox (badness 3209) in paragraph at lines 13037--13038
+] [172] (_minted/EFAFD071196D1E82E11848E90EA16666.highlight.minted)
+(_minted/C70CCC5230288AD08E65CAC495A1B947.highlight.minted) [173]
+(_minted/A966D19E87C2ACF4AB953BDE7C18074E.highlight.minted) [174]
+(_minted/213AFF2DC68558247EC5EF5DA3BBA7E7.highlight.minted) [175]
+(_minted/E8B4B1418C167EF1CCF0A0C06D5CB2FA.highlight.minted) [176]
+(_minted/FDF9670465E7EDB978A8303006B6DD00.highlight.minted) [177]
+Underfull \hbox (badness 3209) in paragraph at lines 12967--12968
 []\TU/DejaVuSansMono(0)/m/n/10 conformance_report() \TU/DejaVuSans(0)/m/n/10 sh
 ows the op (automatic for registry ops; manual block additions extend
  []
 
-[171] [172]
-Chapter 46.
-(./_minted/0E5F1E9EE44EBF4C84E3B648565FF80D.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted)
-(./_minted/82AB298B98D061B295003580AE16C58C.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [173
-
-]
-(./_minted/7FF8B633E35A83A4630E7446F9719DE6.highlight.minted)
-(./_minted/7EC53C391A0B30988621B20E42AB9E32.highlight.minted)
-(./_minted/E5AF88883A1274A43734B8D8D85CD2B6.highlight.minted)
-(./_minted/CED16EA68C500F541E3AEB062CBA2412.highlight.minted) [174]
-(./_minted/D16056B6463FD2FF2D80EE715785EC6C.highlight.minted)
-(./_minted/A4E6B8DCF68068837D8C66125A573D4F.highlight.minted) [175] [176]
-Chapter 47.
-(./_minted/DD21C4ACBBF7E1820366F5D176A8FE14.highlight.minted)
-(./_minted/1A31670845199B4E5D327AB2886E5F02.highlight.minted) [177
-
-] [178]
-[179
-
-]
+[178]
 Chapter 48.
-[180
+(_minted/86504FC3046518FD55D1AE1E9A7BC99D.highlight.minted)
+(_minted/17FE4968B0468E716E0DC9AC3E0D4C60.highlight.minted)
+(_minted/3010A19865BD05CA72A515021F68A2C3.highlight.minted)
+(_minted/17FE4968B0468E716E0DC9AC3E0D4C60.highlight.minted) [179
 
 ]
-Underfull \hbox (badness 2698) in paragraph at lines 13493--13494
+(_minted/8DBC868E46947A5C99C88474FBCAB914.highlight.minted)
+(_minted/05D570C6A3EF8CE12104C2330266F864.highlight.minted)
+(_minted/56E39D81E5DCB13EA60145DD8E59C6A0.highlight.minted)
+(_minted/17FE4968B0468E716E0DC9AC3E0D4C60.highlight.minted) [180]
+(_minted/975206E24CD7374FFE41B861B2661F40.highlight.minted)
+(_minted/8708480A8027601187CC5DF7D3B04740.highlight.minted) [181] [182]
+Chapter 49.
+(_minted/3485C37D80F15E4B03F571274355BB9A.highlight.minted) [183
+
+] [184]
+Chapter 50.
+[185
+
+]
+Overfull \hbox (10.51349pt too wide) in paragraph at lines 13385--13385
+[]\TU/DejaVuSans(0)/m/n/8 CODEC- 
+ []
+
+
+Overfull \hbox (10.51349pt too wide) in paragraph at lines 13385--13385
+[]\TU/DejaVuSans(0)/m/n/8 CODEC- 
+ []
+
+
+Overfull \hbox (10.51349pt too wide) in paragraph at lines 13385--13385
+[]\TU/DejaVuSans(0)/m/n/8 CODEC- 
+ []
+
+
+Overfull \hbox (10.21486pt too wide) in paragraph at lines 13385--13385
+[]\TU/DejaVuSans(0)/m/n/8 ORDER- 
+ []
+
+
+Overfull \hbox (7.40411pt too wide) in paragraph at lines 13385--13385
+[]\TU/DejaVuSans(0)/m/n/8 TABLE- 
+ []
+
+
+Overfull \hbox (15.35301pt too wide) in paragraph at lines 13385--13385
+[]\TU/DejaVuSans(0)/m/n/8 CARRIER- 
+ []
+
+
+Overfull \hbox (3.70059pt too wide) in paragraph at lines 13385--13385
+[]\TU/DejaVuSans(0)/m/n/8 PERF- 
+ []
+
+[186] [187
+
+]
+Chapter 51.
+[188
+
+]
+Underfull \hbox (badness 2698) in paragraph at lines 13474--13475
 []\TU/DejaVuSans(0)/b/n/10 Symptom: \TU/DejaVuSansMono(0)/b/n/10 Vector{Binary{
 K,P,Σ,Δ}}(undef, n) \TU/DejaVuSans(0)/b/n/10 silently boxes every element, even
  though you
  []
 
-[181] [182]
-Chapter 49.
-(./_minted/84A90A9B2B4C74F7026D7CC233FC9E3D.highlight.minted)
-(./_minted/1EF2902BD5C0D835A502F67390D89EC6.highlight.minted)
-(./_minted/2BFD2C2747A17E7B7D9F08C964623EE0.highlight.minted) [183
+[189] (_minted/9FD400FADD16754DA56184AEA6609DB1.highlight.minted) [190]
+Chapter 52.
+(_minted/E40B68BDD2C01F218F6A9E6E453847C0.highlight.minted)
+(_minted/2309B7DDA116789644A845715C2FA661.highlight.minted)
+(_minted/F52789D021B5D1B08E850AB1F544D53B.highlight.minted) [191
 
 ]
-(./_minted/2A736D3AB516FCB90F1DB19FCD189728.highlight.minted)
-(./_minted/F703E6CC9F09FC9FA8B19212C6540031.highlight.minted)
-(./_minted/B151FF6DB04AECFC964D55A0B0EAFFA4.highlight.minted)
-(./_minted/42D0FAF94820CC48FEA22F0E68586C90.highlight.minted)
-(./_minted/961385C6871245361D0EC53AD3A0B878.highlight.minted) [184]
-(./_minted/7262042352FFDB90D04CB63208B7B00F.highlight.minted)
-(./_minted/F1391FB6C6AC2922181D4EA6EEFFB40F.highlight.minted)
-(./_minted/C3C7BFA53A57BD2438DF9E609F63AE94.highlight.minted) [185]
-(./_minted/51BF9C8795CF5651D61D8B3D356A3328.highlight.minted)
-(./_minted/3398B865E06CC25B3CA0560227028868.highlight.minted)
-Underfull \hbox (badness 3039) in paragraph at lines 13900--13901
+(_minted/68647968D08E8EDBF4E1A36A8F346780.highlight.minted)
+(_minted/579BF17CE8B0F428E0BD4D8730676B2B.highlight.minted)
+(_minted/C291FB4AC814D8E2CA46F3589F865110.highlight.minted)
+(_minted/4C707D85B9FAF50ECFD9C2A2ACE00BFE.highlight.minted) [192]
+(_minted/1E695E62CDDC8810D23D298E81632D7F.highlight.minted)
+(_minted/04218E3F5286822AD133BD55085A29A4.highlight.minted)
+(_minted/66271AF36FA53C58A09087B87B63C5CF.highlight.minted) [193]
+(_minted/4C7B05E18DE931B67C086C4FB7251A52.highlight.minted)
+(_minted/68F567E3D0BF461BFD4FA129693AF3C9.highlight.minted)
+Underfull \hbox (badness 3039) in paragraph at lines 13894--13895
 []\TU/DejaVuSans(0)/m/n/10 Setting a rounding/saturation component rebuilds \TU
 /DejaVuSansMono(0)/m/n/10 DefaultProjection\TU/DejaVuSans(0)/m/n/10 ; setting \
 TU/DejaVuSansMono(0)/m/n/10 DefaultProjection! \TU/DejaVuSans(0)/m/n/10 di-
  []
 
 
-Underfull \hbox (badness 1817) in paragraph at lines 13900--13901
+Underfull \hbox (badness 1817) in paragraph at lines 13894--13895
 \TU/DejaVuSans(0)/m/n/10 rectly updates both components. Always: \TU/DejaVuSans
 Mono(0)/m/n/10 DefaultProjection() === ProjSpec(DefaultRoundingMode(),
  []
 
-(./_minted/58ACFD9B206EE57754A5D0E62CFC3C1D.highlight.minted) [186]
-(./_minted/B400E262F2B13FDE8DE3C87DB9DABEA1.highlight.minted)
-Overfull \hbox (1.30995pt too wide) in paragraph at lines 13956--13956
+(_minted/D5CA60D28354773B64A724EF69D5A173.highlight.minted) [194]
+(_minted/FB8D488D0F6F33735979C7C62DBA50E8.highlight.minted)
+Overfull \hbox (1.30995pt too wide) in paragraph at lines 13950--13950
 []\TU/DejaVuSans(0)/m/n/8 Ternary|  
  []
 
-(./_minted/AE2293A77638F0CAFBFD89EA5C2F5495.highlight.minted)
-(./_minted/24F221DCB574BFDDC8719325DD18AA91.highlight.minted) [187]
-(./_minted/52F087A7E3FDBBD4636577CF9B074EAE.highlight.minted)
-(./_minted/0D4B83877DACA6B55F675191F5DF5AA0.highlight.minted)
-(./_minted/1D06E6F27441A44E124DE2C5983822C5.highlight.minted)
-(./_minted/BD07044F7FBC9DBA83A8497B454C54C0.highlight.minted)
-(./_minted/53006BE75C801F46B18A48EA6942AE93.highlight.minted)
-(./_minted/1EEBB0150B3CA2344075567985F1A31B.highlight.minted) [188]
-Overfull \hbox (37.17235pt too wide) in paragraph at lines 14161--14161
+(_minted/5F497B5D9E27C4C2218B2C72EA199CF4.highlight.minted)
+(_minted/C691A956D02ECD203C4E932A2A759FCF.highlight.minted) [195]
+(_minted/5F6EA2BFFA0C430E6E0491F2C9F249EB.highlight.minted)
+(_minted/6B80485BF866A3E23B664DAFDC851388.highlight.minted)
+(_minted/EE0901194FF4CEC2D2DB9A84262BD525.highlight.minted)
+(_minted/A46E2A5EC78317FEE9ECCCC5DAB0BEE1.highlight.minted)
+(_minted/5AD90EF4073A9F25C390B0F227B98C33.highlight.minted)
+(_minted/363979A81B24883CFEEC60DBE21D7651.highlight.minted) [196]
+Overfull \hbox (37.17235pt too wide) in paragraph at lines 14155--14155
 []\TU/DejaVuSansMono(0)/m/n/8 Vector{Binary{K,P,Σ,Δ}}(undef, 
  []
 
-[189]
-Chapter 50.
+[197]
+Chapter 53.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[190
+[198
 
-] [191]
-Chapter 51.
-[192
+] [199]
+Chapter 54.
+[200
 
-] [193]
+] [201]
 \tf@toc=\write8
 \openout8 = `main.toc'.
 
- (./main.aux)
+ (main.aux)
  ***********
-LaTeX2e <2025-11-01>
+LaTeX2e <2026-06-01>
 L3 programming layer <2020/03/25>
  ***********
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 739012E6D4BDDAE07FF4D68ECEC3F5D8;21620.
+(rerunfilecheck)             Checksum: 58680E2847A799C1EB4C3E258451135B;22254.
  ) 
 Here is how much of TeX's memory you used:
- 36706 strings out of 469223
- 839997 string characters out of 5454114
- 1383011 words of memory out of 6000000
- 64160 multiletter control sequences out of 15000+600000
- 635601 words of font info for 121 fonts, out of 8000000 for 9000
- 430 hyphenation exceptions out of 8191
- 114i,13n,133p,1288b,1095s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 36705 strings out of 402620
+ 830537 string characters out of 5438883
+ 1383171 words of memory out of 5000000
+ 64475 multiletter control sequences out of 15000+600000
+ 635960 words of font info for 123 fonts, out of 8000000 for 9000
+ 1348 hyphenation exceptions out of 8191
+ 126i,13n,133p,1290b,1031s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (197 pages, 4417868 bytes).
+Output written on main.xdv (206 pages, 4627272 bytes).

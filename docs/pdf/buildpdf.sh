@@ -25,7 +25,41 @@ julia --project=docs docs/make_latex.jl
 
 echo "== Stages 2+3: survey + transform =="
 rm -rf "$BUILD"
-python3 "$PDFDIR/transform.py" "$ROOT/docs/build_latex" "$BUILD"
+PYTHONIOENCODING=utf-8 python3 "$PDFDIR/transform.py" "$ROOT/docs/build_latex" "$BUILD"
+
+# minted's Python helper must MATCH the installed minted.sty: a newer
+# latexminted refuses to run against an older .sty, and vice versa. This box
+# has three `latexminted.exe` on PATH, and the first one wins:
+#
+#   C:\Python314\Scripts             0.7.1  — needs .sty >= 3.8.0, we have 3.7.0
+#   MiKTeX\miktex\bin\x64            0.6.0  — bundled wheel; crashes under
+#                                             Python 3.14's argparse
+#   AppData\Roaming\Python\Python313 0.6.0  — correct pairing, runs clean
+#
+# Only PATH order can select among them: MiKTeX's \ShellEscape scrubs the
+# environment, so LATEXMINTED_SUBPROCESS and friends never reach the helper
+# (that was tried, and silently did nothing). PATH does survive, because the
+# launcher resolves the executable by searching it at call time.
+#
+# Prepend the Python 3.13 user-scripts directory when it holds a latexminted;
+# absent, fall through unchanged rather than breaking a machine set up
+# differently.
+_LM313="$APPDATA/Python/Python313/Scripts"
+if [ -x "$_LM313/latexminted.exe" ]; then
+    export PATH="$_LM313:$PATH"
+fi
+
+# Same class of problem, different tool: a `qpdf` unrelated to the PDF utility
+# can sit earlier on PATH (a Python console script of the same name), and its
+# argument parser rejects `--check`, so Stage 5 reports "qpdf --check failed"
+# with an empty message while the PDF is in fact valid. Prefer a real qpdf
+# when one is installed; otherwise leave PATH alone.
+for _q in "/c/Program Files"/qpdf*/bin "$PROGRAMFILES"/qpdf*/bin; do
+    if [ -x "$_q/qpdf.exe" ] && "$_q/qpdf.exe" --version >/dev/null 2>&1; then
+        export PATH="$_q:$PATH"
+        break
+    fi
+done
 
 echo "== Stage 3.8: preamble probe =="
 cd "$BUILD"
@@ -65,7 +99,10 @@ if [ "$VBOX" -ne 0 ] || [ "$MISSCHAR" -ne 0 ] || [ "$MULTIDEF" -ne 0 ]; then
   exit 1
 fi
 [ -s main.toc ] || { echo "buildpdf.sh: empty main.toc (stale aux state?)"; exit 1; }
-WORST_HBOX=$(grep "^Overfull \\\\hbox" main.log | sed 's/[^0-9.]*\([0-9.]*\)pt.*/\1/' | sort -rn | head -1)
+# `|| true`: with ZERO overfull hboxes the grep exits nonzero, and under
+# pipefail that would fail the build precisely when the layout is cleanest
+# (found by the compact manual's first build, docsmall/pdf/buildpdf.sh).
+WORST_HBOX=$(grep "^Overfull \\\\hbox" main.log | sed 's/[^0-9.]*\([0-9.]*\)pt.*/\1/' | sort -rn | head -1 || true)
 echo "Gate 4 clean (worst residual Overfull hbox: ${WORST_HBOX:-0}pt)"
 
 echo "== Stage 5: validate =="
@@ -98,10 +135,12 @@ custom.sty are fine but survive only until the next transform run.
 EOF
 
 PAGES=$(pdfinfo main.pdf | awk '/^Pages:/{print $2}')
-python3 - "$BUILD" "$OUT" "$PAGES" "${WORST_HBOX:-0}" <<'PYEOF'
+# UTF-8 stdout, as at Stage 2+3: the buildnote carries the survey's `nonascii`
+# inventory (⟺ among them), which a cp1252 console encoding cannot write.
+PYTHONIOENCODING=utf-8 python3 - "$BUILD" "$OUT" "$PAGES" "${WORST_HBOX:-0}" <<'PYEOF'
 import json, subprocess, sys, datetime
 build, out, pages, hbox = sys.argv[1:5]
-s = json.load(open(f"{build}/survey.json"))
+s = json.load(open(f"{build}/survey.json", encoding="utf-8"))
 def ver(cmd):
     try:
         return subprocess.run(cmd, capture_output=True, text=True).stdout.strip().split("\n")[0]
@@ -146,7 +185,7 @@ page-boundary crossings, TOC block integrity (rule 9) clean.
     bash docs/pdf/buildpdf.sh       # PDF only (docs env must be instantiated)
 Content changes regenerate from docs/src — never edit the LaTeX by hand.
 """
-open(f"{build}/../buildnote.md", "w").write(note)
+open(f"{build}/../buildnote.md", "w", encoding="utf-8").write(note)
 PYEOF
 
 echo "buildpdf.sh: done — $OUT ($PAGES pages); buildnote at docs/pdf/buildnote.md"

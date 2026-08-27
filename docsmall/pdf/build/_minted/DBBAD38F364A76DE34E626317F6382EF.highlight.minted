@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{NextGreaterThan}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.0}\PYG{p}{))}
+\PYG{g+go}{Binary8p4se(1.125 ⇆ 0x41)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Class}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{0.01}\PYG{p}{))}
+\PYG{g+go}{ClassPosNormal::FPClass = 0x06}
+\end{MintedVerbatim}

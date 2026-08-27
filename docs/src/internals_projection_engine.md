@@ -39,7 +39,11 @@ a distinct carrier value for that infinitesimal displacement.
 `sticky ∈ {-1,0,+1}` carries that relation into every rounding comparison. The
 delicate “just below a datum” case crosses into the preceding binade and uses a
 fraction of `1⁻`; treating it as the endpoint itself would give the wrong answer
-for directed modes and ties.
+for directed modes and ties. The observable effect: projecting carrier value
+`1.0` with `sticky = -1` under `TowardNegative` lands on `0.9375` — exactly
+`NextLessThan(1.0)`, across the binade boundary — where without `sticky` the
+projection of an exactly representable value is the identity. [The
+Exact-Then-Project Contract](concept_exact_then_project.md) walks that example.
 
 ## Saturate
 

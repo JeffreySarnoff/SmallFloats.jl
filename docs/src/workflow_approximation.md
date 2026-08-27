@@ -19,25 +19,19 @@ honest, measured error bound.
 approximate function against the defined operation over every input and
 returns the worst code-point distance, exhaustively verified:
 
-```julia
-step2(x) = (r = Exp(Binary8p4se, RNE_SN, x);
-            isfinite(decode(r)) ? NextGreaterThan(NextGreaterThan(r)) : r)
+```julia-repl
+julia> step2(x) = (r = Exp(Binary8p4se, RNE_SN, x);
+                   isfinite(decode(r)) ? NextGreaterThan(NextGreaterThan(r)) : r);
 
-measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
-```
-
-```
+julia> measure_kappa(step2, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN)
 (2.0, true)                # κ = 2 code points, verified over all 256 inputs
 ```
 
 **2. Register with the measured (or a larger) κ.** `register_approx!` takes
 the same signature plus the implementation and a declared `κ`:
 
-```julia
-register_approx!(:cheater, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN, step2; κ=1)
-```
-
-```
+```julia-repl
+julia> register_approx!(:cheater, :Exp, Binary8p4se, (Binary8p4se,), RNE_SN, step2; κ=1)
 ERROR: ArgumentError: declared κ = 1.0 understates measured κ = 2.0 — registration rejected
 ```
 
@@ -50,25 +44,20 @@ declaring the true value (or higher) succeeds. The same shape applied to a
 hardware-style approximation (`hardtanh` standing in for `Tanh`) shows the
 full round trip:
 
-```julia
-one4 = Binary8p4se(1.0)
-hardtanh(x) = Clamp(Binary8p4se, RNE_SN, x, Negate(one4), one4)
+```julia-repl
+julia> one4 = Binary8p4se(1.0);
 
-κ, exhaustive = measure_kappa(hardtanh, :Tanh, Binary8p4se, (Binary8p4se,), RNE_SN)
-(κ, exhaustive)
-```
+julia> hardtanh(x) = Clamp(Binary8p4se, RNE_SN, x, Negate(one4), one4);
 
-```
+julia> κ, exhaustive = measure_kappa(hardtanh, :Tanh, Binary8p4se, (Binary8p4se,), RNE_SN)
 (4.0, true)                # worst deviation: 4 code points, verified on all 256 inputs
 ```
 
-```julia
-impl = register_approx!(:hardtanh_act, :Tanh, Binary8p4se, (Binary8p4se,),
-                        RNE_SN, hardtanh; κ=4)
-(kappa(:hardtanh_act), kappa_measured(impl), :hardtanh_act in list_approx())
-```
+```julia-repl
+julia> impl = register_approx!(:hardtanh_act, :Tanh, Binary8p4se, (Binary8p4se,),
+                               RNE_SN, hardtanh; κ=4);
 
-```
+julia> (kappa(:hardtanh_act), kappa_measured(impl), :hardtanh_act in list_approx())
 (4.0, 4.0, true)           # declared = measured; conformance_report() now lists it
 ```
 

@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+pkg\PYGZgt{} add https://github.com/JeffreySarnoff/SmallFloats.jl
+\end{MintedVerbatim}

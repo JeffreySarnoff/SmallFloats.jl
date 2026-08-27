@@ -1,0 +1,18 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{codetable}\PYG{p}{(}\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{k+kt}{F}\PYG{p}{\PYGZcb{};}\PYG{+w}{ }\PYG{n}{by}\PYG{o}{::}\PYG{k+kt}{Symbol}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+ss}{:code}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{where}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{k+kt}{F}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{by}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{p}{(}\PYG{l+s+ss}{:code}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+ss}{:value}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{n}{throw}\PYG{p}{(}\PYG{k+kt}{ArgumentError}\PYG{p}{(}\PYG{l+s}{\PYGZdq{}by must be :code or :value\PYGZdq{}}\PYG{p}{))}
+\PYG{+w}{    }\PYG{n}{U}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{codeunit\PYGZus{}type}\PYG{p}{(}\PYG{n}{F}\PYG{p}{)}\PYG{+w}{                        }\PYG{c}{\PYGZsh{} UInt8 at K ≤ 8, UInt16 above}
+\PYG{+w}{    }\PYG{n}{vals}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[}\PYG{n}{F}\PYG{p}{(}\PYG{n}{U}\PYG{p}{(}\PYG{n}{c}\PYG{p}{))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{c}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{o}{:}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{+w}{ }\PYG{o}{\PYGZlt{}\PYGZlt{}}\PYG{+w}{ }\PYG{n}{bitwidth}\PYG{p}{(}\PYG{n}{F}\PYG{p}{))}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{+w}{   }\PYG{c}{\PYGZsh{} validated code\PYGZhy{}point constructor}
+\PYG{+w}{    }\PYG{n}{by}\PYG{+w}{ }\PYG{o}{===}\PYG{+w}{ }\PYG{l+s+ss}{:value}\PYG{+w}{ }\PYG{o}{\PYGZam{}\PYGZam{}}\PYG{+w}{ }\PYG{n}{sort!}\PYG{p}{(}\PYG{n}{vals}\PYG{p}{)}\PYG{+w}{                }\PYG{c}{\PYGZsh{} the draft\PYGZsq{}s total order: NaN first}
+\PYG{+w}{    }\PYG{p}{[(}\PYG{n}{code}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{v}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{value}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{v}\PYG{p}{))}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{v}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{vals}\PYG{p}{]}
+\PYG{k}{end}
+
+\PYG{k}{function}\PYG{+w}{ }\PYG{n}{printcodetable}\PYG{p}{(}\PYG{n}{io}\PYG{o}{::}\PYG{k+kt}{IO}\PYG{p}{,}\PYG{+w}{ }\PYG{o}{::}\PYG{k+kt}{Type}\PYG{p}{\PYGZob{}}\PYG{k+kt}{F}\PYG{p}{\PYGZcb{};}\PYG{+w}{ }\PYG{n}{by}\PYG{o}{::}\PYG{k+kt}{Symbol}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+ss}{:code}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{where}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{k+kt}{F}\PYG{o}{\PYGZlt{}:}\PYG{k+kt}{Binary}\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{n}{w}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{2}\PYG{+w}{ }\PYG{o}{*}\PYG{+w}{ }\PYG{n}{sizeof}\PYG{p}{(}\PYG{n}{codeunit\PYGZus{}type}\PYG{p}{(}\PYG{n}{F}\PYG{p}{))}\PYG{+w}{            }\PYG{c}{\PYGZsh{} hex digits per code unit}
+\PYG{+w}{    }\PYG{k}{for}\PYG{+w}{ }\PYG{n}{r}\PYG{+w}{ }\PYG{k}{in}\PYG{+w}{ }\PYG{n}{codetable}\PYG{p}{(}\PYG{n}{F}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{by}\PYG{p}{)}
+\PYG{+w}{        }\PYG{n}{println}\PYG{p}{(}\PYG{n}{io}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}  0x\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{string}\PYG{p}{(}\PYG{n}{r}\PYG{o}{.}\PYG{n}{code}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{base}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+m+mi}{16}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{pad}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{w}\PYG{p}{),}\PYG{+w}{ }\PYG{l+s}{\PYGZdq{}  \PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{r}\PYG{o}{.}\PYG{n}{value}\PYG{p}{)}
+\PYG{+w}{    }\PYG{k}{end}
+\PYG{k}{end}
+
+\PYG{n}{printcodetable}\PYG{p}{(}\PYG{n+nb}{stdout}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Binary4p2se}\PYG{p}{)}
+\end{MintedVerbatim}

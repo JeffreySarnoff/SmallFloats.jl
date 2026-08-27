@@ -1,8 +1,9 @@
 # Defined, Stochastic, and Approximate Results
 
-SmallFloats can produce results that vary for three very different reasons.
-Keeping them separate is essential: a selected rounding policy is not an
-implementation error, and a registered approximation is not a defined result.
+Two runs disagree — is that a defect? Three reasons are legitimate: the policy
+changed, the policy itself requests randomness, or a named approximation was
+selected. Anything else is a defect. The provenance test at the end of this
+page decides which case you are in.
 
 ## Defined result
 
@@ -14,7 +15,7 @@ inputs always produce the same code point.
 julia> x, y = Binary8p4se(1.625), Binary8p4se(1.75);
 
 julia> Add(Binary8p4se, RNE_SN, x, y)
-Binary8p4se(3.5 ≡ 0x4e)
+Binary8p4se(3.5 ⇆ 0x4e)
 ```
 
 The exact sum is 3.375. `RNE_SN` determines the one permitted landing. The

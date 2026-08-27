@@ -1,5 +1,12 @@
 # Verification Strategy
 
+The doctrine in one sentence: **enumerate rather than sample wherever the
+input space allows it, and where it does not, say "sampled" in so many
+words.** The formats are finite, so most correctness questions here are
+theorems checkable by exhaustion rather than statistics — and a tier the
+caller asks for is honoured, never downgraded, because a gate that quietly
+runs less than it was told to is worse than no gate.
+
 ## What Is Verified
 
 The suite combines exhaustive finite-domain gates with explicitly sampled axes.
@@ -28,29 +35,22 @@ public entry points, zero warm-path allocation) stand in for timing assertions.
 
 ## The Approach to Benchmarking
 
-Recorded after two measurement post-mortems: a benchmark closure over any non-`const`
-global measures Julia's dispatch machinery, not the code under test — and it distorts
-*ratios*, not just absolutes, because dispatch cost varies with call shape.
-
-The rules the shipped `benchmarking/benchmarking.jl` enforces structurally:
-
-- format types enter as type parameters, never as globals;
-- operands come from untimed setup;
-- functions retrieved reflectively pass through argument barriers to specialize;
-- a preflight aborts the run if warm scalar paths allocate — including the
-  wide-spread `FMA`/`FAA` sticky-head path.
-
-The table-build section reports both the cold build (cache evicted per sample) and
-the steady-state warm cache hit, since callers amortize the former through the
-latter. Vary one binding per variant; verify specialization before believing a
-number.
+Correctness is asserted here; timing methodology belongs to [Benchmark
+Correctly](internals_benchmark.md), which records the four measurement
+post-mortems and the rules `benchmarking/benchmarking.jl` enforces
+structurally. The division matters: a gate that fails means a wrong answer, a
+benchmark that misleads means a wrong decision, and conflating them is how a
+harness bug gets filed as a performance regression.
 
 ## Deliberate limitations
 
-No implicit cross-format arithmetic (promotion is to `Float64`, explicitly). No
-in-place packed arithmetic. Threading is opt-in and narrow: only the untabled
-ternary (`K = 8`) compute kernel threads, and only above a size cutoff and when
-`Threads.nthreads() > 1`; every other kernel is single-threaded.
+No implicit cross-format arithmetic exists. Arithmetic with an ordinary Julia
+number promotes to the format's public promotion carrier, which may be wider
+than `Float64`; callers who want a particular result format must name it and a
+projection explicitly. There is no in-place packed arithmetic. Threading is
+opt-in for pure Shape-B compute loops at every arity, only above the configured
+size cutoff and when `Threads.nthreads() > 1`; stochastic paths remain
+sequential to preserve RNG-stream order.
 `Irrational`/`Rational` inputs to `Convert` are rejected rather than
 double-rounded silently. The `Float128` machinery never changes results — disabling
 it (`SmallFloats_Float128=disable`) is a tested no-op semantically.

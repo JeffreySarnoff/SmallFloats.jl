@@ -1,3 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{decode}\PYG{o}{.}\PYG{p}{(}\PYG{n}{sort}\PYG{p}{(}\PYG{n}{Binary4p2se}\PYG{o}{.}\PYG{p}{(}\PYG{l+m+mh}{0x00}\PYG{o}{:}\PYG{l+m+mh}{0x0f}\PYG{p}{)))}\PYG{+w}{      }\PYG{c}{\PYGZsh{} broadcast the code\PYGZhy{}point constructor}
-\end{MintedVerbatim}

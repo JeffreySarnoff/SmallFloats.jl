@@ -1,120 +1,96 @@
 # SmallFloats.jl
 
-SmallFloats.jl implements the IEEE P3109 draft's small binary formats for
-Julia, across bitwidths 3 through 16. Its default operations compute the
-mathematically exact result and project once into the requested format.
+*An exact, policy-visible Julia implementation of the IEEE P3109 small binary
+formats, from 3- through 16-bit code points.*
+
+In an 8-bit format almost every operation rounds: most numbers you construct,
+and most sums and products you form, are not among the format's few hundred
+values. The question that decides a small-float experiment is therefore not
+*whether* rounding happened but *where, and under which policy* — and that is
+exactly what most implementations hide. SmallFloats.jl keeps it visible: the
+finite datum set, the rounding/saturation policy as a named argument, and the
+one projection that turns each exact result back into a code point. All 504
+legal formats are supported, byte-sized `Code8` representations and wider
+`Code16` representations alike, without the storage difference ever entering
+the arithmetic semantics.
 
 ```julia-repl
 julia> using SmallFloats
 
-julia> x = Binary8p4se(1.6)
-Binary8p4se(1.625 ≡ 0x45)
+julia> x = Binary8p4se(1.6)                 # construction projects a value
+Binary8p4se(1.625 ⇆ 0x45)
 
 julia> Add(Binary8p4se, RNE_SN, x, Binary8p4se(1.75))
-Binary8p4se(3.5 ≡ 0x4e)
+Binary8p4se(3.5 ⇆ 0x4e)                     # exact sum, then one projection
+
+julia> T = format(16, 6, true, true)        # a wider format is an ordinary format
+Binary16p6se
+
+julia> codeunit_type(T), SmallFloats.datumcarrier(T)
+(UInt16, Float64)
 ```
 
-The display shows both parts of a stored value: `1.625` is the exact datum and
-`0x45` is the code point that names it. The addition computes the exact sum,
-3.375, then applies the named projection `RNE_SN` once. That relationship—an
-exact value, a code point, and an explicit projection—is the center of the
-package and of this manual.
+The last line is an implementation-facing fact with a user-facing consequence:
+the code point of a wide format need not fit in a byte, and `decode` returns
+the exact carrier selected for the format rather than promising `Float64` in
+every case. The value model itself stays the same.
 
-### Start using the package
+## The promises
 
-Begin with [Installation](install_and_verify.md), then work through
-[First Session](first_session.md). Read [Core Model](core_model.md) once before
-moving into a larger workflow. Together these pages take you from installation
-to the four distinctions that prevent most mistakes.
+- **Defined results are exact, then projected once.** Construction, conversion,
+  scalar operations, tables, and kernels all agree on `RoundToPrecision →
+  Saturate → Encode` — one rounding, at the end. No path rounds twice, so no
+  result drifts quietly from the draft's defined answer.
+- **Policy is visible.** A `ProjSpec` names rounding and saturation in the call
+  itself, so a line of code produces the same bits in every session that runs
+  it — repeatability never depends on ambient state.
+- **Approximation is declared and measured.** Approximate kernels are opt-in,
+  retrieved by name, and carry a code-point error bound κ measured by
+  exhaustive enumeration at registration time; a declaration that understates
+  the measurement is rejected.
+- **Representation does not weaken the datum contract.** `Code8` and `Code16`
+  select storage, decode, and table policies; both represent the draft's finite
+  datum sets exactly, so widening a format changes cost, never meaning.
 
-### Basic Tasks
+## Documentation map
 
-Go directly to a workflow when you already know the core model:
+**New here?** Start with [Installation](install_and_verify.md), take the
+[First Session](first_session.md), then read the [Core Model](core_model.md).
+Those three pages establish the vocabulary used everywhere else.
 
-- [Choose a Format](workflow_choose_format.md)
-- [Control Rounding and Overflow](workflow_rounding_overflow.md)
-- [Quantize and Measure a Tensor](workflow_quantize_measure.md)
-- [Make Stochastic Work Reproducible](workflow_stochastic.md)
+**Using the package?** Follow the [User Guide](user_guide.md) through formats,
+values, projection, arrays, blocks, storage, reproducibility, and Julia
+interoperability. Use the [Cheat Sheet](help_cheat_sheet.md) only when you
+already know the distinction you are looking up.
 
-### Block tasks
+**Choosing or evaluating a format?** Begin with [Choose a
+Format](workflow_choose_format.md), then [Quantize and Measure a
+Tensor](workflow_quantize_measure.md). [Example Gallery](examples_gallery.md)
+routes to runnable basic, AI, machine-learning, and deep-learning sessions.
 
-- [Use Blocks for Dynamic Range](workflow_blocks.md)
-- [Run Operations over Arrays](workflow_arrays.md)
-- [Pack Values for Storage](workflow_packed_storage.md)
-- [Interoperate with Float16 and BFloat16](workflow_float16.md)
+**Maintaining or extending SmallFloats?** Read the [Technical
+Guide](technical_guide.md). It follows a datum through representation, codec,
+projection, oracle, tables, blocks, verification, and benchmarking before
+pointing to the extension checklists.
 
-Each workflow gives one shortest correct procedure, a way to validate the
-result, and the failure modes most likely to produce a plausible but wrong
-answer.
+**Looking up a contract?** The [Formats and Values](reference_formats_values.md),
+[Projection Specifications](reference_projections.md), [Operation
+Catalog](reference_operations.md), and [Julia Compatibility
+Register](reference_julia_compat.md) are curated references. The public and
+internal API indices are docstring inventories, not substitutes for the guides.
 
-### Understand the semantics
+## Code point or number?
 
-[P3109 in One Chapter](concept_p3109.md) introduces the draft standard.
-[Format Anatomy](concept_format_anatomy.md),
-[Values, Code Points, and Conversion](concept_values_codepoints.md), and
-[The Exact-Then-Project Contract](concept_exact_then_project.md) form the
-conceptual spine. The remaining concept pages explain Julia integration,
-session state, performance, and the difference between defined, stochastic,
-and approximate results.
-
-### Look up a contract
-
-Reference pages are organized by API family. Start with
-[Formats and Value Queries](reference_formats_values.md),
-[Projection Specifications](reference_projections.md), or the
-[Operation Catalog](reference_operations.md). The
-[Public API Index](reference_public_api.md) collects source docstrings after
-the curated family references.
-
-### Inspect evidence or implementation
-
-[Examples and Evidence](examples_gallery.md) indexes complete applied and
-verification sessions. Maintainers should begin with
-[Architecture and Invariants](internals_architecture.md), then follow the data
-path through encoding, projection, the oracle, tables, and block reductions.
-
-## Three promises and one boundary
-
-### Defined paths are bit-exact
-
-For a defined operation, the package returns the projection of the
-mathematically exact result. Table kernels and scalar methods implement the
-same function; a table is a cache, not an approximate alternate path.
-
-### Policy is visible
-
-Rounding and saturation are values in a `ProjSpec`. Convenience operators use
-the session default, while the spec-named register—`Add(T, ρ, x, y)`,
-`Exp(T, ρ, x)`, and so on—makes policy explicit and reproducible.
-
-### Approximation is declared and measured
-
-Optional approximate kernels live behind a registry. Registration measures
-their maximum code-point deviation κ and rejects an understated bound.
-
-### P3109 is not IEEE 754 in smaller storage
-
-P3109 has one NaN and one zero, defines a different bias rule, and makes
-signedness and finite/extended domain format parameters. In particular,
-`Binary16p11se` is not `Float16`, and converting between them is never a
-reinterpretation. See [P3109 in One Chapter](concept_p3109.md) before porting
-IEEE-specific assumptions.
-
-## The rule to remember first
-
-An `Unsigned` constructor argument is a **code point**. Every other `Real`
-constructor argument is a **value to project**.
+An `Unsigned` argument names a stored code point directly. Any other `Real`
+argument is treated as a number and rounded to the format's nearest datum under
+the active projection policy.
 
 ```julia-repl
 julia> Binary8p4se(0x02), Binary8p4se(2)
-(Binary8p4se(0.001953125 ≡ 0x02), Binary8p4se(2.0 ≡ 0x48))
+(Binary8p4se(0.001953125 ⇆ 0x02), Binary8p4se(2.0 ⇆ 0x48))
 ```
 
-Use `codepoint(x)` and `decode(x)` to make the two interpretations explicit.
-
-## Supported formats
-
-The package implements all 504 legal formats at `K ∈ 3:16`. `using
-SmallFloats` exports the 120 aliases at `K ≤ 8`; the other 384 are available
-through `SmallFloats.Binary…`, `format(K, P, SGN, EXT)`, or `using
-SmallFloats.Formats`.
+The same digit, two questions, answers a factor of 1024 apart — and neither
+call is an error. `Convert(T, ρ, x)` projects whatever the argument's integer
+type. [Values, Code Points, and Conversion](concept_values_codepoints.md) has
+the complete rule.

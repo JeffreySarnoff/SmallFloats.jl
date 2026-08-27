@@ -6,6 +6,13 @@ Julia Base spellings. Use the named form when result format and projection must
 be explicit; use [Julia Compatibility Register](reference_julia_compat.md) for
 the complete Base mapping.
 
+Every operation here follows the same contract and it is not repeated per row:
+operands decode exactly, the operation evaluates exactly, and one projection
+produces the result code point. The tables therefore record names, arities, and
+the places where a draft operation's behavior differs from the Base spelling
+readers expect — not semantics, which live in [The Exact-Then-Project
+Contract](concept_exact_then_project.md).
+
 ## Unary (30)
 
 | Operation | Arity | Base spelling | Notes | Related guide |

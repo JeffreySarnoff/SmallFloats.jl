@@ -51,7 +51,7 @@ operands), not by a session preference.
 | `with_default_projection` | `with_default_projection(f, args...)` calls `f(DefaultProjection(), args...)` | Cheat Sheet |
 
 ```julia
-with_default_type((T, x) -> T(x), 1.5)          # Binary8p2se(1.5 ≡ 0x41)
+with_default_type((T, x) -> T(x), 1.5)          # Binary8p2se(1.5 ⇆ 0x41)
 with_default_projection((ρ, x, y) -> Add(T, ρ, x, y), x, y)
 with_default_returntype(f, args...)              # f(DefaultReturnType(), args...)
 ```
@@ -108,8 +108,8 @@ sets it. `VALID_SHOW_STYLES` contains four values:
 |:---|:---|
 | `:value` | `1.625` |
 | `:codepoint` | `0x45` |
-| `:datum` | `(1.625 ≡ 0x45)` |
-| `:typed` | `Binary8p4se(1.625 ≡ 0x45)` |
+| `:datum` | `(1.625 ⇆ 0x45)` |
+| `:typed` | `Binary8p4se(1.625 ⇆ 0x45)` |
 
 An `IOContext` property, `:binary_show_style`, overrides the process default for
 one stream. Prefer that form in concurrent code and in libraries that should

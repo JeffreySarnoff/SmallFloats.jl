@@ -40,10 +40,10 @@ disagree on the value of every code point.
 julia> using SmallFloats.Formats
 
 julia> Convert(Binary16p11se, RNE_SF, Float16(1.5))    # a conversion: 1.5 ↦ 1.5
-Binary16p11se(1.5 ≡ 0x4200)
+Binary16p11se(1.5 ⇆ 0x4200)
 
 julia> reinterpret(Binary16p11se, Float16(1.5))        # the SAME BITS: 1.5 ↦ 0.75
-Binary16p11se(0.75 ≡ 0x3e00)
+Binary16p11se(0.75 ⇆ 0x3e00)
 ```
 
 `Float16(1.5)` has the bit pattern `0x3e00`; read as a `Binary16p11se`, those

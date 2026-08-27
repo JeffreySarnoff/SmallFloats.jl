@@ -1,0 +1,16 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{x}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1.6}\PYG{p}{)}\PYG{+w}{              }\PYG{c}{\PYGZsh{} construct from a Real: projects (rounds)}
+\PYG{g+go}{Binary8p4se(1.625 ⇆ 0x45)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mh}{0x45}\PYG{p}{)}\PYG{+w}{                 }\PYG{c}{\PYGZsh{} construct from a UInt8 CODE POINT (validated)}
+\PYG{g+go}{Binary8p4se(1.625 ⇆ 0x45)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Convert}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mi}{3}\PYG{p}{)}\PYG{+w}{   }\PYG{c}{\PYGZsh{} explicit conversion, any mode}
+\PYG{g+go}{Binary8p4se(3.0 ⇆ 0x4c)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{decode}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{                          }\PYG{c}{\PYGZsh{} the exact datum, on the format\PYGZsq{}s carrier}
+\PYG{g+go}{1.625}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{codepoint}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}\PYG{+w}{                       }\PYG{c}{\PYGZsh{} the code point (extends Base.codepoint)}
+\PYG{g+go}{0x45}
+\end{MintedVerbatim}

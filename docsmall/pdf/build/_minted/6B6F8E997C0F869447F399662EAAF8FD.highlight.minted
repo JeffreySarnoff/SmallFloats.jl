@@ -1,0 +1,20 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{decode}\PYG{o}{.}\PYG{p}{(}\PYG{n}{sort}\PYG{p}{(}\PYG{n}{Binary4p2se}\PYG{o}{.}\PYG{p}{(}\PYG{l+m+mh}{0x00}\PYG{o}{:}\PYG{l+m+mh}{0x0f}\PYG{p}{)))}
+\PYG{g+go}{16\PYGZhy{}element Vector\PYGZob{}Float64\PYGZcb{}:}
+\PYG{g+go}{ NaN}
+\PYG{g+go}{ \PYGZhy{}Inf}
+\PYG{g+go}{  \PYGZhy{}2.0}
+\PYG{g+go}{  \PYGZhy{}1.5}
+\PYG{g+go}{  \PYGZhy{}1.0}
+\PYG{g+go}{  \PYGZhy{}0.75}
+\PYG{g+go}{  \PYGZhy{}0.5}
+\PYG{g+go}{  \PYGZhy{}0.25}
+\PYG{g+go}{   0.0}
+\PYG{g+go}{   0.25}
+\PYG{g+go}{   0.5}
+\PYG{g+go}{   0.75}
+\PYG{g+go}{   1.0}
+\PYG{g+go}{   1.5}
+\PYG{g+go}{   2.0}
+\PYG{g+go}{  Inf}
+\end{MintedVerbatim}

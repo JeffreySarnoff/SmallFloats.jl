@@ -1,0 +1,10 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{1e9}\PYG{p}{)}\PYG{+w}{                   }\PYG{c}{\PYGZsh{} overflow under the default spec → +Inf}
+\PYG{g+go}{Binary8p4se(Inf ⇆ 0x7f)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{0.0}\PYG{p}{)}\PYG{+w}{                  }\PYG{c}{\PYGZsh{} no −0: projects to the single zero}
+\PYG{g+go}{Binary8p4se(0.0 ⇆ 0x00)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{isnan}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{n+nb}{NaN}\PYG{p}{)),}\PYG{+w}{ }\PYG{n}{isfinite}\PYG{p}{(}\PYG{n}{Binary8p4se}\PYG{p}{(}\PYG{l+m+mf}{2.0}\PYG{p}{))}
+\PYG{g+go}{(true, true)}
+\end{MintedVerbatim}

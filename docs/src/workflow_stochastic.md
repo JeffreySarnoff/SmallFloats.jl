@@ -1,7 +1,10 @@
 # Make Stochastic Work Reproducible
 
-Make stochastic-rounding code reproducible — across runs, and inside test
-suites — by fixing the entropy source.
+Stochastic rounding varies by design, which makes "did my change break
+something?" hard to answer unless the randomness is pinned. Two things can be
+pinned, and they suit different jobs: an RNG seed reproduces a whole stream,
+while an explicit draw `R` reproduces one decision without depending on any
+RNG algorithm at all. Tests usually want the second.
 
 ## Ingredients
 
@@ -18,14 +21,14 @@ suites — by fixing the entropy source.
 
 ```julia-repl
 julia> rand(Xoshiro(1), Binary8p4se)
-Binary8p4se(0.0703125 ≡ 0x21)
+Binary8p4se(0.0703125 ⇆ 0x21)
 
 julia> rand(Xoshiro(8), Binary8p4se, 4)
 4-element Vector{Binary8p4se}:
- Binary8p4se(0.40625 ≡ 0x35)
- Binary8p4se(0.021484375 ≡ 0x13)
- Binary8p4se(0.75 ≡ 0x3c)
- Binary8p4se(0.28125 ≡ 0x31)
+ Binary8p4se(0.40625 ⇆ 0x35)
+ Binary8p4se(0.021484375 ⇆ 0x13)
+ Binary8p4se(0.75 ⇆ 0x3c)
+ Binary8p4se(0.28125 ⇆ 0x31)
 ```
 
 If you rely on the implicit task-local generator instead, `Random.seed!`
@@ -33,10 +36,10 @@ controls it exactly as for any other type:
 
 ```julia-repl
 julia> Random.seed!(1234); rand(Binary8p4se)
-Binary8p4se(0.3125 ≡ 0x32)
+Binary8p4se(0.3125 ⇆ 0x32)
 
 julia> Random.seed!(1234); rand(Binary8p4se)      # same seed, same draw
-Binary8p4se(0.3125 ≡ 0x32)
+Binary8p4se(0.3125 ⇆ 0x32)
 ```
 
 **2. A stochastic projection draws from the same rng as the value draw.**
@@ -48,16 +51,16 @@ julia> rand(Xoshiro(2), Float64)                # the underlying uniform draw
 0.0022505868897625403
 
 julia> rand(Xoshiro(2), Binary8p4se)            # default: floor (stays in [0,1))
-Binary8p4se(0.001953125 ≡ 0x02)
+Binary8p4se(0.001953125 ⇆ 0x02)
 
 julia> rand(Xoshiro(2), Binary8p4se; projection = RTP_SN)   # ceiling
-Binary8p4se(0.0029296875 ≡ 0x03)
+Binary8p4se(0.0029296875 ⇆ 0x03)
 
 julia> rand(Xoshiro(2), Binary8p4se; projection = RNE_SN)   # nearest
-Binary8p4se(0.001953125 ≡ 0x02)
+Binary8p4se(0.001953125 ⇆ 0x02)
 
 julia> rand(Xoshiro(2), Binary8p4se; projection = RSA_SN(8))  # stochastic
-Binary8p4se(0.001953125 ≡ 0x02)
+Binary8p4se(0.001953125 ⇆ 0x02)
 ```
 
 Because the stochastic projection draws its random bits from the *same* rng
@@ -73,13 +76,13 @@ stochastic rounding decision deterministically:
 julia> σ = RSA_SN();                 # ≡ ProjSpec(StochasticA{8}(), SatNone())
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); rng = Xoshiro(1))
-Binary8p4se(2.0 ≡ 0x48)
+Binary8p4se(2.0 ⇆ 0x48)
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); R = 0)
-Binary8p4se(2.0 ≡ 0x48)      # smallest draw: rounds down
+Binary8p4se(2.0 ⇆ 0x48)      # smallest draw: rounds down
 
 julia> Add(Binary8p4se, σ, Binary8p4se(2.0), Binary8p4se(0.03125); R = 255)
-Binary8p4se(2.25 ≡ 0x49)     # largest draw: rounds up
+Binary8p4se(2.25 ⇆ 0x49)     # largest draw: rounds up
 ```
 
 **4. Omitted RNGs follow Julia.** SmallFloats does not keep a second package-wide

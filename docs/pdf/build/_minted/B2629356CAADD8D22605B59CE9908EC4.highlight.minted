@@ -1,0 +1,7 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{360}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary3p1se}\PYG{p}{)}\PYG{+w}{         }\PYG{c}{\PYGZsh{} SatFinite clamps the tail}
+\PYG{g+go}{Binary3p1se(1.0 ⇆ 0x02)}
+
+\PYG{g+gp}{julia\PYGZgt{}}\PYG{+w}{ }\PYG{n}{randn}\PYG{p}{(}\PYG{n}{Xoshiro}\PYG{p}{(}\PYG{l+m+mi}{360}\PYG{p}{),}\PYG{+w}{ }\PYG{n}{Binary3p1se}\PYG{p}{;}\PYG{+w}{ }\PYG{n}{projection}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n}{RNE\PYGZus{}SN}\PYG{p}{)}
+\PYG{g+go}{Binary3p1se(Inf ⇆ 0x03)                         \PYGZsh{} opt out, get the overflow}
+\end{MintedVerbatim}
