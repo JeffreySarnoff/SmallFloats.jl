@@ -140,7 +140,7 @@ Julia defines a shift at or beyond a type's width as zero, so `UInt8(1) << 8`
 and `UInt16(1) << 16` are both `0`, and `2^K` computed in a unit of width `K`
 is `0`. The format grid **always contains a format whose K equals its storage
 width** (K = 8 on `UInt8`, K = 16 on `UInt16`), so that case is structural, not
-an edge. Here the shift amount is `width − K ∈ [0, width−1]`, in which the
+an edge. Here the shift amount is `width-K ∈ [0, width-1]`, in which the
 pathological amount is unreachable *by construction*, at every K, for every
 unit — including a future `Code32`.
 """

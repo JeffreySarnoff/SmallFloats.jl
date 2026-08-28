@@ -157,7 +157,7 @@ Setting it directly decomposes ρ into [`DefaultRoundingMode`](@ref) and
 [`DefaultSaturationMode`](@ref), so the three stay coherent in both directions.
 """
 DefaultProjection() = _DEFAULT_PROJECTION[]
-function DefaultProjection!(ρ::ProjSpec)
+function  (ρ::ProjSpec)
     _DEFAULT_PROJECTION[] = ρ
     _DEFAULT_ROUNDING[] = roundingmode(ρ)
     _DEFAULT_SATURATION[] = saturationmode(ρ)
